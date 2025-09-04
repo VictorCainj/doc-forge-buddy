@@ -128,9 +128,9 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
             <Card className="shadow-card print:shadow-none print:border-none">
               <CardContent className="p-8 print:p-12">
                 <div id="document-content" className="prose prose-lg max-w-none text-foreground">
-                  <div className="text-center mb-8">
-                    <img src={companyLogo} alt="Company Logo" className="mx-auto mb-4 h-16 w-auto" />
-                    <div className="w-24 h-1 bg-gradient-primary mx-auto"></div>
+                  <div className="flex justify-between items-start mb-8">
+                    <img src={companyLogo} alt="Company Logo" className="h-16 w-auto" />
+                    <div className="flex-1"></div>
                   </div>
                   <div 
                     dangerouslySetInnerHTML={{ 
