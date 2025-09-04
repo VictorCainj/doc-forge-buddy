@@ -17,28 +17,28 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
 
-    --primary: 217 76% 51%;
+    --primary: 340 75% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 213 27% 92%;
+    --secondary: 340 25% 92%;
     --secondary-foreground: 215 25% 15%;
 
-    --muted: 213 27% 92%;
+    --muted: 340 15% 92%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 217 76% 51%;
+    --accent: 340 75% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 213 27% 84%;
-    --input: 213 27% 84%;
-    --ring: 217 76% 51%;
+    --border: 340 20% 84%;
+    --input: 340 20% 84%;
+    --ring: 340 75% 45%;
 
     /* Custom design tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(217 76% 51%), hsl(220 88% 63%));
-    --gradient-secondary: linear-gradient(135deg, hsl(213 27% 92%), hsl(220 14% 96%));
+    --gradient-primary: linear-gradient(135deg, hsl(340 75% 45%), hsl(340 80% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(340 15% 92%), hsl(340 10% 96%));
     --shadow-soft: 0 4px 20px -4px hsl(217 76% 51% / 0.15);
     --shadow-card: 0 2px 8px -2px hsl(215 25% 15% / 0.08);
 

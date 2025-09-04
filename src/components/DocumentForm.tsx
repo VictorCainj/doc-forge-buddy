@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { Document, Paragraph, TextRun, Packer } from "docx";
 import { saveAs } from "file-saver";
+import companyLogo from "@/assets/company-logo.png";
 
 interface FormField {
   name: string;
@@ -126,15 +127,19 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
           <div className="max-w-4xl mx-auto">
             <Card className="shadow-card print:shadow-none print:border-none">
               <CardContent className="p-8 print:p-12">
-                <div 
-                  id="document-content"
-                  className="prose prose-lg max-w-none text-foreground"
-                  dangerouslySetInnerHTML={{ 
-                    __html: replaceTemplateVariables(template, formData)
-                      .replace(/\n/g, '<br/>')
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  }}
-                />
+                <div id="document-content" className="prose prose-lg max-w-none text-foreground">
+                  <div className="text-center mb-8">
+                    <img src={companyLogo} alt="Company Logo" className="mx-auto mb-4 h-16 w-auto" />
+                    <div className="w-24 h-1 bg-gradient-primary mx-auto"></div>
+                  </div>
+                  <div 
+                    dangerouslySetInnerHTML={{ 
+                      __html: replaceTemplateVariables(template, formData)
+                        .replace(/\n/g, '<br/>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
