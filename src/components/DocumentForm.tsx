@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Printer } from "lucide-react";
+import { ArrowLeft, FileText, Printer, Download, FileDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import html2pdf from "html2pdf.js";
+import { Document, Paragraph, TextRun, Packer } from "docx";
+import { saveAs } from "file-saver";
 
 interface FormField {
   name: string;
@@ -41,6 +44,39 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
     window.print();
   };
 
+  const handleDownloadPDF = () => {
+    const element = document.getElementById('document-content');
+    const opt = {
+      margin: 1,
+      filename: `${title}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  };
+
+  const handleDownloadDOCX = async () => {
+    const processedText = replaceTemplateVariables(template, formData)
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .split('\n');
+
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: processedText.map(line => 
+          new Paragraph({
+            children: [new TextRun(line)],
+            spacing: { after: line.trim() === '' ? 200 : 100 }
+          })
+        )
+      }]
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+    saveAs(new Blob([buffer]), `${title}.docx`);
+  };
+
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
     Object.entries(data).forEach(([key, value]) => {
@@ -68,10 +104,20 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
                 </Button>
                 <h1 className="text-xl font-semibold text-foreground">{title}</h1>
               </div>
-              <Button onClick={handlePrint} className="gap-2 bg-gradient-primary">
-                <Printer className="h-4 w-4" />
-                Imprimir
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleDownloadPDF} variant="outline" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  PDF
+                </Button>
+                <Button onClick={handleDownloadDOCX} variant="outline" className="gap-2">
+                  <FileDown className="h-4 w-4" />
+                  DOCX
+                </Button>
+                <Button onClick={handlePrint} className="gap-2 bg-gradient-primary">
+                  <Printer className="h-4 w-4" />
+                  Imprimir
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -81,6 +127,7 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
             <Card className="shadow-card print:shadow-none print:border-none">
               <CardContent className="p-8 print:p-12">
                 <div 
+                  id="document-content"
                   className="prose prose-lg max-w-none text-foreground"
                   dangerouslySetInnerHTML={{ 
                     __html: replaceTemplateVariables(template, formData)

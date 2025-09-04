@@ -98,41 +98,6 @@ const Index = () => {
           })}
         </div>
 
-        {/* Features Section */}
-        <div className="mt-20 text-center">
-          <h3 className="text-xl font-semibold text-foreground mb-8">
-            Funcionalidades do Sistema
-          </h3>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-medium text-foreground mb-2">Documentos Padronizados</h4>
-              <p className="text-sm text-muted-foreground">
-                Templates profissionais prontos para uso
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Key className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-medium text-foreground mb-2">Personalização Rápida</h4>
-              <p className="text-sm text-muted-foreground">
-                Preencha apenas os campos necessários
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Building2 className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-medium text-foreground mb-2">Impressão Profissional</h4>
-              <p className="text-sm text-muted-foreground">
-                Documentos prontos para impressão e assinatura
-              </p>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
