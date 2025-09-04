@@ -135,8 +135,6 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
                   <div 
                     dangerouslySetInnerHTML={{ 
                       __html: replaceTemplateVariables(template, formData)
-                        .replace(/\n/g, '<br/>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     }}
                   />
                 </div>

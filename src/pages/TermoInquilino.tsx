@@ -18,32 +18,49 @@ const TermoInquilino = () => {
   ];
 
   const template = `
-{{cidade}}, {{dataRecebimento}}.
+<div style="text-align: right; margin-bottom: 20px;">{{cidade}}, {{dataRecebimento}}.</div>
 
+<div style="text-align: justify; line-height: 1.6; margin-bottom: 15px;">
 Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{nomeLocatario}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
+</div>
 
-**LOCADOR DO IMÓVEL:** {{nomeLocador}}
-**DADOS DOS LOCATÁRIOS:** {{nomeLocatario}}
-**Celular:** {{celularLocatario}} **E-mail:** {{emailLocatario}}
+<div style="margin: 20px 0;">
+<strong>LOCADOR DO IMÓVEL:</strong> {{nomeLocador}}<br>
+<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}<br>
+<strong>Celular:</strong> {{celularLocatario}} <strong>E-mail:</strong> {{emailLocatario}}
+</div>
 
-**COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS (CPFL):**
-**CPFL:** {{cpfl}}        **DAEV:** {{daev}}
-**OBS:** Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
+<div style="margin: 20px 0;">
+<strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS (CPFL):</strong><br>
+<strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>DAEV:</strong> {{daev}}<br>
+<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
+</div>
 
-**Entregue na Madia Imóveis a relação de chaves:**
+<div style="margin: 20px 0;">
+<strong>Entregue na Madia Imóveis a relação de chaves:</strong><br>
 Foi entregue {{tipoQuantidadeChaves}}
+</div>
 
-**Vistoria realizada em** {{dataVistoria}}
+<div style="margin: 20px 0;">
+<strong>Vistoria realizada em</strong> {{dataVistoria}}
+</div>
 
-(  ) Imóvel entregue de acordo com a vistoria inicial
+<div style="margin: 30px 0;">
+(  ) Imóvel entregue de acordo com a vistoria inicial<br>
 (  ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
+</div>
 
+<div style="margin-top: 80px;">
+<div style="text-align: right; margin-bottom: 10px;">
+__________________________________________<br>
+{{nomeQuemRetira}}
+</div>
 
-                                          __________________________________________
-                                                       {{nomeQuemRetira}}
-
-________________________________________
-  VICTOR CAIN JORGE
+<div style="margin-top: 40px;">
+________________________________________<br>
+VICTOR CAIN JORGE
+</div>
+</div>
   `;
 
   const handleGenerate = (data: Record<string, string>) => {
