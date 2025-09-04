@@ -2,36 +2,54 @@ import DocumentForm from "@/components/DocumentForm";
 
 const TermoInquilino = () => {
   const fields = [
-    { name: "nomeInquilino", label: "Nome do Inquilino", type: "text" as const, required: true, placeholder: "Nome completo do inquilino" },
-    { name: "nomeProprietario", label: "Nome do Proprietário", type: "text" as const, required: true, placeholder: "Nome completo do proprietário" },
+    { name: "numeroTermo", label: "Número do Termo", type: "text" as const, required: true, placeholder: "Ex: 14021" },
+    { name: "cidade", label: "Cidade", type: "text" as const, required: true, placeholder: "Ex: Valinhos" },
+    { name: "dataRecebimento", label: "Data de Recebimento", type: "text" as const, required: true, placeholder: "Ex: 28 de agosto de 2025" },
     { name: "endereco", label: "Endereço do Imóvel", type: "textarea" as const, required: true, placeholder: "Endereço completo do imóvel" },
-    { name: "quantidadeChaves", label: "Quantidade de Chaves", type: "number" as const, required: true, placeholder: "Ex: 3" },
-    { name: "dataEntrega", label: "Data de Entrega", type: "text" as const, required: true, placeholder: "Ex: 15/01/2024" },
-    { name: "observacoes", label: "Observações", type: "textarea" as const, placeholder: "Observações adicionais (opcional)" }
+    { name: "nomeLocatario", label: "Nome do Locatário", type: "text" as const, required: true, placeholder: "Nome completo do locatário" },
+    { name: "dataContrato", label: "Data de Firmamento do Contrato", type: "text" as const, required: true, placeholder: "Ex: 15 de janeiro de 2024" },
+    { name: "nomeLocador", label: "Nome do Locador", type: "text" as const, required: true, placeholder: "Nome completo do locador" },
+    { name: "celularLocatario", label: "Celular do Locatário", type: "text" as const, required: true, placeholder: "Ex: (19) 99999-9999" },
+    { name: "emailLocatario", label: "E-mail do Locatário", type: "text" as const, required: true, placeholder: "email@exemplo.com" },
+    { name: "cpfl", label: "CPFL Apresentada", type: "text" as const, required: true, placeholder: "SIM ou NÃO" },
+    { name: "daev", label: "DAEV Apresentada", type: "text" as const, required: true, placeholder: "SIM ou NÃO" },
+    { name: "tipoQuantidadeChaves", label: "Tipo e Quantidade de Chaves", type: "textarea" as const, required: true, placeholder: "Ex: 3 chaves da porta principal, 2 chaves do portão" },
+    { name: "dataVistoria", label: "Data da Vistoria", type: "text" as const, required: true, placeholder: "Ex: 28/08/2025" },
+    { name: "condicaoImovel", label: "Condição do Imóvel", type: "text" as const, required: true, placeholder: "De acordo com vistoria inicial ou Não conforme" },
+    { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" }
   ];
 
   const template = `
-**TERMO DE ENTREGA DE CHAVES - INQUILINO**
+**TERMO DE RECEBIMENTO DE CHAVES – {{numeroTermo}}**
 
-Eu, **{{nomeProprietario}}**, proprietário do imóvel localizado no endereço **{{endereco}}**, declaro que entreguei ao inquilino **{{nomeInquilino}}** um total de **{{quantidadeChaves}}** chave(s) do referido imóvel.
+{{cidade}}, {{dataRecebimento}}.
 
-**Data da Entrega:** {{dataEntrega}}
+Pelo presente, recebemos as chaves do imóvel sito à **{{endereco}}**, ora locado **{{nomeLocatario}}**, devidamente qualificados no contrato de locação residencial firmado em **{{dataContrato}}**.
 
-**Endereço do Imóvel:** {{endereco}}
+**LOCADOR DO IMÓVEL:** {{nomeLocador}}
+**DADOS DOS LOCATÁRIOS:** {{nomeLocatario}}
+**Celular:** {{celularLocatario}} **E-mail:** {{emailLocatario}}
 
-**Quantidade de Chaves Entregues:** {{quantidadeChaves}} unidade(s)
+**COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS (CPFL):**
+**CPFL:** {{cpfl}}                     **DAEV:** {{daev}}
+**OBS:** Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
 
-**Observações:** {{observacoes}}
+**Entregue na Madia Imóveis a relação de chaves:**
+Foi entregue **{{tipoQuantidadeChaves}}**
 
-O inquilino se compromete a devolver todas as chaves em perfeito estado no término do contrato de locação, sob pena de arcar com os custos de substituição das fechaduras.
+**Vistoria realizada em** {{dataVistoria}}
 
-Este documento serve como comprovante da entrega das chaves e faz parte integrante do contrato de locação.
+**Condição do imóvel:** {{condicaoImovel}}
 
-____________________                           ____________________
-{{nomeProprietario}}                           {{nomeInquilino}}
-(Proprietário)                                 (Inquilino)
+(  ) Imóvel entregue de acordo com a vistoria inicial
+(  ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 
-Data: {{dataEntrega}}
+
+                                          __________________________________________
+                                                       {{nomeQuemRetira}}
+
+________________________________________
+  VICTOR CAIN JORGE
   `;
 
   const handleGenerate = (data: Record<string, string>) => {
@@ -40,8 +58,8 @@ Data: {{dataEntrega}}
 
   return (
     <DocumentForm
-      title="Termo de Entrega de Chaves - Inquilino"
-      description="Documento para formalizar a entrega de chaves ao inquilino"
+      title="Termo de Recebimento de Chaves - Inquilino"
+      description="Documento para formalizar o recebimento de chaves pelo inquilino"
       fields={fields}
       template={template}
       onGenerate={handleGenerate}
