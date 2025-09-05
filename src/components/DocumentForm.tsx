@@ -48,11 +48,12 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
   const handleDownloadPDF = () => {
     const element = document.getElementById('document-content');
     const opt = {
-      margin: 1,
+      margin: 0.5,
       filename: `${title}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      html2canvas: { scale: 1.5, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all'] }
     };
     html2pdf().set(opt).from(element).save();
   };
@@ -126,8 +127,8 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
         <main className="container mx-auto px-6 py-8">
           <div className="max-w-4xl mx-auto">
             <Card className="shadow-card print:shadow-none print:border-none">
-              <CardContent className="p-8 print:p-12">
-                <div id="document-content" className="prose prose-lg max-w-none text-foreground">
+              <CardContent className="p-6 print:p-8">
+                <div id="document-content" className="max-w-none text-foreground" style={{ fontFamily: 'Arial, sans-serif', maxHeight: '100vh', overflow: 'hidden' }}>
                   <div className="flex justify-between items-start mb-8">
                     <img src={companyLogo} alt="Company Logo" className="h-16 w-auto" />
                     <div className="flex-1"></div>

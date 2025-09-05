@@ -2,8 +2,6 @@ import DocumentForm from "@/components/DocumentForm";
 
 const TermoInquilino = () => {
   const fields = [
-    { name: "cidade", label: "Cidade", type: "text" as const, required: true, placeholder: "Ex: Valinhos" },
-    { name: "dataRecebimento", label: "Data de Recebimento", type: "text" as const, required: true, placeholder: "Ex: 28 de agosto de 2025" },
     { name: "endereco", label: "Endereço do Imóvel", type: "textarea" as const, required: true, placeholder: "Endereço completo do imóvel" },
     { name: "nomeLocatario", label: "Nome do Locatário", type: "text" as const, required: true, placeholder: "Nome completo do locatário" },
     { name: "dataContrato", label: "Data de Firmamento do Contrato", type: "text" as const, required: true, placeholder: "Ex: 15 de janeiro de 2024" },
@@ -17,48 +15,61 @@ const TermoInquilino = () => {
     { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" }
   ];
 
-  const template = `
-<div style="text-align: right; margin-bottom: 20px;">{{cidade}}, {{dataRecebimento}}.</div>
+  // Gera data atual automaticamente
+  const getCurrentDate = () => {
+    const today = new Date();
+    const day = today.getDate();
+    const months = [
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    ];
+    const month = months[today.getMonth()];
+    const year = today.getFullYear();
+    return `${day} de ${month} de ${year}`;
+  };
 
-<div style="text-align: justify; line-height: 1.6; margin-bottom: 15px;">
+  const template = `
+<div style="text-align: right; margin-bottom: 15px; font-size: 14px;">Valinhos, ${getCurrentDate()}.</div>
+
+<div style="text-align: justify; line-height: 1.4; margin-bottom: 12px; font-size: 14px;">
 Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{nomeLocatario}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
 </div>
 
-<div style="margin: 20px 0;">
+<div style="margin: 12px 0; font-size: 13px;">
 <strong>LOCADOR DO IMÓVEL:</strong> {{nomeLocador}}<br>
 <strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}<br>
 <strong>Celular:</strong> {{celularLocatario}} <strong>E-mail:</strong> {{emailLocatario}}
 </div>
 
-<div style="margin: 20px 0;">
+<div style="margin: 12px 0; font-size: 13px;">
 <strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS (CPFL):</strong><br>
 <strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>DAEV:</strong> {{daev}}<br>
 <strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
 </div>
 
-<div style="margin: 20px 0;">
+<div style="margin: 12px 0; font-size: 13px;">
 <strong>Entregue na Madia Imóveis a relação de chaves:</strong><br>
 Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
-<div style="margin: 20px 0;">
+<div style="margin: 12px 0; font-size: 13px;">
 <strong>Vistoria realizada em</strong> {{dataVistoria}}
 </div>
 
-<div style="margin: 30px 0;">
+<div style="margin: 15px 0; font-size: 13px;">
 (  ) Imóvel entregue de acordo com a vistoria inicial<br>
 (  ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 </div>
 
-<div style="margin-top: 80px;">
-<div style="text-align: right; margin-bottom: 10px;">
+<div style="margin-top: 40px; text-align: center;">
+<div style="margin-bottom: 40px;">
 __________________________________________<br>
-{{nomeQuemRetira}}
+<span style="font-size: 12px;">{{nomeQuemRetira}}</span>
 </div>
 
-<div style="margin-top: 40px;">
+<div>
 ________________________________________<br>
-VICTOR CAIN JORGE
+<span style="font-size: 12px;">VICTOR CAIN JORGE</span>
 </div>
 </div>
   `;
