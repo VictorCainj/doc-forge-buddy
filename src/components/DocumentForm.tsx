@@ -19,15 +19,21 @@ interface FormField {
   placeholder?: string;
 }
 
+interface FieldGroup {
+  title: string;
+  fields: FormField[];
+}
+
 interface DocumentFormProps {
   title: string;
   description: string;
-  fields: FormField[];
+  fields?: FormField[];
+  fieldGroups?: FieldGroup[];
   template: string;
   onGenerate: (data: Record<string, string>) => void;
 }
 
-const DocumentForm = ({ title, description, fields, template, onGenerate }: DocumentFormProps) => {
+const DocumentForm = ({ title, description, fields, fieldGroups, template, onGenerate }: DocumentFormProps) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
@@ -179,30 +185,66 @@ const DocumentForm = ({ title, description, fields, template, onGenerate }: Docu
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {fields.map((field) => (
-                <div key={field.name} className="space-y-2">
-                  <Label htmlFor={field.name} className="text-sm font-medium">
-                    {field.label} {field.required && <span className="text-destructive">*</span>}
-                  </Label>
-                  {field.type === "textarea" ? (
-                    <Textarea
-                      id={field.name}
-                      placeholder={field.placeholder}
-                      value={formData[field.name] || ""}
-                      onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      className="min-h-20"
-                    />
-                  ) : (
-                    <Input
-                      id={field.name}
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      value={formData[field.name] || ""}
-                      onChange={(e) => handleInputChange(field.name, e.target.value)}
-                    />
-                  )}
-                </div>
-              ))}
+              {fieldGroups ? (
+                fieldGroups.map((group, groupIndex) => (
+                  <div key={groupIndex} className="space-y-4">
+                    <h3 className="text-sm font-semibold text-primary border-b border-border pb-2">
+                      {group.title}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {group.fields.map((field) => (
+                        <div key={field.name} className="space-y-2">
+                          <Label htmlFor={field.name} className="text-sm font-medium">
+                            {field.label} {field.required && <span className="text-destructive">*</span>}
+                          </Label>
+                          {field.type === "textarea" ? (
+                            <Textarea
+                              id={field.name}
+                              placeholder={field.placeholder}
+                              value={formData[field.name] || ""}
+                              onChange={(e) => handleInputChange(field.name, e.target.value)}
+                              className="min-h-20"
+                            />
+                          ) : (
+                            <Input
+                              id={field.name}
+                              type={field.type}
+                              placeholder={field.placeholder}
+                              value={formData[field.name] || ""}
+                              onChange={(e) => handleInputChange(field.name, e.target.value)}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                fields?.map((field) => (
+                  <div key={field.name} className="space-y-2">
+                    <Label htmlFor={field.name} className="text-sm font-medium">
+                      {field.label} {field.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    {field.type === "textarea" ? (
+                      <Textarea
+                        id={field.name}
+                        placeholder={field.placeholder}
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                        className="min-h-20"
+                      />
+                    ) : (
+                      <Input
+                        id={field.name}
+                        type={field.type}
+                        placeholder={field.placeholder}
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                      />
+                    )}
+                  </div>
+                ))
+              )}
               
               <Button 
                 onClick={handleGenerate} 
