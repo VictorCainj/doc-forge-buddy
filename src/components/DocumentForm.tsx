@@ -30,7 +30,7 @@ interface DocumentFormProps {
   fields?: FormField[];
   fieldGroups?: FieldGroup[];
   template: string;
-  onGenerate: (data: Record<string, string>) => void;
+  onGenerate: (data: Record<string, string>) => Record<string, string> | void;
 }
 
 const DocumentForm = ({ title, description, fields, fieldGroups, template, onGenerate }: DocumentFormProps) => {
@@ -43,7 +43,11 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
   };
 
   const handleGenerate = () => {
-    onGenerate(formData);
+    const processedData = onGenerate(formData);
+    // Usa os dados processados se retornados, senão usa os originais
+    if (processedData) {
+      setFormData(processedData);
+    }
     setShowPreview(true);
   };
 

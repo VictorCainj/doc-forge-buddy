@@ -35,10 +35,46 @@ const TermoInquilino = () => {
       fields: [
         { name: "tipoQuantidadeChaves", label: "Tipo e Quantidade de Chaves", type: "textarea" as const, required: true, placeholder: "Ex: 04 chaves simples" },
         { name: "dataVistoria", label: "Data da Vistoria", type: "text" as const, required: true, placeholder: "Ex: 28/08/2025" },
-        { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" }
+        { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" },
+        { name: "nomeGestor", label: "Nome do Gestor", type: "text" as const, required: true, placeholder: "Ex: Victor Cain Jorge" }
       ]
     }
   ];
+
+  // Funções para detectar plural e gênero
+  const isPlural = (text: string) => {
+    return text.includes(',') || text.includes(' e ') || text.includes(' E ');
+  };
+
+  const isFeminine = (text: string) => {
+    const femaleNames = ['ana', 'maria', 'carla', 'sandra', 'patricia', 'fernanda', 'juliana', 'carolina', 'gabriela', 'mariana'];
+    const firstNameLower = text.split(' ')[0].toLowerCase();
+    return text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower);
+  };
+
+  const getLocadorTerm = (nomeLocador: string) => {
+    if (!nomeLocador) return 'LOCADOR';
+    if (isPlural(nomeLocador)) {
+      return 'LOCADORES';
+    }
+    return isFeminine(nomeLocador) ? 'LOCADORA' : 'LOCADOR';
+  };
+
+  const getLocatarioTerm = (nomeLocatario: string) => {
+    if (!nomeLocatario) return 'LOCATÁRIO';
+    if (isPlural(nomeLocatario)) {
+      return 'LOCATÁRIOS';
+    }
+    return isFeminine(nomeLocatario) ? 'LOCATÁRIA' : 'LOCATÁRIO';
+  };
+
+  const getLocatarioPronoun = (nomeLocatario: string) => {
+    if (!nomeLocatario) return 'ao';
+    if (isPlural(nomeLocatario)) {
+      return 'aos';
+    }
+    return isFeminine(nomeLocatario) ? 'à' : 'ao';
+  };
 
   // Gera data atual automaticamente
   const getCurrentDate = () => {
@@ -57,12 +93,12 @@ const TermoInquilino = () => {
 <div style="text-align: right; margin-bottom: 15px; font-size: 14px;">Valinhos, ${getCurrentDate()}.</div>
 
 <div style="text-align: justify; line-height: 1.4; margin-bottom: 12px; font-size: 14px;">
-Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{nomeLocatario}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
+Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{locatarioPronoun}} {{nomeLocatario}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
 </div>
 
 <div style="margin: 12px 0; font-size: 13px;">
-<strong>LOCADOR DO IMÓVEL:</strong> {{nomeLocador}}<br>
-<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}<br>
+<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeLocador}}<br>
+<strong>DADOS {{locatarioTermPlural}}:</strong> {{nomeLocatario}}<br>
 <strong>Celular:</strong> {{celularLocatario}} <strong>E-mail:</strong> {{emailLocatario}}
 </div>
 
@@ -87,20 +123,29 @@ Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
 <div style="margin-top: 40px; text-align: center;">
-<div style="margin-bottom: 40px;">
+<div style="margin-bottom: 30px;">
 __________________________________________<br>
 <span style="font-size: 12px;">{{nomeQuemRetira}}</span>
 </div>
 
 <div>
 ________________________________________<br>
-<span style="font-size: 12px;">VICTOR CAIN JORGE</span>
+<span style="font-size: 12px;">{{nomeGestor}}</span>
 </div>
 </div>
   `;
 
   const handleGenerate = (data: Record<string, string>) => {
-    console.log("Documento gerado:", data);
+    // Adiciona termos inteligentes baseados nos nomes inseridos
+    const enhancedData = {
+      ...data,
+      locadorTerm: getLocadorTerm(data.nomeLocador),
+      locatarioTerm: getLocatarioTerm(data.nomeLocatario),
+      locatarioTermPlural: getLocatarioTerm(data.nomeLocatario).replace('LOCATÁRIO', 'DOS LOCATÁRIOS').replace('LOCATÁRIA', 'DAS LOCATÁRIAS'),
+      locatarioPronoun: getLocatarioPronoun(data.nomeLocatario)
+    };
+    console.log("Documento gerado:", enhancedData);
+    return enhancedData;
   };
 
   return (
