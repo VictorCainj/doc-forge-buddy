@@ -34,11 +34,14 @@ interface DocumentFormProps {
   fieldGroups?: FieldGroup[];
   template: string;
   onGenerate: (data: Record<string, string>) => Record<string, string> | void;
+  initialData?: Record<string, string>;
+  termId?: string;
+  isEditing?: boolean;
 }
 
-const DocumentForm = ({ title, description, fields, fieldGroups, template, onGenerate }: DocumentFormProps) => {
+const DocumentForm = ({ title, description, fields, fieldGroups, template, onGenerate, initialData, termId, isEditing }: DocumentFormProps) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, string>>(initialData || {});
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -100,21 +103,41 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
       const documentContent = replaceTemplateVariables(template, formData);
       const documentTitle = `${title} - ${formData.nomeLocatario || 'Sem nome'} - ${new Date().toLocaleDateString('pt-BR')}`;
       
-      const { error } = await supabase
-        .from('saved_terms')
-        .insert({
-          title: documentTitle,
-          content: documentContent,
-          form_data: formData,
-          document_type: 'termo-inquilino'
+      if (isEditing && termId) {
+        // Atualizar termo existente
+        const { error } = await supabase
+          .from('saved_terms')
+          .update({
+            title: documentTitle,
+            content: documentContent,
+            form_data: formData,
+          })
+          .eq('id', termId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Documento atualizado!",
+          description: "O termo foi atualizado com sucesso.",
         });
+      } else {
+        // Criar novo termo
+        const { error } = await supabase
+          .from('saved_terms')
+          .insert({
+            title: documentTitle,
+            content: documentContent,
+            form_data: formData,
+            document_type: 'termo-inquilino'
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Documento salvo!",
-        description: "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
-      });
+        toast({
+          title: "Documento salvo!",
+          description: "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
+        });
+      }
     } catch (error) {
       console.error('Erro ao salvar:', error);
       toast({
@@ -212,11 +235,11 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate("/")}
+              onClick={() => isEditing ? navigate("/termos-salvos") : navigate("/")}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar
+              {isEditing ? 'Voltar aos Termos' : 'Voltar'}
             </Button>
             <div>
               <h1 className="text-xl font-semibold text-foreground">{title}</h1>
@@ -302,7 +325,7 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                 className="w-full bg-gradient-primary hover:opacity-90"
                 size="lg"
               >
-                Gerar Documento
+                {isEditing ? 'Atualizar Documento' : 'Gerar Documento'}
               </Button>
             </CardContent>
           </Card>

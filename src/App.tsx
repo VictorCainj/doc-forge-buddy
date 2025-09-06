@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TermoInquilino from "./pages/TermoInquilino";
 import SavedTerms from "./pages/SavedTerms";
+import EditTerm from "./pages/EditTerm";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/documento/termo-inquilino" element={<TermoInquilino />} />
           <Route path="/termos-salvos" element={<SavedTerms />} />
+          <Route path="/editar-termo/:id" element={<EditTerm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, Download, FileText, Calendar, Filter } from "lucide-react";
+import { ArrowLeft, Search, Download, FileText, Calendar, Filter, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -200,15 +200,26 @@ const SavedTerms = () => {
                           </span>
                         </div>
                       </div>
-                      <Button
-                        onClick={() => handleDownload(term)}
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        Baixar PDF
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => navigate(`/editar-termo/${term.id}`)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Editar
+                        </Button>
+                        <Button
+                          onClick={() => handleDownload(term)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Baixar PDF
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
