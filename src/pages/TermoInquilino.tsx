@@ -17,6 +17,7 @@ const TermoInquilino = () => {
     },
     {
       title: "Dados do Locatário",
+      getDynamicTitle: (formData) => getLocatarioFieldTitle(formData.nomeLocatario),
       fields: [
         { name: "nomeLocatario", label: "Nome do Locatário", type: "text" as const, required: true, placeholder: "Nome completo do locatário" },
         { name: "celularLocatario", label: "Celular do Locatário", type: "text" as const, required: true, placeholder: "Ex: (19) 99999-9999" },
@@ -68,6 +69,14 @@ const TermoInquilino = () => {
     return isFeminine(nomeLocatario) ? 'LOCATÁRIA' : 'LOCATÁRIO';
   };
 
+  const getLocatarioFieldTitle = (nomeLocatario: string) => {
+    if (!nomeLocatario) return 'Dados do Locatário';
+    if (isPlural(nomeLocatario)) {
+      return 'Dados dos Locatários';
+    }
+    return isFeminine(nomeLocatario) ? 'Dados da Locatária' : 'Dados do Locatário';
+  };
+
   const getLocatarioPronoun = (nomeLocatario: string) => {
     if (!nomeLocatario) return 'ao';
     if (isPlural(nomeLocatario)) {
@@ -98,7 +107,7 @@ Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {
 
 <div style="margin: 12px 0; font-size: 13px;">
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeLocador}}<br>
-<strong>DADOS {{locatarioTermPlural}}:</strong> {{nomeLocatario}}<br>
+<strong>{{locatarioFieldTitle}}:</strong> {{nomeLocatario}}<br>
 <strong>Celular:</strong> {{celularLocatario}} <strong>E-mail:</strong> {{emailLocatario}}
 </div>
 
@@ -141,7 +150,7 @@ ________________________________________<br>
       ...data,
       locadorTerm: getLocadorTerm(data.nomeLocador),
       locatarioTerm: getLocatarioTerm(data.nomeLocatario),
-      locatarioTermPlural: getLocatarioTerm(data.nomeLocatario).replace('LOCATÁRIO', 'DOS LOCATÁRIOS').replace('LOCATÁRIA', 'DAS LOCATÁRIAS'),
+      locatarioFieldTitle: getLocatarioFieldTitle(data.nomeLocatario),
       locatarioPronoun: getLocatarioPronoun(data.nomeLocatario)
     };
     console.log("Documento gerado:", enhancedData);

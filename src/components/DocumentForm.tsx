@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Printer, Download, FileDown } from "lucide-react";
+import { ArrowLeft, FileText, Printer, Download, FileDown, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { Document, Paragraph, TextRun, Packer } from "docx";
 import { saveAs } from "file-saver";
 import companyLogo from "@/assets/company-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface FormField {
   name: string;
@@ -22,6 +24,7 @@ interface FormField {
 interface FieldGroup {
   title: string;
   fields: FormField[];
+  getDynamicTitle?: (formData: Record<string, string>) => string;
 }
 
 interface DocumentFormProps {
@@ -37,6 +40,8 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
   const navigate = useNavigate();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -89,6 +94,39 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
     saveAs(new Blob([buffer]), `${title}.docx`);
   };
 
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const documentContent = replaceTemplateVariables(template, formData);
+      const documentTitle = `${title} - ${formData.nomeLocatario || 'Sem nome'} - ${new Date().toLocaleDateString('pt-BR')}`;
+      
+      const { error } = await supabase
+        .from('saved_terms')
+        .insert({
+          title: documentTitle,
+          content: documentContent,
+          form_data: formData,
+          document_type: 'termo-inquilino'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Documento salvo!",
+        description: "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o documento. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
     Object.entries(data).forEach(([key, value]) => {
@@ -117,6 +155,15 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                 <h1 className="text-xl font-semibold text-foreground">{title}</h1>
               </div>
               <div className="flex items-center gap-2">
+                <Button 
+                  onClick={handleSave} 
+                  variant="outline" 
+                  className="gap-2"
+                  disabled={saving}
+                >
+                  <Save className="h-4 w-4" />
+                  {saving ? 'Salvando...' : 'Salvar'}
+                </Button>
                 <Button onClick={handleDownloadPDF} variant="outline" className="gap-2">
                   <Download className="h-4 w-4" />
                   PDF
@@ -193,7 +240,7 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                 fieldGroups.map((group, groupIndex) => (
                   <div key={groupIndex} className="space-y-4">
                     <h3 className="text-sm font-semibold text-primary border-b border-border pb-2">
-                      {group.title}
+                      {group.getDynamicTitle ? group.getDynamicTitle(formData) : group.title}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {group.fields.map((field) => (

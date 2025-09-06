@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Key, Calendar, Building2 } from "lucide-react";
+import { FileText, Key, Archive } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -9,27 +9,19 @@ const Index = () => {
   const documentTypes = [
     {
       id: "termo-inquilino",
-      title: "Termo de Entrega de Chaves - Inquilino",
-      description: "Documento para formalizar a entrega de chaves ao inquilino",
+      title: "Termo de Recebimento de Chaves",
+      description: "Documento para formalizar o recebimento de chaves pelo inquilino",
       icon: Key,
       color: "bg-primary",
       route: "/documento/termo-inquilino"
     },
     {
-      id: "termo-proprietario", 
-      title: "Termo de Entrega de Chaves - Proprietário",
-      description: "Documento para formalizar a entrega de chaves ao proprietário",
-      icon: Building2,
+      id: "termos-salvos",
+      title: "Termos Salvos",
+      description: "Visualizar, filtrar e baixar termos salvos anteriormente",
+      icon: Archive,
       color: "bg-secondary",
-      route: "/documento/termo-proprietario"
-    },
-    {
-      id: "notificacao-vistoria",
-      title: "Notificação de Agendamento de Vistoria",
-      description: "Notificação oficial para agendamento de vistoria no imóvel",
-      icon: Calendar,
-      color: "bg-accent",
-      route: "/documento/notificacao-vistoria"
+      route: "/termos-salvos"
     }
   ];
 
@@ -62,7 +54,7 @@ const Index = () => {
         </div>
 
         {/* Document Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {documentTypes.map((doc) => {
             const IconComponent = doc.icon;
             return (
