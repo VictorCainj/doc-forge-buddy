@@ -1,56 +1,225 @@
-import DocumentForm from "@/components/DocumentForm";
+import DocumentFormWizard from "@/components/DocumentFormWizard";
+import { Home, User, Users, FileCheck, Search } from "lucide-react";
+import { FormStep } from "@/hooks/use-form-wizard";
 
 const TermoInquilino = () => {
-  const fieldGroups = [
+  const steps: FormStep[] = [
     {
+      id: "imovel",
       title: "Dados do Imóvel",
+      description: "Informações básicas sobre o imóvel e contrato",
+      icon: Home,
       fields: [
-        { name: "endereco", label: "Endereço do Imóvel", type: "textarea" as const, required: true, placeholder: "Endereço completo do imóvel" },
-        { name: "dataContrato", label: "Data de Firmamento do Contrato", type: "text" as const, required: true, placeholder: "Ex: 15 de janeiro de 2024" }
+        { 
+          name: "numeroContrato", 
+          label: "Número do Contrato", 
+          type: "text", 
+          required: true, 
+          placeholder: "Ex: 14021, CON-2024-001, etc." 
+        },
+        { 
+          name: "endereco", 
+          label: "Endereço Completo do Imóvel", 
+          type: "textarea", 
+          required: true, 
+          placeholder: "Rua, número, complemento, bairro, condomínio, cidade/estado, CEP" 
+        },
+        { 
+          name: "dataContrato", 
+          label: "Data de Firmamento do Contrato", 
+          type: "text", 
+          required: true, 
+          placeholder: "Ex: 15/10/2024 ou 15 de outubro de 2024",
+          validation: (value) => {
+            if (value && value.length < 5) {
+              return "Digite uma data válida";
+            }
+            return null;
+          }
+        }
       ]
     },
     {
-      title: "Dados do Locador",
+      id: "locador",
+      title: "Dados do Locador(es)",
+      description: "Informações do(s) proprietário(s) do imóvel",
+      icon: User,
       fields: [
-        { name: "nomeLocador", label: "Nome do Locador", type: "text" as const, required: true, placeholder: "Nome completo do locador" }
+        { 
+          name: "nomeLocador", 
+          label: "Nome do(s) Locador(es)", 
+          type: "text", 
+          required: true, 
+          placeholder: "Ex: João Silva, Maria Santos (separe múltiplos nomes por vírgula)",
+          validation: (value) => {
+            if (value) {
+              const nomes = value.split(',').map(nome => nome.trim());
+              for (const nome of nomes) {
+                if (nome.split(' ').length < 2) {
+                  return "Digite o nome completo para cada pessoa";
+                }
+              }
+            }
+            return null;
+          }
+        }
       ]
     },
     {
-      title: "Dados do Locatário",
-      getDynamicTitle: (formData) => getLocatarioFieldTitle(formData.nomeLocatario),
+      id: "locatario",
+      title: "Qualificação dos Locatários",
+      description: "Qualificação completa dos inquilinos conforme contrato",
+      icon: Users,
       fields: [
-        { name: "nomeLocatario", label: "Nome do Locatário", type: "text" as const, required: true, placeholder: "Nome completo do locatário" },
-        { name: "celularLocatario", label: "Celular do Locatário", type: "text" as const, required: true, placeholder: "Ex: (19) 99999-9999" },
-        { name: "emailLocatario", label: "E-mail do Locatário", type: "text" as const, required: true, placeholder: "email@exemplo.com" }
+        { 
+          name: "qualificacaoLocatarios", 
+          label: "Qualificação Completa dos Locatários", 
+          type: "textarea", 
+          required: true, 
+          placeholder: "Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental, portador do RG. nº MG-14.837.051 SSP/MG, e inscrito no CPF sob o nº 096.402.496-96, nascido em 14/12/1988, com filiação de LUIS ANTONIO ORLANDO e MARIA TEREZA VIEIRA ORLANDO, residente e domiciliado na cidade de Campinas/SP, e BARBARA SIMINATTI DOS SANTOS..."
+        },
+        { 
+          name: "nomesResumidos", 
+          label: "Nomes dos Locatários (para seção de dados)", 
+          type: "text", 
+          required: true, 
+          placeholder: "Ex: DIOGO VIEIRA ORLANDO e BARBARA SIMINATTI DOS SANTOS"
+        },
+        { 
+          name: "celularLocatario", 
+          label: "Celular de Contato", 
+          type: "tel", 
+          required: true, 
+          placeholder: "XX XXXXXXXXX",
+          validation: (value) => {
+            const cleaned = value.replace(/\D/g, '');
+            if (value && cleaned.length !== 11) {
+              return "Digite um celular válido com DDD";
+            }
+            return null;
+          }
+        },
+        { 
+          name: "emailLocatario", 
+          label: "E-mail de Contato", 
+          type: "email", 
+          required: true, 
+          placeholder: "email@exemplo.com"
+        }
       ]
     },
     {
+      id: "documentos",
       title: "Documentos Apresentados",
+      description: "Comprovantes de contas de consumo",
+      icon: FileCheck,
       fields: [
-        { name: "cpfl", label: "CPFL Apresentada", type: "text" as const, required: true, placeholder: "SIM ou NÃO" },
-        { name: "daev", label: "DAEV Apresentada", type: "text" as const, required: true, placeholder: "SIM ou NÃO" }
+        { 
+          name: "cpfl", 
+          label: "CPFL Apresentada", 
+          type: "select", 
+          required: true, 
+          placeholder: "Selecione uma opção",
+          options: [
+            { value: "SIM", label: "SIM" },
+            { value: "NÃO", label: "NÃO" }
+          ]
+        },
+        { 
+          name: "tipoSegundaDocumento", 
+          label: "Tipo do Segundo Documento", 
+          type: "select", 
+          required: true, 
+          placeholder: "Selecione o tipo",
+          options: [
+            { value: "DAEV", label: "DAEV" },
+            { value: "SANASA", label: "SANASA" }
+          ]
+        },
+        { 
+          name: "segundoDocumento", 
+          label: "Status do Segundo Documento", 
+          type: "select", 
+          required: true, 
+          placeholder: "Selecione uma opção",
+          options: [
+            { value: "SIM", label: "SIM" },
+            { value: "NÃO", label: "NÃO" },
+            { value: "No condomínio", label: "No condomínio" }
+          ]
+        }
       ]
     },
     {
+      id: "vistoria",
       title: "Vistoria e Entrega",
+      description: "Detalhes da vistoria e entrega das chaves",
+      icon: Search,
       fields: [
-        { name: "tipoQuantidadeChaves", label: "Tipo e Quantidade de Chaves", type: "textarea" as const, required: true, placeholder: "Ex: 04 chaves simples" },
-        { name: "dataVistoria", label: "Data da Vistoria", type: "text" as const, required: true, placeholder: "Ex: 28/08/2025" },
-        { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" },
-        { name: "nomeGestor", label: "Nome do Gestor", type: "text" as const, required: true, placeholder: "Ex: Victor Cain Jorge" }
+        { 
+          name: "tipoQuantidadeChaves", 
+          label: "Tipo e Quantidade de Chaves", 
+          type: "textarea", 
+          required: true, 
+          placeholder: "Ex: 04 chaves simples, 02 chaves tetra"
+        },
+        { 
+          name: "dataVistoria", 
+          label: "Data da Vistoria", 
+          type: "text", 
+          required: true, 
+          placeholder: "DD/MM/AAAA",
+          mask: "date"
+        },
+        { 
+          name: "nomeQuemRetira", 
+          label: "Nome de Quem Retira a Chave", 
+          type: "text", 
+          required: true, 
+          placeholder: "Nome completo de quem está retirando"
+        }
       ]
     }
   ];
 
   // Funções para detectar plural e gênero
   const isPlural = (text: string) => {
+    if (!text) return false;
+    // Verifica se há vírgula (múltiplos nomes) ou conectores
     return text.includes(',') || text.includes(' e ') || text.includes(' E ');
   };
 
   const isFeminine = (text: string) => {
-    const femaleNames = ['ana', 'maria', 'carla', 'sandra', 'patricia', 'fernanda', 'juliana', 'carolina', 'gabriela', 'mariana'];
-    const firstNameLower = text.split(' ')[0].toLowerCase();
-    return text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower);
+    if (!text) return false;
+    
+    // Se há múltiplas pessoas, verifica se a maioria é feminina
+    if (isPlural(text)) {
+      const nomes = text.split(',').map(nome => nome.trim());
+      const femininos = nomes.filter(nome => isSingleFeminine(nome));
+      return femininos.length > nomes.length / 2;
+    }
+    
+    return isSingleFeminine(text);
+  };
+
+  const isSingleFeminine = (nome: string) => {
+    const femaleNames = ['ana', 'maria', 'carla', 'sandra', 'patricia', 'fernanda', 'juliana', 'carolina', 'gabriela', 'mariana', 'barbara', 'vanir', 'claudia', 'lucia', 'andrea', 'paula', 'rita', 'rosa', 'vera', 'luana'];
+    const maleNames = ['joão', 'jose', 'antonio', 'carlos', 'francisco', 'paulo', 'luis', 'marcos', 'rafael', 'pedro', 'daniel', 'ricardo', 'fernando', 'roberto', 'sergio', 'diego', 'diogo', 'victor'];
+    
+    const firstNameLower = nome.split(' ')[0].toLowerCase();
+    
+    // Se está na lista de nomes masculinos, é masculino
+    if (maleNames.includes(firstNameLower)) {
+      return false;
+    }
+    
+    // Se está na lista de nomes femininos, é feminino
+    if (femaleNames.includes(firstNameLower)) {
+      return true;
+    }
+    
+    // Como fallback, verifica se termina com 'a'
+    return nome.toLowerCase().endsWith('a');
   };
 
   const getLocadorTerm = (nomeLocador: string) => {
@@ -98,71 +267,101 @@ const TermoInquilino = () => {
     return `${day} de ${month} de ${year}`;
   };
 
-  const template = `
-<div style="text-align: right; margin-bottom: 15px; font-size: 14px;">Valinhos, ${getCurrentDate()}.</div>
-
-<div style="text-align: justify; line-height: 1.4; margin-bottom: 12px; font-size: 14px;">
-Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{locatarioPronoun}} {{nomeLocatario}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
+  const getTemplate = (fontSize: number) => {
+    const titleSize = Math.max(fontSize + 2, 12); // Título um pouco maior
+    const signatureSize = Math.max(fontSize - 2, 10); // Assinatura um pouco menor
+    
+    return `
+<div style="text-align: center; margin-bottom: 20px; font-size: ${titleSize}px; font-weight: bold;">
+TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
 </div>
 
-<div style="margin: 12px 0; font-size: 13px;">
+<div style="text-align: right; margin-bottom: 20px; font-size: ${fontSize}px;">
+Valinhos, ${getCurrentDate()}.
+</div>
+
+<div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
+Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{qualificacaoLocatarios}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
+</div>
+
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeLocador}}<br>
-<strong>{{locatarioFieldTitle}}:</strong> {{nomeLocatario}}<br>
-<strong>Celular:</strong> {{celularLocatario}} <strong>E-mail:</strong> {{emailLocatario}}
+<strong>{{dadosLocatarioTitulo}}:</strong> {{nomesResumidos}}<br>
+<strong>Celular:</strong> {{celularLocatario}} &nbsp;&nbsp;<strong>E-mail:</strong> {{emailLocatario}}
 </div>
 
-<div style="margin: 12px 0; font-size: 13px;">
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS (CPFL):</strong><br>
-<strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>DAEV:</strong> {{daev}}<br>
+<strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>{{tipoSegundaDocumento}}:</strong> {{segundoDocumento}}<br>
+<br>
 <strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
 </div>
 
-<div style="margin: 12px 0; font-size: 13px;">
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>Entregue na Madia Imóveis a relação de chaves:</strong><br>
 Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
-<div style="margin: 12px 0; font-size: 13px;">
-<strong>Vistoria realizada em</strong> {{dataVistoria}}
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
+<strong>Vistoria realizada em</strong> {{dataVistoria}}.
 </div>
 
-<div style="margin: 15px 0; font-size: 13px;">
-(  ) Imóvel entregue de acordo com a vistoria inicial<br>
-(  ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
+<div style="margin: 20px 0; font-size: ${fontSize}px;">
+( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>
+( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 </div>
 
-<div style="margin-top: 40px; text-align: center;">
-<div style="margin-bottom: 30px;">
+<div style="margin-top: 50px; text-align: center;">
+<div style="margin-bottom: 40px;">
 __________________________________________<br>
-<span style="font-size: 12px;">{{nomeQuemRetira}}</span>
+<span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{nomeQuemRetira}}</span>
 </div>
 
 <div>
-________________________________________<br>
-<span style="font-size: 12px;">{{nomeGestor}}</span>
+__________________________________________<br>
+<span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{nomeGestor}}</span>
 </div>
 </div>
-  `;
+`;
+  };
 
   const handleGenerate = (data: Record<string, string>) => {
+    const isMultipleLocadores = isPlural(data.nomeLocador);
+    
+    // Detectar se há múltiplos locatários baseado nos nomes resumidos
+    const isMultipleLocatarios = data.nomesResumidos && (
+      data.nomesResumidos.includes(' e ') || 
+      data.nomesResumidos.includes(',') ||
+      data.nomesResumidos.split(' ').length > 2
+    );
+    
     // Adiciona termos inteligentes baseados nos nomes inseridos
     const enhancedData = {
       ...data,
+      // Nome fixo do gestor
+      nomeGestor: "VICTOR CAIN JORGE",
+      
+      // Termos inteligentes para locadores
       locadorTerm: getLocadorTerm(data.nomeLocador),
-      locatarioTerm: getLocatarioTerm(data.nomeLocatario),
-      locatarioFieldTitle: getLocatarioFieldTitle(data.nomeLocatario),
-      locatarioPronoun: getLocatarioPronoun(data.nomeLocatario)
+      
+      // Título dinâmico para seção de dados do locatário
+      dadosLocatarioTitulo: isMultipleLocatarios ? "DADOS DOS LOCATÁRIOS" : "DADOS DO LOCATÁRIO",
+      
+      // Formatar celular sem máscara para ficar igual ao exemplo real
+      celularLocatario: data.celularLocatario?.replace(/\D/g, '').replace(/(\d{2})(\d{5})(\d{4})/, '$1 $2$3') || data.celularLocatario
     };
+    
     console.log("Documento gerado:", enhancedData);
     return enhancedData;
   };
 
   return (
-    <DocumentForm
+    <DocumentFormWizard
       title="Termo de Recebimento de Chaves - Inquilino"
       description="Documento para formalizar o recebimento de chaves pelo inquilino"
-      fieldGroups={fieldGroups}
-      template={template}
+      steps={steps}
+      template={getTemplate(14)}
+      getTemplate={getTemplate}
       onGenerate={handleGenerate}
     />
   );
