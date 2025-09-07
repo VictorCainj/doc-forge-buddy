@@ -60,18 +60,104 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
   };
 
   const handlePrint = () => {
+    // Criar estilos CSS para ocultar elementos da UI durante impressão
+    const printStyles = document.createElement('style');
+    printStyles.id = 'print-styles';
+    printStyles.textContent = `
+      @media print {
+        /* Ocultar todos os elementos da UI */
+        header, .header, nav, .nav, .action-bar, .toolbar,
+        button, .btn, .button, .print\\:hidden,
+        [class*="shadow"], [class*="border"],
+        .container, .mx-auto, .px-6, .py-8,
+        .max-w-4xl, .max-w-none,
+        .bg-gradient-secondary, .bg-card,
+        .shadow-card, .border-b,
+        .flex, .justify-between, .items-center,
+        .gap-2, .gap-3,
+        .text-xl, .text-sm, .text-muted-foreground,
+        .font-semibold, .font-bold,
+        .mb-6, .mb-8, .py-6, .px-6,
+        .min-h-screen, .bg-gradient-secondary {
+          display: none !important;
+        }
+        
+        /* Mostrar apenas o conteúdo do documento */
+        #document-content {
+          display: block !important;
+          position: static !important;
+          width: 100% !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 20mm !important;
+          box-shadow: none !important;
+          border: none !important;
+          background: white !important;
+          font-size: 14px !important;
+          line-height: 1.6 !important;
+        }
+        
+        /* Garantir que o documento ocupe toda a página */
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+        }
+        
+        /* Garantir quebra de página */
+        .page-break {
+          page-break-before: always;
+        }
+      }
+    `;
+    
+    // Adicionar estilos temporariamente
+    document.head.appendChild(printStyles);
+    
+    // Imprimir
     window.print();
+    
+    // Remover estilos após impressão
+    setTimeout(() => {
+      const existingStyles = document.getElementById('print-styles');
+      if (existingStyles) {
+        document.head.removeChild(existingStyles);
+      }
+    }, 1000);
   };
 
   const handleDownloadPDF = () => {
     const element = document.getElementById('document-content');
+    // Configuração de alta qualidade para PDF
     const opt = {
-      margin: 0.5,
+      margin: [8, 8, 8, 8],
       filename: `${title}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 1.5, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all'] }
+      image: { 
+        type: 'jpeg', 
+        quality: 1.0 // Qualidade máxima
+      },
+      html2canvas: { 
+        scale: 3, // Escala maior para melhor qualidade
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        dpi: 300, // DPI alto para qualidade profissional
+        letterRendering: true,
+        imageTimeout: 15000,
+        removeContainer: true
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        putOnlyUsedFonts: true,
+        compress: false // Não comprimir para manter qualidade
+      },
+      pagebreak: { 
+        mode: ['avoid-all'],
+        avoid: ['tr', 'img', 'div']
+      }
     };
     html2pdf().set(opt).from(element).save();
   };
@@ -209,9 +295,18 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
             <Card className="shadow-card print:shadow-none print:border-none">
               <CardContent className="p-6 print:p-8">
                 <div id="document-content" className="max-w-none text-foreground" style={{ fontFamily: 'Arial, sans-serif', maxHeight: '100vh', overflow: 'hidden' }}>
-                  <div className="flex justify-between items-start mb-8">
-                    <img src={companyLogo} alt="Company Logo" className="h-16 w-auto" />
-                    <div className="flex-1"></div>
+                  <div className="flex justify-end items-start mb-8" style={{ minHeight: '120px' }}>
+                    <img 
+                      src={companyLogo} 
+                      alt="Company Logo" 
+                      style={{ 
+                        height: 'auto', 
+                        width: 'auto',
+                        maxHeight: '120px',
+                        maxWidth: '300px',
+                        objectFit: 'contain'
+                      }}
+                    />
                   </div>
                   <div 
                     dangerouslySetInnerHTML={{ 

@@ -192,23 +192,24 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       scrollHeight: element.scrollHeight 
     });
     
-    // Configuração de alta qualidade para 1 página
+    // Configuração de alta qualidade para PDF
     const opt = {
-      margin: [10, 10, 10, 10], // Margens menores para mais espaço
+      margin: [8, 8, 8, 8], // Margens otimizadas
       filename: `${title}.pdf`,
       image: { 
         type: 'jpeg', 
         quality: 1.0 // Qualidade máxima
       },
       html2canvas: { 
-        scale: 2.0, // Escala alta para qualidade máxima
+        scale: 3, // Escala máxima para qualidade profissional
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        dpi: 192, // DPI alto para qualidade
+        dpi: 300, // DPI alto para qualidade profissional
         letterRendering: true,
         removeContainer: true,
+        imageTimeout: 15000,
         height: element.scrollHeight,
         width: element.scrollWidth,
         scrollX: 0,
@@ -230,7 +231,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             clonedElement.style.lineHeight = '1.4';
             
             // Remover elementos da UI que possam ter sido clonados
-            const uiElements = clonedDoc.querySelectorAll('.print\\:hidden, [class*="shadow"], [class*="border"], button, .action-bar, .header');
+            const uiElements = clonedDoc.querySelectorAll('.print\\:hidden, [class*="shadow"], [class*="border"], button, .action-bar, .header, header, nav');
             uiElements.forEach(el => el.remove());
           }
         }
@@ -516,25 +517,25 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                     pageBreakAfter: 'avoid'
                   }}
                 >
-                  <div style={{ 
+                   <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'space-between', 
+                    justifyContent: 'flex-end', 
                     alignItems: 'flex-start', 
                     marginBottom: '40px',
-                    height: '80px'
+                    minHeight: '120px'
                   }}>
                     <img 
                       src={companyLogo} 
                       alt="Company Logo" 
                       style={{ 
-                        height: '80px', 
+                        height: 'auto', 
                         width: 'auto',
-                        maxWidth: '200px',
+                        maxHeight: '120px',
+                        maxWidth: '300px',
                         objectFit: 'contain'
                       }}
                       crossOrigin="anonymous"
                     />
-                    <div style={{ flex: 1 }}></div>
                   </div>
                   <div 
                     dangerouslySetInnerHTML={{ 
