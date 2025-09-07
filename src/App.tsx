@@ -8,6 +8,9 @@ import NotFound from "./pages/NotFound";
 import TermoInquilino from "./pages/TermoInquilino";
 import SavedTerms from "./pages/SavedTerms";
 import EditTerm from "./pages/EditTerm";
+import Contratos from "./pages/Contratos";
+import CadastrarContrato from "./pages/CadastrarContrato";
+import ProcessoDesocupacao from "./pages/ProcessoDesocupacao";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +22,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/contratos" element={<Contratos />} />
+          <Route path="/cadastrar-contrato" element={<CadastrarContrato />} />
+          <Route path="/processo/:contratoId" element={<ProcessoDesocupacao />} />
+          <Route path="/processo/:contratoId/termo-chaves" element={<TermoInquilino />} />
           <Route path="/documento/termo-inquilino" element={<TermoInquilino />} />
           <Route path="/termos-salvos" element={<SavedTerms />} />
           <Route path="/editar-termo/:id" element={<EditTerm />} />

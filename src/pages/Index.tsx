@@ -1,26 +1,35 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Key, Archive } from "lucide-react";
+import { FileText, Key, Archive, Building2, Plus, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
 
   const documentTypes = [
     {
-      id: "termo-inquilino",
-      title: "Termo de Recebimento de Chaves",
-      description: "Documento para formalizar o recebimento de chaves pelo inquilino",
-      icon: Key,
+      id: "contratos",
+      title: "Gestão de Contratos",
+      description: "Gerenciar contratos e processos de desocupação",
+      icon: Building2,
       color: "bg-primary",
+      route: "/contratos"
+    },
+    {
+      id: "termo-inquilino",
+      title: "Documento Avulso",
+      description: "Criar termo de recebimento de chaves sem contrato",
+      icon: FileText,
+      color: "bg-secondary",
       route: "/documento/termo-inquilino"
     },
     {
       id: "termos-salvos",
-      title: "Termos Salvos",
-      description: "Visualizar, filtrar e baixar termos salvos anteriormente",
+      title: "Documentos Salvos",
+      description: "Visualizar e editar documentos anteriores",
       icon: Archive,
-      color: "bg-secondary",
+      color: "bg-accent",
       route: "/termos-salvos"
     }
   ];
@@ -54,7 +63,7 @@ const Index = () => {
         </div>
 
         {/* Document Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {documentTypes.map((doc) => {
             const IconComponent = doc.icon;
             return (

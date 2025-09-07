@@ -1,0 +1,116 @@
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, FileText, Users, Building, Briefcase, Download } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+
+const ProcessoDesocupacao = () => {
+  const { contratoId } = useParams();
+
+  const processos = [
+    {
+      id: "termo-chaves",
+      title: "Termo de Recebimento de Chaves",
+      description: "Documento para formalizar a entrega das chaves",
+      icon: <FileText className="h-6 w-6 text-primary" />,
+      route: `/processo/${contratoId}/termo-chaves`,
+      status: "pending"
+    },
+    {
+      id: "devolutiva-inquilino",
+      title: "Devolutiva para Inquilino",
+      description: "Comunicação oficial para o inquilino",
+      icon: <Users className="h-6 w-6 text-secondary" />,
+      route: `/processo/${contratoId}/devolutiva-inquilino`,
+      status: "pending"
+    },
+    {
+      id: "devolutiva-proprietario",
+      title: "Devolutiva para Proprietário",
+      description: "Comunicação oficial para o proprietário",
+      icon: <Building className="h-6 w-6 text-accent" />,
+      route: `/processo/${contratoId}/devolutiva-proprietario`,
+      status: "pending"
+    },
+    {
+      id: "devolutiva-comercial",
+      title: "Devolutiva Comercial",
+      description: "Comunicação interna para o setor comercial",
+      icon: <Briefcase className="h-6 w-6 text-destructive" />,
+      route: `/processo/${contratoId}/devolutiva-comercial`,
+      status: "pending"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
+      <div className="max-w-6xl mx-auto">
+        <header className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Link to="/contratos">
+              <Button variant="outline" size="sm" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Button>
+            </Link>
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Processo de Desocupação
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Contrato #{contratoId} - Gerencie todos os documentos necessários
+            </p>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {processos.map((processo) => (
+            <Card key={processo.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                    {processo.icon}
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{processo.title}</CardTitle>
+                    <CardDescription>{processo.description}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Link to={processo.route} className="flex-1">
+                    <Button className="w-full gap-2">
+                      <FileText className="h-4 w-4" />
+                      Gerar Documento
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="icon" disabled>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações do Contrato</CardTitle>
+            <CardDescription>
+              Dados básicos do contrato em processamento
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Carregando informações do contrato...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default ProcessoDesocupacao;
