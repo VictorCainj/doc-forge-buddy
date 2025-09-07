@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { Document, Paragraph, TextRun, Packer } from "docx";
 import { saveAs } from "file-saver";
-import companyLogo from "@/assets/company-logo.png";
+const companyLogo = "/lovable-uploads/b46a97fe-55bb-462c-98b9-2f3ad07ee463.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FormWizard, WizardStep } from "@/components/ui/form-wizard";

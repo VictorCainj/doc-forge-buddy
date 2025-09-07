@@ -91,7 +91,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   );
 
   const renderInput = () => {
-    const commonProps = {
+    const baseProps = {
       id: name,
       name,
       value,
@@ -100,7 +100,6 @@ export const FormField: React.FC<FormFieldProps> = ({
       placeholder,
       disabled,
       className: inputClasses,
-      "aria-invalid": hasError ? "true" : "false",
       "aria-describedby": hasError ? `${name}-error` : description ? `${name}-description` : undefined,
     };
 
@@ -124,13 +123,14 @@ export const FormField: React.FC<FormFieldProps> = ({
     if (type === "textarea") {
       return (
         <Textarea
-          {...commonProps}
-          className={cn(commonProps.className, "min-h-20 resize-y")}
+          {...baseProps}
+          aria-invalid={hasError ? "true" : "false"}
+          className={cn(baseProps.className, "min-h-20 resize-y")}
         />
       );
     }
 
-    return <Input {...commonProps} type={type} />;
+    return <Input {...baseProps} aria-invalid={hasError ? "true" : "false"} type={type} />;
   };
 
   return (
