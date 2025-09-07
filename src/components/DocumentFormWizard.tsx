@@ -105,43 +105,51 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     printStyles.id = 'print-styles';
     printStyles.textContent = `
       @media print {
-        /* Ocultar elementos da UI */
+        /* Ocultar TODOS os elementos da UI e containers */
+        body > *:not(.print-only), 
+        .min-h-screen, .bg-gradient-secondary,
         header, .header, nav, .nav, .action-bar, .toolbar,
         button, .btn, .button, .print\\:hidden,
-        [class*="shadow"], [class*="border"],
         .container, .mx-auto, .px-6, .py-8,
-        .max-w-4xl, .max-w-none,
-        .bg-gradient-secondary, .bg-card,
-        .shadow-card, .border-b,
-        .flex, .justify-between, .items-center,
-        .gap-2, .gap-3,
+        .max-w-4xl, .shadow-card, .border-b,
+        .flex.items-center.justify-between,
+        .gap-2, .gap-3, main, .card, .CardContent,
+        [class*="shadow"], [class*="border"],
         .text-xl, .text-sm, .text-muted-foreground,
         .font-semibold, .font-bold,
-        .mb-6, .mb-8, .py-6, .px-6,
-        .min-h-screen, .bg-gradient-secondary {
+        .mb-6, .mb-8, .py-6, .px-6 {
           display: none !important;
         }
         
-        /* Mostrar apenas o conteúdo do documento */
-        #document-content {
-          display: block !important;
-          position: static !important;
-          width: 100% !important;
-          height: auto !important;
-          margin: 0 !important;
-          padding: 20mm !important;
-          box-shadow: none !important;
-          border: none !important;
-          background: white !important;
-          font-size: ${dynamicFontSize}px !important;
-          line-height: 1.4 !important;
-        }
-        
-        /* Garantir que o documento ocupe toda a página */
+        /* Resetar body para impressão */
         body {
           margin: 0 !important;
           padding: 0 !important;
           background: white !important;
+          font-family: Arial, sans-serif !important;
+        }
+        
+        /* Mostrar APENAS o conteúdo do documento */
+        #document-content {
+          display: block !important;
+          position: static !important;
+          width: 210mm !important;
+          min-height: 297mm !important;
+          margin: 0 auto !important;
+          padding: 20mm !important;
+          box-sizing: border-box !important;
+          background: white !important;
+          color: black !important;
+          font-size: ${dynamicFontSize}px !important;
+          line-height: 1.6 !important;
+          page-break-inside: avoid !important;
+          box-shadow: none !important;
+          border: none !important;
+        }
+        
+        /* Garantir que o documento seja o único elemento visível */
+        .print-only {
+          display: block !important;
         }
         
         /* Ocultar scrollbars */
@@ -149,12 +157,19 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           display: none !important;
         }
         
-        /* Garantir quebra de página */
-        .page-break {
-          page-break-before: always;
+        /* Configurações de página */
+        @page {
+          size: A4;
+          margin: 0;
         }
       }
     `;
+    
+    // Adicionar classe especial ao documento para impressão
+    const documentElement = document.getElementById('document-content');
+    if (documentElement) {
+      documentElement.classList.add('print-only');
+    }
     
     // Adicionar estilos temporariamente
     document.head.appendChild(printStyles);
@@ -162,11 +177,14 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     // Imprimir
     window.print();
     
-    // Remover estilos após impressão
+    // Remover estilos e classe após impressão
     setTimeout(() => {
       const existingStyles = document.getElementById('print-styles');
       if (existingStyles) {
         document.head.removeChild(existingStyles);
+      }
+      if (documentElement) {
+        documentElement.classList.remove('print-only');
       }
     }, 1000);
   };
