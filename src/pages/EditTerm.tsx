@@ -38,7 +38,6 @@ const EditTerm = () => {
 
       setTermData(data);
     } catch (error) {
-      console.error('Erro ao carregar termo:', error);
       toast({
         title: "Erro ao carregar",
         description: "Não foi possível carregar o termo para edição.",
@@ -202,7 +201,6 @@ ________________________________________<br>
       locatarioFieldTitle: getLocatarioFieldTitle(data.nomeLocatario),
       locatarioPronoun: getLocatarioPronoun(data.nomeLocatario)
     };
-    console.log("Documento gerado:", enhancedData);
     return enhancedData;
   };
 

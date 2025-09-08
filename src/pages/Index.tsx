@@ -17,14 +17,6 @@ const Index = () => {
       route: "/contratos"
     },
     {
-      id: "termo-inquilino",
-      title: "Documento Avulso",
-      description: "Criar termo de recebimento de chaves sem contrato",
-      icon: FileText,
-      color: "bg-secondary",
-      route: "/documento/termo-inquilino"
-    },
-    {
       id: "termos-salvos",
       title: "Documentos Salvos",
       description: "Visualizar e editar documentos anteriores",
@@ -63,7 +55,7 @@ const Index = () => {
         </div>
 
         {/* Document Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {documentTypes.map((doc) => {
             const IconComponent = doc.icon;
             return (

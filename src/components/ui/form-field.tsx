@@ -3,8 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface FormFieldProps {
   name: string;
@@ -22,6 +23,7 @@ export interface FormFieldProps {
   className?: string;
   description?: string;
   options?: Array<{ value: string; label: string }>;
+  tooltip?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -40,6 +42,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   className,
   description,
   options = [],
+  tooltip,
 }) => {
   const hasError = touched && error;
   const isValid = touched && !error && value.length > 0;
@@ -147,6 +150,19 @@ export const FormField: React.FC<FormFieldProps> = ({
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
+        
+        {tooltip && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <div className="text-sm whitespace-pre-line">{tooltip}</div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         
         {/* Status indicator */}
         {touched && (

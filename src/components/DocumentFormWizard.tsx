@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Printer, Download, FileDown, Save, Home, User, Users, FileCheck, Search, Check, TestTube } from "lucide-react";
+import { ArrowLeft, FileText, Printer, Download, FileDown, Save, Home, User, Users, FileCheck, Search, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
-import { Document, Paragraph, TextRun, Packer } from "docx";
-import { saveAs } from "file-saver";
-const companyLogo = "/lovable-uploads/b46a97fe-55bb-462c-98b9-2f3ad07ee463.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FormWizard, WizardStep } from "@/components/ui/form-wizard";
 import { FormField } from "@/components/ui/form-field";
 import { useFormWizard, FormStep as FormStepType } from "@/hooks/use-form-wizard";
+import { generateDocx, downloadDocx, DocxData } from "@/utils/docxGenerator";
+import { formatDateBrazilian, convertDateToBrazilian } from "@/utils/dateFormatter";
 
 interface DocumentFormWizardProps {
   title: string;
@@ -23,6 +22,8 @@ interface DocumentFormWizardProps {
   initialData?: Record<string, string>;
   termId?: string;
   isEditing?: boolean;
+  contractData?: Record<string, string>;
+  onFormDataChange?: (data: Record<string, string>) => void;
 }
 
 const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
@@ -35,6 +36,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   initialData,
   termId,
   isEditing = false,
+  contractData = {},
+  onFormDataChange,
 }) => {
   const navigate = useNavigate();
   const [showPreview, setShowPreview] = useState(false);
@@ -42,6 +45,14 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const [processedFormData, setProcessedFormData] = useState<Record<string, string>>({});
   const [dynamicFontSize, setDynamicFontSize] = useState(14); // Tamanho padrão
   const { toast } = useToast();
+
+  // Função para detectar múltiplos locatários
+  const isMultipleLocatarios = (nomeLocatario: string) => {
+    if (!nomeLocatario) return false;
+    return nomeLocatario.includes(',') || 
+           nomeLocatario.includes(' e ') || 
+           nomeLocatario.includes(' E ');
+  };
 
   const {
     currentStep,
@@ -60,17 +71,71 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     isFieldTouched,
     isLastStep,
     isFirstStep,
-    generateTestData,
   } = useFormWizard({
     steps,
     initialData,
   });
+
+  // Efeito para preencher automaticamente o campo de gênero quando há múltiplos locatários
+  React.useEffect(() => {
+    const nomeLocatario = formData.nomeLocatario || "";
+    if (isMultipleLocatarios(nomeLocatario) && !formData.generoLocatario) {
+      updateField("generoLocatario", "neutro");
+    }
+  }, [formData.nomeLocatario, formData.generoLocatario, updateField]);
+
+  // Efeito para preencher automaticamente o campo de gênero quando há múltiplos proprietários
+  React.useEffect(() => {
+    const nomeProprietario = formData.nomeProprietario || "";
+    if (isMultipleLocatarios(nomeProprietario) && !formData.generoProprietario) {
+      updateField("generoProprietario", "neutro");
+    }
+  }, [formData.nomeProprietario, formData.generoProprietario, updateField]);
+
+  // Auto-preencher campos quando for termo do locador
+  React.useEffect(() => {
+    
+    if (formData.tipoTermo === "locador" && contractData?.nomeProprietario) {
+      if (!formData.tipoQuemRetira) {
+        updateField("tipoQuemRetira", "proprietario");
+      }
+      if (!formData.nomeQuemRetira) {
+        updateField("nomeQuemRetira", contractData.nomeProprietario);
+      }
+    }
+  }, [formData.tipoTermo, formData.tipoQuemRetira, formData.nomeQuemRetira, contractData?.nomeProprietario, updateField]);
+
+  // Notificar mudanças no formData para o componente pai
+  React.useEffect(() => {
+    if (onFormDataChange) {
+      onFormDataChange(formData);
+    }
+  }, [formData, onFormDataChange]);
+
+  // Auto-preencher nome quando selecionar "incluir nome completo" no termo do locador
+  React.useEffect(() => {
+    
+    if (formData.incluirNomeCompleto === "sim" && contractData?.nomeProprietario) {
+      updateField("nomeQuemRetira", contractData.nomeProprietario);
+    } else if (formData.incluirNomeCompleto === "todos" && contractData?.nomeProprietario) {
+      updateField("nomeQuemRetira", contractData.nomeProprietario);
+    } else if (formData.incluirNomeCompleto && formData.incluirNomeCompleto !== "nao" && formData.incluirNomeCompleto !== "sim" && formData.incluirNomeCompleto !== "todos" && contractData?.nomeProprietario) {
+      updateField("nomeQuemRetira", formData.incluirNomeCompleto);
+    } else if (formData.incluirNomeCompleto === "sim" && contractData?.nomeLocatario) {
+      updateField("nomeQuemRetira", contractData.nomeLocatario);
+    } else if (formData.incluirNomeCompleto === "todos" && contractData?.nomeLocatario) {
+      updateField("nomeQuemRetira", contractData.nomeLocatario);
+    } else if (formData.incluirNomeCompleto && formData.incluirNomeCompleto !== "nao" && formData.incluirNomeCompleto !== "sim" && formData.incluirNomeCompleto !== "todos") {
+      updateField("nomeQuemRetira", formData.incluirNomeCompleto);
+    }
+  }, [formData.incluirNomeCompleto, contractData?.nomeProprietario, contractData?.nomeLocatario, updateField]);
 
   const handleStepChange = (stepIndex: number) => {
     goToStep(stepIndex);
   };
 
   const handleComplete = () => {
+    
     if (isFormValid) {
       const processedData = onGenerate(formData);
       const finalData = { ...formData, ...processedData };
@@ -91,15 +156,29 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             duration: 4000,
           });
         } else {
-          console.log(`✅ Mantida fonte padrão: ${optimalFontSize}px`);
         }
       }
       
       setShowPreview(true);
+    } else {
+      toast({
+        title: "Formulário incompleto",
+        description: "Por favor, preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
     }
   };
 
   const handlePrint = () => {
+    if (!processedFormData || Object.keys(processedFormData).length === 0) {
+      toast({
+        title: "Erro",
+        description: "Nenhum documento foi gerado ainda. Complete o formulário primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Criar estilos CSS para ocultar elementos da UI durante impressão
     const printStyles = document.createElement('style');
     printStyles.id = 'print-styles';
@@ -189,12 +268,64 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     }, 1000);
   };
 
+  const handleDownloadDocx = async () => {
+    if (!processedFormData || Object.keys(processedFormData).length === 0) {
+      toast({
+        title: "Erro",
+        description: "Nenhum documento foi gerado ainda. Complete o formulário primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const htmlContent = getTemplate ? replaceTemplateVariables(getTemplate(dynamicFontSize), processedFormData) : '';
+      
+      // Extrair título do documento
+      const titleMatch = htmlContent.match(/<div[^>]*>([^<]+)<\/div>/);
+      const documentTitle = titleMatch ? titleMatch[1].trim() : 'Documento';
+      
+      // Extrair data
+      const dateMatch = htmlContent.match(/Valinhos, ([^<]+)\./);
+      const documentDate = dateMatch ? dateMatch[1].trim() : formatDateBrazilian(new Date());
+      
+      // Extrair assinaturas
+      const signatureMatches = htmlContent.match(/<span[^>]*>([^<]+)<\/span>/g);
+      const signatures = {
+        name1: signatureMatches && signatureMatches[0] ? signatureMatches[0].replace(/<[^>]*>/g, '') : '',
+        name2: signatureMatches && signatureMatches[1] ? signatureMatches[1].replace(/<[^>]*>/g, '') : 'VICTOR CAIN JORGE'
+      };
+
+      const docxData: DocxData = {
+        title: documentTitle,
+        date: `Valinhos, ${documentDate}.`,
+        content: htmlContent,
+        signatures
+      };
+
+      const blob = await generateDocx(docxData);
+      const filename = `${documentTitle.replace(/\s+/g, '_')}.docx`;
+      
+      downloadDocx(blob, filename);
+      
+      toast({
+        title: "Sucesso",
+        description: "Documento DOCX baixado com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar documento DOCX. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDownloadPDF = () => {
     // Usar o elemento existente mas com configuração otimizada
     const element = document.getElementById('document-content');
     
     if (!element) {
-      console.error('❌ Elemento document-content não encontrado!');
       toast({
         title: "❌ Erro na Geração do PDF",
         description: "Elemento do documento não encontrado",
@@ -203,12 +334,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       return;
     }
 
-    console.log('🔍 Elemento encontrado:', element);
-    console.log('📏 Dimensões:', { 
-      width: element.offsetWidth, 
-      height: element.offsetHeight,
-      scrollHeight: element.scrollHeight 
-    });
     
     // Configuração de alta qualidade para PDF
     const opt = {
@@ -267,14 +392,12 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       }
     };
     
-    console.log('🔄 Iniciando geração do PDF...');
     
     html2pdf()
       .from(element)
       .set(opt)
       .save()
       .then(() => {
-        console.log('✅ PDF gerado com sucesso!');
         toast({
           title: "📄 PDF Gerado",
           description: "Download realizado com sucesso",
@@ -282,7 +405,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
         });
       })
       .catch((error) => {
-        console.error('❌ Erro na geração do PDF:', error);
         toast({
           title: "❌ Erro na Geração do PDF",
           description: "Tente novamente",
@@ -291,33 +413,12 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       });
   };
 
-  const handleDownloadDOCX = async () => {
-    const templateToUse = getTemplate ? getTemplate(dynamicFontSize) : template;
-    const processedText = replaceTemplateVariables(templateToUse, processedFormData)
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .split('\n');
-
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: processedText.map(line => 
-          new Paragraph({
-            children: [new TextRun(line)],
-            spacing: { after: line.trim() === '' ? 200 : 100 }
-          })
-        )
-      }]
-    });
-
-    const buffer = await Packer.toBuffer(doc);
-    saveAs(new Blob([buffer]), `${title}.docx`);
-  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const documentContent = replaceTemplateVariables(template, processedFormData);
-      const documentTitle = `${title} - ${processedFormData.nomeLocatario || 'Sem nome'} - ${new Date().toLocaleDateString('pt-BR')}`;
+      const documentTitle = `${title} - ${processedFormData.nomeLocatario || 'Sem nome'} - ${formatDateBrazilian(new Date())}`;
       
       if (isEditing && termId) {
         const { error } = await supabase
@@ -353,7 +454,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
         });
       }
     } catch (error) {
-      console.error('Erro ao salvar:', error);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar o documento. Tente novamente.",
@@ -368,7 +468,16 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     let result = template;
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
-      result = result.replace(new RegExp(placeholder, 'g'), value || `[${key.toUpperCase()}]`);
+      let formattedValue = value || `[${key.toUpperCase()}]`;
+      
+      // Formatar datas automaticamente
+      if (key.toLowerCase().includes('data') || key.toLowerCase().includes('date')) {
+        if (value && value.trim() !== '') {
+          formattedValue = convertDateToBrazilian(value);
+        }
+      }
+      
+      result = result.replace(new RegExp(placeholder, 'g'), formattedValue);
     });
     return result;
   };
@@ -400,11 +509,9 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     // Se cabe perfeitamente, não reduzir
     if (currentHeight <= maxHeightPx) {
       document.body.removeChild(tempDiv);
-      console.log(`✅ Fonte ${baseSize}px cabe perfeitamente (${currentHeight}px <= ${maxHeightPx}px)`);
       return baseSize;
     }
     
-    console.log(`⚠️ Conteúdo excede 1 página: ${currentHeight}px > ${maxHeightPx}px`);
     
     // Só agora reduzir gradualmente com precisão
     let currentSize = baseSize;
@@ -418,7 +525,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       
       if (heightPx <= maxHeightPx) {
         document.body.removeChild(tempDiv);
-        console.log(`✅ Fonte otimizada: ${currentSize}px (${heightPx}px <= ${maxHeightPx}px)`);
         return currentSize;
       }
       
@@ -426,15 +532,24 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     }
     
     document.body.removeChild(tempDiv);
-    console.log(`⚠️ Fonte mínima atingida: ${minSize}px`);
     return minSize;
   };
 
   // Mapear os ícones para cada etapa
   const stepIcons = [Home, User, Users, FileCheck, Search, Check];
 
+  // Filtrar etapas baseado no tipo de termo
+  const filteredSteps = steps.filter(step => {
+    // Ocultar etapa "Documentos Apresentados" para termo do locador
+    if (step.id === "documentos" && formData.tipoTermo === "locador") {
+      return false;
+    }
+    return true;
+  });
+  
+
   // Converter FormSteps para WizardSteps
-  const wizardSteps: WizardStep[] = steps.map((step, index) => ({
+  const wizardSteps: WizardStep[] = filteredSteps.map((step, index) => ({
     id: step.id,
     title: step.title,
     description: step.description,
@@ -442,7 +557,67 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     isValid: index <= currentStep ? true : undefined,
     content: (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {step.fields.map((field) => (
+        {step.fields.map((field) => {
+          // Lógica condicional para mostrar campos baseados no tipo de termo
+          let shouldShowField = true;
+          
+          if (field.name === "statusAgua") {
+            shouldShowField = formData.tipoAgua && formData.tipoAgua !== "";
+          } else if (field.name === "cpfl" || field.name === "tipoAgua" || field.name === "statusAgua") {
+            // Campos de documentos só aparecem para termo do locatário
+            shouldShowField = formData.tipoTermo !== "locador";
+          } else if (field.name === "dataVistoria") {
+            // Campo de vistoria só aparece para termo do locatário
+            shouldShowField = formData.tipoTermo !== "locador";
+          }
+
+          if (!shouldShowField) return null;
+
+          // Lógica para opções dinâmicas baseadas no tipo de termo
+          let dynamicOptions = field.options;
+          
+          // Ajustar opções do campo "tipoQuemRetira" baseado no tipo de termo
+          if (field.name === "tipoQuemRetira") {
+            if (formData.tipoTermo === "locador") {
+              // Para termo do locador, só mostra opção de proprietário
+              dynamicOptions = [
+                { value: "proprietario", label: "Proprietário" }
+              ];
+            } else {
+              // Para termo do locatário, mostra ambas as opções
+              dynamicOptions = [
+                { value: "proprietario", label: "Proprietário" },
+                { value: "locatario", label: "Locatário" }
+              ];
+            }
+          } else if (field.name === "nomeQuemRetira") {
+            // Para termo do locador, não usar opções (campo de texto)
+            if (formData.tipoTermo === "locador") {
+              dynamicOptions = [];
+            } else if (formData.tipoQuemRetira === "proprietario") {
+              dynamicOptions = [
+                { value: contractData.nomeProprietario || "", label: contractData.nomeProprietario || "Proprietário" }
+              ];
+            } else if (formData.tipoQuemRetira === "locatario") {
+              if (isMultipleLocatarios(contractData.nomeLocatario || "")) {
+                // Se há múltiplos locatários, criar opções para cada um
+                const nomesLocatarios = contractData.nomeLocatario?.split(/[, e E]+/).map(nome => nome.trim()).filter(nome => nome) || [];
+                dynamicOptions = nomesLocatarios.map(nome => ({
+                  value: nome,
+                  label: nome
+                }));
+              } else {
+                // Se há apenas um locatário
+                dynamicOptions = [
+                  { value: contractData.nomeLocatario || "", label: contractData.nomeLocatario || "Locatário" }
+                ];
+              }
+            } else {
+              dynamicOptions = [];
+            }
+          }
+
+          return (
           <div
             key={field.name}
             className={field.type === "textarea" ? "md:col-span-2" : ""}
@@ -450,7 +625,11 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             <FormField
               name={field.name}
               label={field.label}
-              type={field.type}
+                type={
+                  field.name === "nomeQuemRetira" && formData.tipoTermo === "locador"
+                    ? "text"
+                    : field.type
+                }
               value={formData[field.name] || ""}
               onChange={(value) => updateField(field.name, value)}
               placeholder={field.placeholder}
@@ -458,10 +637,30 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
               error={getFieldError(field.name)}
               touched={isFieldTouched(field.name)}
               mask={field.mask}
-              options={field.options}
+                options={dynamicOptions}
+                disabled={false}
+                description={
+                  field.name === "generoLocatario" && 
+                  isMultipleLocatarios(formData.nomeLocatario || "")
+                    ? "Campo preenchido automaticamente para múltiplos locatários (neutro)"
+                    : field.name === "generoProprietario" && 
+                      isMultipleLocatarios(formData.nomeProprietario || "")
+                    ? "Campo preenchido automaticamente para múltiplos proprietários (neutro)"
+                    : field.name === "statusAgua"
+                    ? `Status do documento ${formData.tipoAgua || 'selecionado'}`
+                    : field.name === "nomeQuemRetira" && !formData.tipoQuemRetira
+                    ? "Primeiro selecione quem está retirando a chave"
+                    : undefined
+                }
+                tooltip={
+                  field.name === "dataFirmamentoContrato"
+                    ? "Guia dos meses:\n1 - Janeiro\n2 - Fevereiro\n3 - Março\n4 - Abril\n5 - Maio\n6 - Junho\n7 - Julho\n8 - Agosto\n9 - Setembro\n10 - Outubro\n11 - Novembro\n12 - Dezembro"
+                    : undefined
+                }
             />
           </div>
-        ))}
+          );
+        })}
       </div>
     ),
   }));
@@ -498,7 +697,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                   <Download className="h-4 w-4" />
                   PDF
                 </Button>
-                <Button onClick={handleDownloadDOCX} variant="outline" className="gap-2 print:hidden">
+                <Button onClick={handleDownloadDocx} variant="outline" className="gap-2 print:hidden">
                   <FileDown className="h-4 w-4" />
                   DOCX
                 </Button>
@@ -543,7 +742,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                     minHeight: '120px'
                   }}>
                     <img 
-                      src={companyLogo} 
+                      src="https://i.imgur.com/xwz1P7v.png" 
                       alt="Company Logo" 
                       style={{ 
                         height: 'auto', 
@@ -593,15 +792,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
               </div>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={generateTestData}
-              className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50"
-            >
-              <TestTube className="h-4 w-4" />
-              Preencher com Dados de Teste
-            </Button>
           </div>
         </div>
       </header>

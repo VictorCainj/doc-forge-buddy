@@ -36,7 +36,12 @@ export const useFormWizard = ({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Validar um campo específico
-  const validateField = useCallback((field: FormField, value: string): string | null => {
+  const validateField = useCallback((field: FormField, value: string, isDisabled?: boolean): string | null => {
+    // Se o campo está desabilitado, não validar
+    if (isDisabled) {
+      return null;
+    }
+    
     if (field.required && (!value || value.trim() === "")) {
       return `${field.label} é obrigatório`;
     }
@@ -67,6 +72,11 @@ export const useFormWizard = ({
     const step = steps[stepIndex];
     if (!step) return true;
 
+    // Pular validação da etapa "documentos" para termo do locador
+    if (step.id === "documentos" && data.tipoTermo === "locador") {
+      return true;
+    }
+
     return step.fields.every(field => {
       const value = data[field.name] || "";
       const error = validateField(field, value);
@@ -78,6 +88,11 @@ export const useFormWizard = ({
   const validateStep = useCallback((stepIndex: number): boolean => {
     const step = steps[stepIndex];
     if (!step) return true;
+
+    // Pular validação da etapa "documentos" para termo do locador
+    if (step.id === "documentos" && formData.tipoTermo === "locador") {
+      return true;
+    }
 
     let hasErrors = false;
     const newErrors: Record<string, string> = { ...errors };
@@ -182,7 +197,13 @@ export const useFormWizard = ({
 
   // Verificar se o formulário está válido
   const isFormValid = useMemo(() => {
-    return steps.every((_, index) => validateStepInternal(index, formData));
+    return steps.every((step, index) => {
+      // Pular validação da etapa "documentos" para termo do locador
+      if (step.id === "documentos" && formData.tipoTermo === "locador") {
+        return true;
+      }
+      return validateStepInternal(index, formData);
+    });
   }, [steps, formData, validateStepInternal]);
 
   // Verificar se a etapa atual está válida
@@ -198,54 +219,6 @@ export const useFormWizard = ({
     setTouched({});
   }, [initialData]);
 
-  // Gerar dados de teste aleatórios
-  const generateTestData = useCallback(() => {
-    const nomes = ['João Silva', 'Pedro Lima', 'Carlos Oliveira', 'Victor Cain', 'Rafael Santos', 'Maria Santos', 'Ana Costa', 'Fernanda Souza'];
-    const enderecosCompletos = [
-      'Rua das Flores, 123, Apto 45, Centro, Valinhos/SP, CEP: 13270-000',
-      'Avenida Brasil, 456, Casa 2, Jardim América, Campinas/SP, CEP: 13100-000',
-      'Rua Santos Dumont, 789, Bloco A, Vila Industrial, Valinhos/SP, CEP: 13271-000'
-    ];
-    const qualificacoes = [
-      'JOÃO SILVA, brasileiro, solteiro, engenheiro civil, portador do RG. nº SP-12.345.678 SSP/SP, e inscrito no CPF sob o nº 123.456.789-00, nascido em 15/05/1985, com filiação de ANTONIO SILVA e MARIA SILVA, residente e domiciliado na cidade de Valinhos/SP',
-      'MARIA SANTOS, brasileira, casada, professora universitária, portadora do RG. nº SP-98.765.432 SSP/SP, e inscrita no CPF sob o nº 987.654.321-00, nascida em 22/08/1990, com filiação de JOSÉ SANTOS e ANA SANTOS, residente e domiciliada na cidade de Campinas/SP',
-      'DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental, portador do RG. nº MG-14.837.051 SSP/MG, e inscrito no CPF sob o nº 096.402.496-96, nascido em 14/12/1988, com filiação de LUIS ANTONIO ORLANDO e MARIA TEREZA VIEIRA ORLANDO, residente e domiciliado na cidade de Campinas/SP, e BARBARA SIMINATTI DOS SANTOS, brasileira, solteira, maior, servidora pública municipal, portadora do RG. nº 36.153.912-5 SSP/SP, e inscrita no CPF sob o nº 395.076.738-06, nascida em 02/07/1990, com filiação de VALDIR CORREIA DOS SANTOS e VANIR SIMINATTI DOS SANTOS, residente e domiciliada na cidade de Campinas/SP, ambos devidamente qualificados neste instrumento'
-    ];
-    const nomesResumidos = ['JOÃO SILVA', 'MARIA SANTOS e PEDRO LIMA', 'ANA COSTA', 'CARLOS OLIVEIRA e FERNANDA SOUZA'];
-    const celulares = ['19 99999-9999', '19 98888-8888', '19 97777-7777'];
-    const emails = ['joao@email.com', 'maria@email.com', 'contato@email.com'];
-    const chavesExemplos = ['04 chaves simples', '02 chaves simples, 01 chave tetra', '06 chaves simples'];
-
-    const randomChoice = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
-    const randomNumber = () => Math.floor(Math.random() * 9000) + 1000;
-    const randomDate = () => {
-      const start = new Date(2024, 0, 1);
-      const end = new Date(2025, 11, 31);
-      const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-      return date.toLocaleDateString('pt-BR');
-    };
-
-    const testData: Record<string, string> = {
-      numeroContrato: randomNumber().toString(),
-      endereco: randomChoice(enderecosCompletos),
-      dataContrato: randomDate(),
-      nomeLocador: randomChoice(nomes),
-      qualificacaoLocatarios: randomChoice(qualificacoes),
-      nomesResumidos: randomChoice(nomesResumidos),
-      celularLocatario: randomChoice(celulares),
-      emailLocatario: randomChoice(emails),
-      cpfl: Math.random() > 0.5 ? 'SIM' : 'NÃO',
-      tipoSegundaDocumento: Math.random() > 0.5 ? 'DAEV' : 'SANASA',
-      segundoDocumento: randomChoice(['SIM', 'NÃO', 'No condomínio']),
-      tipoQuantidadeChaves: randomChoice(chavesExemplos),
-      dataVistoria: randomDate(),
-      nomeQuemRetira: randomChoice(nomes),
-    };
-
-    setFormData(testData);
-    setTouched({});
-    setErrors({});
-  }, []);
 
   return {
     // Estado
@@ -268,7 +241,6 @@ export const useFormWizard = ({
     goToStep,
     validateStep,
     resetForm,
-    generateTestData,
     applyMask,
     
     // Utilitários

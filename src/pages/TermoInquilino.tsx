@@ -116,7 +116,7 @@ const TermoInquilino = () => {
       fields: [
         { 
           name: "cpfl", 
-          label: "CPFL Apresentada", 
+          label: "CPFL", 
           type: "select", 
           required: true, 
           placeholder: "Selecione uma opção",
@@ -126,8 +126,8 @@ const TermoInquilino = () => {
           ]
         },
         { 
-          name: "tipoSegundaDocumento", 
-          label: "Tipo do Segundo Documento", 
+          name: "tipoAgua", 
+          label: "ÁGUA", 
           type: "select", 
           required: true, 
           placeholder: "Selecione o tipo",
@@ -137,8 +137,8 @@ const TermoInquilino = () => {
           ]
         },
         { 
-          name: "segundoDocumento", 
-          label: "Status do Segundo Documento", 
+          name: "statusAgua", 
+          label: "Status da Água", 
           type: "select", 
           required: true, 
           placeholder: "Selecione uma opção",

@@ -4,57 +4,63 @@ import { FormStep } from "@/hooks/use-form-wizard";
 import { Home, Users, FileText, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const CadastrarContrato = () => {
   const navigate = useNavigate();
 
   const steps: FormStep[] = [
     {
-      id: "imovel",
-      title: "Dados do Imóvel",
-      description: "Informações básicas do imóvel",
-      icon: Home,
+      id: "contrato",
+      title: "Dados do Contrato",
+      description: "Informações essenciais do contrato",
+      icon: FileText,
       fields: [
         {
           name: "numeroContrato",
           label: "Número do Contrato",
           type: "text",
           required: true,
-          placeholder: "Ex: 2024/001"
+          placeholder: "Ex: 13734"
         },
         {
-          name: "endereco",
-          label: "Endereço Completo",
+          name: "nomeLocatario",
+          label: "Nome do Locatário",
           type: "text",
           required: true,
-          placeholder: "Rua, número, bairro, cidade"
+          placeholder: "Ex: Beatriz ou INSERVICE LIMPEZA E INFRA-ESTRUTURA LTDA"
         },
         {
-          name: "cep",
-          label: "CEP",
-          type: "text",
-          required: true,
-          mask: "#####-###",
-          placeholder: "00000-000"
-        },
-        {
-          name: "tipoImovel",
-          label: "Tipo do Imóvel",
+          name: "generoLocatario",
+          label: "Gênero do Locatário",
           type: "select",
           required: true,
           options: [
-            { value: "casa", label: "Casa" },
-            { value: "apartamento", label: "Apartamento" },
-            { value: "comercial", label: "Comercial" },
-            { value: "terreno", label: "Terreno" }
+            { value: "masculino", label: "Masculino" },
+            { value: "feminino", label: "Feminino" },
+            { value: "neutro", label: "Neutro (múltiplos locatários)" }
           ]
+        },
+        {
+          name: "enderecoImovel",
+          label: "Endereço do Imóvel",
+          type: "text",
+          required: true,
+          placeholder: "Endereço completo do imóvel"
+        },
+        {
+          name: "dataFirmamentoContrato",
+          label: "Data de Firmamento do Contrato",
+          type: "text",
+          required: true,
+          placeholder: "Ex: 15/10/2024 ou 15 de outubro de 2024"
         }
       ]
     },
     {
       id: "proprietario",
       title: "Dados do Proprietário",
-      description: "Informações do proprietário do imóvel",
+      description: "Informações do proprietário para devolutiva",
       icon: Users,
       fields: [
         {
@@ -62,119 +68,79 @@ const CadastrarContrato = () => {
           label: "Nome do Proprietário",
           type: "text",
           required: true,
-          placeholder: "Nome completo"
-        },
-        {
-          name: "cpfProprietario",
-          label: "CPF",
-          type: "text",
-          required: true,
-          mask: "###.###.###-##",
-          placeholder: "000.000.000-00"
-        },
-        {
-          name: "telefoneProprietario",
-          label: "Telefone",
-          type: "text",
-          required: true,
-          mask: "(##) #####-####",
-          placeholder: "(00) 00000-0000"
+          placeholder: "Ex: Sr João"
         },
         {
           name: "emailProprietario",
-          label: "E-mail",
+          label: "E-mail do Proprietário",
           type: "email",
           required: true,
           placeholder: "email@exemplo.com"
+        },
+        {
+          name: "generoProprietario",
+          label: "Gênero do Proprietário",
+          type: "select",
+          required: true,
+          options: [
+            { value: "masculino", label: "Masculino" },
+            { value: "feminino", label: "Feminino" },
+            { value: "neutro", label: "Neutro (múltiplos proprietários)" }
+          ]
         }
       ]
     },
     {
-      id: "inquilino",
-      title: "Dados do Inquilino",
-      description: "Informações do inquilino atual",
-      icon: Users,
+      id: "desocupacao",
+      title: "Dados de Desocupação",
+      description: "Informações para processo de desocupação",
+      icon: Calendar,
       fields: [
         {
-          name: "nomeInquilino",
-          label: "Nome do Inquilino",
+          name: "dataInicioDesocupacao",
+          label: "Data de Início da Desocupação",
           type: "text",
           required: true,
-          placeholder: "Nome completo"
+          placeholder: "DD/MM/AAAA - Ex: 23/06/2025"
         },
         {
-          name: "cpfInquilino",
-          label: "CPF",
+          name: "dataTerminoDesocupacao",
+          label: "Data de Término da Desocupação",
           type: "text",
           required: true,
-          mask: "###.###.###-##",
-          placeholder: "000.000.000-00"
-        },
-        {
-          name: "telefoneInquilino",
-          label: "Telefone",
-          type: "text",
-          required: true,
-          mask: "(##) #####-####",
-          placeholder: "(00) 00000-0000"
-        },
-        {
-          name: "emailInquilino",
-          label: "E-mail",
-          type: "email",
-          required: true,
-          placeholder: "email@exemplo.com"
-        }
-      ]
-    },
-    {
-      id: "contrato",
-      title: "Dados do Contrato",
-      description: "Informações contratuais",
-      icon: FileText,
-      fields: [
-        {
-          name: "dataInicio",
-          label: "Data de Início",
-          type: "text",
-          required: true,
-          placeholder: "DD/MM/AAAA"
-        },
-        {
-          name: "dataVencimento",
-          label: "Data de Vencimento",
-          type: "text",
-          required: true,
-          placeholder: "DD/MM/AAAA"
-        },
-        {
-          name: "valorAluguel",
-          label: "Valor do Aluguel",
-          type: "text",
-          required: true,
-          placeholder: "R$ 0,00"
-        },
-        {
-          name: "observacoes",
-          label: "Observações",
-          type: "textarea",
-          required: false,
-          placeholder: "Informações adicionais sobre o contrato"
+          placeholder: "DD/MM/AAAA - Ex: 22/07/2025"
         }
       ]
     }
   ];
 
-  const handleGenerate = (data: Record<string, string>) => {
+  const handleGenerate = async (data: Record<string, string>) => {
     try {
-      // Aqui você salvaria o contrato no banco de dados
-      console.log('Dados do contrato:', data);
+      // Adicionar campos automáticos
+      const enhancedData = {
+        ...data,
+        prazoDias: "30", // Sempre 30 dias
+        dataComunicacao: data.dataInicioDesocupacao // Data de comunicação = data de início
+      };
+
+      // Salvar o contrato no banco de dados usando a tabela saved_terms
+      const contractData = {
+        title: `Contrato ${enhancedData.numeroContrato} - ${enhancedData.nomeLocatario}`,
+        content: JSON.stringify(enhancedData), // Armazenar dados como JSON
+        form_data: enhancedData,
+        document_type: 'contrato'
+      };
+
+      const { error } = await supabase
+        .from('saved_terms')
+        .insert(contractData);
+
+      if (error) throw error;
       
       toast.success("Contrato cadastrado com sucesso!");
       navigate('/contratos');
     } catch (error) {
       toast.error("Erro ao cadastrar contrato");
-      console.error('Erro:', error);
     }
   };
 
@@ -184,7 +150,7 @@ const CadastrarContrato = () => {
   return (
     <DocumentFormWizard
       title="Cadastrar Novo Contrato"
-      description="Preencha as informações do contrato para ter acesso a todos os processos de desocupação"
+      description="Preencha as informações essenciais para gerar os documentos de notificação de desocupação e devolutiva do proprietário"
       steps={steps}
       template=""
       onGenerate={handleGenerate}

@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { Document, Paragraph, TextRun, Packer } from "docx";
 import { saveAs } from "file-saver";
-const companyLogo = "/lovable-uploads/b46a97fe-55bb-462c-98b9-2f3ad07ee463.png";
+const companyLogo = "https://i.imgur.com/xwz1P7v.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatDateBrazilian } from "@/utils/dateFormatter";
 
 interface FormField {
   name: string;
@@ -210,7 +211,7 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
     setSaving(true);
     try {
       const documentContent = replaceTemplateVariables(template, formData);
-      const documentTitle = `${title} - ${formData.nomeLocatario || 'Sem nome'} - ${new Date().toLocaleDateString('pt-BR')}`;
+      const documentTitle = `${title} - ${formData.nomeLocatario || 'Sem nome'} - ${formatDateBrazilian(new Date())}`;
       
       if (isEditing && termId) {
         // Atualizar termo existente
@@ -248,7 +249,6 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
         });
       }
     } catch (error) {
-      console.error('Erro ao salvar:', error);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar o documento. Tente novamente.",
