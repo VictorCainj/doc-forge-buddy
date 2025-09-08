@@ -127,6 +127,25 @@ const Contratos = () => {
     const mesesComprovantes = generateMesesComprovantes();
     enhancedData.mesesComprovantes = mesesComprovantes;
     
+    // Adicionar variáveis de data padrão
+    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.dataComunicacao = formData.dataComunicacao || formatDateBrazilian(new Date());
+    enhancedData.dataInicioDesocupacao = formData.dataInicioDesocupacao || formatDateBrazilian(new Date());
+    enhancedData.dataTerminoDesocupacao = formData.dataTerminoDesocupacao || formatDateBrazilian(new Date());
+    enhancedData.prazoDias = formData.prazoDias || "30";
+    
+    // Adicionar variáveis de endereço e contrato
+    enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || "[ENDEREÇO]";
+    enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
+    enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    
+    // Adicionar variáveis específicas dos termos
+    enhancedData.dataFirmamentoContrato = formData.dataFirmamentoContrato || formatDateBrazilian(new Date());
+    enhancedData.dataVistoria = formData.dataVistoria || formatDateBrazilian(new Date());
+    enhancedData.cpflDaev = formData.cpflDaev || "[CPFL/DAEV]";
+    enhancedData.quantidadeChaves = formData.quantidadeChaves || "[QUANTIDADE DE CHAVES]";
+    
     return enhancedData;
   };
 
