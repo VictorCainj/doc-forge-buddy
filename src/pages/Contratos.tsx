@@ -16,6 +16,9 @@ interface Contract {
   title: string;
   form_data: Record<string, string>;
   created_at: string;
+  content: string;
+  document_type: string;
+  updated_at: string;
 }
 
 const Contratos = () => {
@@ -27,6 +30,8 @@ const Contratos = () => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [dataVistoria, setDataVistoria] = useState('');
   const [horaVistoria, setHoraVistoria] = useState('');
+  const [deletingContract, setDeletingContract] = useState<string | null>(null);
+  const [generatingDocument, setGeneratingDocument] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,7 +62,16 @@ const Contratos = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setContracts(data || []);
+      
+      // Converter os dados do Supabase para o formato esperado
+      const contracts: Contract[] = (data || []).map(row => ({
+        ...row,
+        form_data: typeof row.form_data === 'string' 
+          ? JSON.parse(row.form_data) 
+          : (row.form_data as Record<string, string>) || {}
+      }));
+      
+      setContracts(contracts);
     } catch (error) {
       toast.error('Erro ao carregar contratos');
     } finally {
@@ -150,6 +164,7 @@ const Contratos = () => {
   };
 
   const generateDocument = (contract: Contract, template: string, documentType: string) => {
+    setGeneratingDocument(`${contract.id}-${documentType}`);
     const formData = contract.form_data;
     
     if (documentType === "Termo do Locador") {
@@ -176,14 +191,17 @@ const Contratos = () => {
       const processedTemplate = replaceTemplateVariables(template, enhancedData);
       const documentTitle = `${documentType} - ${contract.title}`;
       
-      navigate('/gerar-documento', {
-        state: {
-          title: documentTitle,
-          template: processedTemplate,
-          formData: enhancedData,
-          documentType: documentType
-        }
-      });
+      setTimeout(() => {
+        navigate('/gerar-documento', {
+          state: {
+            title: documentTitle,
+            template: processedTemplate,
+            formData: enhancedData,
+            documentType: documentType
+          }
+        });
+        setGeneratingDocument(null);
+      }, 800);
     }
   };
 
@@ -198,6 +216,7 @@ const Contratos = () => {
 
   const handleDeleteContract = async (contractId: string, contractTitle: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o contrato "${contractTitle}"? Esta ação não pode ser desfeita.`)) {
+      setDeletingContract(contractId);
       try {
         const { error } = await supabase
           .from('saved_terms')
@@ -211,6 +230,8 @@ const Contratos = () => {
         toast.success("Contrato excluído com sucesso!");
       } catch (error) {
         toast.error("Erro ao excluir contrato");
+      } finally {
+        setDeletingContract(null);
       }
     }
   };
@@ -351,8 +372,13 @@ const Contratos = () => {
                               variant="outline"
                               onClick={() => generateDocument(contract, "", "Termo do Locador")}
                               className="gap-2"
+                              disabled={generatingDocument === `${contract.id}-Termo do Locador`}
                             >
-                              <FileText className="h-4 w-4" />
+                              {generatingDocument === `${contract.id}-Termo do Locador` ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
                               Termo do Locador
                             </Button>
                             <Button
@@ -360,8 +386,13 @@ const Contratos = () => {
                               variant="outline"
                               onClick={() => generateDocument(contract, "", "Termo do Locatário")}
                               className="gap-2"
+                              disabled={generatingDocument === `${contract.id}-Termo do Locatário`}
                             >
-                              <FileText className="h-4 w-4" />
+                              {generatingDocument === `${contract.id}-Termo do Locatário` ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
                               Termo do Locatário
                             </Button>
                             <Button
@@ -369,9 +400,14 @@ const Contratos = () => {
                               variant="destructive"
                               onClick={() => handleDeleteContract(contract.id, contract.title)}
                               className="gap-2"
+                              disabled={deletingContract === contract.id}
                             >
-                              <Trash2 className="h-4 w-4" />
-                              Excluir
+                              {deletingContract === contract.id ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                              {deletingContract === contract.id ? "Excluindo..." : "Excluir"}
                             </Button>
                           </div>
                           <Button
@@ -379,8 +415,13 @@ const Contratos = () => {
                             variant="outline"
                             onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_TEMPLATE, "Devolutiva Proprietário")}
                             className="gap-2"
+                            disabled={generatingDocument === `${contract.id}-Devolutiva Proprietário`}
                           >
-                            <Building className="h-4 w-4" />
+                            {generatingDocument === `${contract.id}-Devolutiva Proprietário` ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            ) : (
+                              <Building className="h-4 w-4" />
+                            )}
                             Devolutiva Proprietário
                           </Button>
                           <Button
@@ -388,8 +429,13 @@ const Contratos = () => {
                             variant="outline"
                             onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_TEMPLATE, "Devolutiva Locatário")}
                             className="gap-2"
+                            disabled={generatingDocument === `${contract.id}-Devolutiva Locatário`}
                           >
-                            <Users className="h-4 w-4" />
+                            {generatingDocument === `${contract.id}-Devolutiva Locatário` ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            ) : (
+                              <Users className="h-4 w-4" />
+                            )}
                             Devolutiva Locatário
                           </Button>
                           <Button
@@ -397,8 +443,13 @@ const Contratos = () => {
                             variant="outline"
                             onClick={() => generateDocument(contract, NOTIFICACAO_AGENDAMENTO_TEMPLATE, "Notificação de Agendamento")}
                             className="gap-2"
+                            disabled={generatingDocument === `${contract.id}-Notificação de Agendamento`}
                           >
-                            <FileText className="h-4 w-4" />
+                            {generatingDocument === `${contract.id}-Notificação de Agendamento` ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
                             Notificação de Agendamento
                           </Button>
                         </div>

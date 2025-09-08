@@ -21,6 +21,8 @@ interface FormWizardProps {
   currentStep?: number;
   showProgress?: boolean;
   allowStepNavigation?: boolean;
+  isSubmitting?: boolean;
+  submitButtonText?: string;
 }
 
 export const FormWizard: React.FC<FormWizardProps> = ({
@@ -31,6 +33,8 @@ export const FormWizard: React.FC<FormWizardProps> = ({
   currentStep: controlledStep,
   showProgress = true,
   allowStepNavigation = true,
+  isSubmitting = false,
+  submitButtonText = "Gerar Documento",
 }) => {
   const [internalStep, setInternalStep] = useState(0);
   const currentStep = controlledStep !== undefined ? controlledStep : internalStep;
@@ -176,11 +180,20 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             <Button
               type="button"
               onClick={handleNext}
-              disabled={currentStepData.isValid === false}
+              disabled={currentStepData.isValid === false || isSubmitting}
               className="gap-2 bg-gradient-primary hover:opacity-90"
             >
-              {currentStep === steps.length - 1 ? 'Gerar Documento' : 'Próximo'}
-              {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
+              {isSubmitting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {submitButtonText}
+                </>
+              ) : (
+                <>
+                  {currentStep === steps.length - 1 ? submitButtonText : 'Próximo'}
+                  {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

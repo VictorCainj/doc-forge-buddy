@@ -18,12 +18,14 @@ interface DocumentFormWizardProps {
   steps: FormStepType[];
   template: string;
   getTemplate?: (fontSize: number) => string;
-  onGenerate: (data: Record<string, string>) => Record<string, string> | void;
+  onGenerate: (data: Record<string, string>) => Record<string, string> | void | Promise<Record<string, string>>;
   initialData?: Record<string, string>;
   termId?: string;
   isEditing?: boolean;
   contractData?: Record<string, string>;
   onFormDataChange?: (data: Record<string, string>) => void;
+  isSubmitting?: boolean;
+  submitButtonText?: string;
 }
 
 const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
@@ -38,6 +40,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   isEditing = false,
   contractData = {},
   onFormDataChange,
+  isSubmitting = false,
+  submitButtonText = "Gerar Documento",
 }) => {
   const navigate = useNavigate();
   const [showPreview, setShowPreview] = useState(false);
@@ -150,17 +154,22 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     goToStep(stepIndex);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     
-    if (isFormValid) {
-      const processedData = onGenerate(formData);
-      const finalData = { ...formData, ...processedData };
-      setProcessedFormData(finalData);
-      
-      // Fonte mantida no tamanho padrão de 14px
-      
-      setShowPreview(true);
-    } else {
+    if (isFormValid && !isSubmitting) {
+      try {
+        const processedData = await onGenerate(formData);
+        const finalData = { ...formData, ...processedData };
+        setProcessedFormData(finalData);
+        
+        // Fonte mantida no tamanho padrão de 14px
+        
+        setShowPreview(true);
+      } catch (error) {
+        // Erro já tratado no onGenerate
+        console.error("Erro ao processar formulário:", error);
+      }
+    } else if (!isFormValid) {
       toast({
         title: "Formulário incompleto",
         description: "Por favor, preencha todos os campos obrigatórios",
@@ -814,6 +823,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           completedSteps={completedSteps}
           currentStep={currentStep}
           allowStepNavigation={true}
+          isSubmitting={isSubmitting}
+          submitButtonText={submitButtonText}
         />
       </main>
     </div>

@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Users, Building, Briefcase, Download } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+
+interface Contract {
+  id: string;
+  title: string;
+  form_data: Record<string, string>;
+  created_at: string;
+}
 
 const ProcessoDesocupacao = () => {
   const { contratoId } = useParams();
+  const [contract, setContract] = useState<Contract | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const processos = [
     {
@@ -41,6 +53,40 @@ const ProcessoDesocupacao = () => {
       status: "pending"
     }
   ];
+
+  useEffect(() => {
+    const fetchContract = async () => {
+      if (!contratoId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('saved_terms')
+          .select('*')
+          .eq('id', contratoId)
+          .eq('document_type', 'contrato')
+          .single();
+
+        if (error) throw error;
+        
+        // Converter os dados do Supabase para o formato esperado
+        const contractData: Contract = {
+          ...data,
+          form_data: typeof data.form_data === 'string' 
+            ? JSON.parse(data.form_data) 
+            : (data.form_data as Record<string, string>) || {}
+        };
+        
+        setContract(contractData);
+      } catch (error) {
+        toast.error("Erro ao carregar contrato");
+        console.error("Erro ao carregar contrato:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContract();
+  }, [contratoId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
@@ -103,9 +149,44 @@ const ProcessoDesocupacao = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Carregando informações do contrato...</p>
-            </div>
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+            ) : contract ? (
+              <div className="space-y-3">
+                <div>
+                  <span className="font-medium">Contrato:</span> {contract.form_data.numeroContrato || 'N/A'}
+                </div>
+                <div>
+                  <span className="font-medium">Locatário:</span> {contract.form_data.nomeLocatario || 'N/A'}
+                </div>
+                <div>
+                  <span className="font-medium">Proprietário:</span> {contract.form_data.nomeProprietario || 'N/A'}
+                </div>
+                <div>
+                  <span className="font-medium">Endereço:</span> {contract.form_data.enderecoImovel || 'N/A'}
+                </div>
+                <div>
+                  <span className="font-medium">Início da Desocupação:</span> {contract.form_data.dataInicioDesocupacao || 'N/A'}
+                </div>
+                <div>
+                  <span className="font-medium">Término da Desocupação:</span> {contract.form_data.dataTerminoDesocupacao || 'N/A'}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <p>Contrato não encontrado ou não é válido.</p>
+                <Link to="/contratos">
+                  <Button variant="outline" className="mt-4">
+                    Voltar aos Contratos
+                  </Button>
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

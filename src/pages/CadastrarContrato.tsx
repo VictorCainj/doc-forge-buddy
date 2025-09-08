@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DocumentFormWizard from "@/components/DocumentFormWizard";
 import { FormStep } from "@/hooks/use-form-wizard";
 import { Home, Users, FileText, Calendar } from "lucide-react";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CadastrarContrato = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const steps: FormStep[] = [
     {
@@ -114,39 +115,44 @@ const CadastrarContrato = () => {
     }
   ];
 
-  const handleGenerate = (data: Record<string, string>) => {
-    // Adicionar campos automáticos
-    const enhancedData = {
-      ...data,
-      prazoDias: "30", // Sempre 30 dias
-      dataComunicacao: data.dataInicioDesocupacao // Data de comunicação = data de início
-    };
+  const handleGenerate = async (data: Record<string, string>) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Adicionar campos automáticos
+      const enhancedData = {
+        ...data,
+        prazoDias: "30", // Sempre 30 dias
+        dataComunicacao: data.dataInicioDesocupacao // Data de comunicação = data de início
+      };
 
-    // Salvar o contrato no banco de dados usando a tabela saved_terms
-    const contractData = {
-      title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeLocatario || '[LOCATÁRIO]'}`,
-      content: JSON.stringify(enhancedData), // Armazenar dados como JSON
-      form_data: enhancedData,
-      document_type: 'contrato'
-    };
+      // Salvar o contrato no banco de dados usando a tabela saved_terms
+      const contractData = {
+        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeLocatario || '[LOCATÁRIO]'}`,
+        content: JSON.stringify(enhancedData), // Armazenar dados como JSON
+        form_data: enhancedData,
+        document_type: 'contrato'
+      };
 
-    // Executar operação assíncrona sem bloquear o retorno
-    (async () => {
-      try {
-        const { error } = await supabase
-          .from('saved_terms')
-          .insert(contractData);
-        
-        if (error) throw error;
-        
-        toast.success("Contrato cadastrado com sucesso!");
-        navigate('/contratos');
-      } catch (error) {
-        toast.error("Erro ao cadastrar contrato");
-      }
-    })();
-
-    return enhancedData;
+      const { error } = await supabase
+        .from('saved_terms')
+        .insert(contractData);
+      
+      if (error) throw error;
+      
+      toast.success("Contrato cadastrado com sucesso!");
+      navigate('/contratos');
+      
+      return enhancedData;
+    } catch (error) {
+      toast.error("Erro ao cadastrar contrato");
+      console.error("Erro ao cadastrar contrato:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Template vazio para o cadastro (não gera documento)
@@ -159,6 +165,8 @@ const CadastrarContrato = () => {
       steps={steps}
       template=""
       onGenerate={handleGenerate}
+      isSubmitting={isSubmitting}
+      submitButtonText={isSubmitting ? "Cadastrando..." : "Cadastrar Contrato"}
     />
   );
 };

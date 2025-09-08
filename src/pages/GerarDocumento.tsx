@@ -9,6 +9,8 @@ const GerarDocumento = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   
   // Dados passados via state da navegação
   const { title, template, formData, documentType } = location.state || {};
@@ -96,6 +98,9 @@ const GerarDocumento = () => {
   };
 
   const handlePrint = () => {
+    if (isPrinting) return;
+    
+    setIsPrinting(true);
     try {
       // Criar uma nova janela para impressão
       const printWindow = window.open('', '_blank');
@@ -200,10 +205,15 @@ const GerarDocumento = () => {
       toast.success('Abrindo janela de impressão... Dica: Nas opções de impressão, desmarque "Cabeçalhos e rodapés" para uma impressão mais limpa.');
     } catch (error) {
       toast.error('Erro ao abrir impressão. Tente novamente.');
+    } finally {
+      setIsPrinting(false);
     }
   };
 
   const handleDownloadPDF = async () => {
+    if (isGeneratingPDF) return;
+    
+    setIsGeneratingPDF(true);
     try {
       toast.info('Gerando PDF...');
       
@@ -291,6 +301,8 @@ const GerarDocumento = () => {
       toast.success('PDF baixado com sucesso!');
     } catch (error) {
       toast.error('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -327,18 +339,28 @@ const GerarDocumento = () => {
                 variant="outline"
                 size="sm"
                 className="gap-2"
+                disabled={isPrinting}
               >
-                <Printer className="h-4 w-4" />
-                Imprimir
+                {isPrinting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                ) : (
+                  <Printer className="h-4 w-4" />
+                )}
+                {isPrinting ? 'Preparando...' : 'Imprimir'}
               </Button>
               <Button
                 onClick={handleDownloadPDF}
                 variant="outline"
                 size="sm"
                 className="gap-2"
+                disabled={isGeneratingPDF}
               >
-                <Download className="h-4 w-4" />
-                Baixar PDF
+                {isGeneratingPDF ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
               </Button>
               <Button
                 onClick={() => navigate('/contratos')}
