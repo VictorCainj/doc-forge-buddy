@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +23,10 @@ const Contratos = () => {
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [dataVistoria, setDataVistoria] = useState('');
+  const [horaVistoria, setHoraVistoria] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,21 +145,14 @@ const Contratos = () => {
           contractData: formData
         }
       });
+    } else if (documentType === "Notificação de Agendamento") {
+      // Abrir modal para preencher data e hora da vistoria
+      setSelectedContract(contract);
+      setShowAgendamentoModal(true);
     } else {
       
       // Aplicar conjunções verbais antes de processar o template
       const enhancedData = applyConjunctions(formData);
-      
-      // Adicionar campos específicos para notificação de agendamento
-      if (documentType === "Notificação de Agendamento") {
-        enhancedData.dataAtual = formatDateBrazilian(new Date());
-        enhancedData.dataVistoria = "29 de agosto de 2025"; // Data padrão em formato brasileiro
-        enhancedData.horaVistoria = "09:00h"; // Hora padrão, pode ser editada
-        enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || "[ENDEREÇO]";
-        enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
-        enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
-        enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
-      }
       
       const processedTemplate = replaceTemplateVariables(template, enhancedData);
       const documentTitle = `${documentType} - ${contract.title}`;
@@ -195,6 +194,52 @@ const Contratos = () => {
         toast.error("Erro ao excluir contrato");
       }
     }
+  };
+
+  const handleGenerateAgendamento = () => {
+    if (!selectedContract || !dataVistoria || !horaVistoria) {
+      toast.error('Por favor, preencha a data e hora da vistoria');
+      return;
+    }
+
+    const formData = selectedContract.form_data;
+    
+    // Aplicar conjunções verbais antes de processar o template
+    const enhancedData = applyConjunctions(formData);
+    
+    // Adicionar campos específicos para notificação de agendamento
+    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.dataVistoria = formatDateBrazilian(new Date(dataVistoria));
+    enhancedData.horaVistoria = horaVistoria;
+    enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || "[ENDEREÇO]";
+    enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
+    enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    
+    const processedTemplate = replaceTemplateVariables(NOTIFICACAO_AGENDAMENTO_TEMPLATE, enhancedData);
+    const documentTitle = `Notificação de Agendamento - ${selectedContract.title}`;
+    
+    navigate('/gerar-documento', {
+      state: {
+        title: documentTitle,
+        template: processedTemplate,
+        formData: enhancedData,
+        documentType: "Notificação de Agendamento"
+      }
+    });
+
+    // Fechar modal e limpar campos
+    setShowAgendamentoModal(false);
+    setSelectedContract(null);
+    setDataVistoria('');
+    setHoraVistoria('');
+  };
+
+  const handleCancelAgendamento = () => {
+    setShowAgendamentoModal(false);
+    setSelectedContract(null);
+    setDataVistoria('');
+    setHoraVistoria('');
   };
 
   return (
@@ -347,6 +392,54 @@ const Contratos = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal para Notificação de Agendamento */}
+      <Dialog open={showAgendamentoModal} onOpenChange={setShowAgendamentoModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Agendar Vistoria</DialogTitle>
+            <DialogDescription>
+              Preencha a data e hora da vistoria de saída para gerar a notificação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dataVistoria" className="text-right">
+                Data da Vistoria
+              </Label>
+              <Input
+                id="dataVistoria"
+                type="date"
+                value={dataVistoria}
+                onChange={(e) => setDataVistoria(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="horaVistoria" className="text-right">
+                Hora da Vistoria
+              </Label>
+              <Input
+                id="horaVistoria"
+                type="time"
+                value={horaVistoria}
+                onChange={(e) => setHoraVistoria(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelAgendamento}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGenerateAgendamento}>
+              Gerar Notificação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
