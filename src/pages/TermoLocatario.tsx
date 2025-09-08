@@ -10,6 +10,7 @@ interface ContractData {
   dataFirmamentoContrato: string;
   nomeProprietario: string;
   nomeLocatario: string;
+  [key: string]: string;
 }
 
 const TermoLocatario: React.FC = () => {

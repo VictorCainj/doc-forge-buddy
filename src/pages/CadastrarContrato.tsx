@@ -114,34 +114,39 @@ const CadastrarContrato = () => {
     }
   ];
 
-  const handleGenerate = async (data: Record<string, string>) => {
-    try {
-      // Adicionar campos automáticos
-      const enhancedData = {
-        ...data,
-        prazoDias: "30", // Sempre 30 dias
-        dataComunicacao: data.dataInicioDesocupacao // Data de comunicação = data de início
-      };
+  const handleGenerate = (data: Record<string, string>) => {
+    // Adicionar campos automáticos
+    const enhancedData = {
+      ...data,
+      prazoDias: "30", // Sempre 30 dias
+      dataComunicacao: data.dataInicioDesocupacao // Data de comunicação = data de início
+    };
 
-      // Salvar o contrato no banco de dados usando a tabela saved_terms
-      const contractData = {
-        title: `Contrato ${enhancedData.numeroContrato} - ${enhancedData.nomeLocatario}`,
-        content: JSON.stringify(enhancedData), // Armazenar dados como JSON
-        form_data: enhancedData,
-        document_type: 'contrato'
-      };
+    // Salvar o contrato no banco de dados usando a tabela saved_terms
+    const contractData = {
+      title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeLocatario || '[LOCATÁRIO]'}`,
+      content: JSON.stringify(enhancedData), // Armazenar dados como JSON
+      form_data: enhancedData,
+      document_type: 'contrato'
+    };
 
-      const { error } = await supabase
-        .from('saved_terms')
-        .insert(contractData);
+    // Executar operação assíncrona sem bloquear o retorno
+    (async () => {
+      try {
+        const { error } = await supabase
+          .from('saved_terms')
+          .insert(contractData);
+        
+        if (error) throw error;
+        
+        toast.success("Contrato cadastrado com sucesso!");
+        navigate('/contratos');
+      } catch (error) {
+        toast.error("Erro ao cadastrar contrato");
+      }
+    })();
 
-      if (error) throw error;
-      
-      toast.success("Contrato cadastrado com sucesso!");
-      navigate('/contratos');
-    } catch (error) {
-      toast.error("Erro ao cadastrar contrato");
-    }
+    return enhancedData;
   };
 
   // Template vazio para o cadastro (não gera documento)
