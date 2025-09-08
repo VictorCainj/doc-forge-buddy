@@ -88,10 +88,14 @@ const TermoLocador: React.FC = () => {
 
   const getCurrentDate = () => {
     const today = new Date();
-    const day = today.getDate().toString().padStart(2, '0');
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate();
+    const months = [
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    ];
+    const month = months[today.getMonth()];
     const year = today.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day} de ${month} de ${year}`;
   };
 
   const getTemplate = (fontSize: number) => {
@@ -124,11 +128,14 @@ Pelo presente, entrego as chaves do imóvel sito à {{enderecoImovel}}.
 {{observacao}}
 </div>
 
-<div style="margin-top: 50px; text-align: center;">
-<div style="margin-bottom: 40px;">
-__________________________________________<br>
-<span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{nomeQuemRetira}}</span>
-</div>
+  <div style="margin-top: 50px; text-align: center;">
+    <div style="margin-bottom: 40px;">
+      __________________________________________<br>
+      <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{nomeQuemRetira}}</span>
+      {{#if documentoQuemRetira}}
+      <br><span style="font-size: ${signatureSize - 1}px;">{{documentoQuemRetira}}</span>
+      {{/if}}
+    </div>
 
 <div>
 __________________________________________<br>

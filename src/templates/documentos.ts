@@ -1,13 +1,19 @@
 // Templates para os documentos de desocupação
 
 export const TERMO_RECEBIMENTO_TEMPLATE = `
-<div style="text-align: center; margin-bottom: 20px; font-size: 16px; font-weight: bold;">
-TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
-</div>
-
-<div style="text-align: right; margin-bottom: 20px; font-size: 14px;">
-Valinhos, {{dataAtual}}.
-</div>
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-bottom: 30px; font-size: 16px; font-weight: bold;">
+    TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
+  </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: 14px;">
 Pelo presente, recebemos as chaves do imóvel sito à {{enderecoImovel}}, ora locado {{nomeLocatario}}, devidamente qualificado no contrato de locação residencial firmado em {{dataFirmamentoContrato}}.
@@ -39,21 +45,34 @@ Foi entregue {{quantidadeChaves}}
 ( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 </div>
 
-<div style="margin-top: 50px; text-align: center;">
-<div style="margin-bottom: 40px;">
-__________________________________________<br>
-<span style="font-size: 12px; text-transform: uppercase;">{{nomeQuemRetira}}</span>
-</div>
+  <div style="margin-top: 50px; text-align: center;">
+    <div style="margin-bottom: 40px;">
+      __________________________________________<br>
+      <span style="font-size: 12px; text-transform: uppercase;">{{nomeQuemRetira}}</span>
+      {{#if documentoQuemRetira}}
+      <br><span style="font-size: 11px;">{{documentoQuemRetira}}</span>
+      {{/if}}
+    </div>
 
-<div>
-__________________________________________<br>
-<span style="font-size: 12px; text-transform: uppercase;">VICTOR CAIN JORGE</span>
-</div>
+    <div>
+      __________________________________________<br>
+      <span style="font-size: 12px; text-transform: uppercase;">VICTOR CAIN JORGE</span>
+    </div>
+  </div>
 </div>
 `;
 
 export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
-<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000;">
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
   <h2 style="text-align: center; margin-bottom: 40px; font-size: 18px; font-weight: bold;">
     [CONTRATO] - Notificação de Desocupação e Agendamento de Vistoria.
   </h2>
@@ -81,7 +100,16 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
 `;
 
 export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
-<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000;">
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
   <p style="margin-bottom: 20px;">{{proprietarioPrezado}} <strong>{{nomeLocatario}}</strong>, tudo bem?</p>
   
   <p style="margin-bottom: 20px;">Confirmamos o recebimento da sua notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
@@ -105,5 +133,48 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">Agradecemos desde já pela colaboração!</p>
   
   <p style="margin-top: 40px;">Atenciosamente,</p>
+</div>
+`;
+
+export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #d32f2f; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
+      NOTIFICAÇÃO PARA REALIZAÇÃO DE VISTORIA FINAL
+    </h1>
+  </div>
+  
+  <div style="margin-bottom: 20px;">
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de nome <strong>{{nomeProprietario}}</strong> devidamente qualificada através do contrato de prestação de serviço</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificados Locatários:</strong> <strong>{{nomeLocatario}}</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}, Contrato {{numeroContrato}}</p>
+  </div>
+  
+  <div style="margin-bottom: 20px;">
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezados Senhores,</strong></p>
+  </div>
+  
+  <div style="margin-bottom: 20px; text-align: justify;">
+    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da Vistoria Final do Imóvel situado {{enderecoImovel}}, Contrato {{numeroContrato}}, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de V.Sas.</p>
+    
+    <p style="margin: 10px 0; font-size: 14px;">Pelo presente a notificação tem por finalidade comunicar as partes, ou de seus representantes a constata-se à Vistoria Final do imóvel citado, que assistirão à produção das fotos que embasam o Laudo de Vistoria e acompanharam a constatação das divergências. O não comparecimento ao ato, e nem dos representantes, <strong><u>aceitarão antecipadamente os termos integrais da VISTORIA FINAL, tal como for apurada.</u></strong></p>
+    
+    <p style="margin: 10px 0; font-size: 14px;">Esta notificação integra o laudo de vistoria final para fins de comparecimento do ato realizado, tal qual das assinaturas realizadas no laudo de conclusão da vistoria, sendo ela Aprovada ou Reprovada.</p>
+  </div>
+  
+  <div style="margin-top: 40px;">
+    <p style="margin: 5px 0; font-size: 14px;">Cordiais saudações,</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>MADIA IMÓVEIS LTDA</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;">Setor de Desocupação</p>
+  </div>
 </div>
 `;

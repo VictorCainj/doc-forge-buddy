@@ -43,7 +43,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [processedFormData, setProcessedFormData] = useState<Record<string, string>>({});
-  const [dynamicFontSize, setDynamicFontSize] = useState(14); // Tamanho padrão
+  const [dynamicFontSize] = useState(14); // Tamanho padrão fixo
   const { toast } = useToast();
 
   // Função para detectar múltiplos locatários
@@ -130,6 +130,22 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     }
   }, [formData.incluirNomeCompleto, contractData?.nomeProprietario, contractData?.nomeLocatario, updateField]);
 
+  // Função para verificar se a pessoa que retira a chave é terceira (não é locador nem locatário)
+  const isTerceiraPessoa = () => {
+    const nomeQuemRetira = formData.nomeQuemRetira || "";
+    const nomeProprietario = contractData?.nomeProprietario || "";
+    const nomeLocatario = contractData?.nomeLocatario || "";
+    
+    // Se não há nome preenchido, não é terceira pessoa
+    if (!nomeQuemRetira) return false;
+    
+    // Verificar se o nome não corresponde ao proprietário nem ao locatário
+    const naoEhProprietario = !nomeProprietario || !nomeQuemRetira.toLowerCase().includes(nomeProprietario.toLowerCase());
+    const naoEhLocatario = !nomeLocatario || !nomeQuemRetira.toLowerCase().includes(nomeLocatario.toLowerCase());
+    
+    return naoEhProprietario && naoEhLocatario;
+  };
+
   const handleStepChange = (stepIndex: number) => {
     goToStep(stepIndex);
   };
@@ -141,23 +157,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       const finalData = { ...formData, ...processedData };
       setProcessedFormData(finalData);
       
-      // Calcular tamanho da fonte ideal se getTemplate estiver disponível
-      if (getTemplate) {
-        const htmlContent = replaceTemplateVariables(getTemplate(14), finalData);
-        const optimalFontSize = calculateOptimalFontSize(htmlContent, 14);
-        setDynamicFontSize(optimalFontSize);
-        
-        // Mostrar feedback apenas se a fonte foi realmente reduzida
-        if (optimalFontSize < 14) {
-          const reduction = ((14 - optimalFontSize) / 14 * 100).toFixed(1);
-          toast({
-            title: "📏 Fonte Ajustada para Manter 1 Página",
-            description: `Fonte reduzida de 14px para ${optimalFontSize}px (-${reduction}%)`,
-            duration: 4000,
-          });
-        } else {
-        }
-      }
+      // Fonte mantida no tamanho padrão de 14px
       
       setShowPreview(true);
     } else {
@@ -179,93 +179,126 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       return;
     }
 
-    // Criar estilos CSS para ocultar elementos da UI durante impressão
-    const printStyles = document.createElement('style');
-    printStyles.id = 'print-styles';
-    printStyles.textContent = `
-      @media print {
-        /* Ocultar TODOS os elementos da UI e containers */
-        body > *:not(.print-only), 
-        .min-h-screen, .bg-gradient-secondary,
-        header, .header, nav, .nav, .action-bar, .toolbar,
-        button, .btn, .button, .print\\:hidden,
-        .container, .mx-auto, .px-6, .py-8,
-        .max-w-4xl, .shadow-card, .border-b,
-        .flex.items-center.justify-between,
-        .gap-2, .gap-3, main, .card, .CardContent,
-        [class*="shadow"], [class*="border"],
-        .text-xl, .text-sm, .text-muted-foreground,
-        .font-semibold, .font-bold,
-        .mb-6, .mb-8, .py-6, .px-6 {
-          display: none !important;
-        }
-        
-        /* Resetar body para impressão */
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-          font-family: Arial, sans-serif !important;
-        }
-        
-        /* Mostrar APENAS o conteúdo do documento */
-        #document-content {
-          display: block !important;
-          position: static !important;
-          width: 210mm !important;
-          min-height: 297mm !important;
-          margin: 0 auto !important;
-          padding: 20mm !important;
-          box-sizing: border-box !important;
-          background: white !important;
-          color: black !important;
-          font-size: ${dynamicFontSize}px !important;
-          line-height: 1.6 !important;
-          page-break-inside: avoid !important;
-          box-shadow: none !important;
-          border: none !important;
-        }
-        
-        /* Garantir que o documento seja o único elemento visível */
-        .print-only {
-          display: block !important;
-        }
-        
-        /* Ocultar scrollbars */
-        ::-webkit-scrollbar {
-          display: none !important;
-        }
-        
-        /* Configurações de página */
+    try {
+      // Criar uma nova janela para impressão
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível abrir a janela de impressão. Verifique se o popup está bloqueado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // CSS para impressão
+      const printCSS = `
+        <style>
+          @page {
+            margin: 0;
+            size: A4;
+          }
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #000;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .no-print { display: none !important; }
+            img { 
+              max-width: 100%; 
+              height: auto; 
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+            * { 
+              -webkit-print-color-adjust: exact; 
+              color-adjust: exact;
+              box-sizing: border-box;
+            }
+            div {
+              margin: 0;
+              padding: 0;
+            }
+            p {
+              margin: 0 0 20px 0;
+              padding: 0;
+            }
+            h1, h2, h3 {
+              margin: 0 0 20px 0;
+              padding: 0;
+              letter-spacing: 1px;
+            }
+            /* Ocultar cabeçalho e rodapé do navegador */
         @page {
+              margin: 0;
           size: A4;
-          margin: 0;
-        }
-      }
-    `;
-    
-    // Adicionar classe especial ao documento para impressão
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            body {
+              padding: 20px !important;
+            }
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #000;
+            margin: 0;
+            padding: 20px;
+          }
+        </style>
+      `;
+
+      // Obter o conteúdo do documento
     const documentElement = document.getElementById('document-content');
-    if (documentElement) {
-      documentElement.classList.add('print-only');
+      const documentContent = documentElement ? documentElement.innerHTML : '';
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${title}</title>
+            ${printCSS}
+          </head>
+          <body>
+            ${documentContent}
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      
+      // Aguardar o conteúdo carregar antes de imprimir
+      setTimeout(() => {
+        // Configurar opções de impressão para ocultar cabeçalho/rodapé
+        printWindow.print();
+        
+        // Fechar a janela após um tempo
+        setTimeout(() => {
+          printWindow.close();
+        }, 1000);
+      }, 500);
+
+      toast({
+        title: "Impressão",
+        description: "Abrindo janela de impressão... Dica: Nas opções de impressão, desmarque 'Cabeçalhos e rodapés' para uma impressão mais limpa."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao abrir impressão. Tente novamente.",
+        variant: "destructive"
+      });
     }
-    
-    // Adicionar estilos temporariamente
-    document.head.appendChild(printStyles);
-    
-    // Imprimir
-    window.print();
-    
-    // Remover estilos e classe após impressão
-    setTimeout(() => {
-      const existingStyles = document.getElementById('print-styles');
-      if (existingStyles) {
-        document.head.removeChild(existingStyles);
-      }
-      if (documentElement) {
-        documentElement.classList.remove('print-only');
-      }
-    }, 1000);
   };
 
   const handleDownloadDocx = async () => {
@@ -466,6 +499,16 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
+    
+    // Processar condicionais Handlebars simples
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, content) => {
+      if (data[variable] && data[variable].trim()) {
+        return content;
+      }
+      return '';
+    });
+    
+    // Substituir variáveis
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
       let formattedValue = value || `[${key.toUpperCase()}]`;
@@ -479,61 +522,10 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       
       result = result.replace(new RegExp(placeholder, 'g'), formattedValue);
     });
+    
     return result;
   };
 
-  // Sistema inteligente de ajuste de fonte - mais conservador e preciso
-  const calculateOptimalFontSize = (content: string, baseSize: number = 14) => {
-    // Criar elemento temporário para medir altura com medidas exatas A4
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '-9999px';
-    tempDiv.style.width = '794px'; // 210mm em pixels (96 DPI)
-    tempDiv.style.fontFamily = 'Arial, sans-serif';
-    tempDiv.style.lineHeight = '1.6';
-    tempDiv.style.padding = '60px'; // ~16mm em pixels
-    tempDiv.style.boxSizing = 'border-box';
-    tempDiv.style.backgroundColor = 'white';
-    tempDiv.style.color = '#000000';
-    
-    document.body.appendChild(tempDiv);
-    
-    // Primeiro teste: verificar se cabe com o tamanho base
-    tempDiv.style.fontSize = `${baseSize}px`;
-    tempDiv.innerHTML = content;
-    
-    const maxHeightPx = 950; // Altura máxima controlada para garantir 1 página
-    const currentHeight = tempDiv.scrollHeight;
-    
-    // Se cabe perfeitamente, não reduzir
-    if (currentHeight <= maxHeightPx) {
-      document.body.removeChild(tempDiv);
-      return baseSize;
-    }
-    
-    
-    // Só agora reduzir gradualmente com precisão
-    let currentSize = baseSize;
-    const minSize = 10; // Tamanho mínimo legível
-    
-    while (currentSize >= minSize) {
-      tempDiv.style.fontSize = `${currentSize}px`;
-      tempDiv.innerHTML = content;
-      
-      const heightPx = tempDiv.scrollHeight;
-      
-      if (heightPx <= maxHeightPx) {
-        document.body.removeChild(tempDiv);
-        return currentSize;
-      }
-      
-      currentSize -= 0.2; // Redução mais gradual para maior precisão
-    }
-    
-    document.body.removeChild(tempDiv);
-    return minSize;
-  };
 
   // Mapear os ícones para cada etapa
   const stepIcons = [Home, User, Users, FileCheck, Search, Check];
@@ -654,16 +646,34 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                 }
                 tooltip={
                   field.name === "dataFirmamentoContrato"
-                    ? "Guia dos meses:\n1 - Janeiro\n2 - Fevereiro\n3 - Março\n4 - Abril\n5 - Maio\n6 - Junho\n7 - Julho\n8 - Agosto\n9 - Setembro\n10 - Outubro\n11 - Novembro\n12 - Dezembro"
+                    ? "Guia dos meses:\n\n1 - Janeiro     7 - Julho\n2 - Fevereiro  8 - Agosto\n3 - Março      9 - Setembro\n4 - Abril     10 - Outubro\n5 - Maio      11 - Novembro\n6 - Junho     12 - Dezembro"
                     : undefined
                 }
             />
           </div>
-          );
-        })}
+        );
+      })}
+      
+      {/* Campo adicional para RG/CPF quando é terceira pessoa */}
+      {isTerceiraPessoa() && (
+        <div className="md:col-span-2">
+          <FormField
+            name="documentoQuemRetira"
+            label="RG ou CPF da Pessoa"
+            type="text"
+            value={formData.documentoQuemRetira || ""}
+            onChange={(value) => updateField("documentoQuemRetira", value)}
+            placeholder="Digite o RG ou CPF da pessoa"
+            required={true}
+            error={getFieldError("documentoQuemRetira")}
+            touched={isFieldTouched("documentoQuemRetira")}
+          />
+        </div>
+      )}
       </div>
     ),
   }));
+
 
   if (showPreview) {
     return (
@@ -736,7 +746,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                 >
                    <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'flex-end', 
+                    justifyContent: 'flex-start', 
                     alignItems: 'flex-start', 
                     marginBottom: '40px',
                     minHeight: '120px'

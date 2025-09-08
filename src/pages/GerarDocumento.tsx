@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ArrowLeft } from 'lucide-react';
+import { Copy, Check, ArrowLeft, Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import html2pdf from 'html2pdf.js';
 
 const GerarDocumento = () => {
   const location = useLocation();
@@ -94,6 +95,205 @@ const GerarDocumento = () => {
     }
   };
 
+  const handlePrint = () => {
+    try {
+      // Criar uma nova janela para impressão
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Não foi possível abrir a janela de impressão. Verifique se o popup está bloqueado.');
+        return;
+      }
+
+      // CSS para impressão
+      const printCSS = `
+        <style>
+          @page {
+            margin: 0;
+            size: A4;
+          }
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #000;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .no-print { display: none !important; }
+            img { 
+              max-width: 100%; 
+              height: auto; 
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+            * { 
+              -webkit-print-color-adjust: exact; 
+              color-adjust: exact;
+              box-sizing: border-box;
+            }
+            div {
+              margin: 0;
+              padding: 0;
+            }
+            p {
+              margin: 0 0 20px 0;
+              padding: 0;
+            }
+            h1, h2, h3 {
+              margin: 0 0 20px 0;
+              padding: 0;
+              letter-spacing: 1px;
+            }
+            /* Ocultar cabeçalho e rodapé do navegador */
+            @page {
+              margin: 0;
+              size: A4;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            body {
+              padding: 20px !important;
+            }
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #000;
+            margin: 0;
+            padding: 20px;
+          }
+        </style>
+      `;
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${title}</title>
+            ${printCSS}
+          </head>
+          <body>
+            ${template}
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      
+      // Aguardar o conteúdo carregar antes de imprimir
+      setTimeout(() => {
+        // Configurar opções de impressão para ocultar cabeçalho/rodapé
+        printWindow.print();
+        
+        // Fechar a janela após um tempo
+        setTimeout(() => {
+          printWindow.close();
+        }, 1000);
+      }, 500);
+
+      toast.success('Abrindo janela de impressão... Dica: Nas opções de impressão, desmarque "Cabeçalhos e rodapés" para uma impressão mais limpa.');
+    } catch (error) {
+      toast.error('Erro ao abrir impressão. Tente novamente.');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      toast.info('Gerando PDF...');
+      
+      // Configurações do PDF
+      const opt = {
+        margin: [10, 10, 10, 10], // [top, left, bottom, right]
+        filename: `${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          letterRendering: true,
+          logging: false,
+          width: 800,
+          height: 1000
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait',
+          compress: true
+        }
+      };
+
+      // Criar elemento temporário para conversão
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = template;
+      tempDiv.style.padding = '20px';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.lineHeight = '1.6';
+      tempDiv.style.color = '#000';
+      tempDiv.style.maxWidth = '800px';
+      tempDiv.style.margin = '0 auto';
+      tempDiv.style.backgroundColor = '#ffffff';
+      tempDiv.style.boxSizing = 'border-box';
+      
+      // Aplicar estilos para PDF
+      const style = document.createElement('style');
+      style.textContent = `
+        * { 
+          -webkit-print-color-adjust: exact; 
+          color-adjust: exact;
+          box-sizing: border-box;
+        }
+        img { 
+          max-width: 100%; 
+          height: auto; 
+          display: block;
+        }
+        div {
+          margin: 0;
+          padding: 0;
+        }
+        p {
+          margin: 0 0 20px 0;
+          padding: 0;
+        }
+        h1, h2, h3 {
+          margin: 0 0 20px 0;
+          padding: 0;
+          letter-spacing: 1px;
+        }
+        .flex {
+          display: flex !important;
+        }
+        .justify-content-space-between {
+          justify-content: space-between !important;
+        }
+        .align-items-flex-start {
+          align-items: flex-start !important;
+        }
+      `;
+      tempDiv.appendChild(style);
+      
+      // Adicionar temporariamente ao DOM
+      document.body.appendChild(tempDiv);
+      
+      // Gerar PDF
+      await html2pdf().set(opt).from(tempDiv).save();
+      
+      // Remover elemento temporário
+      document.body.removeChild(tempDiv);
+      
+      toast.success('PDF baixado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao gerar PDF. Tente novamente.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-secondary p-4">
       <div className="max-w-4xl mx-auto">
@@ -121,6 +321,24 @@ const GerarDocumento = () => {
                     Copiar Conteúdo
                   </>
                 )}
+              </Button>
+              <Button
+                onClick={handlePrint}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Imprimir
+              </Button>
+              <Button
+                onClick={handleDownloadPDF}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Baixar PDF
               </Button>
               <Button
                 onClick={() => navigate('/contratos')}

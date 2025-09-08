@@ -6,7 +6,7 @@ import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Tras
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE } from "@/templates/documentos";
+import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE } from "@/templates/documentos";
 import { formatDateBrazilian } from "@/utils/dateFormatter";
 
 interface Contract {
@@ -143,6 +143,17 @@ const Contratos = () => {
       
       // Aplicar conjunções verbais antes de processar o template
       const enhancedData = applyConjunctions(formData);
+      
+      // Adicionar campos específicos para notificação de agendamento
+      if (documentType === "Notificação de Agendamento") {
+        enhancedData.dataAtual = formatDateBrazilian(new Date());
+        enhancedData.dataVistoria = "29 de agosto de 2025"; // Data padrão em formato brasileiro
+        enhancedData.horaVistoria = "09:00h"; // Hora padrão, pode ser editada
+        enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || "[ENDEREÇO]";
+        enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
+        enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+        enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+      }
       
       const processedTemplate = replaceTemplateVariables(template, enhancedData);
       const documentTitle = `${documentType} - ${contract.title}`;
@@ -316,6 +327,15 @@ const Contratos = () => {
                           >
                             <Users className="h-4 w-4" />
                             Devolutiva Locatário
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => generateDocument(contract, NOTIFICACAO_AGENDAMENTO_TEMPLATE, "Notificação de Agendamento")}
+                            className="gap-2"
+                          >
+                            <FileText className="h-4 w-4" />
+                            Notificação de Agendamento
                           </Button>
                         </div>
                       </div>

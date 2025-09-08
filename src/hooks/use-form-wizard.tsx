@@ -9,6 +9,7 @@ export interface FormField {
   validation?: (value: string) => string | null;
   mask?: string;
   options?: Array<{ value: string; label: string }>;
+  tooltip?: string;
 }
 
 export interface FormStep {
