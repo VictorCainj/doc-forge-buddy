@@ -16,7 +16,7 @@ export const TERMO_RECEBIMENTO_TEMPLATE = `
   </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: 14px;">
-Pelo presente, recebemos as chaves do imóvel sito à {{enderecoImovel}}, ora locado {{nomeLocatario}}, devidamente qualificado no contrato de locação residencial firmado em {{dataFirmamentoContrato}}.
+Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, ora locado <strong>{{nomeLocatario}}</strong>, devidamente qualificado no contrato de locação <strong>{{tipoContrato}}</strong> firmado em {{dataFirmamentoContrato}}.
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
@@ -85,7 +85,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Anexo a esse e-mail o laudo de vistoria de entrada para seu conhecimento. O vistoriador na data da vistoria irá seguir conforme esse laudo inicial de entrada.</p>
   
-  <p style="margin-bottom: 20px;">Se o(a) senhor(a) tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  <p style="margin-bottom: 20px;">Se o senhor tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
   
   <p style="margin-bottom: 20px;">Todos os documentos enviados deverão ser assinados pelas partes, no que se refere a data de agendamento de vistoria, termo de comparecimento de vistoria e conclusão de vistoria, pois a Madia deve documentar que, todos os processos administrativos, como contratante serão efetuados e realizados por todas as partes.</p>
   
@@ -152,13 +152,13 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificada através do contrato de prestação de serviço.</p>
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificado(a)(s) Locatário(a)(s):</strong> <strong>{{nomeLocatario}}</strong></p>
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}, Contrato {{numeroContrato}}</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificado através do contrato de prestação de serviço.</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificado Locatário:</strong> <strong>{{nomeLocatario}}</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}</p>
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezado(a)(s) Senhor(a)(s),</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezado Senhor,</strong></p>
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
@@ -187,7 +187,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
   
   <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
   
-  <p style="margin-bottom: 25px;">Se o(a) senhor(a) tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  <p style="margin-bottom: 25px;">Se o senhor tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
   
   <p style="margin-top: 50px;">Atenciosamente,</p>
   

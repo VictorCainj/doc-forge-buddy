@@ -50,24 +50,17 @@ const TermoLocador: React.FC = () => {
         },
         {
           name: "incluirNomeCompleto",
-          label: isMultipleProprietarios(contractData.nomeProprietario) 
-            ? "Selecionar Locador Específico" 
-            : "Incluir Nome Completo do Locador",
+          label: "Selecionar Locador Específico",
           type: "select",
           required: false,
           placeholder: "Selecione uma opção",
-          options: isMultipleProprietarios(contractData.nomeProprietario) 
-            ? [
-                { value: "todos", label: "Todos os locadores" },
-                ...contractData.nomeProprietario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
-                  value: nome,
-                  label: nome
-                }))
-              ]
-            : [
-                { value: "sim", label: "Sim - Incluir nome completo" },
-                { value: "nao", label: "Não - Usar apenas o nome digitado" }
-              ]
+          options: [
+            { value: "todos", label: "Todos os locadores" },
+            ...contractData.nomeProprietario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
+              value: nome,
+              label: nome
+            }))
+          ]
         },
         { 
           name: "tipoQuantidadeChaves", 
@@ -159,11 +152,9 @@ __________________________________________<br>
 
     // Processar nome de quem retira baseado na opção selecionada
     let nomeQuemRetira = data.nomeQuemRetira;
-    if (data.incluirNomeCompleto === "sim") {
+    if (data.incluirNomeCompleto === "todos") {
       nomeQuemRetira = contractData.nomeProprietario;
-    } else if (data.incluirNomeCompleto === "todos") {
-      nomeQuemRetira = contractData.nomeProprietario;
-    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== "nao") {
+    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== "") {
       // Se selecionou um proprietário específico
       nomeQuemRetira = data.incluirNomeCompleto;
     }
@@ -173,6 +164,12 @@ __________________________________________<br>
       ? `<strong>OBS:</strong> ${data.observacao}` 
       : "<!-- SEM OBSERVACAO -->";
 
+    // Aplicar formatação de nomes igual às devolutivas
+    const nomeProprietarioFormatado = contractData.nomeProprietario
+      .split(' e ')
+      .map(nome => `<strong>${nome.trim()}</strong>`)
+      .join(' e ');
+
     const enhancedData = {
       ...data,
       ...contractData,
@@ -180,6 +177,7 @@ __________________________________________<br>
       // Dados específicos do termo do locador
       locadorTerm,
       nomeQuemRetira,
+      nomeProprietario: nomeProprietarioFormatado, // Nome formatado com negrito
       
       // Processar observação
       observacao,

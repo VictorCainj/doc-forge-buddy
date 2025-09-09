@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 export interface FormFieldProps {
   name: string;
   label: string;
-  type?: "text" | "textarea" | "number" | "email" | "tel" | "select";
+  type?: "text" | "textarea" | "number" | "email" | "tel" | "select" | "textWithSuggestions";
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -46,6 +46,10 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   const hasError = touched && error;
   const isValid = touched && !error && value.length > 0;
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState(options);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const applyMask = (inputValue: string, maskPattern?: string): string => {
     if (!maskPattern) return inputValue;
@@ -76,6 +80,37 @@ export const FormField: React.FC<FormFieldProps> = ({
     return masked;
   };
 
+  // Efeito para filtrar opções baseado no valor atual
+  useEffect(() => {
+    if (type === "textWithSuggestions" && options.length > 0) {
+      const filtered = options.filter(option => 
+        option.label.toLowerCase().includes(value.toLowerCase()) ||
+        option.value.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredOptions(filtered);
+      setShowSuggestions(value.length > 0 && filtered.length > 0);
+    }
+  }, [value, options, type]);
+
+  // Efeito para fechar sugestões ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    if (type === "textWithSuggestions") {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [type]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let newValue = e.target.value;
     
@@ -84,6 +119,12 @@ export const FormField: React.FC<FormFieldProps> = ({
     }
     
     onChange(newValue);
+  };
+
+  const handleSuggestionClick = (suggestionValue: string) => {
+    onChange(suggestionValue);
+    setShowSuggestions(false);
+    inputRef.current?.focus();
   };
 
   const inputClasses = cn(
@@ -120,6 +161,40 @@ export const FormField: React.FC<FormFieldProps> = ({
             ))}
           </SelectContent>
         </Select>
+      );
+    }
+
+    if (type === "textWithSuggestions") {
+      return (
+        <div className="relative">
+          <Input 
+            {...baseProps} 
+            ref={inputRef}
+            aria-invalid={hasError ? "true" : "false"} 
+            type="text"
+            onFocus={() => {
+              if (options.length > 0 && value.length > 0) {
+                setShowSuggestions(true);
+              }
+            }}
+          />
+          {showSuggestions && filteredOptions.length > 0 && (
+            <div 
+              ref={suggestionsRef}
+              className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+            >
+              {filteredOptions.map((option) => (
+                <div
+                  key={option.value}
+                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                  onClick={() => handleSuggestionClick(option.value)}
+                >
+                  {option.label}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       );
     }
 

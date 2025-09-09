@@ -120,23 +120,23 @@ const Contratos = () => {
       enhancedData.locatarioComunicou = "informaram";
       enhancedData.locatarioIra = "irão";
       enhancedData.locatarioTermo = "do locatário";
-      enhancedData.locatarioPrezado = "Prezado(a)(s)";
+      enhancedData.locatarioPrezado = "Prezado";
     } else {
-      enhancedData.locatarioTerm = "o (a) inquilino(a)";
+      enhancedData.locatarioTerm = "o inquilino";
       enhancedData.locatarioComunicou = "informou";
       enhancedData.locatarioIra = "irá";
       enhancedData.locatarioTermo = "do locatário";
-      enhancedData.locatarioPrezado = "Prezado(a)";
+      enhancedData.locatarioPrezado = "Prezado";
     }
     
     // Aplicar conjunções para proprietários
     const isMultipleProprietarios = isMultiplePeople(formData.nomeProprietario);
     if (isMultipleProprietarios) {
       enhancedData.proprietarioTerm = "os proprietários";
-      enhancedData.proprietarioPrezado = "Prezado(a)(s)";
+      enhancedData.proprietarioPrezado = "Prezado";
     } else {
       enhancedData.proprietarioTerm = "o proprietário";
-      enhancedData.proprietarioPrezado = "Prezado(a)";
+      enhancedData.proprietarioPrezado = "Prezado";
     }
     
     // Gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)

@@ -100,24 +100,17 @@ const TermoLocatario: React.FC = () => {
         },
         {
           name: "incluirNomeCompleto",
-          label: isMultipleLocatarios(contractData.nomeLocatario) 
-            ? "Selecionar Locatário Específico" 
-            : "Incluir Nome Completo do Locatário",
+          label: "Selecionar Locatário Específico",
           type: "select",
           required: false,
           placeholder: "Selecione uma opção",
-          options: isMultipleLocatarios(contractData.nomeLocatario) 
-            ? [
-                { value: "todos", label: "Todos os locatários" },
-                ...contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
-                  value: nome,
-                  label: nome
-                }))
-              ]
-            : [
-                { value: "sim", label: "Sim - Incluir nome completo" },
-                { value: "nao", label: "Não - Usar apenas o nome digitado" }
-              ]
+          options: [
+            { value: "todos", label: "Todos os locatários" },
+            ...contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
+              value: nome,
+              label: nome
+            }))
+          ]
         },
         { 
           name: "tipoQuantidadeChaves", 
@@ -133,6 +126,17 @@ const TermoLocatario: React.FC = () => {
           required: true,
           placeholder: "DD/MM/AAAA",
           mask: "date"
+        },
+        {
+          name: "tipoContrato",
+          label: "Tipo de Contrato",
+          type: "select",
+          required: false,
+          placeholder: "Selecione o tipo",
+          options: [
+            { value: "residencial", label: "Residencial" },
+            { value: "comercial", label: "Comercial" }
+          ]
         },
         {
           name: "observacao",
@@ -176,7 +180,7 @@ Valinhos, ${getCurrentDate()}.
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}<br>
-<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeLocatario}}
+<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeQuemRetira}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -243,11 +247,10 @@ __________________________________________<br>
 
     // Processar nome de quem retira baseado na opção selecionada
     let nomeQuemRetira = data.nomeQuemRetira;
-    if (data.incluirNomeCompleto === "sim") {
+    
+    if (data.incluirNomeCompleto === "todos") {
       nomeQuemRetira = contractData.nomeLocatario;
-    } else if (data.incluirNomeCompleto === "todos") {
-      nomeQuemRetira = contractData.nomeLocatario;
-    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== "nao") {
+    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== "") {
       // Se selecionou um locatário específico
       nomeQuemRetira = data.incluirNomeCompleto;
     }
@@ -257,8 +260,17 @@ __________________________________________<br>
       ? `<strong>OBS:</strong> ${data.observacao}` 
       : "<!-- SEM OBSERVACAO -->";
 
+    // Aplicar formatação de nomes - locador sem negrito
+    const nomeProprietarioFormatado = contractData.nomeProprietario;
+
+    const nomeLocatarioFormatado = contractData.nomeLocatario
+      .split(' e ')
+      .map(nome => `<strong>${nome.trim()}</strong>`)
+      .join(' e ');
+
     // Texto de entrega de chaves para termo do locatário
-    const textoEntregaChaves = `Pelo presente, recebemos as chaves do imóvel sito à ${contractData.enderecoImovel}, ora locado ${nomeQuemRetira}, devidamente qualificado no contrato de locação residencial firmado em ${contractData.dataFirmamentoContrato}.`;
+    const tipoContrato = data.tipoContrato || "residencial";
+    const textoEntregaChaves = `Pelo presente, recebemos as chaves do imóvel sito à <strong>${contractData.enderecoImovel}</strong>, ora locado <strong>${nomeQuemRetira}</strong>, devidamente qualificado no contrato de locação <strong>${tipoContrato}</strong> firmado em ${contractData.dataFirmamentoContrato}.`;
 
     const enhancedData = {
       ...data,
@@ -269,6 +281,8 @@ __________________________________________<br>
       dadosLocatarioTitulo,
       locatarioResponsabilidade,
       nomeQuemRetira,
+      nomeProprietario: nomeProprietarioFormatado, // Nome formatado com negrito
+      nomeLocatario: nomeLocatarioFormatado, // Nome formatado com negrito
       
       // Processar observação
       observacao,

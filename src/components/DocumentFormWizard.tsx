@@ -601,29 +601,40 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
               ];
             }
           } else if (field.name === "nomeQuemRetira") {
-            // Para termo do locador, não usar opções (campo de texto)
-            if (formData.tipoTermo === "locador") {
-              dynamicOptions = [];
-            } else if (formData.tipoQuemRetira === "proprietario") {
-              dynamicOptions = [
-                { value: contractData.nomeProprietario || "", label: contractData.nomeProprietario || "Proprietário" }
-              ];
-            } else if (formData.tipoQuemRetira === "locatario") {
-              if (isMultipleLocatarios(contractData.nomeLocatario || "")) {
-                // Se há múltiplos locatários, criar opções para cada um
-                const nomesLocatarios = contractData.nomeLocatario?.split(/[, e E]+/).map(nome => nome.trim()).filter(nome => nome) || [];
-                dynamicOptions = nomesLocatarios.map(nome => ({
-                  value: nome,
-                  label: nome
-                }));
-              } else {
-                // Se há apenas um locatário
+            // Verificar se o formulário tem o campo tipoQuemRetira
+            const hasTimoQuemRetira = steps.some(step => 
+              step.fields.some(f => f.name === "tipoQuemRetira")
+            );
+            
+            if (hasTimoQuemRetira) {
+              // Lógica para formulários que têm tipoQuemRetira (como TermoInquilino)
+              if (formData.tipoTermo === "locador") {
+                dynamicOptions = [];
+              } else if (formData.tipoQuemRetira === "proprietario") {
                 dynamicOptions = [
-                  { value: contractData.nomeLocatario || "", label: contractData.nomeLocatario || "Locatário" }
+                  { value: contractData.nomeProprietario || "", label: contractData.nomeProprietario || "Proprietário" }
                 ];
+              } else if (formData.tipoQuemRetira === "locatario") {
+                if (isMultipleLocatarios(contractData.nomeLocatario || "")) {
+                  // Se há múltiplos locatários, criar opções para cada um
+                  const nomesLocatarios = contractData.nomeLocatario?.split(/[, e E]+/).map(nome => nome.trim()).filter(nome => nome) || [];
+                  dynamicOptions = nomesLocatarios.map(nome => ({
+                    value: nome,
+                    label: nome
+                  }));
+                } else {
+                  // Se há apenas um locatário
+                  dynamicOptions = [
+                    { value: contractData.nomeLocatario || "", label: contractData.nomeLocatario || "Locatário" }
+                  ];
+                }
+              } else {
+                dynamicOptions = [];
               }
             } else {
-              dynamicOptions = [];
+              // Para formulários que NÃO têm tipoQuemRetira (como TermoLocatario e TermoLocador)
+              // Usar as opções definidas no próprio formulário
+              dynamicOptions = field.options || [];
             }
           }
 
@@ -636,8 +647,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                   name={field.name}
                   label={field.label}
                     type={
-                      field.name === "nomeQuemRetira" && formData.tipoTermo === "locador"
-                        ? "text"
+                      field.name === "nomeQuemRetira"
+                        ? "textWithSuggestions"
                         : field.type
                     }
                   value={formData[field.name] || ""}
@@ -660,6 +671,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                         ? `Status do documento ${formData.tipoAgua || 'selecionado'}`
                         : field.name === "nomeQuemRetira" && !formData.tipoQuemRetira
                         ? "Primeiro selecione quem está retirando a chave"
+                        : field.name === "nomeQuemRetira"
+                        ? "Digite o nome ou selecione uma sugestão"
                         : undefined
                     }
                     tooltip={

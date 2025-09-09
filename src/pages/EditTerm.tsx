@@ -141,6 +141,10 @@ const EditTerm = () => {
         { name: "tipoQuantidadeChaves", label: "Tipo e Quantidade de Chaves", type: "textarea" as const, required: true, placeholder: "Ex: 04 chaves simples" },
         { name: "dataVistoria", label: "Data da Vistoria", type: "text" as const, required: true, placeholder: "Ex: 28/08/2025" },
         { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" },
+        { name: "tipoContrato", label: "Tipo de Contrato", type: "select" as const, required: false, placeholder: "Selecione o tipo", options: [
+          { value: "residencial", label: "Residencial" },
+          { value: "comercial", label: "Comercial" }
+        ]},
         { name: "nomeGestor", label: "Nome do Gestor", type: "text" as const, required: true, placeholder: "Ex: Victor Cain Jorge" }
       ]
     }
@@ -150,7 +154,7 @@ const EditTerm = () => {
 <div style="text-align: right; margin-bottom: 15px; font-size: 14px;">Valinhos, ${getCurrentDate()}.</div>
 
 <div style="text-align: justify; line-height: 1.4; margin-bottom: 12px; font-size: 14px;">
-Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{locatarioPronoun}} {{nomeLocatario}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
+Pelo presente, recebemos as chaves do imóvel sito à <strong>{{endereco}}</strong>, ora locado <strong>{{locatarioPronoun}} {{nomeLocatario}}</strong>, devidamente qualificado no contrato de locação <strong>{{tipoContrato}}</strong> firmado em {{dataFirmamentoContrato}}.
 </div>
 
 <div style="margin: 12px 0; font-size: 13px;">

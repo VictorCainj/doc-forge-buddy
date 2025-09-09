@@ -177,6 +177,17 @@ const TermoInquilino = () => {
           type: "text", 
           required: true, 
           placeholder: "Nome completo de quem está retirando"
+        },
+        {
+          name: "tipoContrato",
+          label: "Tipo de Contrato",
+          type: "select",
+          required: false,
+          placeholder: "Selecione o tipo",
+          options: [
+            { value: "residencial", label: "Residencial" },
+            { value: "comercial", label: "Comercial" }
+          ]
         }
       ]
     }
@@ -281,7 +292,7 @@ Valinhos, ${getCurrentDate()}.
 </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
-Pelo presente, recebemos as chaves do imóvel sito à {{endereco}}, ora locado {{qualificacaoLocatarios}}, devidamente qualificados no contrato de locação residencial firmado em {{dataContrato}}.
+Pelo presente, recebemos as chaves do imóvel sito à <strong>{{endereco}}</strong>, ora locado <strong>{{qualificacaoLocatarios}}</strong>, devidamente qualificado no contrato de locação <strong>{{tipoContrato}}</strong> firmado em {{dataFirmamentoContrato}}.
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
