@@ -17,9 +17,11 @@ import { formatDateBrazilian } from "@/utils/dateFormatter";
 interface FormField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "number";
+  type: "text" | "textarea" | "number" | "select";
   required?: boolean;
   placeholder?: string;
+  options?: Array<{ value: string; label: string }>;
+  tooltip?: string;
 }
 
 interface FieldGroup {
