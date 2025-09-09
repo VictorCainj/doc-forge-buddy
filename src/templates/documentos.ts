@@ -20,15 +20,15 @@ Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
-<strong>LOCADOR DO IMÓVEL:</strong> {{nomeProprietario}}<br>
-<strong>DADOS DO LOCATÁRIO:</strong> {{nomeLocatario}}
+<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}<br>
+<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
 <strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS:</strong><br>
 {{cpflDaev}}<br>
 <br>
-<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
+<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do(a) Locatário(a).
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
@@ -42,7 +42,7 @@ Foi entregue {{quantidadeChaves}}
 
 <div style="margin: 20px 0; font-size: 14px;">
 ( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>
-( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
+( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do(a) locatário(a). Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 </div>
 
   <div style="margin-top: 50px; text-align: center;">
@@ -79,7 +79,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">A vistoria de Saída do imóvel será agendada após o envio de algumas documentações por parte do locatário dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. Comunicaremos a data da vistoria com antecedência.</p>
+  <p style="margin-bottom: 20px;">A vistoria de Saída do imóvel será agendada após o envio de algumas documentações por parte do(a) locatário(a) dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. Comunicaremos a data da vistoria com antecedência.</p>
   
   <p style="margin-bottom: 20px;">Comunico que os valores da rescisão serão computados financeiramente com a cobrança devida após o término dos <strong>{{prazoDias}} dias</strong>.</p>
   
@@ -120,7 +120,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Ressaltamos que o imóvel deverá ser devolvido nas mesmas condições em que foi entregue, conforme o Art. 23 da Lei do Inquilinato "III - restituir o imóvel, finda a locação, no estado em que o recebeu, salvo as deteriorações decorrentes do seu uso normal;</p>
   
-  <p style="margin-bottom: 20px;">Evite pendencias de reprova na vistoria e atente-se a entregar o imóvel nas condições iniciais - a entrega de chaves com reprova de laudo enseja direito ao locador o pedido <strong>DE LUCROS CESSANTES</strong>.</p>
+  <p style="margin-bottom: 20px;">Evite pendencias de reprova na vistoria e atente-se a entregar o imóvel nas condições iniciais - a entrega de chaves com reprova de laudo enseja direito ao(à) locador(a) o pedido <strong>DE LUCROS CESSANTES</strong>.</p>
   
   <p style="margin-bottom: 20px;">Para sua referência, segue também o laudo de vistoria de entrada.</p>
   

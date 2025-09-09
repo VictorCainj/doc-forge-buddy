@@ -234,27 +234,27 @@ const TermoInquilino = () => {
   };
 
   const getLocadorTerm = (nomeLocador: string) => {
-    if (!nomeLocador) return 'LOCADOR';
+    if (!nomeLocador) return 'LOCADOR(a)';
     if (isPlural(nomeLocador)) {
       return 'LOCADORES';
     }
-    return isFeminine(nomeLocador) ? 'LOCADORA' : 'LOCADOR';
+    return 'LOCADOR(a)';
   };
 
   const getLocatarioTerm = (nomeLocatario: string) => {
-    if (!nomeLocatario) return 'LOCATÁRIO';
+    if (!nomeLocatario) return 'LOCATÁRIO(a)';
     if (isPlural(nomeLocatario)) {
       return 'LOCATÁRIOS';
     }
-    return isFeminine(nomeLocatario) ? 'LOCATÁRIA' : 'LOCATÁRIO';
+    return 'LOCATÁRIO(a)';
   };
 
   const getLocatarioFieldTitle = (nomeLocatario: string) => {
-    if (!nomeLocatario) return 'Dados do Locatário';
+    if (!nomeLocatario) return 'DADOS DO(A) LOCATÁRIO(A)';
     if (isPlural(nomeLocatario)) {
-      return 'Dados dos Locatários';
+      return 'DADOS DOS LOCATÁRIOS';
     }
-    return isFeminine(nomeLocatario) ? 'Dados da Locatária' : 'Dados do Locatário';
+    return 'DADOS DO(A) LOCATÁRIO(A)';
   };
 
   const getLocatarioPronoun = (nomeLocatario: string) => {
@@ -305,7 +305,7 @@ Pelo presente, recebemos as chaves do imóvel sito à <strong>{{endereco}}</stro
 <strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS (CPFL):</strong><br>
 <strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>{{tipoSegundaDocumento}}:</strong> {{segundoDocumento}}<br>
 <br>
-<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do Locatário.
+<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do(a) Locatário(a).
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -319,7 +319,7 @@ Foi entregue {{tipoQuantidadeChaves}}
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
 ( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>
-( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do locatário. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
+( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do(a) locatário(a). Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 </div>
 
 <div style="margin-top: 50px; text-align: center;">
