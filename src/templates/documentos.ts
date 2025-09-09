@@ -158,7 +158,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezado Senhor,</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezado(a) Senhor(a),</strong></p>
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
