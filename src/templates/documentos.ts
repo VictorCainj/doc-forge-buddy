@@ -73,7 +73,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
     </div>
   </div>
   
-  <p style="margin-bottom: 20px;">{{proprietarioPrezado}} <strong>{{nomeProprietario}}</strong>, tudo bem?</p>
+  <p style="margin-bottom: 20px;">{{proprietarioPrezado}} {{nomeProprietarioFormatado}}, tudo bem?</p>
   
   <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTerm}} {{nomeLocatarioFormatado}}, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
   
@@ -153,7 +153,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   
   <div style="margin-bottom: 20px;">
     <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificado através do contrato de prestação de serviço.</p>
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificado Locatário:</strong> <strong>{{nomeLocatario}}</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificado(a) Locatário(a):</strong> <strong>{{nomeLocatario}}</strong></p>
     <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}</p>
   </div>
   
