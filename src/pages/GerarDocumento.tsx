@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ArrowLeft, Printer, Download } from 'lucide-react';
+import { ArrowLeft, Printer, Copy, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import html2pdf from 'html2pdf.js';
 
 const GerarDocumento = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   
   // Dados passados via state da navegação
   const { title, template, formData, documentType } = location.state || {};
@@ -21,81 +19,22 @@ const GerarDocumento = () => {
     return null;
   }
 
-  const handleCopyContent = async () => {
-    try {
-      // Converter HTML para texto preservando formatação e espaços
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = template;
-      
-      // Função para preservar formatação HTML
-      const preserveFormatting = (element: Element): string => {
-        let result = '';
-        
-        for (const node of Array.from(element.childNodes)) {
-          if (node.nodeType === Node.TEXT_NODE) {
-            // Preservar texto exatamente como está
-            result += node.textContent || '';
-          } else if (node.nodeType === Node.ELEMENT_NODE) {
-            const el = node as Element;
-            
-            // Preservar quebras de linha para divs e parágrafos
-            if (el.tagName === 'DIV' || el.tagName === 'P') {
-              result += preserveFormatting(el);
-              if (el.nextSibling) {
-                result += '\n';
-              }
-            }
-            // Preservar quebras de linha para BR
-            else if (el.tagName === 'BR') {
-              result += '\n';
-            }
-            // Preservar conteúdo de SPAN e STRONG
-            else if (el.tagName === 'SPAN' || el.tagName === 'STRONG') {
-              result += preserveFormatting(el);
-            }
-            // Para outros elementos, apenas o conteúdo
-            else {
-              result += preserveFormatting(el);
-            }
-          }
-        }
-        
-        return result;
-      };
-      
-      let textContent = preserveFormatting(tempDiv);
-      
-      // Limpar apenas quebras de linha duplas desnecessárias, mas preservar espaços
-      textContent = textContent
-        .replace(/\n{3,}/g, '\n\n') // Máximo 2 quebras de linha seguidas
-        .trim();
-      
-      // Tentar usar a API moderna do clipboard
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(textContent);
-      } else {
-        // Fallback para navegadores mais antigos
-        const textArea = document.createElement('textarea');
-        textArea.value = textContent;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-      }
-      
-      setCopied(true);
-      toast.success('Conteúdo copiado para a área de transferência!');
-      
-      // Resetar o estado após 2 segundos
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      toast.error('Erro ao copiar conteúdo. Tente selecionar e copiar manualmente.');
+  // Função para gerar título baseado no tipo de documento
+  const getDocumentTitle = () => {
+    const contractNumber = formData?.numeroContrato || '[Número]';
+    
+    switch (documentType) {
+      case 'Devolutiva Locatário':
+        return `Título: Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato ${contractNumber}`;
+      case 'Devolutiva Proprietário':
+        return `Título: Notificação de Desocupação e Agendamento de Vistoria - Contrato ${contractNumber}`;
+      case 'Notificação de Agendamento':
+        return `Título: Notificação para Realização de Vistoria Final - Contrato ${contractNumber}`;
+      default:
+        return `Título: ${documentType} - Contrato ${contractNumber}`;
     }
   };
+
 
   const handlePrint = () => {
     if (isPrinting) return;
@@ -210,101 +149,37 @@ const GerarDocumento = () => {
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (isGeneratingPDF) return;
+  const handleCopyWhatsAppMessage = async () => {
+    if (isCopying) return;
     
-    setIsGeneratingPDF(true);
+    setIsCopying(true);
     try {
-      toast.info('Gerando PDF...');
+      // Extrair apenas o texto da mensagem (sem HTML) e converter para formato WhatsApp
+      let textContent = template
+        .replace(/<[^>]*>/g, '') // Remove todas as tags HTML
+        .replace(/&nbsp;/g, ' ') // Substitui &nbsp; por espaço
+        .replace(/\s+/g, ' ') // Remove espaços múltiplos
+        .trim();
       
-      // Configurações do PDF
-      const opt = {
-        margin: [10, 10, 10, 10], // [top, left, bottom, right]
-        filename: `${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          letterRendering: true,
-          logging: false,
-          width: 800,
-          height: 1000
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait',
-          compress: true
-        }
-      };
-
-      // Criar elemento temporário para conversão
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = template;
-      tempDiv.style.padding = '20px';
-      tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.lineHeight = '1.6';
-      tempDiv.style.color = '#000';
-      tempDiv.style.maxWidth = '800px';
-      tempDiv.style.margin = '0 auto';
-      tempDiv.style.backgroundColor = '#ffffff';
-      tempDiv.style.boxSizing = 'border-box';
+      // Converter negrito HTML para negrito WhatsApp
+      textContent = textContent.replace(/\*\*(.*?)\*\*/g, '*$1*');
       
-      // Aplicar estilos para PDF
-      const style = document.createElement('style');
-      style.textContent = `
-        * { 
-          -webkit-print-color-adjust: exact; 
-          color-adjust: exact;
-          box-sizing: border-box;
-        }
-        img { 
-          max-width: 100%; 
-          height: auto; 
-          display: block;
-        }
-        div {
-          margin: 0;
-          padding: 0;
-        }
-        p {
-          margin: 0 0 20px 0;
-          padding: 0;
-        }
-        h1, h2, h3 {
-          margin: 0 0 20px 0;
-          padding: 0;
-          letter-spacing: 1px;
-        }
-        .flex {
-          display: flex !important;
-        }
-        .justify-content-space-between {
-          justify-content: space-between !important;
-        }
-        .align-items-flex-start {
-          align-items: flex-start !important;
-        }
-      `;
-      tempDiv.appendChild(style);
+      // Adicionar emojis e formatação para WhatsApp
+      textContent = textContent.replace(/MADIA IMÓVEIS/g, '🏠 *MADIA IMÓVEIS* 🏠');
+      textContent = textContent.replace(/VICTOR/g, '*VICTOR*');
+      textContent = textContent.replace(/Setor de Desocupação/g, '*Setor de Desocupação*');
       
-      // Adicionar temporariamente ao DOM
-      document.body.appendChild(tempDiv);
-      
-      // Gerar PDF
-      await html2pdf().set(opt).from(tempDiv).save();
-      
-      // Remover elemento temporário
-      document.body.removeChild(tempDiv);
-      
-      toast.success('PDF baixado com sucesso!');
+      await navigator.clipboard.writeText(textContent);
+      toast.success('Mensagem copiada para a área de transferência! Cole no WhatsApp.');
     } catch (error) {
-      toast.error('Erro ao gerar PDF. Tente novamente.');
+      toast.error('Erro ao copiar mensagem. Tente novamente.');
     } finally {
-      setIsGeneratingPDF(false);
+      setIsCopying(false);
     }
   };
+
+  // Verificar se é uma mensagem do WhatsApp
+  const isWhatsAppMessage = documentType?.includes('WhatsApp');
 
   return (
     <div className="min-h-screen bg-gradient-secondary p-4">
@@ -316,52 +191,37 @@ const GerarDocumento = () => {
               <p className="text-gray-600 mt-1">Gerando {documentType} baseado nos dados do contrato</p>
             </div>
             <div className="flex gap-2">
-              <Button
-                onClick={handleCopyContent}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
+              {isWhatsAppMessage ? (
+                <Button
+                  onClick={handleCopyWhatsAppMessage}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                  disabled={isCopying}
+                >
+                  {isCopying ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                  ) : (
                     <Copy className="h-4 w-4" />
-                    Copiar Conteúdo
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={handlePrint}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                disabled={isPrinting}
-              >
-                {isPrinting ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                ) : (
-                  <Printer className="h-4 w-4" />
-                )}
-                {isPrinting ? 'Preparando...' : 'Imprimir'}
-              </Button>
-              <Button
-                onClick={handleDownloadPDF}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                disabled={isGeneratingPDF}
-              >
-                {isGeneratingPDF ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
-              </Button>
+                  )}
+                  {isCopying ? 'Copiando...' : 'Copiar Mensagem'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handlePrint}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  disabled={isPrinting}
+                >
+                  {isPrinting ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    <Printer className="h-4 w-4" />
+                  )}
+                  {isPrinting ? 'Preparando...' : 'Imprimir'}
+                </Button>
+              )}
               <Button
                 onClick={() => navigate('/contratos')}
                 variant="outline"
@@ -375,8 +235,17 @@ const GerarDocumento = () => {
           </div>
           
           <div className="border rounded-lg p-6 bg-gray-50">
-            <h2 className="text-lg font-semibold mb-4">Documento Gerado:</h2>
-            <div className="bg-white p-6 rounded border max-h-96 overflow-auto">
+            <div className="mb-4">
+              <h1 className="text-xl font-bold text-gray-800 mb-2">{getDocumentTitle()}</h1>
+              <h2 className="text-lg font-semibold">
+                {isWhatsAppMessage ? 'Mensagem para WhatsApp:' : 'Documento Gerado:'}
+              </h2>
+            </div>
+            <div className={`p-6 rounded border max-h-96 overflow-auto ${
+              isWhatsAppMessage 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-white'
+            }`}>
               <div dangerouslySetInnerHTML={{ __html: template }} />
             </div>
           </div>

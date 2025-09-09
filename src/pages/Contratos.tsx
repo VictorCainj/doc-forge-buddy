@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2 } from "lucide-react";
+import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE } from "@/templates/documentos";
+import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE } from "@/templates/documentos";
 import { formatDateBrazilian } from "@/utils/dateFormatter";
 
 interface Contract {
@@ -117,29 +117,49 @@ const Contratos = () => {
     const isMultipleLocatarios = isMultiplePeople(formData.nomeLocatario);
     if (isMultipleLocatarios) {
       enhancedData.locatarioTerm = "os inquilinos";
-      enhancedData.locatarioComunicou = "comunicaram";
+      enhancedData.locatarioComunicou = "informaram";
       enhancedData.locatarioIra = "irão";
       enhancedData.locatarioTermo = "do locatário";
+      enhancedData.locatarioPrezado = "Prezado(a)(s)";
     } else {
-      enhancedData.locatarioTerm = "o inquilino";
-      enhancedData.locatarioComunicou = "comunicou";
+      enhancedData.locatarioTerm = "o (a) inquilino(a)";
+      enhancedData.locatarioComunicou = "informou";
       enhancedData.locatarioIra = "irá";
       enhancedData.locatarioTermo = "do locatário";
+      enhancedData.locatarioPrezado = "Prezado(a)";
     }
     
     // Aplicar conjunções para proprietários
     const isMultipleProprietarios = isMultiplePeople(formData.nomeProprietario);
     if (isMultipleProprietarios) {
       enhancedData.proprietarioTerm = "os proprietários";
-      enhancedData.proprietarioPrezado = "Prezados";
+      enhancedData.proprietarioPrezado = "Prezado(a)(s)";
     } else {
       enhancedData.proprietarioTerm = "o proprietário";
-      enhancedData.proprietarioPrezado = "Prezado";
+      enhancedData.proprietarioPrezado = "Prezado(a)";
     }
     
     // Gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
     const mesesComprovantes = generateMesesComprovantes();
     enhancedData.mesesComprovantes = mesesComprovantes;
+    
+    // Extrair primeiro nome do locatário e capitalizar apenas a primeira letra
+    const primeiroNome = formData.nomeLocatario?.split(' ')[0] || formData.nomeLocatario || "[PRIMEIRO NOME]";
+    const primeiroNomeCapitalizado = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
+    enhancedData.primeiroNomeLocatario = primeiroNomeCapitalizado;
+    
+    // Extrair primeiro nome do proprietário e capitalizar apenas a primeira letra
+    const primeiroNomeProprietario = formData.nomeProprietario?.split(' ')[0] || formData.nomeProprietario || "[PRIMEIRO NOME]";
+    const primeiroNomeProprietarioCapitalizado = primeiroNomeProprietario.charAt(0).toUpperCase() + primeiroNomeProprietario.slice(1).toLowerCase();
+    enhancedData.primeiroNomeProprietario = primeiroNomeProprietarioCapitalizado;
+    
+    // Formatar nome do locatário com negrito apenas nos nomes, não na preposição "e"
+    const nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    const nomeLocatarioFormatado = nomeLocatario
+      .split(' e ')
+      .map(nome => `<strong>${nome.trim()}</strong>`)
+      .join(' e ');
+    enhancedData.nomeLocatarioFormatado = nomeLocatarioFormatado;
     
     // Adicionar variáveis de data padrão
     enhancedData.dataAtual = formatDateBrazilian(new Date());
@@ -183,6 +203,24 @@ const Contratos = () => {
       // Abrir modal para preencher data e hora da vistoria
       setSelectedContract(contract);
       setShowAgendamentoModal(true);
+    } else if (documentType === "Devolutiva Locador WhatsApp" || documentType === "Devolutiva Locatário WhatsApp") {
+      // Aplicar conjunções verbais antes de processar o template
+      const enhancedData = applyConjunctions(formData);
+      
+      const processedTemplate = replaceTemplateVariables(template, enhancedData);
+      const documentTitle = `${documentType} - ${contract.title}`;
+      
+      setTimeout(() => {
+        navigate('/gerar-documento', {
+          state: {
+            title: documentTitle,
+            template: processedTemplate,
+            formData: enhancedData,
+            documentType: documentType
+          }
+        });
+        setGeneratingDocument(null);
+      }, 800);
     } else {
       
       // Aplicar conjunções verbais antes de processar o template
@@ -204,6 +242,7 @@ const Contratos = () => {
       }, 800);
     }
   };
+
 
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
@@ -451,6 +490,34 @@ const Contratos = () => {
                               <FileText className="h-4 w-4" />
                             )}
                             Notificação de Agendamento
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, "Devolutiva Locador WhatsApp")}
+                            className="gap-2 bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                            disabled={generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp`}
+                          >
+                            {generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp` ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                            ) : (
+                              <MessageCircle className="h-4 w-4" />
+                            )}
+                            Devolutiva Locador WhatsApp
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, "Devolutiva Locatário WhatsApp")}
+                            className="gap-2 bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                            disabled={generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp`}
+                          >
+                            {generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp` ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                            ) : (
+                              <MessageCircle className="h-4 w-4" />
+                            )}
+                            Devolutiva Locatário WhatsApp
                           </Button>
                         </div>
                       </div>

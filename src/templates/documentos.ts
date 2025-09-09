@@ -73,13 +73,9 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
     </div>
   </div>
   
-  <h2 style="text-align: center; margin-bottom: 40px; font-size: 18px; font-weight: bold;">
-    [CONTRATO] - Notificação de Desocupação e Agendamento de Vistoria.
-  </h2>
-  
   <p style="margin-bottom: 20px;">{{proprietarioPrezado}} <strong>{{nomeProprietario}}</strong>, tudo bem?</p>
   
-  <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTerm}} <strong>{{nomeLocatario}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
+  <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTerm}} {{nomeLocatarioFormatado}}, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
   
   <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
@@ -95,7 +91,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px; font-weight: bold; text-transform: uppercase;">POR FAVOR CONFIRMAR O RECEBIMENTO DESTE E-MAIL.</p>
   
-  <p style="margin-top: 40px;">Atenciosamente</p>
+  <p style="margin-top: 40px;">Atenciosamente,</p>
 </div>
 `;
 
@@ -110,13 +106,15 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
     </div>
   </div>
   
-  <p style="margin-bottom: 20px;">{{proprietarioPrezado}} <strong>{{nomeLocatario}}</strong>, tudo bem?</p>
+  <p style="margin-bottom: 20px;">{{locatarioPrezado}} <strong>{{primeiroNomeLocatario}}</strong>, tudo bem?</p>
   
   <p style="margin-bottom: 20px;">Confirmamos o recebimento da sua notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
   <p style="margin-bottom: 20px;">Informamos que, como forma de facilitar sua organização e viabilizar o agendamento da vistoria, solicitamos a gentileza de encaminhar os comprovantes de pagamento acompanhados das respectivas faturas referentes aos meses de <strong>{{mesesComprovantes}}</strong> (tais como <strong>condomínio, água, energia elétrica, gás</strong>) bem como a <strong>Certidão Negativa de Débitos (CND)</strong>, conforme estabelecido em contrato.</p>
   
-  <p style="margin-bottom: 20px;">Após o recebimento e a devida confirmação dos documentos, procederemos com o agendamento da vistoria dentro do prazo de {{prazoDias}} (trinta) dias. Realizar o agendamento com <strong>5 dias de antecedência</strong> a data pretendida.</p>
+  <p style="margin-bottom: 20px;">Após o recebimento e a devida confirmação dos documentos, procederemos com o agendamento da vistoria dentro do prazo de {{prazoDias}} (trinta) dias. </p>
+
+  <p style="margin-bottom: 20px;">Informar a data desejada para a vistoria de saída com <strong>5 dias de antecedência</strong> a data pretendida.</p>
   
   <p style="margin-bottom: 20px;">Também solicitamos o envio da <strong>Notificação de Rescisão</strong> preenchida e assinada. Todas essas orientações constam no <strong>Informativo de Desocupação</strong> anexo.</p>
   
@@ -154,13 +152,13 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de nome <strong>{{nomeProprietario}}</strong> devidamente qualificada através do contrato de prestação de serviço</p>
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificados Locatários:</strong> <strong>{{nomeLocatario}}</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificada através do contrato de prestação de serviço.</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificado(a)(s) Locatário(a)(s):</strong> <strong>{{nomeLocatario}}</strong></p>
     <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}, Contrato {{numeroContrato}}</p>
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezados Senhores,</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Prezado(a)(s) Senhor(a)(s),</strong></p>
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
@@ -175,6 +173,50 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
     <p style="margin: 5px 0; font-size: 14px;">Cordiais saudações,</p>
     <p style="margin: 5px 0; font-size: 14px;"><strong>MADIA IMÓVEIS LTDA</strong></p>
     <p style="margin: 5px 0; font-size: 14px;">Setor de Desocupação</p>
+  </div>
+</div>
+`;
+
+export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <p style="margin-bottom: 25px;">{{proprietarioPrezado}} <strong>{{primeiroNomeProprietario}}</strong>, tudo bem?</p>
+  
+  <p style="margin-bottom: 25px;">Enviamos um e-mail informando sobre a desocupação do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
+  
+  <p style="margin-bottom: 25px;">O prazo de <strong>30 dias</strong> para desocupação se inicia em <strong>{{dataInicioDesocupacao}}</strong> e termina em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  
+  <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
+  
+  <p style="margin-bottom: 25px;">Se o(a) senhor(a) tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  
+  <p style="margin-top: 50px;">Atenciosamente,</p>
+  
+  <div style="margin-top: 30px;">
+    <p style="margin-bottom: 8px;"><strong>VICTOR</strong></p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
+    <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
+  </div>
+</div>
+`;
+
+export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <p style="margin-bottom: 25px;">{{locatarioPrezado}} <strong>{{primeiroNomeLocatario}}</strong>, tudo bem?</p>
+  
+  <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de desocupação do imóvel situado em <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
+  
+  <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
+  
+  <p style="margin-bottom: 25px;">Nossa intenção é garantir que todo o processo ocorra de forma tranquila e transparente. Portanto, se houver qualquer dúvida, permanecemos à disposição pelos nossos canais de atendimento.</p>
+  
+  <p style="margin-bottom: 25px;">Agradecemos desde já pela colaboração!</p>
+  
+  <p style="margin-top: 50px;">Atenciosamente,</p>
+  
+  <div style="margin-top: 30px;">
+    <p style="margin-bottom: 8px;"><strong>VICTOR</strong></p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
+    <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
 </div>
 `;

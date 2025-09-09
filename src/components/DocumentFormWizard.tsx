@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Printer, Download, FileDown, Save, Home, User, Users, FileCheck, Search, Check } from "lucide-react";
@@ -26,6 +26,7 @@ interface DocumentFormWizardProps {
   onFormDataChange?: (data: Record<string, string>) => void;
   isSubmitting?: boolean;
   submitButtonText?: string;
+  externalFormData?: Record<string, string>;
 }
 
 const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
@@ -42,6 +43,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   onFormDataChange,
   isSubmitting = false,
   submitButtonText = "Gerar Documento",
+  externalFormData
 }) => {
   const navigate = useNavigate();
   const [showPreview, setShowPreview] = useState(false);
@@ -79,6 +81,13 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     steps,
     initialData,
   });
+
+  // Chamar onFormDataChange quando os dados do formulário mudarem
+  useEffect(() => {
+    if (onFormDataChange && formData) {
+      onFormDataChange(formData);
+    }
+  }, [formData, onFormDataChange]);
 
   // Efeito para preencher automaticamente o campo de gênero quando há múltiplos locatários
   React.useEffect(() => {
@@ -557,7 +566,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     icon: step.icon || stepIcons[index % stepIcons.length],
     isValid: index <= currentStep ? true : undefined,
     content: (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`grid gap-6 ${step.id === "desocupacao" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
         {step.fields.map((field) => {
           // Lógica condicional para mostrar campos baseados no tipo de termo
           let shouldShowField = true;
@@ -619,49 +628,51 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           }
 
           return (
-          <div
-            key={field.name}
-            className={field.type === "textarea" ? "md:col-span-2" : ""}
-          >
-            <FormField
-              name={field.name}
-              label={field.label}
-                type={
-                  field.name === "nomeQuemRetira" && formData.tipoTermo === "locador"
-                    ? "text"
-                    : field.type
-                }
-              value={formData[field.name] || ""}
-              onChange={(value) => updateField(field.name, value)}
-              placeholder={field.placeholder}
-              required={field.required}
-              error={getFieldError(field.name)}
-              touched={isFieldTouched(field.name)}
-              mask={field.mask}
-                options={dynamicOptions}
-                disabled={false}
-                description={
-                  field.name === "generoLocatario" && 
-                  isMultipleLocatarios(formData.nomeLocatario || "")
-                    ? "Campo preenchido automaticamente para múltiplos locatários (neutro)"
-                    : field.name === "generoProprietario" && 
-                      isMultipleLocatarios(formData.nomeProprietario || "")
-                    ? "Campo preenchido automaticamente para múltiplos proprietários (neutro)"
-                    : field.name === "statusAgua"
-                    ? `Status do documento ${formData.tipoAgua || 'selecionado'}`
-                    : field.name === "nomeQuemRetira" && !formData.tipoQuemRetira
-                    ? "Primeiro selecione quem está retirando a chave"
-                    : undefined
-                }
-                tooltip={
+            <React.Fragment key={field.name}>
+              <div
+                className={field.type === "textarea" ? "md:col-span-2" : ""}
+              >
+                <FormField
+                  name={field.name}
+                  label={field.label}
+                    type={
+                      field.name === "nomeQuemRetira" && formData.tipoTermo === "locador"
+                        ? "text"
+                        : field.type
+                    }
+                  value={formData[field.name] || ""}
+                  onChange={(value) => updateField(field.name, value)}
+                  placeholder={field.placeholder}
+                  required={field.required}
+                  error={getFieldError(field.name)}
+                  touched={isFieldTouched(field.name)}
+                  mask={field.mask}
+                    options={dynamicOptions}
+                    disabled={false}
+                    description={
+                      field.name === "generoLocatario" && 
+                      isMultipleLocatarios(formData.nomeLocatario || "")
+                        ? "Campo preenchido automaticamente para múltiplos locatários (neutro)"
+                        : field.name === "generoProprietario" && 
+                          isMultipleLocatarios(formData.nomeProprietario || "")
+                        ? "Campo preenchido automaticamente para múltiplos proprietários (neutro)"
+                        : field.name === "statusAgua"
+                        ? `Status do documento ${formData.tipoAgua || 'selecionado'}`
+                        : field.name === "nomeQuemRetira" && !formData.tipoQuemRetira
+                        ? "Primeiro selecione quem está retirando a chave"
+                        : undefined
+                    }
+                    tooltip={
                   field.name === "dataFirmamentoContrato"
                     ? "Guia dos meses:\n\n1 - Janeiro     7 - Julho\n2 - Fevereiro  8 - Agosto\n3 - Março      9 - Setembro\n4 - Abril     10 - Outubro\n5 - Maio      11 - Novembro\n6 - Junho     12 - Dezembro"
                     : undefined
                 }
             />
-          </div>
-        );
-      })}
+              </div>
+              
+            </React.Fragment>
+          );
+        })}
       
       {/* Campo adicional para RG/CPF quando é terceira pessoa */}
       {isTerceiraPessoa() && (

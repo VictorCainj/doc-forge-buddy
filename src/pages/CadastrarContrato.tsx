@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import DocumentFormWizard from "@/components/DocumentFormWizard";
 import { FormStep } from "@/hooks/use-form-wizard";
-import { Home, Users, FileText, Calendar } from "lucide-react";
+import { Home, Users, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const CadastrarContrato = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+
 
   const steps: FormStep[] = [
     {
@@ -72,13 +75,6 @@ const CadastrarContrato = () => {
           placeholder: "Ex: Sr João"
         },
         {
-          name: "emailProprietario",
-          label: "E-mail do Proprietário",
-          type: "email",
-          required: true,
-          placeholder: "email@exemplo.com"
-        },
-        {
           name: "generoProprietario",
           label: "Gênero do Proprietário",
           type: "select",
@@ -95,7 +91,7 @@ const CadastrarContrato = () => {
       id: "desocupacao",
       title: "Dados de Desocupação",
       description: "Informações para processo de desocupação",
-      icon: Calendar,
+      icon: FileText,
       fields: [
         {
           name: "dataInicioDesocupacao",
@@ -109,11 +105,17 @@ const CadastrarContrato = () => {
           label: "Data de Término da Desocupação",
           type: "text",
           required: true,
-          placeholder: "DD/MM/AAAA - Ex: 22/07/2025"
+          placeholder: "DD/MM/AAAA - Ex: 22/07/2025",
+          tooltip: "Preencha manualmente ou use o botão 'Calcular Automaticamente' (início + 29 dias)"
         }
       ]
     }
   ];
+
+  // Função para lidar com mudanças no formulário
+  const handleFormChange = (data: Record<string, string>) => {
+    setFormData(data);
+  };
 
   const handleGenerate = async (data: Record<string, string>) => {
     if (isSubmitting) return;
@@ -159,15 +161,31 @@ const CadastrarContrato = () => {
   const getTemplate = () => "";
 
   return (
-    <DocumentFormWizard
-      title="Cadastrar Novo Contrato"
-      description="Preencha as informações essenciais para gerar os documentos de notificação de desocupação e devolutiva do proprietário"
-      steps={steps}
-      template=""
-      onGenerate={handleGenerate}
-      isSubmitting={isSubmitting}
-      submitButtonText={isSubmitting ? "Cadastrando..." : "Cadastrar Contrato"}
-    />
+    <div className="min-h-screen bg-gradient-secondary">
+      <div className="container mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Cadastrar Novo Contrato</h1>
+            <p className="text-muted-foreground">
+              Preencha as informações essenciais para gerar os documentos de notificação de desocupação e devolutiva do proprietário
+            </p>
+          </div>
+          
+          
+          <DocumentFormWizard
+            title=""
+            description=""
+            steps={steps}
+            template=""
+            onGenerate={handleGenerate}
+            onFormDataChange={handleFormChange}
+            isSubmitting={isSubmitting}
+            submitButtonText={isSubmitting ? "Cadastrando..." : "Cadastrar Contrato"}
+            externalFormData={formData}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
