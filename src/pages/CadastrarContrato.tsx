@@ -42,8 +42,7 @@ const CadastrarContrato = () => {
           options: [
             { value: "masculino", label: "Masculino" },
             { value: "feminino", label: "Feminino" },
-            { value: "masculinos", label: "Masculinos (plural)" },
-            { value: "femininos", label: "Femininos (plural)" }
+            { value: "neutro", label: "Neutro (múltiplos locatários)" }
           ]
         },
         {
@@ -63,28 +62,27 @@ const CadastrarContrato = () => {
       ]
     },
     {
-      id: "locador",
-      title: "Dados do Locador",
-      description: "Informações do locador para devolutiva",
+      id: "proprietario",
+      title: "Dados do Proprietário",
+      description: "Informações do proprietário para devolutiva",
       icon: Users,
       fields: [
         {
-          name: "nomeLocador",
-          label: "Nome do Locador",
+          name: "nomeProprietario",
+          label: "Nome do Proprietário",
           type: "text",
           required: true,
           placeholder: "Ex: Sr João"
         },
         {
-          name: "generoLocador",
-          label: "Gênero do Locador",
+          name: "generoProprietario",
+          label: "Gênero do Proprietário",
           type: "select",
           required: true,
           options: [
             { value: "masculino", label: "Masculino" },
             { value: "feminino", label: "Feminino" },
-            { value: "masculinos", label: "Masculinos (plural)" },
-            { value: "femininos", label: "Femininos (plural)" }
+            { value: "neutro", label: "Neutro (múltiplos proprietários)" }
           ]
         }
       ]
