@@ -4,11 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Printer, Download, FileDown, Save } from "lucide-react";
+import { ArrowLeft, FileText, Printer, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import html2pdf from "html2pdf.js";
-import { Document, Paragraph, TextRun, Packer } from "docx";
-import { saveAs } from "file-saver";
 const companyLogo = "https://i.imgur.com/xwz1P7v.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -150,62 +147,6 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
     }, 1000);
   };
 
-  const handleDownloadPDF = () => {
-    const element = document.getElementById('document-content');
-    // Configuração de alta qualidade para PDF
-    const opt = {
-      margin: [8, 8, 8, 8],
-      filename: `${title}.pdf`,
-      image: { 
-        type: 'jpeg', 
-        quality: 1.0 // Qualidade máxima
-      },
-      html2canvas: { 
-        scale: 3, // Escala maior para melhor qualidade
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        dpi: 300, // DPI alto para qualidade profissional
-        letterRendering: true,
-        imageTimeout: 15000,
-        removeContainer: true
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait',
-        putOnlyUsedFonts: true,
-        compress: false // Não comprimir para manter qualidade
-      },
-      pagebreak: { 
-        mode: ['avoid-all'],
-        avoid: ['tr', 'img', 'div']
-      }
-    };
-    html2pdf().set(opt).from(element).save();
-  };
-
-  const handleDownloadDOCX = async () => {
-    const processedText = replaceTemplateVariables(template, formData)
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .split('\n');
-
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: processedText.map(line => 
-          new Paragraph({
-            children: [new TextRun(line)],
-            spacing: { after: line.trim() === '' ? 200 : 100 }
-          })
-        )
-      }]
-    });
-
-    const buffer = await Packer.toBuffer(doc);
-    saveAs(new Blob([buffer]), `${title}.docx`);
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -295,14 +236,6 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                 >
                   <Save className="h-4 w-4" />
                   {saving ? 'Salvando...' : 'Salvar'}
-                </Button>
-                <Button onClick={handleDownloadPDF} variant="outline" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  PDF
-                </Button>
-                <Button onClick={handleDownloadDOCX} variant="outline" className="gap-2">
-                  <FileDown className="h-4 w-4" />
-                  DOCX
                 </Button>
                 <Button onClick={handlePrint} className="gap-2 bg-gradient-primary">
                   <Printer className="h-4 w-4" />

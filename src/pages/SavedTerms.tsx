@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import html2pdf from "html2pdf.js";
 
 interface SavedTerm {
   id: string;
@@ -66,32 +65,6 @@ const SavedTerms = () => {
     setFilteredTerms(filtered);
   };
 
-  const handleDownload = async (term: SavedTerm) => {
-    // Create temporary element with document content
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
-        ${term.content}
-      </div>
-    `;
-    tempDiv.style.position = 'fixed';
-    tempDiv.style.left = '-9999px';
-    document.body.appendChild(tempDiv);
-
-    const opt = {
-      margin: 0.5,
-      filename: `${term.title}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 1.5, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-
-    try {
-      await html2pdf().set(opt).from(tempDiv).save();
-    } finally {
-      document.body.removeChild(tempDiv);
-    }
-  };
 
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
@@ -209,15 +182,6 @@ const SavedTerms = () => {
                         >
                           <Edit className="h-4 w-4" />
                           Editar
-                        </Button>
-                        <Button
-                          onClick={() => handleDownload(term)}
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          Baixar PDF
                         </Button>
                       </div>
                     </div>
