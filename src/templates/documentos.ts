@@ -179,7 +179,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
 
 export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
-  <p style="margin-bottom: 25px;">{{proprietarioPrezado}} <strong>{{primeiroNomeProprietario}}</strong>, tudo bem?</p>
+  <p style="margin-bottom: 25px;">{{proprietarioPrezadoWhatsapp}} <strong>{{primeiroNomeProprietario}}</strong>, tudo bem?</p>
   
   <p style="margin-bottom: 25px;">Enviamos um e-mail informando sobre a desocupação do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
@@ -201,7 +201,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 
 export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
-  <p style="margin-bottom: 25px;">{{locatarioPrezado}} <strong>{{primeiroNomeLocatario}}</strong>, tudo bem?</p>
+  <p style="margin-bottom: 25px;">{{locatarioPrezadoWhatsapp}} <strong>{{primeiroNomeLocatario}}</strong>, tudo bem?</p>
   
   <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de desocupação do imóvel situado em <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
@@ -218,5 +218,49 @@ export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
     <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
+</div>
+`;
+
+export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <p style="margin-bottom: 20px;">Prezados, {{saudacaoComercial}}</p>
+  
+  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>, tendo como locador <strong>{{nomeProprietario}}</strong> e locatário <strong>{{nomeLocatario}}</strong>.</p>
+  
+  <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioDesocupacao}}</strong>, com prazo de desocupação até <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  
+  <p style="margin-bottom: 20px;">Solicito, por gentileza, que seja encaminhado ao Captador para que entre em contato com o locador, a fim de averiguar novos valores para uma futura locação.</p>
+  
+  <p style="margin-top: 40px;">Atenciosamente,</p>
+  
+  <div style="margin-top: 30px;">
+    <p style="margin-bottom: 8px;"><strong>VICTOR CAIN JORGE</strong></p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
+    <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
+  </div>
+</div>
+`;
+
+export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <p style="margin-bottom: 20px;">O locatário(a) notificou desocupação em <strong>{{dataComunicacao}}</strong> - o final dos seus {{prazoDias}} dias será em <strong>{{dataTerminoDesocupacao}}</strong> - comuniquei o locador e o comercial.</p>
 </div>
 `;

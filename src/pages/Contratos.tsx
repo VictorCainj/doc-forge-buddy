@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE } from "@/templates/documentos";
+import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_COMERCIAL_TEMPLATE, DEVOLUTIVA_CADERNINHO_TEMPLATE } from "@/templates/documentos";
 import { formatDateBrazilian } from "@/utils/dateFormatter";
 
 interface Contract {
@@ -167,6 +168,22 @@ const Contratos = () => {
     // Gerar saudação para devolutiva do locatário
     enhancedData.saudacaoLocatario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
     
+    // Gerar saudação para WhatsApp do proprietário (com Sr/Sra)
+    const generoProprietario = formData.generoProprietario;
+    const tratamentoProprietario = generoProprietario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+    enhancedData.proprietarioPrezadoWhatsapp = tratamentoProprietario;
+    
+    // Gerar saudação para WhatsApp do locatário (com Sr/Sra)
+    const generoLocatario = formData.generoLocatario;
+    const tratamentoLocatario = generoLocatario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+    enhancedData.locatarioPrezadoWhatsapp = tratamentoLocatario;
+    
+    // Gerar saudação para devolutiva comercial (bom dia/boa tarde)
+    const agora = new Date();
+    const hora = agora.getHours();
+    const saudacaoComercial = hora < 12 ? "bom dia" : "boa tarde";
+    enhancedData.saudacaoComercial = saudacaoComercial;
+    
     // Formatar nome do locatário com negrito apenas nos nomes, não na preposição "e"
     const nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
     const nomeLocatarioFormatado = nomeLocatario
@@ -249,7 +266,12 @@ const Contratos = () => {
       const enhancedData = applyConjunctions(formData);
       
       const processedTemplate = replaceTemplateVariables(template, enhancedData);
-      const documentTitle = `${documentType} - ${contract.title}`;
+      
+      // Personalizar título para devolutiva comercial
+      let documentTitle = `${documentType} - ${contract.title}`;
+      if (documentType === "Devolutiva Comercial") {
+        documentTitle = `${documentType} - Desocupação - ${contract.title}`;
+      }
       
       setTimeout(() => {
         navigate('/gerar-documento', {
@@ -362,8 +384,9 @@ const Contratos = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-7xl mx-auto">
+    <TooltipProvider>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
+        <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -428,137 +451,285 @@ const Contratos = () => {
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredContracts.map((contract) => (
-                  <Card key={contract.id} className="border-l-4 border-l-primary">
+                  <Card key={contract.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
                     <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{contract.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Cadastrado em: {formatDateBrazilian(new Date(contract.created_at))}
-                          </p>
-                          <div className="mt-2 text-sm">
-                            <p><strong>Locatário:</strong> {contract.form_data.nomeLocatario}</p>
-                            <p><strong>Proprietário:</strong> {contract.form_data.nomeProprietario}</p>
-                            <p><strong>Prazo:</strong> {contract.form_data.prazoDias} dias</p>
+                      <div className="flex items-start justify-between gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h3 className="font-semibold text-lg text-gray-900 truncate">{contract.title}</h3>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {formatDateBrazilian(new Date(contract.created_at))}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-500">Locatário:</span> 
+                              <span className="text-gray-900">{contract.form_data.nomeLocatario}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-500">Proprietário:</span> 
+                              <span className="text-gray-900">{contract.form_data.nomeProprietario}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-500">Prazo:</span> 
+                              <span className="text-gray-900">{contract.form_data.prazoDias} dias</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-500">Endereço:</span> 
+                              <span className="text-gray-900 truncate">{contract.form_data.endereco || contract.form_data.enderecoImovel || 'Não informado'}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                              <div className="text-center">
+                                <div className="font-medium text-gray-500 mb-1">Data Início</div>
+                                <div className="text-gray-900">{contract.form_data.dataInicioDesocupacao || 'Não definida'}</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium text-gray-500 mb-1">Data Fim</div>
+                                <div className="text-gray-900">{contract.form_data.dataTerminoDesocupacao || 'Não definida'}</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium text-gray-500 mb-1">Status</div>
+                                <div className="text-gray-900">Em andamento</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium text-gray-500 mb-1">Última Atualização</div>
+                                <div className="text-gray-900">{formatDateBrazilian(new Date(contract.updated_at))}</div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 ml-4">
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => generateDocument(contract, "", "Termo do Locador")}
-                              className="gap-2"
-                              disabled={generatingDocument === `${contract.id}-Termo do Locador`}
-                            >
-                              {generatingDocument === `${contract.id}-Termo do Locador` ? (
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                              ) : (
-                                <FileText className="h-4 w-4" />
-                              )}
-                              Termo do Locador
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => generateDocument(contract, "", "Termo do Locatário")}
-                              className="gap-2"
-                              disabled={generatingDocument === `${contract.id}-Termo do Locatário`}
-                            >
-                              {generatingDocument === `${contract.id}-Termo do Locatário` ? (
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                              ) : (
-                                <FileText className="h-4 w-4" />
-                              )}
-                              Termo do Locatário
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteContract(contract.id, contract.title)}
-                              className="gap-2"
-                              disabled={deletingContract === contract.id}
-                            >
-                              {deletingContract === contract.id ? (
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                              {deletingContract === contract.id ? "Excluindo..." : "Excluir"}
-                            </Button>
+                        
+                        <div className="flex flex-col gap-1">
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, "", "Termo do Locador")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Termo do Locador`}
+                                >
+                                  {generatingDocument === `${contract.id}-Termo do Locador` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <FileText className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Locador</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Termo do Locador</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, "", "Termo do Locatário")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Termo do Locatário`}
+                                >
+                                  {generatingDocument === `${contract.id}-Termo do Locatário` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <FileText className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Locatário</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Termo do Locatário</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_TEMPLATE, "Devolutiva Proprietário")}
-                            className="gap-2"
-                            disabled={generatingDocument === `${contract.id}-Devolutiva Proprietário`}
-                          >
-                            {generatingDocument === `${contract.id}-Devolutiva Proprietário` ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            ) : (
-                              <Building className="h-4 w-4" />
-                            )}
-                            Devolutiva Proprietário
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_TEMPLATE, "Devolutiva Locatário")}
-                            className="gap-2"
-                            disabled={generatingDocument === `${contract.id}-Devolutiva Locatário`}
-                          >
-                            {generatingDocument === `${contract.id}-Devolutiva Locatário` ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            ) : (
-                              <Users className="h-4 w-4" />
-                            )}
-                            Devolutiva Locatário
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateDocument(contract, NOTIFICACAO_AGENDAMENTO_TEMPLATE, "Notificação de Agendamento")}
-                            className="gap-2"
-                            disabled={generatingDocument === `${contract.id}-Notificação de Agendamento`}
-                          >
-                            {generatingDocument === `${contract.id}-Notificação de Agendamento` ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            ) : (
-                              <FileText className="h-4 w-4" />
-                            )}
-                            Notificação de Agendamento
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, "Devolutiva Locador WhatsApp")}
-                            className="gap-2 bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
-                            disabled={generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp`}
-                          >
-                            {generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp` ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
-                            ) : (
-                              <MessageCircle className="h-4 w-4" />
-                            )}
-                            Devolutiva Locador WhatsApp
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, "Devolutiva Locatário WhatsApp")}
-                            className="gap-2 bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
-                            disabled={generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp`}
-                          >
-                            {generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp` ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
-                            ) : (
-                              <MessageCircle className="h-4 w-4" />
-                            )}
-                            Devolutiva Locatário WhatsApp
-                          </Button>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_TEMPLATE, "Devolutiva Proprietário")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Devolutiva Proprietário`}
+                                >
+                                  {generatingDocument === `${contract.id}-Devolutiva Proprietário` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <Building className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Dev. Prop.</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Devolutiva Proprietário</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_TEMPLATE, "Devolutiva Locatário")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Devolutiva Locatário`}
+                                >
+                                  {generatingDocument === `${contract.id}-Devolutiva Locatário` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <Users className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Dev. Loc.</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Devolutiva Locatário</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, NOTIFICACAO_AGENDAMENTO_TEMPLATE, "Notificação de Agendamento")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Notificação de Agendamento`}
+                                >
+                                  {generatingDocument === `${contract.id}-Notificação de Agendamento` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <FileText className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Agendamento</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Notificação de Agendamento</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_COMERCIAL_TEMPLATE, "Devolutiva Comercial")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Devolutiva Comercial`}
+                                >
+                                  {generatingDocument === `${contract.id}-Devolutiva Comercial` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <Briefcase className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Comercial</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Devolutiva Comercial</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, "Devolutiva Locador WhatsApp")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp`}
+                                >
+                                  {generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                                  ) : (
+                                    <MessageCircle className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">WA Prop.</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Devolutiva Locador WhatsApp</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, "Devolutiva Locatário WhatsApp")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp`}
+                                >
+                                  {generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                                  ) : (
+                                    <MessageCircle className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">WA Loc.</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Devolutiva Locatário WhatsApp</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_CADERNINHO_TEMPLATE, "Devolutiva Caderninho")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Devolutiva Caderninho`}
+                                >
+                                  {generatingDocument === `${contract.id}-Devolutiva Caderninho` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <FileText className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Caderninho</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Devolutiva Caderninho</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteContract(contract.id, contract.title)}
+                                  className="h-8 text-xs"
+                                  disabled={deletingContract === contract.id}
+                                >
+                                  {deletingContract === contract.id ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  ) : (
+                                    <Trash2 className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Excluir</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Excluir Contrato</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -617,7 +788,8 @@ const Contratos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 
