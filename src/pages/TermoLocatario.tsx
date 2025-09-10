@@ -139,6 +139,17 @@ const TermoLocatario: React.FC = () => {
           ]
         },
         {
+          name: "statusVistoria",
+          label: "Status da Vistoria",
+          type: "select",
+          required: true,
+          placeholder: "Selecione o status",
+          options: [
+            { value: "aprovada", label: "Aprovada" },
+            { value: "reprovada", label: "Reprovada" }
+          ]
+        },
+        {
           name: "observacao",
           label: "Observação (Opcional)",
           type: "textarea",
@@ -200,8 +211,7 @@ Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
-( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>
-( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade {{locatarioResponsabilidade}}. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
+{{statusVistoriaCheckboxes}}
 </div>
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
@@ -255,13 +265,19 @@ __________________________________________<br>
       nomeQuemRetira = data.incluirNomeCompleto;
     }
 
+    // Processar status da vistoria
+    const statusVistoria = data.statusVistoria || "aprovada";
+    const statusVistoriaCheckboxes = statusVistoria === "aprovada" 
+      ? "( ✓ ) Imóvel entregue de acordo com a vistoria inicial<br>( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão."
+      : "( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>( ✓ ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.";
+
     // Processar observação (só mostra se preenchida)
     const observacao = data.observacao && data.observacao.trim() !== "" 
       ? `<strong>OBS:</strong> ${data.observacao}` 
       : "<!-- SEM OBSERVACAO -->";
 
-    // Aplicar formatação de nomes - locador sem negrito
-    const nomeProprietarioFormatado = contractData.nomeProprietario;
+    // Aplicar formatação de nomes - apenas locatário com negrito
+    const nomeProprietarioFormatado = contractData.nomeProprietario; // Sem negrito
 
     const nomeLocatarioFormatado = contractData.nomeLocatario
       .split(' e ')
@@ -270,7 +286,9 @@ __________________________________________<br>
 
     // Texto de entrega de chaves para termo do locatário
     const tipoContrato = data.tipoContrato || "residencial";
-    const textoEntregaChaves = `Pelo presente, recebemos as chaves do imóvel sito à <strong>${contractData.enderecoImovel}</strong>, ora locado <strong>${nomeQuemRetira}</strong>, devidamente qualificado no contrato de locação <strong>${tipoContrato}</strong> firmado em ${contractData.dataFirmamentoContrato}.`;
+    // Usar a qualificação completa que já foi preenchida no cadastro do contrato
+    const qualificacaoCompleta = contractData.qualificacaoCompletaLocatarios || nomeQuemRetira;
+    const textoEntregaChaves = `Pelo presente, recebemos as chaves do imóvel sito à <strong>${contractData.enderecoImovel}</strong>, ora locado <strong>${qualificacaoCompleta}</strong>, devidamente qualificado no contrato de locação <strong>${tipoContrato}</strong> firmado em <strong>${contractData.dataFirmamentoContrato}</strong>.`;
 
     const enhancedData = {
       ...data,
@@ -286,6 +304,9 @@ __________________________________________<br>
       
       // Processar observação
       observacao,
+      
+      // Status da vistoria com checkboxes
+      statusVistoriaCheckboxes,
       
       // Texto de entrega de chaves baseado em quem está retirando
       textoEntregaChaves,

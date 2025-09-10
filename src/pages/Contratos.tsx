@@ -109,9 +109,17 @@ const Contratos = () => {
     return `${meses.join(', ')} de ${ano}`;
   };
 
+  // Função para obter qualificação completa dos locatários (texto livre)
+  const getLocatarioQualificacao = (formData: Record<string, string>) => {
+    return formData.qualificacaoCompletaLocatarios || "[TEXTOLIVRE]";
+  };
+
   // Função para aplicar conjunções verbais
   const applyConjunctions = (formData: Record<string, string>) => {
     const enhancedData = { ...formData };
+    
+    // Obter qualificação completa dos locatários (texto livre)
+    enhancedData.qualificacaoCompletaLocatarios = getLocatarioQualificacao(formData);
     
     // Aplicar conjunções para locatários
     const isMultipleLocatarios = isMultiplePeople(formData.nomeLocatario);
@@ -153,6 +161,12 @@ const Contratos = () => {
     const primeiroNomeProprietarioCapitalizado = primeiroNomeProprietario.charAt(0).toUpperCase() + primeiroNomeProprietario.slice(1).toLowerCase();
     enhancedData.primeiroNomeProprietario = primeiroNomeProprietarioCapitalizado;
     
+    // Gerar saudação para devolutiva do proprietário
+    enhancedData.saudacaoProprietario = `Prezado Sr <strong>${primeiroNomeProprietarioCapitalizado}</strong>`;
+    
+    // Gerar saudação para devolutiva do locatário
+    enhancedData.saudacaoLocatario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
+    
     // Formatar nome do locatário com negrito apenas nos nomes, não na preposição "e"
     const nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
     const nomeLocatarioFormatado = nomeLocatario
@@ -160,6 +174,14 @@ const Contratos = () => {
       .map(nome => `<strong>${nome.trim()}</strong>`)
       .join(' e ');
     enhancedData.nomeLocatarioFormatado = nomeLocatarioFormatado;
+    
+    // Formatar nome do proprietário com negrito apenas nos nomes, não na preposição "e"
+    const nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    const nomeProprietarioFormatado = nomeProprietario
+      .split(' e ')
+      .map(nome => `<strong>${nome.trim()}</strong>`)
+      .join(' e ');
+    enhancedData.nomeProprietarioFormatado = nomeProprietarioFormatado;
     
     // Adicionar variáveis de data padrão
     enhancedData.dataAtual = formatDateBrazilian(new Date());
@@ -294,6 +316,24 @@ const Contratos = () => {
     enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
     enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
     enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    
+    // Definir título para notificação de agendamento baseado no gênero e quantidade de locatários
+    const isMultipleLocatarios = isMultiplePeople(formData.nomeLocatario);
+    const generoLocatario = formData.generoLocatario;
+    
+    if (isMultipleLocatarios) {
+      enhancedData.notificadoLocatarioTitulo = "Notificados Locatários";
+    } else {
+      // Para um único locatário, usar o gênero preenchido
+      if (generoLocatario === "masculino") {
+        enhancedData.notificadoLocatarioTitulo = "Notificado Locatário";
+      } else if (generoLocatario === "feminino") {
+        enhancedData.notificadoLocatarioTitulo = "Notificada Locatária";
+      } else {
+        // Fallback para neutro ou não preenchido
+        enhancedData.notificadoLocatarioTitulo = "Notificado(a) Locatário(a)";
+      }
+    }
     
     const processedTemplate = replaceTemplateVariables(NOTIFICACAO_AGENDAMENTO_TEMPLATE, enhancedData);
     const documentTitle = `Notificação de Agendamento - ${selectedContract.title}`;

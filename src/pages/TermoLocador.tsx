@@ -164,11 +164,8 @@ __________________________________________<br>
       ? `<strong>OBS:</strong> ${data.observacao}` 
       : "<!-- SEM OBSERVACAO -->";
 
-    // Aplicar formatação de nomes igual às devolutivas
-    const nomeProprietarioFormatado = contractData.nomeProprietario
-      .split(' e ')
-      .map(nome => `<strong>${nome.trim()}</strong>`)
-      .join(' e ');
+    // Aplicar formatação de nomes - sem negrito para o proprietário
+    const nomeProprietarioFormatado = contractData.nomeProprietario; // Sem negrito
 
     const enhancedData = {
       ...data,

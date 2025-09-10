@@ -16,7 +16,7 @@ export const TERMO_RECEBIMENTO_TEMPLATE = `
   </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: 14px;">
-Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, ora locado <strong>{{nomeLocatario}}</strong>, devidamente qualificado no contrato de locação <strong>{{tipoContrato}}</strong> firmado em {{dataFirmamentoContrato}}.
+Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, ora locado <strong>{{qualificacaoCompletaLocatarios}}</strong>, devidamente qualificado no contrato de locação <strong>{{tipoContrato}}</strong> firmado em {{dataFirmamentoContrato}}.
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
@@ -73,7 +73,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
     </div>
   </div>
   
-  <p style="margin-bottom: 20px;">{{proprietarioPrezado}} {{nomeProprietarioFormatado}}, tudo bem?</p>
+  <p style="margin-bottom: 20px;">{{saudacaoProprietario}}, tudo bem?</p>
   
   <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTerm}} {{nomeLocatarioFormatado}}, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
   
@@ -106,7 +106,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
     </div>
   </div>
   
-  <p style="margin-bottom: 20px;">{{locatarioPrezado}} <strong>{{primeiroNomeLocatario}}</strong>, tudo bem?</p>
+  <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
   
   <p style="margin-bottom: 20px;">Confirmamos o recebimento da sua notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
@@ -152,8 +152,8 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificado através do contrato de prestação de serviço.</p>
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificado(a) Locatário(a):</strong> <strong>{{nomeLocatario}}</strong></p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificada  através do contrato de prestação de serviço.</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>{{notificadoLocatarioTitulo}}:</strong> <strong>{{nomeLocatario}}</strong></p>
     <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}</p>
   </div>
   
