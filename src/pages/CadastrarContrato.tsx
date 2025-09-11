@@ -133,6 +133,54 @@ const CadastrarContrato = () => {
           tooltip: "Preencha manualmente ou use o botão 'Calcular Automaticamente' (início + 29 dias)"
         }
       ]
+    },
+    {
+      id: "documentos",
+      title: "Documentos Solicitados",
+       description: "Configure quais documentos devem ser solicitados na devolutiva locatário (energia elétrica sempre é solicitada)",
+      icon: FileText,
+      fields: [
+        {
+          name: "solicitarCondominio",
+          label: "Solicitar Comprovante de Condomínio",
+          type: "select",
+          required: true,
+          options: [
+            { value: "sim", label: "Sim - Locatário paga condomínio" },
+            { value: "nao", label: "Não - Condomínio no boleto do locador" }
+          ]
+        },
+        {
+          name: "solicitarAgua",
+          label: "Solicitar Comprovante de Água",
+          type: "select",
+          required: true,
+          options: [
+            { value: "sim", label: "Sim - Locatário paga água" },
+            { value: "nao", label: "Não - Água inclusa no condomínio" }
+          ]
+        },
+        {
+          name: "solicitarGas",
+          label: "Solicitar Comprovante de Gás",
+          type: "select",
+          required: true,
+          options: [
+            { value: "sim", label: "Sim - Locatário usa gás" },
+            { value: "nao", label: "Não - Gás não utilizado" }
+          ]
+        },
+        {
+          name: "solicitarCND",
+          label: "Solicitar Certidão Negativa de Débitos (CND)",
+          type: "select",
+          required: true,
+          options: [
+            { value: "sim", label: "Sim - Solicitar CND" },
+            { value: "nao", label: "Não - CND não necessária" }
+          ]
+        }
+      ]
     }
   ];
 
@@ -156,7 +204,7 @@ const CadastrarContrato = () => {
 
       // Salvar o contrato no banco de dados usando a tabela saved_terms
       const contractData = {
-        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(' e ')[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(' e ')[0]?.trim() || '[LOCATÁRIO]'}`,
+        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(/ e | E /)[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(/ e | E /)[0]?.trim() || '[LOCATÁRIO]'}`,
         content: JSON.stringify(enhancedData), // Armazenar dados como JSON
         form_data: enhancedData,
         document_type: 'contrato'

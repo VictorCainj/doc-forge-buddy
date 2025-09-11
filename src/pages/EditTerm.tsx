@@ -107,45 +107,99 @@ const EditTerm = () => {
 
   const fieldGroups = [
     {
-      title: "Dados do Imóvel",
+      title: "Dados do Contrato",
       fields: [
-        { name: "endereco", label: "Endereço do Imóvel", type: "textarea" as const, required: true, placeholder: "Endereço completo do imóvel" },
-        { name: "dataContrato", label: "Data de Firmamento do Contrato", type: "text" as const, required: true, placeholder: "Ex: 15 de janeiro de 2024", tooltip: "Guia dos meses:\n\n1 - Janeiro     7 - Julho\n2 - Fevereiro  8 - Agosto\n3 - Março      9 - Setembro\n4 - Abril     10 - Outubro\n5 - Maio      11 - Novembro\n6 - Junho     12 - Dezembro" }
+        { name: "numeroContrato", label: "Número do Contrato", type: "text" as const, required: true, placeholder: "Ex: 13734" },
+        { name: "enderecoImovel", label: "Endereço do Imóvel", type: "textarea" as const, required: true, placeholder: "Endereço completo do imóvel" },
+        { name: "dataFirmamentoContrato", label: "Data de Firmamento do Contrato", type: "text" as const, required: true, placeholder: "Ex: 15/10/2024 ou 15 de outubro de 2024" }
       ]
     },
     {
-      title: "Dados do Locador",
+      title: "Qualificação dos Locadores",
       fields: [
-        { name: "nomeLocador", label: "Nome do Locador", type: "text" as const, required: true, placeholder: "Nome completo do locador" }
+        { name: "generoProprietario", label: "Gênero dos Locadores", type: "select" as const, required: true, options: [
+          { value: "masculino", label: "Masculino" },
+          { value: "feminino", label: "Feminino" },
+          { value: "masculinos", label: "Masculinos (plural)" },
+          { value: "femininos", label: "Femininos (plural)" }
+        ]},
+        { name: "nomeProprietario", label: "Nome dos Locadores", type: "textarea" as const, required: true, placeholder: "Nome completo dos locadores" },
+        { name: "qualificacaoCompletaLocadores", label: "Qualificação Completa dos Locadores", type: "textarea" as const, required: true, placeholder: "Qualificação completa dos locadores conforme contrato" }
       ]
     },
     {
-      title: "Dados do Locatário",
-      getDynamicTitle: (formData: Record<string, string>) => getLocatarioFieldTitle(formData.nomeLocatario),
+      title: "Qualificação dos Locatários",
       fields: [
-        { name: "nomeLocatario", label: "Nome do Locatário", type: "text" as const, required: true, placeholder: "Nome completo do locatário" },
-        { name: "celularLocatario", label: "Celular do Locatário", type: "text" as const, required: true, placeholder: "Ex: (19) 99999-9999" },
-        { name: "emailLocatario", label: "E-mail do Locatário", type: "text" as const, required: true, placeholder: "email@exemplo.com" }
+        { name: "nomeLocatario", label: "Nome dos Locatários", type: "textarea" as const, required: true, placeholder: "Nome completo dos locatários" },
+        { name: "generoLocatario", label: "Gênero dos Locatários", type: "select" as const, required: true, options: [
+          { value: "masculino", label: "Masculino" },
+          { value: "feminino", label: "Feminino" },
+          { value: "masculinos", label: "Masculinos (plural)" },
+          { value: "femininos", label: "Femininos (plural)" }
+        ]},
+        { name: "qualificacaoCompletaLocatarios", label: "Qualificação Completa dos Locatários", type: "textarea" as const, required: false, placeholder: "Qualificação completa dos locatários conforme contrato" }
       ]
     },
     {
-      title: "Documentos Apresentados",
+      title: "Dados de Desocupação",
       fields: [
-        { name: "cpfl", label: "CPFL Apresentada", type: "text" as const, required: true, placeholder: "SIM ou NÃO" },
-        { name: "daev", label: "DAEV Apresentada", type: "text" as const, required: true, placeholder: "SIM ou NÃO" }
+        { name: "dataInicioDesocupacao", label: "Data de Início da Desocupação", type: "text" as const, required: true, placeholder: "DD/MM/AAAA - Ex: 23/06/2025" },
+        { name: "dataTerminoDesocupacao", label: "Data de Término da Desocupação", type: "text" as const, required: true, placeholder: "DD/MM/AAAA - Ex: 22/07/2025" }
+      ]
+    },
+    {
+      title: "Contas de Consumo",
+      description: "Informações sobre as contas de consumo do imóvel",
+      fields: [
+        { name: "cpfl", label: "CPFL", type: "select" as const, required: true, options: [
+          { value: "SIM", label: "SIM" },
+          { value: "NÃO", label: "NÃO" }
+        ]},
+        { name: "tipoAgua", label: "Tipo de Água", type: "select" as const, required: true, options: [
+          { value: "DAEV", label: "DAEV" },
+          { value: "SANASA", label: "SANASA" }
+        ]},
+        { name: "statusAgua", label: "Status da Água", type: "select" as const, required: true, options: [
+          { value: "SIM", label: "SIM" },
+          { value: "NÃO", label: "NÃO" },
+          { value: "No condomínio", label: "No condomínio" }
+        ]}
       ]
     },
     {
       title: "Vistoria e Entrega",
+      description: "Detalhes da vistoria e entrega das chaves",
       fields: [
         { name: "tipoQuantidadeChaves", label: "Tipo e Quantidade de Chaves", type: "textarea" as const, required: true, placeholder: "Ex: 04 chaves simples" },
         { name: "dataVistoria", label: "Data da Vistoria", type: "text" as const, required: true, placeholder: "Ex: 28/08/2025" },
         { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" },
-        { name: "tipoContrato", label: "Tipo de Contrato", type: "select" as const, required: false, placeholder: "Selecione o tipo", options: [
+        { name: "tipoContrato", label: "Tipo de Contrato", type: "select" as const, required: false, options: [
           { value: "residencial", label: "Residencial" },
           { value: "comercial", label: "Comercial" }
         ]},
         { name: "nomeGestor", label: "Nome do Gestor", type: "text" as const, required: true, placeholder: "Ex: Victor Cain Jorge" }
+      ]
+    },
+    {
+      title: "Documentos Solicitados",
+      description: "Configure quais documentos devem ser solicitados na devolutiva locatário (energia elétrica sempre é solicitada)",
+      fields: [
+        { name: "solicitarCondominio", label: "Solicitar Comprovante de Condomínio", type: "select" as const, required: true, options: [
+          { value: "sim", label: "Sim - Locatário paga condomínio" },
+          { value: "nao", label: "Não - Condomínio no boleto do locador" }
+        ]},
+        { name: "solicitarAgua", label: "Solicitar Comprovante de Água", type: "select" as const, required: true, options: [
+          { value: "sim", label: "Sim - Locatário paga água" },
+          { value: "nao", label: "Não - Água inclusa no condomínio" }
+        ]},
+        { name: "solicitarGas", label: "Solicitar Comprovante de Gás", type: "select" as const, required: true, options: [
+          { value: "sim", label: "Sim - Locatário usa gás" },
+          { value: "nao", label: "Não - Gás não utilizado" }
+        ]},
+        { name: "solicitarCND", label: "Solicitar Certidão Negativa de Débitos (CND)", type: "select" as const, required: true, options: [
+          { value: "sim", label: "Sim - Solicitar CND" },
+          { value: "nao", label: "Não - CND não necessária" }
+        ]}
       ]
     }
   ];
@@ -225,8 +279,8 @@ ________________________________________<br>
 
   return (
     <DocumentForm
-      title="Editar Termo de Recebimento de Chaves"
-      description="Editando documento salvo"
+      title="Editar Contrato"
+      description="Editando dados do contrato e configurações de documentos"
       fieldGroups={fieldGroups}
       template={template}
       onGenerate={handleGenerate}

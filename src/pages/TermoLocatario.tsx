@@ -237,7 +237,7 @@ __________________________________________<br>
 
   const handleGenerate = (data: Record<string, string>) => {
     // Detectar se há múltiplos locatários baseado na quantidade adicionada
-    const isMultipleLocatarios = contractData.primeiroLocatario && contractData.segundoLocatario;
+    const isMultipleLocatarios = contractData.primeiroLocatario && (contractData.segundoLocatario || contractData.terceiroLocatario || contractData.quartoLocatario);
 
     // Detectar se há múltiplos proprietários baseado na quantidade adicionada
     const nomeProprietario = contractData.nomesResumidosLocadores || contractData.nomeProprietario;
@@ -300,10 +300,13 @@ __________________________________________<br>
     const nomeProprietarioFormatado = contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
 
     const nomeLocatarioFormatado = contractData.nomeLocatario
-      ? contractData.nomeLocatario
-          .split(' e ')
-          .map(nome => `<strong>${nome.trim()}</strong>`)
-          .join(' e ')
+      ? (() => {
+          const nomesArray = contractData.nomeLocatario.split(/ e | E /).map(nome => nome.trim());
+          return nomesArray.length > 1 
+            ? nomesArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+              ' e ' + `<strong>${nomesArray[nomesArray.length - 1]}</strong>`
+            : `<strong>${nomesArray[0]}</strong>`;
+        })()
       : '';
 
     // Texto de entrega de chaves para termo do locatário

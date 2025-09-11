@@ -340,7 +340,7 @@ __________________________________________<br>
     const isMultipleLocadores = data.nomeProprietario && data.nomeProprietario.includes(' e ');
     
     // Detectar se há múltiplos locatários baseado na quantidade adicionada
-    const isMultipleLocatarios = data.primeiroLocatario && data.segundoLocatario;
+    const isMultipleLocatarios = data.primeiroLocatario && (data.segundoLocatario || data.terceiroLocatario || data.quartoLocatario);
     
     // Adiciona termos inteligentes baseados nos nomes inseridos
     const enhancedData = {

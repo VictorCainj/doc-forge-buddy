@@ -132,7 +132,10 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (hasPersonManagerSteps) {
       // Atualizar dados dos locadores
       if (locadores.length > 0) {
-        const nomesLocadores = locadores.map(l => l.name).join(' e ');
+        const nomesLocadoresArray = locadores.map(l => l.name);
+        const nomesLocadores = nomesLocadoresArray.length > 1 
+          ? nomesLocadoresArray.slice(0, -1).join(', ') + ' e ' + nomesLocadoresArray[nomesLocadoresArray.length - 1]
+          : nomesLocadoresArray[0];
         updateField("nomeProprietario", nomesLocadores);
         // Não sobrescrever qualificacaoCompletaLocadores - deixar o usuário preencher manualmente
       } else {
@@ -142,18 +145,25 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
       // Atualizar dados dos locatários
       if (locatarios.length > 0) {
-        const nomesLocatarios = locatarios.map(l => l.name).join(' e ');
+        const nomesLocatariosArray = locatarios.map(l => l.name);
+        const nomesLocatarios = nomesLocatariosArray.length > 1 
+          ? nomesLocatariosArray.slice(0, -1).join(', ') + ' e ' + nomesLocatariosArray[nomesLocatariosArray.length - 1]
+          : nomesLocatariosArray[0];
         updateField("nomeLocatario", nomesLocatarios);
         // Não sobrescrever qualificacaoCompletaLocatarios - deixar o usuário preencher manualmente
         
-        // Definir primeiro e segundo locatário
+        // Definir primeiro, segundo, terceiro e quarto locatário
         updateField("primeiroLocatario", locatarios[0]?.name || "");
         updateField("segundoLocatario", locatarios[1]?.name || "");
+        updateField("terceiroLocatario", locatarios[2]?.name || "");
+        updateField("quartoLocatario", locatarios[3]?.name || "");
       } else {
         updateField("nomeLocatario", "");
         // Não limpar qualificacaoCompletaLocatarios - preservar o que o usuário digitou
         updateField("primeiroLocatario", "");
         updateField("segundoLocatario", "");
+        updateField("terceiroLocatario", "");
+        updateField("quartoLocatario", "");
       }
     }
   }, [locadores, locatarios, updateField, steps]);
@@ -166,10 +176,10 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (hasPersonManagerSteps && initialData) {
       // Inicializar locadores se houver dados
       if (initialData.nomeProprietario && locadores.length === 0) {
-        const nomesLocadores = initialData.nomeProprietario.split(' e ');
+        const nomesLocadores = initialData.nomeProprietario.split(/ e | E /).map(nome => nome.trim());
         const locadoresIniciais = nomesLocadores.map((nome, index) => ({
           id: `locador-${index}`,
-          name: nome.trim()
+          name: nome
         })).filter(l => l.name);
         if (locadoresIniciais.length > 0) {
           setLocadores(locadoresIniciais);
@@ -178,10 +188,10 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       
       // Inicializar locatários se houver dados
       if (initialData.nomeLocatario && locatarios.length === 0) {
-        const nomesLocatarios = initialData.nomeLocatario.split(' e ');
+        const nomesLocatarios = initialData.nomeLocatario.split(/ e | E /).map(nome => nome.trim());
         const locatariosIniciais = nomesLocatarios.map((nome, index) => ({
           id: `locatario-${index}`,
-          name: nome.trim()
+          name: nome
         })).filter(l => l.name);
         if (locatariosIniciais.length > 0) {
           setLocatarios(locatariosIniciais);
@@ -504,7 +514,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             people={locadores}
             onPeopleChange={setLocadores}
             placeholder="Nome completo do locador"
-            maxPeople={2}
+            maxPeople={4}
           />
         )}
         
@@ -514,7 +524,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             people={locatarios}
             onPeopleChange={setLocatarios}
             placeholder="Nome completo do locatário"
-            maxPeople={2}
+            maxPeople={4}
           />
         )}
         

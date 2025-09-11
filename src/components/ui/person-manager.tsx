@@ -23,7 +23,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
   people,
   onPeopleChange,
   placeholder = "Nome completo",
-  maxPeople = 2
+  maxPeople = 4
 }) => {
   const [newPersonName, setNewPersonName] = useState('');
 

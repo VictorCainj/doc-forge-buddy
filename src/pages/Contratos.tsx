@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_COMERCIAL_TEMPLATE, DEVOLUTIVA_CADERNINHO_TEMPLATE, DISTRATO_CONTRATO_LOCACAO_TEMPLATE } from "@/templates/documentos";
 import { formatDateBrazilian, convertDateToBrazilian } from "@/utils/dateFormatter";
+import { gerarDocumentosSolicitados, ConfiguracaoDocumentos } from "@/utils/documentosSolicitados";
 
 interface Contract {
   id: string;
@@ -33,6 +34,9 @@ const Contratos = () => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [dataVistoria, setDataVistoria] = useState('');
   const [horaVistoria, setHoraVistoria] = useState('');
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [whatsAppType, setWhatsAppType] = useState<'locador' | 'locatario' | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<string>('');
   const [deletingContract, setDeletingContract] = useState<string | null>(null);
   const [generatingDocument, setGeneratingDocument] = useState<string | null>(null);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -129,7 +133,7 @@ const Contratos = () => {
     enhancedData.qualificacaoCompletaProprietario = getProprietarioQualificacao(formData);
     
     // Aplicar conjunções para locatários baseado na quantidade adicionada
-    const isMultipleLocatarios = !!(formData.primeiroLocatario && formData.segundoLocatario);
+    const isMultipleLocatarios = !!(formData.primeiroLocatario && (formData.segundoLocatario || formData.terceiroLocatario || formData.quartoLocatario));
     enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
     
     if (isMultipleLocatarios) {
@@ -157,6 +161,8 @@ const Contratos = () => {
     // Usar os dados dos locatários adicionados manualmente
     enhancedData.primeiroLocatario = formData.primeiroLocatario || "";
     enhancedData.segundoLocatario = formData.segundoLocatario || "";
+    enhancedData.terceiroLocatario = formData.terceiroLocatario || "";
+    enhancedData.quartoLocatario = formData.quartoLocatario || "";
     
     // Aplicar conjunções para proprietários baseado na quantidade adicionada
     const isMultipleProprietarios = formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
@@ -194,13 +200,59 @@ const Contratos = () => {
     
     // Gerar saudação para devolutiva do proprietário (usando gênero correto)
     const generoProprietario = formData.generoProprietario;
-    const tratamentoProprietario = generoProprietario === "feminino" ? "Prezada Sra" : "Prezado Sr";
-    enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${primeiroNomeProprietarioCapitalizado}</strong>`;
+    const nomeProprietarioCompletoSaudacao = formData.nomeProprietario || formData.nomesResumidosLocadores || "";
+    const isMultipleProprietariosSaudacao = nomeProprietarioCompletoSaudacao.includes(' e ') || nomeProprietarioCompletoSaudacao.includes(' E ');
+    
+    let tratamentoProprietario;
+    if (isMultipleProprietariosSaudacao) {
+      tratamentoProprietario = generoProprietario === "feminino" ? "Prezadas Sras" : "Prezados Srs";
+    } else {
+      tratamentoProprietario = generoProprietario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+    }
+    
+    // Para múltiplos proprietários, incluir apenas o primeiro nome de cada pessoa na saudação
+    if (isMultipleProprietariosSaudacao) {
+      const nomesProprietariosSaudacao = nomeProprietarioCompletoSaudacao.split(/ e | E /).map(nome => nome.trim());
+      const primeirosNomes = nomesProprietariosSaudacao.map(nome => {
+        const primeiroNome = nome.split(' ')[0];
+        return primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
+      });
+      const nomesFormatados = primeirosNomes.length > 1 
+        ? primeirosNomes.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+          ' e ' + `<strong>${primeirosNomes[primeirosNomes.length - 1]}</strong>`
+        : `<strong>${primeirosNomes[0]}</strong>`;
+      enhancedData.saudacaoProprietario = `${tratamentoProprietario} ${nomesFormatados}`;
+    } else {
+      enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${primeiroNomeProprietarioCapitalizado}</strong>`;
+    }
     
     // Gerar saudação para devolutiva do locatário (usando gênero correto)
     const generoLocatario = formData.generoLocatario;
-    const tratamentoLocatario = generoLocatario === "feminino" ? "Prezada Sra" : "Prezado Sr";
-    enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${primeiroNomeCapitalizado}</strong>`;
+    const nomeLocatarioCompletoSaudacao = formData.nomeLocatario || formData.primeiroLocatario || "";
+    const isMultipleLocatariosSaudacao = nomeLocatarioCompletoSaudacao.includes(' e ') || nomeLocatarioCompletoSaudacao.includes(' E ');
+    
+    let tratamentoLocatario;
+    if (isMultipleLocatariosSaudacao) {
+      tratamentoLocatario = generoLocatario === "feminino" ? "Prezadas Sras" : "Prezados Srs";
+    } else {
+      tratamentoLocatario = generoLocatario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+    }
+    
+    // Para múltiplos locatários, incluir apenas o primeiro nome de cada pessoa na saudação
+    if (isMultipleLocatariosSaudacao) {
+      const nomesLocatariosSaudacao = nomeLocatarioCompletoSaudacao.split(/ e | E /).map(nome => nome.trim());
+      const primeirosNomes = nomesLocatariosSaudacao.map(nome => {
+        const primeiroNome = nome.split(' ')[0];
+        return primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
+      });
+      const nomesFormatados = primeirosNomes.length > 1 
+        ? primeirosNomes.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+          ' e ' + `<strong>${primeirosNomes[primeirosNomes.length - 1]}</strong>`
+        : `<strong>${primeirosNomes[0]}</strong>`;
+      enhancedData.saudacaoLocatario = `${tratamentoLocatario} ${nomesFormatados}`;
+    } else {
+      enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${primeiroNomeCapitalizado}</strong>`;
+    }
     
     // Gerar saudação para WhatsApp do proprietário (com Sr/Sra)
     enhancedData.proprietarioPrezadoWhatsapp = tratamentoProprietario;
@@ -214,20 +266,22 @@ const Contratos = () => {
     const saudacaoComercial = hora < 12 ? "bom dia" : "boa tarde";
     enhancedData.saudacaoComercial = saudacaoComercial;
     
-    // Formatar nome do locatário com negrito apenas nos nomes, não na preposição "e"
+    // Formatar nome do locatário com negrito apenas nos nomes, seguindo gramática portuguesa
     const nomeLocatario = formData.nomeLocatario || formData.primeiroLocatario || "[NOME DO LOCATÁRIO]";
-    const nomeLocatarioFormatado = nomeLocatario
-      .split(' e ')
-      .map(nome => `<strong>${nome.trim()}</strong>`)
-      .join(' e ');
+    const nomesLocatarioArray = nomeLocatario.split(/ e | E /).map(nome => nome.trim());
+    const nomeLocatarioFormatado = nomesLocatarioArray.length > 1 
+      ? nomesLocatarioArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+        ' e ' + `<strong>${nomesLocatarioArray[nomesLocatarioArray.length - 1]}</strong>`
+      : `<strong>${nomesLocatarioArray[0]}</strong>`;
     enhancedData.nomeLocatarioFormatado = nomeLocatarioFormatado;
     
-    // Formatar nome do proprietário com negrito apenas nos nomes, não na preposição "e"
+    // Formatar nome do proprietário com negrito apenas nos nomes, seguindo gramática portuguesa
     const nomeProprietario = formData.nomeProprietario || formData.nomesResumidosLocadores || "[NOME DO PROPRIETÁRIO]";
-    const nomeProprietarioFormatado = nomeProprietario
-      .split(' e ')
-      .map(nome => `<strong>${nome.trim()}</strong>`)
-      .join(' e ');
+    const nomesProprietarioArray = nomeProprietario.split(/ e | E /).map(nome => nome.trim());
+    const nomeProprietarioFormatado = nomesProprietarioArray.length > 1 
+      ? nomesProprietarioArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+        ' e ' + `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
+      : `<strong>${nomesProprietarioArray[0]}</strong>`;
     enhancedData.nomeProprietarioFormatado = nomeProprietarioFormatado;
     
     // Adicionar variáveis de data padrão
@@ -259,6 +313,24 @@ const Contratos = () => {
     // Adicionar variáveis específicas do distrato
     enhancedData.dataLiquidacao = formData.dataLiquidacao || formatDateBrazilian(new Date());
     
+    // Gerar lista personalizada de documentos solicitados para devolutiva locatário
+    const configDocumentos: ConfiguracaoDocumentos = {
+      solicitarCondominio: formData.solicitarCondominio,
+      solicitarAgua: formData.solicitarAgua,
+      solicitarEnergia: 'sim', // Energia sempre deve ser solicitada
+      solicitarGas: formData.solicitarGas,
+      solicitarCND: formData.solicitarCND
+    };
+    
+    enhancedData.documentosSolicitados = gerarDocumentosSolicitados(configDocumentos);
+    
+    // Manter os campos individuais para uso em condicionais do template
+    enhancedData.solicitarCondominio = formData.solicitarCondominio;
+    enhancedData.solicitarAgua = formData.solicitarAgua;
+    enhancedData.solicitarEnergia = 'sim'; // Energia sempre deve ser solicitada
+    enhancedData.solicitarGas = formData.solicitarGas;
+    enhancedData.solicitarCND = formData.solicitarCND;
+    
     return enhancedData;
   };
 
@@ -283,23 +355,12 @@ const Contratos = () => {
       setSelectedContract(contract);
       setShowAgendamentoModal(true);
     } else if (documentType === "Devolutiva Locador WhatsApp" || documentType === "Devolutiva Locatário WhatsApp") {
-      // Aplicar conjunções verbais antes de processar o template
-      const enhancedData = applyConjunctions(formData);
-      
-      const processedTemplate = replaceTemplateVariables(template, enhancedData);
-      const documentTitle = `${documentType} - ${contract.title}`;
-      
-      setTimeout(() => {
-        navigate('/gerar-documento', {
-          state: {
-            title: documentTitle,
-            template: processedTemplate,
-            formData: enhancedData,
-            documentType: documentType
-          }
-        });
-        setGeneratingDocument(null);
-      }, 800);
+      // Abrir modal para selecionar pessoa específica
+      setSelectedContract(contract);
+      setWhatsAppType(documentType === "Devolutiva Locador WhatsApp" ? 'locador' : 'locatario');
+      setSelectedPerson('');
+      setShowWhatsAppModal(true);
+      setGeneratingDocument(null);
     } else if (documentType === "Distrato de Contrato de Locação") {
       // Aplicar conjunções verbais antes de processar o template
       const enhancedData = applyConjunctions(formData);
@@ -425,8 +486,23 @@ const Contratos = () => {
     enhancedData.nomeProprietario = formData.nomesResumidosLocadores || formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
     enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
     
+    // Adicionar versões formatadas para os templates
+    const nomeProprietario = formData.nomesResumidosLocadores || formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    const nomesProprietarioArray = nomeProprietario.split(/ e | E /).map(nome => nome.trim());
+    enhancedData.nomeProprietarioFormatado = nomesProprietarioArray.length > 1 
+      ? nomesProprietarioArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+        ' e ' + `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
+      : `<strong>${nomesProprietarioArray[0]}</strong>`;
+    
+    const nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    const nomesLocatarioArray = nomeLocatario.split(/ e | E /).map(nome => nome.trim());
+    enhancedData.nomeLocatarioFormatado = nomesLocatarioArray.length > 1 
+      ? nomesLocatarioArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+        ' e ' + `<strong>${nomesLocatarioArray[nomesLocatarioArray.length - 1]}</strong>`
+      : `<strong>${nomesLocatarioArray[0]}</strong>`;
+    
     // Definir título para notificação de agendamento baseado na quantidade de locatários adicionados
-    const isMultipleLocatarios = formData.primeiroLocatario && formData.segundoLocatario;
+    const isMultipleLocatarios = formData.primeiroLocatario && (formData.segundoLocatario || formData.terceiroLocatario || formData.quartoLocatario);
     const generoLocatario = formData.generoLocatario;
     
     if (isMultipleLocatarios) {
@@ -467,6 +543,52 @@ const Contratos = () => {
     setSelectedContract(null);
     setDataVistoria('');
     setHoraVistoria('');
+  };
+
+  const handleGenerateWhatsApp = () => {
+    if (!selectedContract || !selectedPerson || !whatsAppType) {
+      toast.error('Por favor, selecione uma pessoa');
+      return;
+    }
+
+    const formData = selectedContract.form_data;
+    const enhancedData = applyConjunctions(formData);
+    
+    // Personalizar saudação para a pessoa selecionada
+    const primeiroNome = selectedPerson.split(' ')[0];
+    const primeiroNomeCapitalizado = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
+    
+    if (whatsAppType === 'locador') {
+      enhancedData.saudacaoProprietario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
+    } else {
+      enhancedData.saudacaoLocatario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
+    }
+    
+    const template = whatsAppType === 'locador' ? DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE : DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE;
+    const processedTemplate = replaceTemplateVariables(template, enhancedData);
+    const documentTitle = `Devolutiva ${whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp - ${selectedContract.title}`;
+    
+    navigate('/gerar-documento', {
+      state: {
+        title: documentTitle,
+        template: processedTemplate,
+        formData: enhancedData,
+        documentType: `Devolutiva ${whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp`
+      }
+    });
+
+    // Fechar modal e limpar campos
+    setShowWhatsAppModal(false);
+    setSelectedContract(null);
+    setWhatsAppType(null);
+    setSelectedPerson('');
+  };
+
+  const handleCancelWhatsApp = () => {
+    setShowWhatsAppModal(false);
+    setSelectedContract(null);
+    setWhatsAppType(null);
+    setSelectedPerson('');
   };
 
   const handleEditContract = (contract: Contract) => {
@@ -965,6 +1087,75 @@ const Contratos = () => {
             </Button>
             <Button onClick={handleGenerateAgendamento}>
               Gerar Notificação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Seleção de WhatsApp */}
+      <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Selecionar Pessoa para WhatsApp</DialogTitle>
+            <DialogDescription>
+              Selecione para qual {whatsAppType === 'locador' ? 'locador' : 'locatário'} você deseja enviar a mensagem do WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="selectedPerson" className="text-right">
+                {whatsAppType === 'locador' ? 'Locador' : 'Locatário'}
+              </Label>
+              <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder={`Selecione um ${whatsAppType === 'locador' ? 'locador' : 'locatário'}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {whatsAppType === 'locador' ? (
+                    (() => {
+                      const nomesLocadores = selectedContract?.form_data.nomesResumidosLocadores || selectedContract?.form_data.nomeProprietario;
+                      if (nomesLocadores) {
+                        const nomesArray = nomesLocadores.split(/ e | E /).map(nome => nome.trim()).filter(nome => nome);
+                        return nomesArray.map((nome, index) => (
+                          <SelectItem key={index} value={nome}>
+                            {nome}
+                          </SelectItem>
+                        ));
+                      }
+                      return (
+                        <SelectItem value="Nenhum locador encontrado" disabled>
+                          Nenhum locador encontrado
+                        </SelectItem>
+                      );
+                    })()
+                  ) : (
+                    (() => {
+                      const nomesLocatarios = selectedContract?.form_data.nomeLocatario || selectedContract?.form_data.primeiroLocatario;
+                      if (nomesLocatarios) {
+                        const nomesArray = nomesLocatarios.split(/ e | E /).map(nome => nome.trim()).filter(nome => nome);
+                        return nomesArray.map((nome, index) => (
+                          <SelectItem key={index} value={nome}>
+                            {nome}
+                          </SelectItem>
+                        ));
+                      }
+                      return (
+                        <SelectItem value="Nenhum locatário encontrado" disabled>
+                          Nenhum locatário encontrado
+                        </SelectItem>
+                      );
+                    })()
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelWhatsApp}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGenerateWhatsApp} disabled={!selectedPerson}>
+              Gerar WhatsApp
             </Button>
           </DialogFooter>
         </DialogContent>
