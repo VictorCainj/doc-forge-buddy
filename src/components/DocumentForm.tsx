@@ -14,9 +14,11 @@ import { formatDateBrazilian } from "@/utils/dateFormatter";
 interface FormField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "number";
+  type: "text" | "textarea" | "number" | "select";
   required?: boolean;
   placeholder?: string;
+  options?: Array<{ value: string; label: string }>;
+  tooltip?: string;
 }
 
 interface FieldGroup {
@@ -345,6 +347,20 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                               onChange={(e) => handleInputChange(field.name, e.target.value)}
                               className="min-h-20"
                             />
+                          ) : field.type === "select" ? (
+                            <select
+                              id={field.name}
+                              value={formData[field.name] || ""}
+                              onChange={(e) => handleInputChange(field.name, e.target.value)}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <option value="">{field.placeholder || "Selecione uma opção"}</option>
+                              {field.options?.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
                           ) : (
                             <Input
                               id={field.name}
@@ -373,6 +389,20 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                         onChange={(e) => handleInputChange(field.name, e.target.value)}
                         className="min-h-20"
                       />
+                    ) : field.type === "select" ? (
+                      <select
+                        id={field.name}
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">{field.placeholder || "Selecione uma opção"}</option>
+                        {field.options?.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       <Input
                         id={field.name}

@@ -57,15 +57,30 @@ const CadastrarContrato = () => {
       icon: Users,
       fields: [
         {
-          name: "generoProprietario",
+          name: "generoLocador",
           label: "Gênero dos Locadores",
           type: "select",
           required: true,
           options: [
             { value: "masculino", label: "Masculino" },
             { value: "feminino", label: "Feminino" },
-            { value: "neutro", label: "Neutro (múltiplos locadores)" }
+            { value: "masculinos", label: "Masculinos (plural)" },
+            { value: "femininos", label: "Femininos (plural)" }
           ]
+        },
+        {
+          name: "nomeLocador",
+          label: "Nome dos Locadores",
+          type: "textarea",
+          required: true,
+          placeholder: "Nome completo dos locadores"
+        },
+        {
+          name: "qualificacaoCompletaLocadores",
+          label: "Qualificação Completa dos Locadores",
+          type: "textarea",
+          required: true,
+          placeholder: "Qualificação completa dos locadores conforme contrato"
         }
       ]
     },
@@ -83,8 +98,16 @@ const CadastrarContrato = () => {
           options: [
             { value: "masculino", label: "Masculino" },
             { value: "feminino", label: "Feminino" },
-            { value: "neutro", label: "Neutro (múltiplos locatários)" }
+            { value: "masculinos", label: "Masculinos (plural)" },
+            { value: "femininos", label: "Femininos (plural)" }
           ]
+        },
+        {
+          name: "nomeLocatario",
+          label: "Nome dos Locatários",
+          type: "textarea",
+          required: true,
+          placeholder: "Nome completo dos locatários"
         }
       ]
     },
@@ -133,7 +156,7 @@ const CadastrarContrato = () => {
 
       // Salvar o contrato no banco de dados usando a tabela saved_terms
       const contractData = {
-        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeLocatario || '[LOCATÁRIO]'}`,
+        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeLocatario?.split(',')[0]?.trim() || '[LOCATÁRIO]'}`,
         content: JSON.stringify(enhancedData), // Armazenar dados como JSON
         form_data: enhancedData,
         document_type: 'contrato'
