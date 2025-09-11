@@ -40,13 +40,6 @@ const CadastrarContrato = () => {
           type: "text",
           required: true,
           placeholder: "Ex: 15/10/2024 ou 15 de outubro de 2024"
-        },
-        {
-          name: "qualificacaoCompletaLocatarios",
-          label: "Qualificação Completa dos Locatários",
-          type: "textarea",
-          required: false,
-          placeholder: "Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental, portador do RG. nº MG-14.837.051 SSP/MG, e inscrito no CPF sob o nº 096.402.496-96, nascido em 14/12/1988, com filiação de LUIS ANTONIO ORLANDO e MARIA TEREZA VIEIRA ORLANDO, residente e domiciliado na cidade de Campinas/SP, e BARBARA SIMINATTI DOS SANTOS, brasileira, solteira, servidora pública, portadora do RG. nº 36.153.912-5 SSP/SP, e inscrita no CPF sob o nº 395.076.738-06, nascida em 02/07/1990, com filiação de VALDIR CORREIA DOS SANTOS e VANIR SIMINATTI DOS SANTOS, residente e domiciliada na cidade de Campinas/SP"
         }
       ]
     },
@@ -57,7 +50,7 @@ const CadastrarContrato = () => {
       icon: Users,
       fields: [
         {
-          name: "generoLocador",
+          name: "generoProprietario",
           label: "Gênero dos Locadores",
           type: "select",
           required: true,
@@ -69,7 +62,7 @@ const CadastrarContrato = () => {
           ]
         },
         {
-          name: "nomeLocador",
+          name: "nomeProprietario",
           label: "Nome dos Locadores",
           type: "textarea",
           required: true,
@@ -91,6 +84,13 @@ const CadastrarContrato = () => {
       icon: Users,
       fields: [
         {
+          name: "nomeLocatario",
+          label: "Nome dos Locatários",
+          type: "textarea",
+          required: true,
+          placeholder: "Nome completo dos locatários"
+        },
+        {
           name: "generoLocatario",
           label: "Gênero dos Locatários",
           type: "select",
@@ -103,11 +103,11 @@ const CadastrarContrato = () => {
           ]
         },
         {
-          name: "nomeLocatario",
-          label: "Nome dos Locatários",
+          name: "qualificacaoCompletaLocatarios",
+          label: "Qualificação Completa dos Locatários",
           type: "textarea",
-          required: true,
-          placeholder: "Nome completo dos locatários"
+          required: false,
+          placeholder: "Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental, portador do RG. nº MG-14.837.051 SSP/MG, e inscrito no CPF sob o nº 096.402.496-96, nascido em 14/12/1988, com filiação de LUIS ANTONIO ORLANDO e MARIA TEREZA VIEIRA ORLANDO, residente e domiciliado na cidade de Campinas/SP, e BARBARA SIMINATTI DOS SANTOS, brasileira, solteira, servidora pública, portadora do RG. nº 36.153.912-5 SSP/SP, e inscrita no CPF sob o nº 395.076.738-06, nascida em 02/07/1990, com filiação de VALDIR CORREIA DOS SANTOS e VANIR SIMINATTI DOS SANTOS, residente e domiciliada na cidade de Campinas/SP"
         }
       ]
     },
@@ -156,7 +156,7 @@ const CadastrarContrato = () => {
 
       // Salvar o contrato no banco de dados usando a tabela saved_terms
       const contractData = {
-        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeLocatario?.split(',')[0]?.trim() || '[LOCATÁRIO]'}`,
+        title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(' e ')[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(' e ')[0]?.trim() || '[LOCATÁRIO]'}`,
         content: JSON.stringify(enhancedData), // Armazenar dados como JSON
         form_data: enhancedData,
         document_type: 'contrato'

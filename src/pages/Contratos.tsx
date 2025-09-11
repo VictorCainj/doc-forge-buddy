@@ -349,7 +349,15 @@ const Contratos = () => {
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
     
-    // Processar condicionais Handlebars simples
+    // Processar condicionais Handlebars com else
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, ifContent, elseContent) => {
+      if (data[variable] && data[variable].trim()) {
+        return ifContent;
+      }
+      return elseContent;
+    });
+    
+    // Processar condicionais Handlebars simples (sem else)
     result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, content) => {
       if (data[variable] && data[variable].trim()) {
         return content;

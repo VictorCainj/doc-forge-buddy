@@ -134,24 +134,24 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       if (locadores.length > 0) {
         const nomesLocadores = locadores.map(l => l.name).join(' e ');
         updateField("nomeProprietario", nomesLocadores);
-        updateField("qualificacaoCompletaLocadores", nomesLocadores);
+        // Não sobrescrever qualificacaoCompletaLocadores - deixar o usuário preencher manualmente
       } else {
         updateField("nomeProprietario", "");
-        updateField("qualificacaoCompletaLocadores", "");
+        // Não limpar qualificacaoCompletaLocadores - preservar o que o usuário digitou
       }
 
       // Atualizar dados dos locatários
       if (locatarios.length > 0) {
         const nomesLocatarios = locatarios.map(l => l.name).join(' e ');
         updateField("nomeLocatario", nomesLocatarios);
-        updateField("qualificacaoCompletaLocatarios", nomesLocatarios);
+        // Não sobrescrever qualificacaoCompletaLocatarios - deixar o usuário preencher manualmente
         
         // Definir primeiro e segundo locatário
         updateField("primeiroLocatario", locatarios[0]?.name || "");
         updateField("segundoLocatario", locatarios[1]?.name || "");
       } else {
         updateField("nomeLocatario", "");
-        updateField("qualificacaoCompletaLocatarios", "");
+        // Não limpar qualificacaoCompletaLocatarios - preservar o que o usuário digitou
         updateField("primeiroLocatario", "");
         updateField("segundoLocatario", "");
       }
@@ -440,7 +440,15 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
     
-    // Processar condicionais Handlebars simples
+    // Processar condicionais Handlebars com else
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, ifContent, elseContent) => {
+      if (data[variable] && data[variable].trim()) {
+        return ifContent;
+      }
+      return elseContent;
+    });
+    
+    // Processar condicionais Handlebars simples (sem else)
     result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, content) => {
       if (data[variable] && data[variable].trim()) {
         return content;
@@ -516,9 +524,9 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           let shouldShowField = true;
           
           // Ocultar campos tradicionais quando PersonManager estiver sendo usado
-          if (step.id === "locador" && (field.name === "nomeLocador" || field.name === "qualificacaoCompletaLocadores")) {
+          if (step.id === "locador" && field.name === "nomeLocador") {
             shouldShowField = false;
-          } else if (step.id === "locatario" && (field.name === "qualificacaoCompletaLocatarios" || field.name === "nomesResumidos")) {
+          } else if (step.id === "locatario" && field.name === "nomesResumidos") {
             shouldShowField = false;
           } else if (field.name === "statusAgua") {
             shouldShowField = formData.tipoAgua && formData.tipoAgua !== "";

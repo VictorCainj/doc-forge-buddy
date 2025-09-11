@@ -277,7 +277,7 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
     </div>
   </div>
   
-  <p style="margin-bottom: 20px;">{{#if nomeLocatario}}O(s) locatário(s) {{nomeLocatario}} {{#else}}O locatário{{/if}} notificou(aram) a desocupação em <strong>{{dataComunicacao}}</strong>, tendo como término do prazo de {{prazoDias}} dias a data de <strong>{{dataTerminoDesocupacao}}</strong>. Realizei a devolutiva ao locatário, ao locador e ao setor comercial.</p>
+  <p style="margin-bottom: 20px;">{{#if nomeLocatario}}O(s) locatário(s) {{nomeLocatario}} notificou(aram) a desocupação em <strong>{{dataComunicacao}}</strong>, tendo como término do prazo de {{prazoDias}} dias a data de <strong>{{dataTerminoDesocupacao}}</strong>. Realizei a devolutiva ao locatário, ao locador e ao setor comercial.{{else}}O locatário notificou a desocupação em <strong>{{dataComunicacao}}</strong>, tendo como término do prazo de {{prazoDias}} dias a data de <strong>{{dataTerminoDesocupacao}}</strong>. Realizei a devolutiva ao locatário, ao locador e ao setor comercial.{{/if}}</p>
 </div>
 `;
 
