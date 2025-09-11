@@ -4,13 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle } from "lucide-react";
+import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle, Edit } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_COMERCIAL_TEMPLATE, DEVOLUTIVA_CADERNINHO_TEMPLATE } from "@/templates/documentos";
-import { formatDateBrazilian } from "@/utils/dateFormatter";
+import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_COMERCIAL_TEMPLATE, DEVOLUTIVA_CADERNINHO_TEMPLATE, DISTRATO_CONTRATO_LOCACAO_TEMPLATE } from "@/templates/documentos";
+import { formatDateBrazilian, convertDateToBrazilian } from "@/utils/dateFormatter";
 
 interface Contract {
   id: string;
@@ -33,6 +35,10 @@ const Contratos = () => {
   const [horaVistoria, setHoraVistoria] = useState('');
   const [deletingContract, setDeletingContract] = useState<string | null>(null);
   const [generatingDocument, setGeneratingDocument] = useState<string | null>(null);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState<Record<string, string>>({});
+  const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,14 +86,6 @@ const Contratos = () => {
     }
   };
 
-  // Função para detectar múltiplas pessoas
-  const isMultiplePeople = (name: string) => {
-    if (!name) return false;
-    return name.includes(',') || 
-           name.includes(' e ') || 
-           name.includes(' E ');
-  };
-
   // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
   const generateMesesComprovantes = () => {
     const hoje = new Date();
@@ -115,6 +113,11 @@ const Contratos = () => {
     return formData.qualificacaoCompletaLocatarios || "[TEXTOLIVRE]";
   };
 
+  // Função para obter qualificação completa dos proprietários (texto livre)
+  const getProprietarioQualificacao = (formData: Record<string, string>) => {
+    return formData.qualificacaoCompletaLocadores || "[TEXTOLIVRE]";
+  };
+
   // Função para aplicar conjunções verbais
   const applyConjunctions = (formData: Record<string, string>) => {
     const enhancedData = { ...formData };
@@ -122,29 +125,54 @@ const Contratos = () => {
     // Obter qualificação completa dos locatários (texto livre)
     enhancedData.qualificacaoCompletaLocatarios = getLocatarioQualificacao(formData);
     
-    // Aplicar conjunções para locatários
-    const isMultipleLocatarios = isMultiplePeople(formData.nomeLocatario);
+    // Obter qualificação completa dos proprietários (texto livre)
+    enhancedData.qualificacaoCompletaProprietario = getProprietarioQualificacao(formData);
+    
+    // Aplicar conjunções para locatários baseado na quantidade adicionada
+    const isMultipleLocatarios = !!(formData.primeiroLocatario && formData.segundoLocatario);
+    enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
+    
     if (isMultipleLocatarios) {
       enhancedData.locatarioTerm = "os inquilinos";
       enhancedData.locatarioComunicou = "informaram";
       enhancedData.locatarioIra = "irão";
       enhancedData.locatarioTermo = "do locatário";
       enhancedData.locatarioPrezado = "Prezado";
-    } else {
-      enhancedData.locatarioTerm = "o inquilino";
+    } else if (formData.primeiroLocatario) {
+      // Usar o gênero do locatário para definir o termo correto
+      const generoLocatario = formData.generoLocatario;
+      if (generoLocatario === "feminino") {
+        enhancedData.locatarioTerm = "a inquilina";
+      } else if (generoLocatario === "masculino") {
+        enhancedData.locatarioTerm = "o inquilino";
+      } else {
+        enhancedData.locatarioTerm = "o inquilino"; // fallback
+      }
       enhancedData.locatarioComunicou = "informou";
       enhancedData.locatarioIra = "irá";
       enhancedData.locatarioTermo = "do locatário";
       enhancedData.locatarioPrezado = "Prezado";
     }
     
-    // Aplicar conjunções para proprietários
-    const isMultipleProprietarios = isMultiplePeople(formData.nomeProprietario);
+    // Usar os dados dos locatários adicionados manualmente
+    enhancedData.primeiroLocatario = formData.primeiroLocatario || "";
+    enhancedData.segundoLocatario = formData.segundoLocatario || "";
+    
+    // Aplicar conjunções para proprietários baseado na quantidade adicionada
+    const isMultipleProprietarios = formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
     if (isMultipleProprietarios) {
       enhancedData.proprietarioTerm = "os proprietários";
       enhancedData.proprietarioPrezado = "Prezado";
-    } else {
-      enhancedData.proprietarioTerm = "o proprietário";
+    } else if (formData.nomeProprietario) {
+      // Usar o gênero do proprietário para definir o termo correto
+      const generoProprietario = formData.generoProprietario;
+      if (generoProprietario === "feminino") {
+        enhancedData.proprietarioTerm = "a proprietária";
+      } else if (generoProprietario === "masculino") {
+        enhancedData.proprietarioTerm = "o proprietário";
+      } else {
+        enhancedData.proprietarioTerm = "o proprietário"; // fallback
+      }
       enhancedData.proprietarioPrezado = "Prezado";
     }
     
@@ -153,29 +181,31 @@ const Contratos = () => {
     enhancedData.mesesComprovantes = mesesComprovantes;
     
     // Extrair primeiro nome do locatário e capitalizar apenas a primeira letra
-    const primeiroNome = formData.nomeLocatario?.split(' ')[0] || formData.nomeLocatario || "[PRIMEIRO NOME]";
+    const nomeLocatarioCompleto = formData.nomeLocatario || formData.primeiroLocatario || "[PRIMEIRO NOME]";
+    const primeiroNome = nomeLocatarioCompleto?.split(' ')[0] || nomeLocatarioCompleto || "[PRIMEIRO NOME]";
     const primeiroNomeCapitalizado = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
     enhancedData.primeiroNomeLocatario = primeiroNomeCapitalizado;
     
     // Extrair primeiro nome do proprietário e capitalizar apenas a primeira letra
-    const primeiroNomeProprietario = formData.nomeProprietario?.split(' ')[0] || formData.nomeProprietario || "[PRIMEIRO NOME]";
+    const nomeProprietarioCompleto = formData.nomeProprietario || formData.nomesResumidosLocadores || "[PRIMEIRO NOME]";
+    const primeiroNomeProprietario = nomeProprietarioCompleto?.split(' ')[0] || nomeProprietarioCompleto || "[PRIMEIRO NOME]";
     const primeiroNomeProprietarioCapitalizado = primeiroNomeProprietario.charAt(0).toUpperCase() + primeiroNomeProprietario.slice(1).toLowerCase();
     enhancedData.primeiroNomeProprietario = primeiroNomeProprietarioCapitalizado;
     
-    // Gerar saudação para devolutiva do proprietário
-    enhancedData.saudacaoProprietario = `Prezado Sr <strong>${primeiroNomeProprietarioCapitalizado}</strong>`;
-    
-    // Gerar saudação para devolutiva do locatário
-    enhancedData.saudacaoLocatario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
-    
-    // Gerar saudação para WhatsApp do proprietário (com Sr/Sra)
+    // Gerar saudação para devolutiva do proprietário (usando gênero correto)
     const generoProprietario = formData.generoProprietario;
     const tratamentoProprietario = generoProprietario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+    enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${primeiroNomeProprietarioCapitalizado}</strong>`;
+    
+    // Gerar saudação para devolutiva do locatário (usando gênero correto)
+    const generoLocatario = formData.generoLocatario;
+    const tratamentoLocatario = generoLocatario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+    enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${primeiroNomeCapitalizado}</strong>`;
+    
+    // Gerar saudação para WhatsApp do proprietário (com Sr/Sra)
     enhancedData.proprietarioPrezadoWhatsapp = tratamentoProprietario;
     
     // Gerar saudação para WhatsApp do locatário (com Sr/Sra)
-    const generoLocatario = formData.generoLocatario;
-    const tratamentoLocatario = generoLocatario === "feminino" ? "Prezada Sra" : "Prezado Sr";
     enhancedData.locatarioPrezadoWhatsapp = tratamentoLocatario;
     
     // Gerar saudação para devolutiva comercial (bom dia/boa tarde)
@@ -185,7 +215,7 @@ const Contratos = () => {
     enhancedData.saudacaoComercial = saudacaoComercial;
     
     // Formatar nome do locatário com negrito apenas nos nomes, não na preposição "e"
-    const nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    const nomeLocatario = formData.nomeLocatario || formData.primeiroLocatario || "[NOME DO LOCATÁRIO]";
     const nomeLocatarioFormatado = nomeLocatario
       .split(' e ')
       .map(nome => `<strong>${nome.trim()}</strong>`)
@@ -193,7 +223,7 @@ const Contratos = () => {
     enhancedData.nomeLocatarioFormatado = nomeLocatarioFormatado;
     
     // Formatar nome do proprietário com negrito apenas nos nomes, não na preposição "e"
-    const nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    const nomeProprietario = formData.nomeProprietario || formData.nomesResumidosLocadores || "[NOME DO PROPRIETÁRIO]";
     const nomeProprietarioFormatado = nomeProprietario
       .split(' e ')
       .map(nome => `<strong>${nome.trim()}</strong>`)
@@ -210,14 +240,24 @@ const Contratos = () => {
     // Adicionar variáveis de endereço e contrato
     enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || "[ENDEREÇO]";
     enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
-    enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    enhancedData.nomeProprietario = formData.nomesResumidosLocadores || formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
     enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
+    
+    // Adicionar campos de gênero para uso nos termos
+    enhancedData.generoProprietario = formData.generoProprietario;
+    enhancedData.generoLocatario = formData.generoLocatario;
+    
+    // Adicionar campos de nomes resumidos para uso nos termos
+    enhancedData.nomesResumidosLocadores = formData.nomesResumidosLocadores;
     
     // Adicionar variáveis específicas dos termos
     enhancedData.dataFirmamentoContrato = formData.dataFirmamentoContrato || formatDateBrazilian(new Date());
     enhancedData.dataVistoria = formData.dataVistoria || formatDateBrazilian(new Date());
     enhancedData.cpflDaev = formData.cpflDaev || "[CPFL/DAEV]";
     enhancedData.quantidadeChaves = formData.quantidadeChaves || "[QUANTIDADE DE CHAVES]";
+    
+    // Adicionar variáveis específicas do distrato
+    enhancedData.dataLiquidacao = formData.dataLiquidacao || formatDateBrazilian(new Date());
     
     return enhancedData;
   };
@@ -243,6 +283,24 @@ const Contratos = () => {
       setSelectedContract(contract);
       setShowAgendamentoModal(true);
     } else if (documentType === "Devolutiva Locador WhatsApp" || documentType === "Devolutiva Locatário WhatsApp") {
+      // Aplicar conjunções verbais antes de processar o template
+      const enhancedData = applyConjunctions(formData);
+      
+      const processedTemplate = replaceTemplateVariables(template, enhancedData);
+      const documentTitle = `${documentType} - ${contract.title}`;
+      
+      setTimeout(() => {
+        navigate('/gerar-documento', {
+          state: {
+            title: documentTitle,
+            template: processedTemplate,
+            formData: enhancedData,
+            documentType: documentType
+          }
+        });
+        setGeneratingDocument(null);
+      }, 800);
+    } else if (documentType === "Distrato de Contrato de Locação") {
       // Aplicar conjunções verbais antes de processar o template
       const enhancedData = applyConjunctions(formData);
       
@@ -290,10 +348,30 @@ const Contratos = () => {
 
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
+    
+    // Processar condicionais Handlebars simples
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, content) => {
+      if (data[variable] && data[variable].trim()) {
+        return content;
+      }
+      return '';
+    });
+    
+    // Substituir variáveis
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
-      result = result.replace(new RegExp(placeholder, 'g'), value || `[${key.toUpperCase()}]`);
+      let formattedValue = value || `[${key.toUpperCase()}]`;
+      
+      // Formatar datas automaticamente
+      if (key.toLowerCase().includes('data') || key.toLowerCase().includes('date')) {
+        if (value && value.trim() !== '') {
+          formattedValue = convertDateToBrazilian(value);
+        }
+      }
+      
+      result = result.replace(new RegExp(placeholder, 'g'), formattedValue);
     });
+    
     return result;
   };
 
@@ -336,16 +414,16 @@ const Contratos = () => {
     enhancedData.horaVistoria = horaVistoria;
     enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || "[ENDEREÇO]";
     enhancedData.numeroContrato = formData.numeroContrato || "[NÚMERO DO CONTRATO]";
-    enhancedData.nomeProprietario = formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
+    enhancedData.nomeProprietario = formData.nomesResumidosLocadores || formData.nomeProprietario || "[NOME DO PROPRIETÁRIO]";
     enhancedData.nomeLocatario = formData.nomeLocatario || "[NOME DO LOCATÁRIO]";
     
-    // Definir título para notificação de agendamento baseado no gênero e quantidade de locatários
-    const isMultipleLocatarios = isMultiplePeople(formData.nomeLocatario);
+    // Definir título para notificação de agendamento baseado na quantidade de locatários adicionados
+    const isMultipleLocatarios = formData.primeiroLocatario && formData.segundoLocatario;
     const generoLocatario = formData.generoLocatario;
     
     if (isMultipleLocatarios) {
       enhancedData.notificadoLocatarioTitulo = "Notificados Locatários";
-    } else {
+    } else if (formData.primeiroLocatario) {
       // Para um único locatário, usar o gênero preenchido
       if (generoLocatario === "masculino") {
         enhancedData.notificadoLocatarioTitulo = "Notificado Locatário";
@@ -381,6 +459,61 @@ const Contratos = () => {
     setSelectedContract(null);
     setDataVistoria('');
     setHoraVistoria('');
+  };
+
+  const handleEditContract = (contract: Contract) => {
+    setEditingContract(contract);
+    setEditFormData(contract.form_data);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateContract = async () => {
+    if (!editingContract) return;
+    
+    setIsUpdating(true);
+    try {
+      // Adicionar campos automáticos
+      const enhancedData = {
+        ...editFormData,
+        prazoDias: "30", // Sempre 30 dias
+        dataComunicacao: editFormData.dataInicioDesocupacao // Data de comunicação = data de início
+      };
+
+      const { error } = await supabase
+        .from('saved_terms')
+        .update({
+          title: `Contrato ${editFormData.numeroContrato || '[NÚMERO]'} - ${editFormData.nomeLocatario || '[LOCATÁRIO]'}`,
+          content: JSON.stringify(enhancedData),
+          form_data: enhancedData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingContract.id);
+
+      if (error) throw error;
+
+      // Atualizar a lista local
+      setContracts(prev => prev.map(contract => 
+        contract.id === editingContract.id 
+          ? { ...contract, form_data: enhancedData, title: `Contrato ${editFormData.numeroContrato || '[NÚMERO]'} - ${editFormData.nomeLocatario || '[LOCATÁRIO]'}`, updated_at: new Date().toISOString() }
+          : contract
+      ));
+
+      toast.success("Contrato atualizado com sucesso!");
+      setShowEditModal(false);
+      setEditingContract(null);
+      setEditFormData({});
+    } catch (error) {
+      toast.error("Erro ao atualizar contrato");
+      console.error("Erro ao atualizar contrato:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingContract(null);
+    setEditFormData({});
   };
 
   return (
@@ -712,6 +845,46 @@ const Contratos = () => {
                               <TooltipTrigger asChild>
                                 <Button
                                   size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DISTRATO_CONTRATO_LOCACAO_TEMPLATE, "Distrato de Contrato de Locação")}
+                                  className="h-8 text-xs"
+                                  disabled={generatingDocument === `${contract.id}-Distrato de Contrato de Locação`}
+                                >
+                                  {generatingDocument === `${contract.id}-Distrato de Contrato de Locação` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                  ) : (
+                                    <FileText className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Distrato</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Distrato de Contrato de Locação</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditContract(contract)}
+                                  className="h-8 text-xs"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  <span className="ml-1">Editar</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Editar Contrato</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
                                   variant="destructive"
                                   onClick={() => handleDeleteContract(contract.id, contract.title)}
                                   className="h-8 text-xs"
@@ -784,6 +957,165 @@ const Contratos = () => {
             </Button>
             <Button onClick={handleGenerateAgendamento}>
               Gerar Notificação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Edição de Contrato */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Contrato</DialogTitle>
+            <DialogDescription>
+              Edite as informações do contrato. Todos os campos são editáveis.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            {/* Dados do Contrato */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Dados do Contrato</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-numeroContrato">Número do Contrato</Label>
+                  <Input
+                    id="edit-numeroContrato"
+                    value={editFormData.numeroContrato || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, numeroContrato: e.target.value }))}
+                    placeholder="Ex: 13734"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nomeLocatario">Nome do Locatário</Label>
+                  <Input
+                    id="edit-nomeLocatario"
+                    value={editFormData.nomeLocatario || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, nomeLocatario: e.target.value }))}
+                    placeholder="Ex: Beatriz ou INSERVICE LIMPEZA E INFRA-ESTRUTURA LTDA"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-generoLocatario">Gênero do Locatário</Label>
+                  <Select
+                    value={editFormData.generoLocatario || ''}
+                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, generoLocatario: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="neutro">Neutro (múltiplos locatários)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-enderecoImovel">Endereço do Imóvel</Label>
+                  <Input
+                    id="edit-enderecoImovel"
+                    value={editFormData.enderecoImovel || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, enderecoImovel: e.target.value }))}
+                    placeholder="Endereço completo do imóvel"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-dataFirmamentoContrato">Data de Firmamento do Contrato</Label>
+                <Input
+                  id="edit-dataFirmamentoContrato"
+                  value={editFormData.dataFirmamentoContrato || ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, dataFirmamentoContrato: e.target.value }))}
+                  placeholder="Ex: 15/10/2024 ou 15 de outubro de 2024"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-qualificacaoCompletaLocatarios">Qualificação Completa dos Locatários</Label>
+                <Textarea
+                  id="edit-qualificacaoCompletaLocatarios"
+                  value={editFormData.qualificacaoCompletaLocatarios || ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, qualificacaoCompletaLocatarios: e.target.value }))}
+                  placeholder="Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Dados dos Locadores */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Qualificação dos Locadores</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nomesResumidosLocadores">Nomes dos Locadores</Label>
+                  <Input
+                    id="edit-nomesResumidosLocadores"
+                    value={editFormData.nomesResumidosLocadores || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, nomesResumidosLocadores: e.target.value }))}
+                    placeholder="Ex: JOÃO SILVA SANTOS e MARIA SILVA SANTOS"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-generoProprietario">Gênero dos Locadores</Label>
+                  <Select
+                    value={editFormData.generoProprietario || ''}
+                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, generoProprietario: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="neutro">Neutro (múltiplos locadores)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-qualificacaoCompletaLocadores">Qualificação Completa dos Locadores</Label>
+                <Textarea
+                  id="edit-qualificacaoCompletaLocadores"
+                  value={editFormData.qualificacaoCompletaLocadores || ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, qualificacaoCompletaLocadores: e.target.value }))}
+                  placeholder="Ex: JOÃO SILVA SANTOS, brasileiro, casado, empresário..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Dados de Desocupação */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Dados de Desocupação</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dataInicioDesocupacao">Data de Início da Desocupação</Label>
+                  <Input
+                    id="edit-dataInicioDesocupacao"
+                    value={editFormData.dataInicioDesocupacao || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, dataInicioDesocupacao: e.target.value }))}
+                    placeholder="DD/MM/AAAA - Ex: 23/06/2025"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dataTerminoDesocupacao">Data de Término da Desocupação</Label>
+                  <Input
+                    id="edit-dataTerminoDesocupacao"
+                    value={editFormData.dataTerminoDesocupacao || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, dataTerminoDesocupacao: e.target.value }))}
+                    placeholder="DD/MM/AAAA - Ex: 22/07/2025"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelEdit}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateContract} disabled={isUpdating}>
+              {isUpdating ? "Atualizando..." : "Atualizar Contrato"}
             </Button>
           </DialogFooter>
         </DialogContent>

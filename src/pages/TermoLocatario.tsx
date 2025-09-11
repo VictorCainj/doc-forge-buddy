@@ -106,10 +106,10 @@ const TermoLocatario: React.FC = () => {
           placeholder: "Selecione uma opção",
           options: [
             { value: "todos", label: "Todos os locatários" },
-            ...contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
+            ...(contractData.nomeLocatario ? contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
               value: nome,
               label: nome
-            }))
+            })) : [])
           ]
         },
         { 
@@ -236,23 +236,43 @@ __________________________________________<br>
   };
 
   const handleGenerate = (data: Record<string, string>) => {
-    // Detectar se há múltiplos locatários baseado nos nomes resumidos
-    const isMultipleLocatarios = contractData.nomeLocatario && (
-      contractData.nomeLocatario.includes(',') || 
-      contractData.nomeLocatario.includes(' e ') ||
-      contractData.nomeLocatario.includes(' E ')
-    );
+    // Detectar se há múltiplos locatários baseado na quantidade adicionada
+    const isMultipleLocatarios = contractData.primeiroLocatario && contractData.segundoLocatario;
 
-    // Detectar se há múltiplos proprietários
-    const isMultipleProprietarios = contractData.nomeProprietario && (
-      contractData.nomeProprietario.includes(',') || 
-      contractData.nomeProprietario.includes(' e ') ||
-      contractData.nomeProprietario.includes(' E ')
-    );
+    // Detectar se há múltiplos proprietários baseado na quantidade adicionada
+    const nomeProprietario = contractData.nomesResumidosLocadores || contractData.nomeProprietario;
+    const isMultipleProprietarios = nomeProprietario && nomeProprietario.includes(' e ');
 
-    // Definir termos baseados na quantidade
-    const locadorTerm = isMultipleProprietarios ? "LOCADORES" : "LOCADOR";
-    const dadosLocatarioTitulo = isMultipleLocatarios ? "DADOS DOS LOCATÁRIOS" : "DADOS DO LOCATÁRIO";
+    // Definir termos baseados na quantidade e gênero
+    let locadorTerm;
+    if (isMultipleProprietarios) {
+      locadorTerm = "LOCADORES";
+    } else {
+      // Usar o gênero do locador cadastrado no contrato
+      const generoProprietario = contractData.generoProprietario;
+      if (generoProprietario === "feminino") {
+        locadorTerm = "LOCADORA";
+      } else if (generoProprietario === "masculino") {
+        locadorTerm = "LOCADOR";
+      } else {
+        locadorTerm = "LOCADOR"; // fallback para neutro ou indefinido
+      }
+    }
+    // Definir título baseado na quantidade e gênero
+    let dadosLocatarioTitulo;
+    if (isMultipleLocatarios) {
+      dadosLocatarioTitulo = "DADOS DOS LOCATÁRIOS";
+    } else {
+      // Usar o gênero do locatário cadastrado no contrato
+      const generoLocatario = contractData.generoLocatario;
+      if (generoLocatario === "feminino") {
+        dadosLocatarioTitulo = "DADOS DA LOCATÁRIA";
+      } else if (generoLocatario === "masculino") {
+        dadosLocatarioTitulo = "DADOS DO LOCATÁRIO";
+      } else {
+        dadosLocatarioTitulo = "DADOS DO LOCATÁRIO"; // fallback para neutro ou indefinido
+      }
+    }
     const locatarioResponsabilidade = isMultipleLocatarios ? "dos locatários" : "do locatário";
 
     // Processar nome de quem retira baseado na opção selecionada
@@ -277,12 +297,14 @@ __________________________________________<br>
       : "<!-- SEM OBSERVACAO -->";
 
     // Aplicar formatação de nomes - apenas locatário com negrito
-    const nomeProprietarioFormatado = contractData.nomeProprietario; // Sem negrito
+    const nomeProprietarioFormatado = contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
 
     const nomeLocatarioFormatado = contractData.nomeLocatario
-      .split(' e ')
-      .map(nome => `<strong>${nome.trim()}</strong>`)
-      .join(' e ');
+      ? contractData.nomeLocatario
+          .split(' e ')
+          .map(nome => `<strong>${nome.trim()}</strong>`)
+          .join(' e ')
+      : '';
 
     // Texto de entrega de chaves para termo do locatário
     const tipoContrato = data.tipoContrato || "residencial";

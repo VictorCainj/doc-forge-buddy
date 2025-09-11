@@ -30,6 +30,8 @@ const GerarDocumento = () => {
         return `Título: Notificação de Desocupação e Agendamento de Vistoria - Contrato ${contractNumber}`;
       case 'Notificação de Agendamento':
         return `Título: Notificação para Realização de Vistoria Final - Contrato ${contractNumber}`;
+      case 'Distrato de Contrato de Locação':
+        return `Título: Instrumento Particular de Rescisão de Contrato de Locação - Contrato ${contractNumber}`;
       default:
         return `Título: ${documentType} - Contrato ${contractNumber}`;
     }

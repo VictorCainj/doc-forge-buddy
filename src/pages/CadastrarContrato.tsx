@@ -28,24 +28,6 @@ const CadastrarContrato = () => {
           placeholder: "Ex: 13734"
         },
         {
-          name: "nomeLocatario",
-          label: "Nome do Locatário",
-          type: "text",
-          required: true,
-          placeholder: "Ex: Beatriz ou INSERVICE LIMPEZA E INFRA-ESTRUTURA LTDA"
-        },
-        {
-          name: "generoLocatario",
-          label: "Gênero do Locatário",
-          type: "select",
-          required: true,
-          options: [
-            { value: "masculino", label: "Masculino" },
-            { value: "feminino", label: "Feminino" },
-            { value: "neutro", label: "Neutro (múltiplos locatários)" }
-          ]
-        },
-        {
           name: "enderecoImovel",
           label: "Endereço do Imóvel",
           type: "text",
@@ -69,27 +51,39 @@ const CadastrarContrato = () => {
       ]
     },
     {
-      id: "proprietario",
-      title: "Dados do Proprietário",
-      description: "Informações do proprietário para devolutiva",
+      id: "locador",
+      title: "Qualificação dos Locadores",
+      description: "Adicione os locadores do contrato",
       icon: Users,
       fields: [
         {
-          name: "nomeProprietario",
-          label: "Nome do Proprietário",
-          type: "text",
-          required: true,
-          placeholder: "Ex: Sr João"
-        },
-        {
           name: "generoProprietario",
-          label: "Gênero do Proprietário",
+          label: "Gênero dos Locadores",
           type: "select",
           required: true,
           options: [
             { value: "masculino", label: "Masculino" },
             { value: "feminino", label: "Feminino" },
-            { value: "neutro", label: "Neutro (múltiplos proprietários)" }
+            { value: "neutro", label: "Neutro (múltiplos locadores)" }
+          ]
+        }
+      ]
+    },
+    {
+      id: "locatario",
+      title: "Qualificação dos Locatários",
+      description: "Adicione os locatários do contrato",
+      icon: Users,
+      fields: [
+        {
+          name: "generoLocatario",
+          label: "Gênero dos Locatários",
+          type: "select",
+          required: true,
+          options: [
+            { value: "masculino", label: "Masculino" },
+            { value: "feminino", label: "Feminino" },
+            { value: "neutro", label: "Neutro (múltiplos locatários)" }
           ]
         }
       ]
@@ -174,7 +168,7 @@ const CadastrarContrato = () => {
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-foreground mb-2">Cadastrar Novo Contrato</h1>
             <p className="text-muted-foreground">
-              Preencha as informações essenciais para gerar os documentos de notificação de desocupação e devolutiva do proprietário
+              Preencha as informações essenciais incluindo a qualificação completa dos locadores e locatários para gerar os documentos de notificação de desocupação e devolutiva do proprietário
             </p>
           </div>
           

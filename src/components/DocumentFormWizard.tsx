@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FormWizard, WizardStep } from "@/components/ui/form-wizard";
 import { FormField } from "@/components/ui/form-field";
+import { PersonManager } from "@/components/ui/person-manager";
 import { useFormWizard, FormStep as FormStepType } from "@/hooks/use-form-wizard";
 import { formatDateBrazilian, convertDateToBrazilian } from "@/utils/dateFormatter";
 
@@ -48,14 +49,14 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const [saving, setSaving] = useState(false);
   const [processedFormData, setProcessedFormData] = useState<Record<string, string>>({});
   const [dynamicFontSize] = useState(14); // Tamanho padrão fixo
+  const [locadores, setLocadores] = useState<Array<{id: string, name: string}>>([]);
+  const [locatarios, setLocatarios] = useState<Array<{id: string, name: string}>>([]);
   const { toast } = useToast();
 
-  // Função para detectar múltiplos locatários
+  // Função para detectar múltiplos locatários baseado na quantidade adicionada
   const isMultipleLocatarios = (nomeLocatario: string) => {
     if (!nomeLocatario) return false;
-    return nomeLocatario.includes(',') || 
-           nomeLocatario.includes(' e ') || 
-           nomeLocatario.includes(' E ');
+    return nomeLocatario.includes(' e ');
   };
 
   const {
@@ -85,7 +86,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (onFormDataChange && formData) {
       onFormDataChange(formData);
     }
-  }, [formData, onFormDataChange]);
+  }, [formData]);
 
   // Efeito para preencher automaticamente o campo de gênero quando há múltiplos locatários
   React.useEffect(() => {
@@ -121,7 +122,73 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (onFormDataChange) {
       onFormDataChange(formData);
     }
-  }, [formData, onFormDataChange]);
+  }, [formData]);
+
+  // Sincronizar dados das pessoas com o formData apenas quando o PersonManager estiver sendo usado
+  React.useEffect(() => {
+    // Verificar se há etapas que usam PersonManager (locador/locatario)
+    const hasPersonManagerSteps = steps.some(step => step.id === "locador" || step.id === "locatario");
+    
+    if (hasPersonManagerSteps) {
+      // Atualizar dados dos locadores
+      if (locadores.length > 0) {
+        const nomesLocadores = locadores.map(l => l.name).join(' e ');
+        updateField("nomeProprietario", nomesLocadores);
+        updateField("qualificacaoCompletaLocadores", nomesLocadores);
+      } else {
+        updateField("nomeProprietario", "");
+        updateField("qualificacaoCompletaLocadores", "");
+      }
+
+      // Atualizar dados dos locatários
+      if (locatarios.length > 0) {
+        const nomesLocatarios = locatarios.map(l => l.name).join(' e ');
+        updateField("nomeLocatario", nomesLocatarios);
+        updateField("qualificacaoCompletaLocatarios", nomesLocatarios);
+        
+        // Definir primeiro e segundo locatário
+        updateField("primeiroLocatario", locatarios[0]?.name || "");
+        updateField("segundoLocatario", locatarios[1]?.name || "");
+      } else {
+        updateField("nomeLocatario", "");
+        updateField("qualificacaoCompletaLocatarios", "");
+        updateField("primeiroLocatario", "");
+        updateField("segundoLocatario", "");
+      }
+    }
+  }, [locadores, locatarios, updateField, steps]);
+
+  // Inicializar dados das pessoas a partir dos dados existentes do formulário
+  React.useEffect(() => {
+    // Verificar se há etapas que usam PersonManager
+    const hasPersonManagerSteps = steps.some(step => step.id === "locador" || step.id === "locatario");
+    
+    if (hasPersonManagerSteps && initialData) {
+      // Inicializar locadores se houver dados
+      if (initialData.nomeProprietario && locadores.length === 0) {
+        const nomesLocadores = initialData.nomeProprietario.split(' e ');
+        const locadoresIniciais = nomesLocadores.map((nome, index) => ({
+          id: `locador-${index}`,
+          name: nome.trim()
+        })).filter(l => l.name);
+        if (locadoresIniciais.length > 0) {
+          setLocadores(locadoresIniciais);
+        }
+      }
+      
+      // Inicializar locatários se houver dados
+      if (initialData.nomeLocatario && locatarios.length === 0) {
+        const nomesLocatarios = initialData.nomeLocatario.split(' e ');
+        const locatariosIniciais = nomesLocatarios.map((nome, index) => ({
+          id: `locatario-${index}`,
+          name: nome.trim()
+        })).filter(l => l.name);
+        if (locatariosIniciais.length > 0) {
+          setLocatarios(locatariosIniciais);
+        }
+      }
+    }
+  }, [initialData, steps, locadores.length, locatarios.length]);
 
   // Auto-preencher nome quando selecionar "incluir nome completo" no termo do locador
   React.useEffect(() => {
@@ -421,12 +488,39 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     icon: step.icon || stepIcons[index % stepIcons.length],
     isValid: index <= currentStep ? true : undefined,
     content: (
-      <div className={`grid gap-6 ${step.id === "desocupacao" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
+      <div className="space-y-6">
+        {/* Gerenciadores de pessoas para etapas específicas */}
+        {step.id === "locador" && (
+          <PersonManager
+            title="Locador(es)"
+            people={locadores}
+            onPeopleChange={setLocadores}
+            placeholder="Nome completo do locador"
+            maxPeople={2}
+          />
+        )}
+        
+        {step.id === "locatario" && (
+          <PersonManager
+            title="Locatário(s)"
+            people={locatarios}
+            onPeopleChange={setLocatarios}
+            placeholder="Nome completo do locatário"
+            maxPeople={2}
+          />
+        )}
+        
+        <div className={`grid gap-6 ${step.id === "desocupacao" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
         {step.fields.map((field) => {
           // Lógica condicional para mostrar campos baseados no tipo de termo
           let shouldShowField = true;
           
-          if (field.name === "statusAgua") {
+          // Ocultar campos tradicionais quando PersonManager estiver sendo usado
+          if (step.id === "locador" && (field.name === "nomeLocador" || field.name === "qualificacaoCompletaLocadores")) {
+            shouldShowField = false;
+          } else if (step.id === "locatario" && (field.name === "qualificacaoCompletaLocatarios" || field.name === "nomesResumidos")) {
+            shouldShowField = false;
+          } else if (field.name === "statusAgua") {
             shouldShowField = formData.tipoAgua && formData.tipoAgua !== "";
           } else if (field.name === "cpfl" || field.name === "tipoAgua" || field.name === "statusAgua") {
             // Campos de documentos só aparecem para termo do locatário
@@ -558,6 +652,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           />
         </div>
       )}
+        </div>
       </div>
     ),
   }));

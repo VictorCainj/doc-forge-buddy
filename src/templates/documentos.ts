@@ -20,8 +20,12 @@ Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
+{{#if nomeProprietario}}
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}<br>
+{{/if}}
+{{#if nomeLocatario}}
 <strong>{{dadosLocatarioTitulo}}:</strong> {{nomeLocatario}}
+{{/if}}
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
@@ -75,7 +79,9 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">{{saudacaoProprietario}}, tudo bem?</p>
   
+  {{#if nomeLocatarioFormatado}}
   <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTerm}} {{nomeLocatarioFormatado}}, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
+  {{/if}}
   
   <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
@@ -106,7 +112,9 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
     </div>
   </div>
   
+  {{#if saudacaoLocatario}}
   <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
+  {{/if}}
   
   <p style="margin-bottom: 20px;">Confirmamos o recebimento da sua notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
@@ -152,8 +160,10 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificada  através do contrato de prestação de serviço.</p>
+    <p style="margin: 5px 0; font-size: 14px;"><strong>Notificante:</strong> Madia Imóveis Ltda{{#if nomeProprietario}}, no interesse e representante de <strong>{{nomeProprietario}}</strong> devidamente qualificada  através do contrato de prestação de serviço{{/if}}.</p>
+    {{#if nomeLocatario}}
     <p style="margin: 5px 0; font-size: 14px;"><strong>{{notificadoLocatarioTitulo}}:</strong> <strong>{{nomeLocatario}}</strong></p>
+    {{/if}}
     <p style="margin: 5px 0; font-size: 14px;"><strong>Referência:</strong> {{enderecoImovel}}</p>
   </div>
   
@@ -179,7 +189,9 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
 
 export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  {{#if primeiroNomeProprietario}}
   <p style="margin-bottom: 25px;">{{proprietarioPrezadoWhatsapp}} <strong>{{primeiroNomeProprietario}}</strong>, tudo bem?</p>
+  {{/if}}
   
   <p style="margin-bottom: 25px;">Enviamos um e-mail informando sobre a desocupação do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
@@ -201,7 +213,9 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 
 export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  {{#if primeiroNomeLocatario}}
   <p style="margin-bottom: 25px;">{{locatarioPrezadoWhatsapp}} <strong>{{primeiroNomeLocatario}}</strong>, tudo bem?</p>
+  {{/if}}
   
   <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de desocupação do imóvel situado em <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
@@ -232,13 +246,15 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
     </div>
   </div>
   
+  {{#if saudacaoComercial}}
   <p style="margin-bottom: 20px;">Prezados, {{saudacaoComercial}}</p>
+  {{/if}}
   
-  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>, tendo como locador <strong>{{nomeProprietario}}</strong> e locatário <strong>{{nomeLocatario}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietario}}, tendo como {{proprietarioTerm}} <strong>{{nomeProprietario}}</strong>{{/if}}{{#if nomeLocatario}} e {{locatarioTerm}} <strong>{{nomeLocatario}}</strong>{{/if}}.</p>
   
   <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioDesocupacao}}</strong>, com prazo de desocupação até <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Solicito, por gentileza, que seja encaminhado ao Captador para que entre em contato com o locador, a fim de averiguar novos valores para uma futura locação.</p>
+  <p style="margin-bottom: 20px;">Solicito, por gentileza, que seja encaminhado ao Captador para que entre em contato com {{proprietarioTerm}}, a fim de averiguar novos valores para uma futura locação.</p>
   
   <p style="margin-top: 40px;">Atenciosamente,</p>
   
@@ -261,6 +277,104 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
     </div>
   </div>
   
-  <p style="margin-bottom: 20px;">O locatário(a) notificou desocupação em <strong>{{dataComunicacao}}</strong> - o final dos seus {{prazoDias}} dias será em <strong>{{dataTerminoDesocupacao}}</strong> - comuniquei o locador e o comercial.</p>
+  <p style="margin-bottom: 20px;">{{#if nomeLocatario}}O(s) locatário(s) {{nomeLocatario}} {{#else}}O locatário{{/if}} notificou(aram) a desocupação em <strong>{{dataComunicacao}}</strong>, tendo como término do prazo de {{prazoDias}} dias a data de <strong>{{dataTerminoDesocupacao}}</strong>. Realizei a devolutiva ao locatário, ao locador e ao setor comercial.</p>
+</div>
+`;
+
+export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-bottom: 40px; font-size: 16px; font-weight: bold; text-transform: uppercase;">
+    INSTRUMENTO PARTICULAR DE RESCISÃO DE CONTRATO DE LOCAÇÃO SOB N° {{numeroContrato}}
+  </div>
+
+  <div style="margin-bottom: 25px; text-align: justify; font-size: 14px;">
+    <p style="margin-bottom: 20px;">Pelo presente Instrumento Particular de Rescisão de Contrato de Locação, as partes, a seguir nomeadas:</p>
+  </div>
+
+  <div style="margin-bottom: 25px; font-size: 14px;">
+    <p style="margin-bottom: 15px;"><strong>LOCADOR(A):</strong> {{qualificacaoCompletaProprietario}}.</p>
+    
+    <p style="margin-bottom: 15px;"><strong>LOCATÁRIO(A):</strong> {{qualificacaoCompletaLocatarios}}.</p>
+  </div>
+
+  <div style="margin-bottom: 25px; text-align: justify; font-size: 14px;">
+    <p style="margin-bottom: 20px;">Resolvem em comum acordo, proceder a <strong>RESCISÃO</strong> do contrato de locação referente ao imóvel localizado <strong>{{enderecoImovel}}</strong></p>
+  </div>
+
+  <div style="margin-bottom: 25px; text-align: justify; font-size: 14px;">
+    <p style="margin-bottom: 20px;">Todos os valores referentes a alugueis e encargos locatícios foram liquidados até a data de <strong>{{dataLiquidacao}}</strong>, deixado claro o Locador que nada mais tem a pleitear em juízo ou fora dele.</p>
+  </div>
+
+  <div style="margin-bottom: 25px; text-align: justify; font-size: 14px;">
+    <p style="margin-bottom: 20px;">Para tornar firme e valiosa a presente rescisão, as partes declaram quitadas todas as obrigações locatícias, abrangendo alugueres e encargos de ambas as partes.</p>
+  </div>
+
+  <div style="margin-bottom: 25px; text-align: justify; font-size: 14px;">
+    <p style="margin-bottom: 20px;">Fica eleito o foro da situação do imóvel, com expressa renúncia de qualquer outro, por mais privilegiado que seja para dirimir as dúvidas porventura advindas o presente Instrumento.</p>
+  </div>
+
+  <div style="margin-bottom: 35px; text-align: justify; font-size: 14px;">
+    <p style="margin-bottom: 20px;">Por estarem assim justos e acordados, assinam o presente Instrumento em 03 (três) vias de idêntico teor e para o mesmo fim, perante as testemunhas abaixo.</p>
+  </div>
+
+  <div style="margin-bottom: 35px; text-align: center; font-size: 14px;">
+    <p style="margin-bottom: 25px;">Valinhos, {{dataAtual}}.</p>
+  </div>
+
+  <div style="margin-top: 60px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 50px;">
+      <div style="text-align: center; width: 45%;">
+        {{#if nomeProprietario}}
+        <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+        <p style="font-size: 12px; text-transform: uppercase; margin: 0;">"LOCADOR(A)"</p>
+        <p style="font-size: 12px; margin: 8px 0 0 0;">{{nomeProprietario}}</p>
+        {{/if}}
+      </div>
+      
+      <div style="text-align: center; width: 45%;">
+        {{#if primeiroLocatario}}
+        <div style="margin-bottom: 20px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
+          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"Locatário(a)"</p>
+          <p style="font-size: 11px; margin: 5px 0 0 0;">{{primeiroLocatario}}</p>
+        </div>
+        {{/if}}
+        {{#if segundoLocatario}}
+        <div>
+          <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
+          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"Locatário(a)"</p>
+          <p style="font-size: 11px; margin: 5px 0 0 0;">{{segundoLocatario}}</p>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+
+    <div style="margin-top: 50px;">
+      <p style="font-size: 14px; font-weight: bold; margin-bottom: 25px; text-align: center;">Testemunhas:</p>
+      
+      <div style="display: flex; justify-content: space-between;">
+        <div style="text-align: center; width: 45%;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+          <p style="font-size: 12px; margin: 0;">CINTIA PEREIRA ALMEIDA GOMES</p>
+          <p style="font-size: 11px; margin: 8px 0 0 0;">CPF: 289.212.608-89</p>
+        </div>
+        
+        <div style="text-align: center; width: 45%;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+          <p style="font-size: 12px; margin: 0;">FABIANA SALOTTI MARTINS</p>
+          <p style="font-size: 11px; margin: 8px 0 0 0;">CPF: 357.106.138-19</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 `;

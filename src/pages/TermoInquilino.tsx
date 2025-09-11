@@ -337,14 +337,10 @@ __________________________________________<br>
   };
 
   const handleGenerate = (data: Record<string, string>) => {
-    const isMultipleLocadores = isPlural(data.nomeLocador);
+    const isMultipleLocadores = data.nomeProprietario && data.nomeProprietario.includes(' e ');
     
-    // Detectar se há múltiplos locatários baseado nos nomes resumidos
-    const isMultipleLocatarios = data.nomesResumidos && (
-      data.nomesResumidos.includes(' e ') || 
-      data.nomesResumidos.includes(',') ||
-      data.nomesResumidos.split(' ').length > 2
-    );
+    // Detectar se há múltiplos locatários baseado na quantidade adicionada
+    const isMultipleLocatarios = data.primeiroLocatario && data.segundoLocatario;
     
     // Adiciona termos inteligentes baseados nos nomes inseridos
     const enhancedData = {
@@ -356,7 +352,8 @@ __________________________________________<br>
       locadorTerm: getLocadorTerm(data.nomeLocador),
       
       // Título dinâmico para seção de dados do locatário
-      dadosLocatarioTitulo: isMultipleLocatarios ? "DADOS DOS LOCATÁRIOS" : "DADOS DO LOCATÁRIO",
+      dadosLocatarioTitulo: isMultipleLocatarios ? "DADOS DOS LOCATÁRIOS" : 
+        (data.generoLocatario === "feminino" ? "DADOS DA LOCATÁRIA" : "DADOS DO LOCATÁRIO"),
       
       // Formatar celular sem máscara para ficar igual ao exemplo real
       celularLocatario: data.celularLocatario?.replace(/\D/g, '').replace(/(\d{2})(\d{5})(\d{4})/, '$1 $2$3') || data.celularLocatario
