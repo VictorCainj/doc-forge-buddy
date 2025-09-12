@@ -450,6 +450,14 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
     
+    // Processar condicionais Handlebars {{#eq}} (igualdade)
+    result = result.replace(/\{\{#eq\s+(\w+)\s+"([^"]+)"\}\}([\s\S]*?)\{\{\/eq\}\}/g, (match, variable, expectedValue, content) => {
+      if (data[variable] === expectedValue) {
+        return content;
+      }
+      return '';
+    });
+    
     // Processar condicionais Handlebars com else
     result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, ifContent, elseContent) => {
       if (data[variable] && data[variable].trim()) {

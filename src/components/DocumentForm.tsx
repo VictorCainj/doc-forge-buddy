@@ -204,10 +204,37 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
 
   const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
     let result = template;
+    
+    // Processar condicionais Handlebars {{#eq}} (igualdade)
+    result = result.replace(/\{\{#eq\s+(\w+)\s+"([^"]+)"\}\}([\s\S]*?)\{\{\/eq\}\}/g, (match, variable, expectedValue, content) => {
+      if (data[variable] === expectedValue) {
+        return content;
+      }
+      return '';
+    });
+    
+    // Processar condicionais Handlebars com else
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, ifContent, elseContent) => {
+      if (data[variable] && data[variable].trim()) {
+        return ifContent;
+      }
+      return elseContent;
+    });
+    
+    // Processar condicionais Handlebars simples (sem else)
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, content) => {
+      if (data[variable] && data[variable].trim()) {
+        return content;
+      }
+      return '';
+    });
+    
+    // Substituir variáveis
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
       result = result.replace(new RegExp(placeholder, 'g'), value || `[${key.toUpperCase()}]`);
     });
+    
     return result;
   };
 

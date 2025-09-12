@@ -210,9 +210,12 @@ const CadastrarContrato = () => {
         document_type: 'contrato'
       };
 
+      console.log('Salvando contrato no banco:', contractData);
       const { error } = await supabase
         .from('saved_terms')
         .insert(contractData);
+      
+      console.log('Resultado do salvamento:', { error });
       
       if (error) throw error;
       
