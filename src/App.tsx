@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TermoInquilino from "./pages/TermoInquilino";
-import SavedTerms from "./pages/SavedTerms";
 import EditTerm from "./pages/EditTerm";
 import Contratos from "./pages/Contratos";
 import CadastrarContrato from "./pages/CadastrarContrato";
@@ -32,7 +31,6 @@ const App = () => (
           <Route path="/termo-locatario" element={<TermoLocatario />} />
           <Route path="/processo/:contratoId" element={<ProcessoDesocupacao />} />
           <Route path="/processo/:contratoId/termo-chaves" element={<TermoInquilino />} />
-          <Route path="/termos-salvos" element={<SavedTerms />} />
           <Route path="/editar-termo/:id" element={<EditTerm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle, Edit } from "lucide-react";
+import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle, Edit, Calendar, Clock, MapPin, User, UserCheck, FileCheck, FileX, NotebookPen, Handshake, AlertCircle, CheckCircle, Timer, Home, User2, Building2, CalendarDays, Phone, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -656,20 +656,26 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 p-4">
         <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Gestão de Contratos
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Gerencie contratos e processos de desocupação
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gray-900 rounded-xl shadow-lg">
+                <Building2 className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900">
+                  Gestão de Contratos
+                </h1>
+                <p className="text-gray-600 mt-2 flex items-center gap-2">
+                  <FileCheck className="h-4 w-4 text-gray-500" />
+                  Gerencie contratos e processos de desocupação
+                </p>
+              </div>
             </div>
             <Link to="/cadastrar-contrato">
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2 bg-gray-900 hover:bg-gray-800 text-white shadow-lg transition-all duration-200">
                 <Plus className="h-5 w-5" />
                 Novo Contrato
               </Button>
@@ -678,14 +684,25 @@ const Contratos = () => {
         </header>
 
 
-        <Card>
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Contratos Cadastrados</CardTitle>
-                <CardDescription>
-                  Lista dos contratos cadastrados no sistema - Clique nos botões para gerar documentos
-                </CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-800 rounded-lg">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    Contratos Cadastrados
+                    <span className="px-2 py-1 bg-gray-200 text-gray-800 text-xs font-medium rounded-full">
+                      {filteredContracts.length}
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    Lista dos contratos cadastrados no sistema - Clique nos botões para gerar documentos
+                  </CardDescription>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -702,81 +719,130 @@ const Contratos = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
-                <p>Carregando contratos...</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="relative">
+                  <div className="p-4 bg-gray-800 rounded-full mx-auto mb-4 w-16 h-16 flex items-center justify-center animate-pulse">
+                    <FileText className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-gray-800 animate-ping opacity-20"></div>
+                </div>
+                <p className="text-lg font-medium">Carregando contratos...</p>
+                <p className="text-sm opacity-70">Aguarde um momento</p>
               </div>
             ) : filteredContracts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="p-4 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
                 {searchTerm ? (
                   <>
-                    <p>Nenhum contrato encontrado para "{searchTerm}"</p>
-                    <p className="text-sm">Tente outro termo de busca</p>
+                    <p className="text-lg font-medium mb-2">Nenhum contrato encontrado para "{searchTerm}"</p>
+                    <p className="text-sm opacity-70">Tente outro termo de busca</p>
                   </>
                 ) : (
                   <>
-                    <p>Nenhum contrato cadastrado ainda</p>
-                    <p className="text-sm">Clique em "Novo Contrato" para começar</p>
+                    <p className="text-lg font-medium mb-2">Nenhum contrato cadastrado ainda</p>
+                    <p className="text-sm opacity-70">Clique em "Novo Contrato" para começar</p>
                   </>
                 )}
               </div>
             ) : (
               <div className="space-y-3">
                 {filteredContracts.map((contract) => (
-                  <Card key={contract.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
-                    <CardContent className="p-4">
+                  <Card key={contract.id} className="border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-300 bg-white">
+                    <CardContent className="p-6">
                       <div className="flex items-start justify-between gap-6">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-3">
-                            <h3 className="font-semibold text-lg text-gray-900 truncate">{contract.title}</h3>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              {formatDateBrazilian(new Date(contract.created_at))}
-                            </span>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-gray-800 rounded-lg">
+                              <FileCheck className="h-4 w-4 text-white" />
+                            </div>
+                            <h3 className="font-semibold text-lg text-gray-900 truncate">Contrato {contract.form_data.numeroContrato || '[NÚMERO]'}</h3>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-500">Locatário:</span> 
-                              <span className="text-gray-900">{contract.form_data.nomeLocatario}</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="p-1.5 bg-gray-200 rounded-md">
+                                <User2 className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600 block text-xs">Locatário</span>
+                                <span className="text-gray-900 font-medium">{contract.form_data.nomeLocatario}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-500">Proprietário:</span> 
-                              <span className="text-gray-900">{contract.form_data.nomeProprietario}</span>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="p-1.5 bg-gray-200 rounded-md">
+                                <User className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600 block text-xs">Proprietário</span>
+                                <span className="text-gray-900 font-medium">{contract.form_data.nomeProprietario}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-500">Prazo:</span> 
-                              <span className="text-gray-900">{contract.form_data.prazoDias} dias</span>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="p-1.5 bg-gray-200 rounded-md">
+                                <Timer className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600 block text-xs">Prazo</span>
+                                <span className="text-gray-900 font-medium">{contract.form_data.prazoDias} dias</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-500">Endereço:</span> 
-                              <span className="text-gray-900 truncate">{contract.form_data.endereco || contract.form_data.enderecoImovel || 'Não informado'}</span>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="p-1.5 bg-gray-200 rounded-md">
+                                <MapPin className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <span className="font-medium text-gray-600 block text-xs">Endereço</span>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="text-gray-900 font-medium truncate block cursor-help">
+                                      {contract.form_data.endereco || contract.form_data.enderecoImovel || 'Não informado'}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p className="break-words">{contract.form_data.endereco || contract.form_data.enderecoImovel || 'Não informado'}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
                             </div>
                           </div>
                           
-                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                              <div className="text-center">
-                                <div className="font-medium text-gray-500 mb-1">Data Início</div>
-                                <div className="text-gray-900">{contract.form_data.dataInicioDesocupacao || 'Não definida'}</div>
+                          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-sm">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-center mb-2">
+                                  <CalendarDays className="h-4 w-4 text-gray-600" />
+                                </div>
+                                <div className="font-medium text-gray-600 text-xs mb-1">Data Início</div>
+                                <div className="text-gray-900 font-medium text-sm">{contract.form_data.dataInicioDesocupacao || 'Não definida'}</div>
                               </div>
-                              <div className="text-center">
-                                <div className="font-medium text-gray-500 mb-1">Data Fim</div>
-                                <div className="text-gray-900">{contract.form_data.dataTerminoDesocupacao || 'Não definida'}</div>
+                              <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-center mb-2">
+                                  <Clock className="h-4 w-4 text-gray-600" />
+                                </div>
+                                <div className="font-medium text-gray-600 text-xs mb-1">Data Fim</div>
+                                <div className="text-gray-900 font-medium text-sm">{contract.form_data.dataTerminoDesocupacao || 'Não definida'}</div>
                               </div>
-                              <div className="text-center">
-                                <div className="font-medium text-gray-500 mb-1">Status</div>
-                                <div className="text-gray-900">Em andamento</div>
+                              <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-center mb-2">
+                                  <CheckCircle className="h-4 w-4 text-gray-600" />
+                                </div>
+                                <div className="font-medium text-gray-600 text-xs mb-1">Status</div>
+                                <div className="text-gray-900 font-medium text-sm">Em andamento</div>
                               </div>
-                              <div className="text-center">
-                                <div className="font-medium text-gray-500 mb-1">Última Atualização</div>
-                                <div className="text-gray-900">{formatDateBrazilian(new Date(contract.updated_at))}</div>
+                              <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-center mb-2">
+                                  <AlertCircle className="h-4 w-4 text-gray-600" />
+                                </div>
+                                <div className="font-medium text-gray-600 text-xs mb-1">Última Atualização</div>
+                                <div className="text-gray-900 font-medium text-sm">{formatDateBrazilian(new Date(contract.updated_at))}</div>
                               </div>
                             </div>
                           </div>
                         </div>
                         
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-2 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                           <div className="grid grid-cols-2 gap-1">
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -784,13 +850,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, "", "Termo do Locador")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Termo do Locador`}
                                 >
                                   {generatingDocument === `${contract.id}-Termo do Locador` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <FileText className="h-3 w-3" />
+                                    <User className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">Locador</span>
                                 </Button>
@@ -805,13 +871,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, "", "Termo do Locatário")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Termo do Locatário`}
                                 >
                                   {generatingDocument === `${contract.id}-Termo do Locatário` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <FileText className="h-3 w-3" />
+                                    <User2 className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">Locatário</span>
                                 </Button>
@@ -829,13 +895,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_TEMPLATE, "Devolutiva Proprietário")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Devolutiva Proprietário`}
                                 >
                                   {generatingDocument === `${contract.id}-Devolutiva Proprietário` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <Building className="h-3 w-3" />
+                                    <Home className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">Dev. Prop.</span>
                                 </Button>
@@ -850,11 +916,11 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_TEMPLATE, "Devolutiva Locatário")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Devolutiva Locatário`}
                                 >
                                   {generatingDocument === `${contract.id}-Devolutiva Locatário` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
                                     <Users className="h-3 w-3" />
                                   )}
@@ -874,13 +940,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, NOTIFICACAO_AGENDAMENTO_TEMPLATE, "Notificação de Agendamento")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Notificação de Agendamento`}
                                 >
                                   {generatingDocument === `${contract.id}-Notificação de Agendamento` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <FileText className="h-3 w-3" />
+                                    <Calendar className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">Agendamento</span>
                                 </Button>
@@ -895,11 +961,11 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DEVOLUTIVA_COMERCIAL_TEMPLATE, "Devolutiva Comercial")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Devolutiva Comercial`}
                                 >
                                   {generatingDocument === `${contract.id}-Devolutiva Comercial` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
                                     <Briefcase className="h-3 w-3" />
                                   )}
@@ -919,13 +985,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, "Devolutiva Locador WhatsApp")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp`}
                                 >
                                   {generatingDocument === `${contract.id}-Devolutiva Locador WhatsApp` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <MessageCircle className="h-3 w-3" />
+                                    <Phone className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">WA Prop.</span>
                                 </Button>
@@ -940,13 +1006,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, "Devolutiva Locatário WhatsApp")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp`}
                                 >
                                   {generatingDocument === `${contract.id}-Devolutiva Locatário WhatsApp` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <MessageCircle className="h-3 w-3" />
+                                    <Phone className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">WA Loc.</span>
                                 </Button>
@@ -964,13 +1030,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DEVOLUTIVA_CADERNINHO_TEMPLATE, "Devolutiva Caderninho")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Devolutiva Caderninho`}
                                 >
                                   {generatingDocument === `${contract.id}-Devolutiva Caderninho` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <FileText className="h-3 w-3" />
+                                    <NotebookPen className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">Caderninho</span>
                                 </Button>
@@ -985,13 +1051,13 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => generateDocument(contract, DISTRATO_CONTRATO_LOCACAO_TEMPLATE, "Distrato de Contrato de Locação")}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
                                   disabled={generatingDocument === `${contract.id}-Distrato de Contrato de Locação`}
                                 >
                                   {generatingDocument === `${contract.id}-Distrato de Contrato de Locação` ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
                                   ) : (
-                                    <FileText className="h-3 w-3" />
+                                    <FileX className="h-3 w-3" />
                                   )}
                                   <span className="ml-1">Distrato</span>
                                 </Button>
@@ -1009,7 +1075,7 @@ const Contratos = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleEditContract(contract)}
-                                  className="h-8 text-xs"
+                                  className="h-8 text-xs border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 text-blue-700 transition-all duration-200"
                                 >
                                   <Edit className="h-3 w-3" />
                                   <span className="ml-1">Editar</span>

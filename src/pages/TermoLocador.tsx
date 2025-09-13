@@ -54,7 +54,21 @@ const TermoLocador: React.FC = () => {
           placeholder: "Selecione uma opção",
           options: [
             { value: "todos", label: "Todos os locadores" },
-            ...(contractData.nomesResumidosLocadores ? contractData.nomesResumidosLocadores.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
+            ...(contractData.nomesResumidosLocadores || contractData.nomeProprietario ? (contractData.nomesResumidosLocadores || contractData.nomeProprietario).split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
+              value: nome,
+              label: nome
+            })) : [])
+          ]
+        },
+        {
+          name: "incluirNomeLocatario",
+          label: "Selecionar Locatário Específico",
+          type: "select",
+          required: false,
+          placeholder: "Selecione uma opção",
+          options: [
+            { value: "todos", label: "Todos os locatários" },
+            ...(contractData.nomeLocatario ? contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
               value: nome,
               label: nome
             })) : [])
@@ -108,7 +122,8 @@ Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}
+<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}<br>
+<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -162,6 +177,28 @@ __________________________________________<br>
       }
     }
 
+    // Definir título dos locatários baseado na quantidade e gênero (usando mesma lógica do termo do locatário)
+    let dadosLocatarioTitulo;
+    const isMultipleLocatarios = contractData.nomeLocatario && (
+      contractData.nomeLocatario.includes(',') || 
+      contractData.nomeLocatario.includes(' e ') || 
+      contractData.nomeLocatario.includes(' E ')
+    );
+    
+    if (isMultipleLocatarios) {
+      dadosLocatarioTitulo = "DADOS DOS LOCATÁRIOS";
+    } else {
+      // Usar o gênero do locatário cadastrado no contrato
+      const generoLocatario = contractData.generoLocatario;
+      if (generoLocatario === "feminino") {
+        dadosLocatarioTitulo = "DADOS DA LOCATÁRIA";
+      } else if (generoLocatario === "masculino") {
+        dadosLocatarioTitulo = "DADOS DO LOCATÁRIO";
+      } else {
+        dadosLocatarioTitulo = "DADOS DO LOCATÁRIO"; // fallback para neutro ou indefinido
+      }
+    }
+
     // Processar nome de quem retira baseado na opção selecionada
     let nomeQuemRetira = data.nomeQuemRetira;
     if (data.incluirNomeCompleto === "todos") {
@@ -179,18 +216,32 @@ __________________________________________<br>
     // Aplicar formatação de nomes - sem negrito para o proprietário
     const nomeProprietarioFormatado = contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
 
+    // Formatar nome do locatário com negrito (igual ao termo do locatário)
+    const nomeLocatarioFormatado = contractData.nomeLocatario
+      ? (() => {
+          const nomesArray = contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim());
+          return nomesArray.length > 1 
+            ? nomesArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
+              ' e ' + `<strong>${nomesArray[nomesArray.length - 1]}</strong>`
+            : `<strong>${nomesArray[0]}</strong>`;
+        })()
+      : '';
+
     const enhancedData = {
-      ...data,
       ...contractData,
+      ...data,
       
-      // Dados específicos do termo do locador
+      // Dados específicos do termo do locador - devem vir por último para sobrescrever
       locadorTerm,
+      dadosLocatarioTitulo,
       nomeQuemRetira,
       nomeProprietario: nomeProprietarioFormatado, // Nome formatado
+      nomeLocatario: nomeLocatarioFormatado, // Nome formatado com negrito
       
       // Processar observação
       observacao,
     };
+
     
     return enhancedData;
   };

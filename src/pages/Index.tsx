@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Key, Archive, Building2, Plus, History } from "lucide-react";
+import { FileText, Key, Building2, Plus, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
@@ -15,14 +15,6 @@ const Index = () => {
       icon: Building2,
       color: "bg-primary",
       route: "/contratos"
-    },
-    {
-      id: "termos-salvos",
-      title: "Documentos Salvos",
-      description: "Visualizar e editar documentos anteriores",
-      icon: Archive,
-      color: "bg-accent",
-      route: "/termos-salvos"
     }
   ];
 

@@ -32,7 +32,7 @@ const EditTerm = () => {
           description: "O termo que você está tentando editar não foi encontrado.",
           variant: "destructive"
         });
-        navigate('/termos-salvos');
+        navigate('/');
         return;
       }
 

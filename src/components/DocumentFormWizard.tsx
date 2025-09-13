@@ -791,7 +791,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => isEditing ? navigate("/termos-salvos") : navigate("/")}
+                onClick={() => navigate("/")}
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
