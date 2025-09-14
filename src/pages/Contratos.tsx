@@ -7,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle, Edit, Calendar, Clock, MapPin, User, UserCheck, FileCheck, FileX, NotebookPen, Handshake, AlertCircle, CheckCircle, Timer, Home, User2, Building2, CalendarDays, Phone, Mail } from "lucide-react";
+import { Plus, FileText, Users, Building, Briefcase, Download, Eye, Search, Trash2, MessageCircle, Edit, Calendar, Clock, MapPin, User, UserCheck, FileCheck, FileX, NotebookPen, Handshake, AlertCircle, CheckCircle, Timer, Home, User2, Building2, CalendarDays, Phone, Mail, Receipt } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_COMERCIAL_TEMPLATE, DEVOLUTIVA_CADERNINHO_TEMPLATE, DISTRATO_CONTRATO_LOCACAO_TEMPLATE } from "@/templates/documentos";
+import { DEVOLUTIVA_PROPRIETARIO_TEMPLATE, DEVOLUTIVA_LOCATARIO_TEMPLATE, NOTIFICACAO_AGENDAMENTO_TEMPLATE, DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE, DEVOLUTIVA_COMERCIAL_TEMPLATE, DEVOLUTIVA_CADERNINHO_TEMPLATE, DISTRATO_CONTRATO_LOCACAO_TEMPLATE, DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE } from "@/templates/documentos";
 import { formatDateBrazilian, convertDateToBrazilian } from "@/utils/dateFormatter";
 import { gerarDocumentosSolicitados, ConfiguracaoDocumentos } from "@/utils/documentosSolicitados";
 
@@ -137,20 +137,28 @@ const Contratos = () => {
     enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
     
     if (isMultipleLocatarios) {
-      enhancedData.locatarioTerm = "os locatários";
+      enhancedData.locatarioTerm = "LOCATÁRIOS";
       enhancedData.locatarioComunicou = "informaram";
       enhancedData.locatarioIra = "irão";
       enhancedData.locatarioTermo = "do locatário";
       enhancedData.locatarioPrezado = "Prezado";
+      enhancedData.locatarioDocumentacao = "dos locatários";
+      enhancedData.locatarioResponsabilidade = "dos locatários";
     } else if (formData.primeiroLocatario) {
       // Usar o gênero do locatário para definir o termo correto
       const generoLocatario = formData.generoLocatario;
       if (generoLocatario === "feminino") {
-        enhancedData.locatarioTerm = "a locatária";
+        enhancedData.locatarioTerm = "LOCATÁRIA";
+        enhancedData.locatarioDocumentacao = "da locatária";
+        enhancedData.locatarioResponsabilidade = "da locatária";
       } else if (generoLocatario === "masculino") {
-        enhancedData.locatarioTerm = "o locatário";
+        enhancedData.locatarioTerm = "LOCATÁRIO";
+        enhancedData.locatarioDocumentacao = "do locatário";
+        enhancedData.locatarioResponsabilidade = "do locatário";
       } else {
-        enhancedData.locatarioTerm = "o locatário"; // fallback
+        enhancedData.locatarioTerm = "LOCATÁRIO"; // fallback
+        enhancedData.locatarioDocumentacao = "do locatário";
+        enhancedData.locatarioResponsabilidade = "do locatário";
       }
       enhancedData.locatarioComunicou = "informou";
       enhancedData.locatarioIra = "irá";
@@ -168,20 +176,20 @@ const Contratos = () => {
     const isMultipleProprietarios = formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
     if (isMultipleProprietarios) {
       enhancedData.proprietarioTerm = "os proprietários";
-      enhancedData.locadorTerm = "os locadores";
+      enhancedData.locadorTerm = "LOCADORES";
       enhancedData.proprietarioPrezado = "Prezado";
     } else if (formData.nomeProprietario) {
       // Usar o gênero do proprietário para definir o termo correto
       const generoProprietario = formData.generoProprietario;
       if (generoProprietario === "feminino") {
         enhancedData.proprietarioTerm = "a proprietária";
-        enhancedData.locadorTerm = "a locadora";
+        enhancedData.locadorTerm = "LOCADORA";
       } else if (generoProprietario === "masculino") {
         enhancedData.proprietarioTerm = "o proprietário";
-        enhancedData.locadorTerm = "o locador";
+        enhancedData.locadorTerm = "LOCADOR";
       } else {
         enhancedData.proprietarioTerm = "o proprietário"; // fallback
-        enhancedData.locadorTerm = "o locador"; // fallback
+        enhancedData.locadorTerm = "LOCADOR"; // fallback
       }
       enhancedData.proprietarioPrezado = "Prezado";
     }
@@ -313,6 +321,11 @@ const Contratos = () => {
     enhancedData.dataVistoria = formData.dataVistoria || formatDateBrazilian(new Date());
     enhancedData.cpflDaev = formData.cpflDaev || "[CPFL/DAEV]";
     enhancedData.quantidadeChaves = formData.quantidadeChaves || "[QUANTIDADE DE CHAVES]";
+    
+    // Adicionar campos de energia e água para o template de cobrança
+    enhancedData.cpfl = formData.cpfl || "SIM";
+    enhancedData.statusAgua = formData.statusAgua || "SIM";
+    enhancedData.tipoAgua = formData.tipoAgua || "DAEV";
     
     // Adicionar variáveis específicas do distrato
     enhancedData.dataLiquidacao = formData.dataLiquidacao || formatDateBrazilian(new Date());
@@ -1074,6 +1087,31 @@ const Contratos = () => {
                                 <p>Distrato de Contrato de Locação</p>
                               </TooltipContent>
                             </Tooltip>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => generateDocument(contract, DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE, "Cobrança de Consumo")}
+                                  className="h-8 text-xs border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
+                                  disabled={generatingDocument === `${contract.id}-Cobrança de Consumo`}
+                                >
+                                  {generatingDocument === `${contract.id}-Cobrança de Consumo` ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
+                                  ) : (
+                                    <Receipt className="h-3 w-3" />
+                                  )}
+                                  <span className="ml-1">Cobrança</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Cobrança de Contas de Consumo</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <div></div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-1">

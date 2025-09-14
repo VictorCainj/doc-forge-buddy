@@ -18,6 +18,9 @@ const TermoLocador: React.FC = () => {
   const location = useLocation();
   const contractData = location.state?.contractData as ContractData;
 
+  // Estado para gerenciar auto-preenchimento
+  const [autoFillData, setAutoFillData] = React.useState<Record<string, string>>({});
+
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
     return null;
@@ -32,9 +35,6 @@ const TermoLocador: React.FC = () => {
     if (!nomeProprietario) return false;
     return nomeProprietario.includes(' e ');
   };
-
-  // Estado para gerenciar auto-preenchimento
-  const [autoFillData, setAutoFillData] = React.useState<Record<string, string>>({});
 
   const steps: FormStep[] = [
     {

@@ -32,7 +32,7 @@ Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}
 <strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS:</strong><br>
 {{cpflDaev}}<br>
 <br>
-<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do(a) Locatário(a).
+<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade {{locatarioResponsabilidade}}.
 </div>
 
 <div style="margin: 15px 0; font-size: 14px;">
@@ -46,7 +46,7 @@ Foi entregue {{quantidadeChaves}}
 
 <div style="margin: 20px 0; font-size: 14px;">
 ( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>
-( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade do(a) locatário(a). Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
+( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade {{locatarioResponsabilidade}}. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.
 </div>
 
   <div style="margin-top: 50px; text-align: center;">
@@ -85,7 +85,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">A vistoria de Saída do imóvel será agendada após o envio de algumas documentações por parte do(a) locatário(a) dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. Comunicaremos a data da vistoria com antecedência.</p>
+  <p style="margin-bottom: 20px;">A vistoria de Saída do imóvel será agendada após o envio de algumas documentações por parte {{locatarioDocumentacao}} dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. Comunicaremos a data da vistoria com antecedência.</p>
   
   <p style="margin-bottom: 20px;">Comunico que os valores da rescisão serão computados financeiramente com a cobrança devida após o término dos <strong>{{prazoDias}} dias</strong>.</p>
   
@@ -143,6 +143,66 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">Nossa intenção é garantir que todo o processo ocorra de forma tranquila e transparente. Portanto, recomendamos a leitura atenta do informativo anexo e, se houver qualquer dúvida, permanecemos à disposição pelos nossos canais de atendimento.</p>
   
   <p style="margin-bottom: 20px;">Agradecemos desde já pela colaboração!</p>
+  
+  <p style="margin-top: 40px;">Atenciosamente,</p>
+</div>
+`;
+
+export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  {{#if saudacaoLocatario}}
+  <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
+  {{/if}}
+  
+  <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
+  
+  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de desocupação, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de julho, agosto e setembro de 2025.</p>
+  
+  <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
+    <p style="margin-bottom: 10px; font-weight: bold; color: #007bff;">DOCUMENTOS SOLICITADOS:</p>
+    {{#if cpfl}}
+    {{#eq cpfl "SIM"}}
+    <p style="margin-bottom: 5px;">• <strong>CPFL (Energia Elétrica):</strong> Comprovante de pagamento e fatura</p>
+    {{/eq}}
+    {{/if}}
+    {{#if statusAgua}}
+    {{#eq statusAgua "SIM"}}
+    <p style="margin-bottom: 5px;">• <strong>{{tipoAgua}} (Água):</strong> Comprovante de pagamento e fatura</p>
+    {{/eq}}
+    {{/if}}
+    {{#if solicitarGas}}
+    {{#eq solicitarGas "sim"}}
+    <p style="margin-bottom: 5px;">• <strong>Gás (se houver):</strong> Comprovante de pagamento e fatura</p>
+    {{/eq}}
+    {{/if}}
+    {{#if solicitarCondominio}}
+    {{#eq solicitarCondominio "sim"}}
+    <p style="margin-bottom: 5px;">• <strong>Condomínio:</strong> Comprovante de pagamento e fatura</p>
+    {{/eq}}
+    {{/if}}
+    {{#if solicitarCND}}
+    {{#eq solicitarCND "sim"}}
+    <p style="margin-bottom: 5px;">• <strong>Certidão Negativa de Débitos (CND):</strong> Documento atualizado</p>
+    {{/eq}}
+    {{/if}}
+  </div>
+  
+  <p style="margin-bottom: 20px;">Solicitamos que encaminhe esses documentos o mais breve possível, pois são essenciais para a finalização do processo de desocupação.</p>
+  
+  <p style="margin-bottom: 20px;">Conforme estabelecido no contrato de locação, o locatário é responsável pelo pagamento das contas de consumo durante todo o período de ocupação do imóvel.</p>
+  
+  <p style="margin-bottom: 20px;">Caso haja alguma dúvida sobre quais documentos são necessários, permanecemos à disposição para esclarecimentos.</p>
+  
+  <p style="margin-bottom: 20px;">Agradecemos pela compreensão e aguardamos o retorno com os documentos solicitados.</p>
   
   <p style="margin-top: 40px;">Atenciosamente,</p>
 </div>
@@ -320,9 +380,9 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
   </div>
 
   <div style="margin-bottom: 25px; font-size: 14px;">
-    <p style="margin-bottom: 15px;"><strong>LOCADOR(A):</strong> {{qualificacaoCompletaProprietario}}.</p>
+    <p style="margin-bottom: 15px;"><strong>{{locadorTerm}}:</strong> {{qualificacaoCompletaProprietario}}.</p>
     
-    <p style="margin-bottom: 15px;"><strong>LOCATÁRIO(A):</strong> {{qualificacaoCompletaLocatarios}}.</p>
+    <p style="margin-bottom: 15px;"><strong>{{locatarioTerm}}:</strong> {{qualificacaoCompletaLocatarios}}.</p>
   </div>
 
   <div style="margin-bottom: 25px; text-align: justify; font-size: 14px;">
@@ -354,7 +414,7 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
       <div style="text-align: center; width: 45%;">
         {{#if nomeProprietario}}
         <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-        <p style="font-size: 12px; text-transform: uppercase; margin: 0;">"LOCADOR(A)"</p>
+        <p style="font-size: 12px; text-transform: uppercase; margin: 0;">"{{locadorTerm}}"</p>
         <p style="font-size: 12px; margin: 8px 0 0 0;">{{nomeProprietario}}</p>
         {{/if}}
       </div>
@@ -363,28 +423,28 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
         {{#if primeiroLocatario}}
         <div style="margin-bottom: 20px;">
           <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"Locatário(a)"</p>
+          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
           <p style="font-size: 11px; margin: 5px 0 0 0;">{{primeiroLocatario}}</p>
         </div>
         {{/if}}
         {{#if segundoLocatario}}
         <div style="margin-bottom: 20px;">
           <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"Locatário(a)"</p>
+          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
           <p style="font-size: 11px; margin: 5px 0 0 0;">{{segundoLocatario}}</p>
         </div>
         {{/if}}
         {{#if terceiroLocatario}}
         <div style="margin-bottom: 20px;">
           <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"Locatário(a)"</p>
+          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
           <p style="font-size: 11px; margin: 5px 0 0 0;">{{terceiroLocatario}}</p>
         </div>
         {{/if}}
         {{#if quartoLocatario}}
         <div>
           <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"Locatário(a)"</p>
+          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
           <p style="font-size: 11px; margin: 5px 0 0 0;">{{quartoLocatario}}</p>
         </div>
         {{/if}}

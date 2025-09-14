@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DocumentForm from "@/components/DocumentForm";
@@ -9,15 +9,20 @@ const EditTerm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [termData, setTermData] = useState<any>(null);
+  const [termData, setTermData] = useState<{
+    id: string;
+    form_data: Record<string, string>;
+    title: string;
+    content: string;
+  } | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchTerm();
     }
-  }, [id]);
+  }, [id, fetchTerm]);
 
-  const fetchTerm = async () => {
+  const fetchTerm = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('saved_terms')
@@ -47,7 +52,7 @@ const EditTerm = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate, toast]);
 
   // Funções para detectar plural e gênero
   const isPlural = (text: string) => {

@@ -12,13 +12,16 @@ interface ContractData {
   nomeLocatario: string;
   incluirQuantidadeChaves?: string;
   quantidadeChaves?: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 }
 
 const TermoLocatario: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const contractData = location.state?.contractData as ContractData;
+
+  // Estado para gerenciar auto-preenchimento
+  const [autoFillData, setAutoFillData] = React.useState<Record<string, string>>({});
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
@@ -40,9 +43,6 @@ const TermoLocatario: React.FC = () => {
            nomeProprietario.includes(' e ') || 
            nomeProprietario.includes(' E ');
   };
-
-  // Estado para gerenciar auto-preenchimento
-  const [autoFillData, setAutoFillData] = React.useState<Record<string, string>>({});
 
   const steps: FormStep[] = [
     {
@@ -129,7 +129,12 @@ const TermoLocatario: React.FC = () => {
           placeholder: "Selecione uma opção",
           options: [
             { value: "nao", label: "Não - Digitar manualmente" },
-            { value: "sim", label: "Sim - Usar quantidade do contrato" }
+            { 
+              value: "sim", 
+              label: contractData.quantidadeChaves && contractData.quantidadeChaves !== "" 
+                ? `Sim - Usar quantidade do contrato: ${contractData.quantidadeChaves}`
+                : "Sim - Usar quantidade do contrato"
+            }
           ]
         },
         {

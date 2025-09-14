@@ -86,7 +86,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (onFormDataChange && formData) {
       onFormDataChange(formData);
     }
-  }, [formData]);
+  }, [formData, onFormDataChange]);
 
   // Efeito para preencher automaticamente o campo de gênero quando há múltiplos locatários
   React.useEffect(() => {
@@ -122,7 +122,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (onFormDataChange) {
       onFormDataChange(formData);
     }
-  }, [formData]);
+  }, [formData, onFormDataChange]);
 
   // Sincronizar dados das pessoas com o formData apenas quando o PersonManager estiver sendo usado
   React.useEffect(() => {
