@@ -19,7 +19,9 @@ const TermoLocador: React.FC = () => {
   const contractData = location.state?.contractData as ContractData;
 
   // Estado para gerenciar auto-preenchimento
-  const [autoFillData, setAutoFillData] = React.useState<Record<string, string>>({});
+  const [autoFillData, setAutoFillData] = React.useState<
+    Record<string, string>
+  >({});
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
@@ -27,8 +29,8 @@ const TermoLocador: React.FC = () => {
   }
 
   // Debug: verificar dados do contrato
-  console.log("Dados do contrato no TermoLocador:", contractData);
-  console.log("Quantidade de chaves:", contractData.quantidadeChaves);
+  console.log('Dados do contrato no TermoLocador:', contractData);
+  console.log('Quantidade de chaves:', contractData.quantidadeChaves);
 
   // Função para detectar múltiplos proprietários baseado na quantidade adicionada
   const isMultipleProprietarios = (nomeProprietario: string) => {
@@ -38,72 +40,142 @@ const TermoLocador: React.FC = () => {
 
   const steps: FormStep[] = [
     {
-      id: "vistoria",
-      title: "Vistoria e Entrega",
-      description: "Detalhes da vistoria e entrega das chaves",
+      id: 'vistoria',
+      title: 'Vistoria e Entrega',
+      description: 'Detalhes da vistoria e entrega das chaves',
       icon: Search,
       fields: [
         {
-          name: "nomeQuemRetira",
-          label: "Nome de Quem Retira a Chave",
-          type: "text",
+          name: 'nomeQuemRetira',
+          label: 'Nome de Quem Retira a Chave',
+          type: 'text',
           required: true,
-          placeholder: "Digite o nome completo"
+          placeholder: 'Digite o nome completo',
         },
         {
-          name: "incluirNomeCompleto",
-          label: "Quem está retirando as chaves",
-          type: "select",
+          name: 'incluirNomeCompleto',
+          label: 'Quem está retirando as chaves',
+          type: 'select',
           required: false,
-          placeholder: "Selecione uma opção",
+          placeholder: 'Selecione uma opção',
           options: [
-            { value: "todos", label: "Todos os locadores" },
-            ...(contractData.nomesResumidosLocadores || contractData.nomeProprietario ? (contractData.nomesResumidosLocadores || contractData.nomeProprietario).split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
-              value: nome,
-              label: nome
-            })) : [])
-          ]
+            { value: 'todos', label: 'Todos os locadores' },
+            ...(contractData.nomesResumidosLocadores ||
+            contractData.nomeProprietario
+              ? (
+                  contractData.nomesResumidosLocadores ||
+                  contractData.nomeProprietario
+                )
+                  .split(/,| e | E /)
+                  .map((nome) => nome.trim())
+                  .filter((nome) => nome && nome.length > 2)
+                  .map((nome) => ({
+                    value: nome,
+                    label: nome,
+                  }))
+              : []),
+          ],
         },
         {
-          name: "usarQuantidadeChavesContrato",
-          label: "Selecionar chaves entregues no início da locação",
-          type: "select",
+          name: 'usarQuantidadeChavesContrato',
+          label: 'Selecionar chaves entregues no início da locação',
+          type: 'select',
           required: false,
-          placeholder: "Selecione uma opção",
+          placeholder: 'Selecione uma opção',
           options: [
-            { value: "nao", label: "Não - Digitar manualmente" },
-            { 
-              value: "sim", 
-              label: contractData.quantidadeChaves && contractData.quantidadeChaves !== "" 
-                ? `Sim - Todas as chaves: ${contractData.quantidadeChaves}`
-                : "Sim - Usar quantidade do contrato"
-            }
-          ]
-        },
-        { 
-          name: "tipoQuantidadeChaves", 
-          label: "Tipo e Quantidade de Chaves (se não selecionou usar do contrato)", 
-          type: "textarea", 
-          required: false, 
-          placeholder: "Ex: 04 chaves simples, 02 chaves tetra"
+            { value: 'nao', label: 'Não - Digitar manualmente' },
+            {
+              value: 'sim',
+              label:
+                contractData.quantidadeChaves &&
+                contractData.quantidadeChaves !== ''
+                  ? `Sim - Todas as chaves: ${contractData.quantidadeChaves}`
+                  : 'Sim - Usar quantidade do contrato',
+            },
+          ],
         },
         {
-          name: "observacao",
-          label: "Observação (Opcional)",
-          type: "textarea",
+          name: 'tipoQuantidadeChaves',
+          label:
+            'Tipo e Quantidade de Chaves (se não selecionou usar do contrato)',
+          type: 'textarea',
           required: false,
-          placeholder: "Digite observações adicionais se necessário"
-        }
-      ]
-    }
+          placeholder: 'Ex: 04 chaves simples, 02 chaves tetra',
+        },
+        {
+          name: 'cpfl',
+          label: 'CPFL (Energia Elétrica)',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione uma opção',
+          options: [
+            { value: 'SIM', label: 'SIM - Locatário apresentou comprovante' },
+            {
+              value: 'NÃO',
+              label: 'NÃO - Locatário não apresentou comprovante',
+            },
+          ],
+        },
+        {
+          name: 'tipoAgua',
+          label: 'Tipo de Água',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione uma opção',
+          options: [
+            { value: 'DAEV', label: 'DAEV' },
+            { value: 'SANASA', label: 'SANASA' },
+          ],
+        },
+        {
+          name: 'statusAgua',
+          label: 'Status da Água',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione uma opção',
+          options: [
+            { value: 'SIM', label: 'SIM - Locatário apresentou comprovante' },
+            {
+              value: 'NÃO',
+              label: 'NÃO - Locatário não apresentou comprovante',
+            },
+            { value: 'No condomínio', label: 'No condomínio - Água inclusa' },
+          ],
+        },
+        {
+          name: 'dataVistoria',
+          label: 'Data da Vistoria',
+          type: 'text',
+          required: true,
+          placeholder: 'Ex: 14 de setembro de 2025',
+        },
+        {
+          name: 'observacao',
+          label: 'Observação (Opcional)',
+          type: 'textarea',
+          required: false,
+          placeholder: 'Digite observações adicionais se necessário',
+        },
+      ],
+    },
   ];
 
   const getCurrentDate = () => {
     const today = new Date();
     const day = today.getDate();
     const months = [
-      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+      'janeiro',
+      'fevereiro',
+      'março',
+      'abril',
+      'maio',
+      'junho',
+      'julho',
+      'agosto',
+      'setembro',
+      'outubro',
+      'novembro',
+      'dezembro',
     ];
     const month = months[today.getMonth()];
     const year = today.getFullYear();
@@ -113,7 +185,7 @@ const TermoLocador: React.FC = () => {
   const getTemplate = (fontSize: number) => {
     const titleSize = Math.max(fontSize + 2, 12);
     const signatureSize = Math.max(fontSize - 2, 10);
-    
+
     return `
 <div style="text-align: center; margin-bottom: 20px; font-size: ${titleSize}px; font-weight: bold;">
 TERMO DE RECEBIMENTO – {{numeroContrato}}
@@ -132,8 +204,19 @@ Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
+<strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS:</strong><br>
+<strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>{{tipoAgua}}:</strong> {{statusAgua}}<br>
+<br>
+<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do locatário.
+</div>
+
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>Entregue na Madia Imóveis a relação de chaves:</strong><br>
 {{tipoQuantidadeChaves}}
+</div>
+
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
+<strong>Vistoria realizada em</strong> {{dataVistoria}}.
 </div>
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
@@ -159,90 +242,97 @@ __________________________________________<br>
 
   const handleGenerate = (data: Record<string, string>) => {
     // Detectar se há múltiplos proprietários
-    const nomeProprietario = contractData.nomesResumidosLocadores || contractData.nomeProprietario;
-    const isMultipleProprietarios = nomeProprietario && (
-      nomeProprietario.includes(',') || 
-      nomeProprietario.includes(' e ') ||
-      nomeProprietario.includes(' E ')
-    );
+    const nomeProprietario =
+      contractData.nomesResumidosLocadores || contractData.nomeProprietario;
+    const isMultipleProprietarios =
+      nomeProprietario &&
+      (nomeProprietario.includes(',') ||
+        nomeProprietario.includes(' e ') ||
+        nomeProprietario.includes(' E '));
 
     // Definir termo do locador baseado na quantidade e gênero
     let locadorTerm;
     if (isMultipleProprietarios) {
-      locadorTerm = "LOCADORES";
+      locadorTerm = 'LOCADORES';
     } else {
       // Usar o gênero do locador cadastrado no contrato
       const generoProprietario = contractData.generoProprietario;
-      if (generoProprietario === "feminino") {
-        locadorTerm = "LOCADORA";
-      } else if (generoProprietario === "masculino") {
-        locadorTerm = "LOCADOR";
+      if (generoProprietario === 'feminino') {
+        locadorTerm = 'LOCADORA';
+      } else if (generoProprietario === 'masculino') {
+        locadorTerm = 'LOCADOR';
       } else {
-        locadorTerm = "LOCADOR"; // fallback para neutro ou indefinido
+        locadorTerm = 'LOCADOR'; // fallback para neutro ou indefinido
       }
     }
 
-
     // Processar nome de quem retira baseado na opção selecionada
     let nomeQuemRetira = data.nomeQuemRetira;
-    if (data.incluirNomeCompleto === "todos") {
+    if (data.incluirNomeCompleto === 'todos') {
       nomeQuemRetira = nomeProprietario;
-    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== "") {
+    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== '') {
       // Se selecionou um proprietário específico
       nomeQuemRetira = data.incluirNomeCompleto;
     }
 
     // Processar quantidade de chaves baseado na opção selecionada
     let tipoQuantidadeChaves = data.tipoQuantidadeChaves;
-    if (data.usarQuantidadeChavesContrato === "sim") {
+    if (data.usarQuantidadeChavesContrato === 'sim') {
       // Se selecionou usar do contrato, usar sempre a quantidade do contrato
-      tipoQuantidadeChaves = contractData.quantidadeChaves || data.tipoQuantidadeChaves;
-      console.log("Usando quantidade de chaves do contrato:", contractData.quantidadeChaves);
+      tipoQuantidadeChaves =
+        contractData.quantidadeChaves || data.tipoQuantidadeChaves;
+      console.log(
+        'Usando quantidade de chaves do contrato:',
+        contractData.quantidadeChaves
+      );
     } else {
       // Se não selecionou, usar o que foi digitado manualmente
       tipoQuantidadeChaves = data.tipoQuantidadeChaves;
-      console.log("Usando quantidade de chaves digitada manualmente:", data.tipoQuantidadeChaves);
+      console.log(
+        'Usando quantidade de chaves digitada manualmente:',
+        data.tipoQuantidadeChaves
+      );
     }
 
     // Processar observação (só mostra se preenchida)
-    const observacao = data.observacao && data.observacao.trim() !== "" 
-      ? `<strong>OBS:</strong> ${data.observacao}` 
-      : "<!-- SEM OBSERVACAO -->";
+    const observacao =
+      data.observacao && data.observacao.trim() !== ''
+        ? `<strong>OBS:</strong> ${data.observacao}`
+        : '<!-- SEM OBSERVACAO -->';
 
     // Aplicar formatação de nomes - sem negrito para o proprietário
-    const nomeProprietarioFormatado = contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
-
+    const nomeProprietarioFormatado =
+      contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
 
     const enhancedData = {
       ...contractData,
       ...data,
-      
+
       // Dados específicos do termo do locador - devem vir por último para sobrescrever
       locadorTerm,
       nomeQuemRetira,
       nomeProprietario: nomeProprietarioFormatado, // Nome formatado
       tipoQuantidadeChaves, // Quantidade de chaves processada
-      
+
       // Processar observação
       observacao,
     };
 
-    
     return enhancedData;
   };
 
   return (
     <div className="min-h-screen bg-gradient-secondary">
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white shadow-card rounded-lg border-b">
-            <div className="px-6 py-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="px-4 py-4">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
+                  <h1 className="text-lg font-semibold text-gray-900">
                     Termo de Recebimento de Chaves - Locador
                   </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Contrato #{contractData.numeroContrato}
                   </p>
                 </div>
@@ -258,6 +348,7 @@ __________________________________________<br>
                 contractData={contractData}
                 initialData={autoFillData}
                 onFormDataChange={setAutoFillData}
+                hideSaveButton={true}
               />
             </div>
           </div>

@@ -1,9 +1,16 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from 'react';
 
 export interface FormField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "number" | "email" | "tel" | "select";
+  type:
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'email'
+    | 'tel'
+    | 'select'
+    | 'arrowDropdown';
   required?: boolean;
   placeholder?: string;
   validation?: (value: string) => string | null;
@@ -26,10 +33,10 @@ interface UseFormWizardProps {
   onStepValidation?: (stepIndex: number, isValid: boolean) => void;
 }
 
-export const useFormWizard = ({ 
-  steps, 
+export const useFormWizard = ({
+  steps,
   initialData = {},
-  onStepValidation 
+  onStepValidation,
 }: UseFormWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>(initialData);
@@ -37,115 +44,129 @@ export const useFormWizard = ({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Validar um campo específico
-  const validateField = useCallback((field: FormField, value: string, isDisabled?: boolean): string | null => {
-    // Se o campo está desabilitado, não validar
-    if (isDisabled) {
+  const validateField = useCallback(
+    (field: FormField, value: string, isDisabled?: boolean): string | null => {
+      // Se o campo está desabilitado, não validar
+      if (isDisabled) {
+        return null;
+      }
+
+      if (field.required && (!value || value.trim() === '')) {
+        return `${field.label} é obrigatório`;
+      }
+
+      if (field.validation) {
+        return field.validation(value);
+      }
+
+      // Validações básicas por tipo
+      switch (field.type) {
+        case 'email':
+          if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            return 'E-mail inválido';
+          }
+          break;
+        case 'tel':
+          if (value && !/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(value)) {
+            return 'Telefone inválido. Use o formato (XX) XXXXX-XXXX';
+          }
+          break;
+      }
+
       return null;
-    }
-    
-    if (field.required && (!value || value.trim() === "")) {
-      return `${field.label} é obrigatório`;
-    }
-    
-    if (field.validation) {
-      return field.validation(value);
-    }
-
-    // Validações básicas por tipo
-    switch (field.type) {
-      case "email":
-        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return "E-mail inválido";
-        }
-        break;
-      case "tel":
-        if (value && !/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(value)) {
-          return "Telefone inválido. Use o formato (XX) XXXXX-XXXX";
-        }
-        break;
-    }
-
-    return null;
-  }, []);
+    },
+    []
+  );
 
   // Validar uma etapa específica (sem side effects)
-  const validateStepInternal = useCallback((stepIndex: number, data: Record<string, string>): boolean => {
-    const step = steps[stepIndex];
-    if (!step) return true;
+  const validateStepInternal = useCallback(
+    (stepIndex: number, data: Record<string, string>): boolean => {
+      const step = steps[stepIndex];
+      if (!step) return true;
 
-    // Pular validação da etapa "documentos" para termo do locador
-    if (step.id === "documentos" && data.tipoTermo === "locador") {
-      return true;
-    }
+      // Pular validação da etapa "documentos" para termo do locador
+      if (step.id === 'documentos' && data.tipoTermo === 'locador') {
+        return true;
+      }
 
-    return step.fields.every(field => {
-      const value = data[field.name] || "";
-      const error = validateField(field, value);
-      return !error;
-    });
-  }, [steps, validateField]);
+      return step.fields.every((field) => {
+        const value = data[field.name] || '';
+        const error = validateField(field, value);
+        return !error;
+      });
+    },
+    [steps, validateField]
+  );
 
   // Validar uma etapa específica (com side effects)
-  const validateStep = useCallback((stepIndex: number): boolean => {
-    const step = steps[stepIndex];
-    if (!step) return true;
+  const validateStep = useCallback(
+    (stepIndex: number): boolean => {
+      const step = steps[stepIndex];
+      if (!step) return true;
 
-    // Pular validação da etapa "documentos" para termo do locador
-    if (step.id === "documentos" && formData.tipoTermo === "locador") {
-      return true;
-    }
-
-    let hasErrors = false;
-    const newErrors: Record<string, string> = { ...errors };
-
-    step.fields.forEach(field => {
-      const value = formData[field.name] || "";
-      const error = validateField(field, value);
-      
-      if (error) {
-        newErrors[field.name] = error;
-        hasErrors = true;
-      } else {
-        delete newErrors[field.name];
+      // Pular validação da etapa "documentos" para termo do locador
+      if (step.id === 'documentos' && formData.tipoTermo === 'locador') {
+        return true;
       }
-    });
 
-    setErrors(newErrors);
-    const isValid = !hasErrors;
-    onStepValidation?.(stepIndex, isValid);
-    return isValid;
-  }, [steps, formData, errors, validateField, onStepValidation]);
+      let hasErrors = false;
+      const newErrors: Record<string, string> = { ...errors };
+
+      step.fields.forEach((field) => {
+        const value = formData[field.name] || '';
+        const error = validateField(field, value);
+
+        if (error) {
+          newErrors[field.name] = error;
+          hasErrors = true;
+        } else {
+          delete newErrors[field.name];
+        }
+      });
+
+      setErrors(newErrors);
+      const isValid = !hasErrors;
+      onStepValidation?.(stepIndex, isValid);
+      return isValid;
+    },
+    [steps, formData, errors, validateField, onStepValidation]
+  );
 
   // Atualizar valor de um campo
-  const updateField = useCallback((name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setTouched(prev => ({ ...prev, [name]: true }));
+  const updateField = useCallback(
+    (name: string, value: string) => {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      setTouched((prev) => ({ ...prev, [name]: true }));
 
-    // Validar campo em tempo real
-    const field = steps.flatMap(step => step.fields).find(f => f.name === name);
-    if (field) {
-      const error = validateField(field, value);
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        if (error) {
-          newErrors[name] = error;
-        } else {
-          delete newErrors[name];
-        }
-        return newErrors;
-      });
-    }
-  }, [steps, validateField]);
+      // Validar campo em tempo real
+      const field = steps
+        .flatMap((step) => step.fields)
+        .find((f) => f.name === name);
+      if (field) {
+        const error = validateField(field, value);
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          if (error) {
+            newErrors[name] = error;
+          } else {
+            delete newErrors[name];
+          }
+          return newErrors;
+        });
+      }
+    },
+    [steps, validateField]
+  );
 
   // Aplicar máscara a um valor
   const applyMask = useCallback((mask: string, value: string): string => {
     if (!mask) return value;
-    
+
     // Remove tudo que não é dígito
     const digits = value.replace(/\D/g, '');
     let masked = '';
     let digitIndex = 0;
-    
+
     for (let i = 0; i < mask.length && digitIndex < digits.length; i++) {
       if (mask[i] === '9') {
         masked += digits[digitIndex];
@@ -154,14 +175,14 @@ export const useFormWizard = ({
         masked += mask[i];
       }
     }
-    
+
     return masked;
   }, []);
 
   // Ir para próxima etapa
   const nextStep = useCallback(() => {
     if (validateStep(currentStep) && currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
       return true;
     }
     return false;
@@ -170,20 +191,23 @@ export const useFormWizard = ({
   // Ir para etapa anterior
   const previousStep = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
       return true;
     }
     return false;
   }, [currentStep]);
 
   // Ir para etapa específica
-  const goToStep = useCallback((stepIndex: number) => {
-    if (stepIndex >= 0 && stepIndex < steps.length) {
-      setCurrentStep(stepIndex);
-      return true;
-    }
-    return false;
-  }, [steps.length]);
+  const goToStep = useCallback(
+    (stepIndex: number) => {
+      if (stepIndex >= 0 && stepIndex < steps.length) {
+        setCurrentStep(stepIndex);
+        return true;
+      }
+      return false;
+    },
+    [steps.length]
+  );
 
   // Calcular etapas completadas
   const completedSteps = useMemo(() => {
@@ -200,7 +224,7 @@ export const useFormWizard = ({
   const isFormValid = useMemo(() => {
     return steps.every((step, index) => {
       // Pular validação da etapa "documentos" para termo do locador
-      if (step.id === "documentos" && formData.tipoTermo === "locador") {
+      if (step.id === 'documentos' && formData.tipoTermo === 'locador') {
         return true;
       }
       return validateStepInternal(index, formData);
@@ -220,21 +244,20 @@ export const useFormWizard = ({
     setTouched({});
   }, [initialData]);
 
-
   return {
     // Estado
     currentStep,
     formData,
     errors,
     touched,
-    
+
     // Computados
     completedSteps,
     isFormValid,
     isCurrentStepValid,
     totalSteps: steps.length,
     progress: ((currentStep + 1) / steps.length) * 100,
-    
+
     // Ações
     updateField,
     nextStep,
@@ -243,7 +266,7 @@ export const useFormWizard = ({
     validateStep,
     resetForm,
     applyMask,
-    
+
     // Utilitários
     getCurrentStep: () => steps[currentStep],
     getFieldError: (fieldName: string) => errors[fieldName],

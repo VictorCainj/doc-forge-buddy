@@ -1,17 +1,23 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import EditTerm from "./pages/EditTerm";
-import Contratos from "./pages/Contratos";
-import CadastrarContrato from "./pages/CadastrarContrato";
-import ProcessoDesocupacao from "./pages/ProcessoDesocupacao";
-import GerarDocumento from "./pages/GerarDocumento";
-import TermoLocador from "./pages/TermoLocador";
-import TermoLocatario from "./pages/TermoLocatario";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '@/hooks/useAuth';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/Layout';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import NotFound from './pages/NotFound';
+import EditTerm from './pages/EditTerm';
+import Contratos from './pages/Contratos';
+import CadastrarContrato from './pages/CadastrarContrato';
+import ProcessoDesocupacao from './pages/ProcessoDesocupacao';
+import GerarDocumento from './pages/GerarDocumento';
+import TermoLocador from './pages/TermoLocador';
+import TermoLocatario from './pages/TermoLocatario';
 
 const queryClient = new QueryClient();
 
@@ -21,19 +27,130 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/contratos" element={<Contratos />} />
-          <Route path="/cadastrar-contrato" element={<CadastrarContrato />} />
-          <Route path="/gerar-documento" element={<GerarDocumento />} />
-          <Route path="/termo-locador" element={<TermoLocador />} />
-          <Route path="/termo-locatario" element={<TermoLocatario />} />
-          <Route path="/processo/:contratoId" element={<ProcessoDesocupacao />} />
-          <Route path="/processo/:contratoId/termo-chaves" element={<TermoLocatario />} />
-          <Route path="/editar-termo/:id" element={<EditTerm />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route
+              path="/login"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <Login />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <Register />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <ForgotPassword />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Rotas protegidas */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Index />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contratos"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Contratos />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cadastrar-contrato"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CadastrarContrato />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gerar-documento"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <GerarDocumento />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/termo-locador"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <TermoLocador />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/termo-locatario"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <TermoLocatario />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/processo/:contratoId"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ProcessoDesocupacao />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/processo/:contratoId/termo-chaves"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <TermoLocatario />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/editar-termo/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <EditTerm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Rota 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

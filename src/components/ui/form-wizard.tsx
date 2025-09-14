@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 export interface WizardStep {
   id: string;
@@ -34,10 +34,11 @@ export const FormWizard: React.FC<FormWizardProps> = ({
   showProgress = true,
   allowStepNavigation = true,
   isSubmitting = false,
-  submitButtonText = "Gerar Documento",
+  submitButtonText = 'Gerar Documento',
 }) => {
   const [internalStep, setInternalStep] = useState(0);
-  const currentStep = controlledStep !== undefined ? controlledStep : internalStep;
+  const currentStep =
+    controlledStep !== undefined ? controlledStep : internalStep;
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -74,130 +75,50 @@ export const FormWizard: React.FC<FormWizardProps> = ({
   const currentStepData = steps[currentStep];
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Progress Bar */}
-      {showProgress && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Etapa {currentStep + 1} de {steps.length}
-            </h2>
-            <span className="text-sm text-muted-foreground">
-              {Math.round(progress)}% concluído
-            </span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-      )}
+    <div className="w-full">
+      {/* Step Content */}
+      <div className="space-y-6">{currentStepData.content}</div>
 
-      {/* Step Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-          {steps.map((step, index) => {
-            const isCompleted = completedSteps.includes(index);
-            const isCurrent = index === currentStep;
-            const isPast = index < currentStep;
-            const IconComponent = step.icon;
+      {/* Navigation Buttons */}
+      <div className="flex justify-between items-center pt-8 mt-8 border-t border-gray-200">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handlePrevious}
+          disabled={currentStep === 0}
+          className="gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Anterior
+        </Button>
 
-            return (
-              <div key={step.id} className="flex items-center">
-                <button
-                  onClick={() => goToStep(index)}
-                  disabled={!allowStepNavigation && !isPast && !isCurrent}
-                  className={`
-                    relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200
-                    ${isCurrent 
-                      ? 'border-primary bg-primary text-primary-foreground shadow-lg scale-110' 
-                      : isCompleted || isPast
-                        ? 'border-green-500 bg-green-500 text-white'
-                        : 'border-border bg-background text-muted-foreground'
-                    }
-                    ${allowStepNavigation ? 'hover:scale-105 cursor-pointer' : ''}
-                  `}
-                >
-                  {isCompleted ? (
-                    <Check className="h-5 w-5" />
-                  ) : IconComponent ? (
-                    <IconComponent className="h-5 w-5" />
-                  ) : (
-                    <span className="text-sm font-medium">{index + 1}</span>
-                  )}
-                </button>
-                
-                {index < steps.length - 1 && (
-                  <div className={`w-12 h-0.5 mx-1 ${isPast || isCompleted ? 'bg-green-500' : 'bg-border'}`} />
-                )}
-              </div>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">
+            {currentStep + 1} / {steps.length}
+          </span>
         </div>
+
+        <Button
+          type="button"
+          onClick={handleNext}
+          disabled={currentStepData.isValid === false || isSubmitting}
+          className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              {submitButtonText}
+            </>
+          ) : (
+            <>
+              {currentStep === steps.length - 1 ? submitButtonText : 'Próximo'}
+              {currentStep < steps.length - 1 && (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </>
+          )}
+        </Button>
       </div>
-
-      {/* Current Step Content */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            {currentStepData.icon && (
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <currentStepData.icon className="h-5 w-5 text-primary" />
-              </div>
-            )}
-            <div>
-              <h3 className="text-xl font-semibold">{currentStepData.title}</h3>
-              {currentStepData.description && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {currentStepData.description}
-                </p>
-              )}
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Step Content */}
-          <div className="min-h-[200px]">
-            {currentStepData.content}
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 0}
-              className="gap-2"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Anterior
-            </Button>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {currentStep + 1} / {steps.length}
-              </span>
-            </div>
-
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={currentStepData.isValid === false || isSubmitting}
-              className="gap-2 bg-gradient-primary hover:opacity-90"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {submitButtonText}
-                </>
-              ) : (
-                <>
-                  {currentStep === steps.length - 1 ? submitButtonText : 'Próximo'}
-                  {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

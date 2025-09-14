@@ -1,20 +1,20 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Printer, Save } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-const companyLogo = "https://i.imgur.com/xwz1P7v.png";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { formatDateBrazilian } from "@/utils/dateFormatter";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, FileText, Printer, Save, Minimize2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+const companyLogo = 'https://i.imgur.com/xwz1P7v.png';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { formatDateBrazilian } from '@/utils/dateFormatter';
 
 interface FormField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "number" | "select";
+  type: 'text' | 'textarea' | 'number' | 'select' | 'arrowDropdown';
   required?: boolean;
   placeholder?: string;
   options?: Array<{ value: string; label: string }>;
@@ -37,26 +37,130 @@ interface DocumentFormProps {
   initialData?: Record<string, string>;
   termId?: string;
   isEditing?: boolean;
+  hideSaveButton?: boolean;
 }
 
-const DocumentForm = ({ title, description, fields, fieldGroups, template, onGenerate, initialData, termId, isEditing }: DocumentFormProps) => {
+const DocumentForm = ({
+  title,
+  description,
+  fields,
+  fieldGroups,
+  template,
+  onGenerate,
+  initialData,
+  termId,
+  isEditing,
+  hideSaveButton = false,
+}: DocumentFormProps) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<Record<string, string>>(initialData || {});
+  const [formData, setFormData] = useState<Record<string, string>>(
+    initialData || {}
+  );
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [dynamicFontSize, setDynamicFontSize] = useState(14); // Tamanho dinâmico
   const { toast } = useToast();
 
   const handleInputChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Função para verificar se o conteúdo excede uma página e ajustar a fonte
+  const checkAndAdjustFontSize = (content: string, fontSize: number) => {
+    // Criar um elemento temporário para medir o conteúdo
+    const tempElement = document.createElement('div');
+    tempElement.style.cssText = `
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 794px;
+      font-family: Arial, sans-serif;
+      font-size: ${fontSize}px;
+      line-height: 1.4;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow: hidden;
+    `;
+    tempElement.innerHTML = content;
+    document.body.appendChild(tempElement);
+
+    const contentHeight = tempElement.offsetHeight;
+    const maxHeight = 1050; // Altura máxima de uma página A4 (297mm - margens) em pixels
+
+    document.body.removeChild(tempElement);
+
+    // Se exceder uma página, reduzir a fonte
+    if (contentHeight > maxHeight && fontSize > 10) {
+      const newFontSize = Math.max(10, fontSize - 1);
+      return newFontSize;
+    }
+
+    return fontSize;
   };
 
   const handleGenerate = () => {
     const processedData = onGenerate(formData);
     // Usa os dados processados se retornados, senão usa os originais
-    if (processedData) {
-      setFormData(processedData);
+    const finalData = processedData || formData;
+    setFormData(finalData);
+
+    // Verificar e ajustar o tamanho da fonte se necessário
+    const documentContent = replaceTemplateVariables(template, finalData);
+    const adjustedFontSize = checkAndAdjustFontSize(
+      documentContent,
+      dynamicFontSize
+    );
+
+    if (adjustedFontSize !== dynamicFontSize) {
+      setDynamicFontSize(adjustedFontSize);
+      toast({
+        title: 'Ajuste automático aplicado',
+        description: `O tamanho da fonte foi reduzido para ${adjustedFontSize}px para caber em uma página.`,
+      });
     }
+
     setShowPreview(true);
+
+    // Verificação adicional após o preview ser exibido
+    setTimeout(() => {
+      const documentElement = document.getElementById('document-content');
+      if (documentElement) {
+        const contentHeight = documentElement.offsetHeight;
+        const maxHeight = 1050;
+
+        if (contentHeight > maxHeight && dynamicFontSize > 10) {
+          const newFontSize = Math.max(10, dynamicFontSize - 1);
+          setDynamicFontSize(newFontSize);
+          toast({
+            title: 'Ajuste adicional aplicado',
+            description: `O tamanho da fonte foi reduzido para ${newFontSize}px para garantir que caiba em uma página.`,
+          });
+        }
+      }
+    }, 100);
+  };
+
+  const handleCompact = () => {
+    if (dynamicFontSize > 11) {
+      setDynamicFontSize(11);
+      toast({
+        title: 'Documento compactado',
+        description:
+          'O tamanho da fonte foi reduzido para 11px para economizar espaço.',
+      });
+    } else if (dynamicFontSize > 10) {
+      setDynamicFontSize(10);
+      toast({
+        title: 'Documento super compactado',
+        description:
+          'O tamanho da fonte foi reduzido para 10px para máxima economia de espaço.',
+      });
+    } else {
+      toast({
+        title: 'Já no tamanho mínimo',
+        description: 'O documento já está no tamanho mínimo de fonte (10px).',
+      });
+    }
   };
 
   const handlePrint = () => {
@@ -124,19 +228,19 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
         }
       }
     `;
-    
+
     // Adicionar classe especial ao documento para impressão
     const documentElement = document.getElementById('document-content');
     if (documentElement) {
       documentElement.classList.add('print-only');
     }
-    
+
     // Adicionar estilos temporariamente
     document.head.appendChild(printStyles);
-    
+
     // Imprimir
     window.print();
-    
+
     // Remover estilos e classe após impressão
     setTimeout(() => {
       const existingStyles = document.getElementById('print-styles');
@@ -149,13 +253,12 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
     }, 1000);
   };
 
-
   const handleSave = async () => {
     setSaving(true);
     try {
       const documentContent = replaceTemplateVariables(template, formData);
       const documentTitle = `${title} - ${formData.nomeLocatario || 'Sem nome'} - ${formatDateBrazilian(new Date())}`;
-      
+
       if (isEditing && termId) {
         // Atualizar termo existente
         const { error } = await supabase
@@ -170,71 +273,85 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
         if (error) throw error;
 
         toast({
-          title: "Documento atualizado!",
-          description: "O termo foi atualizado com sucesso.",
+          title: 'Documento atualizado!',
+          description: 'O termo foi atualizado com sucesso.',
         });
       } else {
         // Criar novo termo
-        const { error } = await supabase
-          .from('saved_terms')
-          .insert({
-            title: documentTitle,
-            content: documentContent,
-            form_data: formData,
-            document_type: 'termo-inquilino'
-          });
+        const { error } = await supabase.from('saved_terms').insert({
+          title: documentTitle,
+          content: documentContent,
+          form_data: formData,
+          document_type: 'termo-inquilino',
+        });
 
         if (error) throw error;
 
         toast({
-          title: "Documento salvo!",
-          description: "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
+          title: 'Documento salvo!',
+          description:
+            "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
         });
       }
     } catch (error) {
       toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o documento. Tente novamente.",
-        variant: "destructive"
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar o documento. Tente novamente.',
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
     }
   };
 
-  const replaceTemplateVariables = (template: string, data: Record<string, string>) => {
+  const replaceTemplateVariables = (
+    template: string,
+    data: Record<string, string>
+  ) => {
     let result = template;
-    
+
     // Processar condicionais Handlebars {{#eq}} (igualdade)
-    result = result.replace(/\{\{#eq\s+(\w+)\s+"([^"]+)"\}\}([\s\S]*?)\{\{\/eq\}\}/g, (match, variable, expectedValue, content) => {
-      if (data[variable] === expectedValue) {
-        return content;
+    result = result.replace(
+      /\{\{#eq\s+(\w+)\s+"([^"]+)"\}\}([\s\S]*?)\{\{\/eq\}\}/g,
+      (match, variable, expectedValue, content) => {
+        if (data[variable] === expectedValue) {
+          return content;
+        }
+        return '';
       }
-      return '';
-    });
-    
+    );
+
     // Processar condicionais Handlebars com else
-    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, ifContent, elseContent) => {
-      if (data[variable] && data[variable].trim()) {
-        return ifContent;
+    result = result.replace(
+      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g,
+      (match, variable, ifContent, elseContent) => {
+        if (data[variable] && data[variable].trim()) {
+          return ifContent;
+        }
+        return elseContent;
       }
-      return elseContent;
-    });
-    
+    );
+
     // Processar condicionais Handlebars simples (sem else)
-    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, variable, content) => {
-      if (data[variable] && data[variable].trim()) {
-        return content;
+    result = result.replace(
+      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+      (match, variable, content) => {
+        if (data[variable] && data[variable].trim()) {
+          return content;
+        }
+        return '';
       }
-      return '';
-    });
-    
+    );
+
     // Substituir variáveis
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
-      result = result.replace(new RegExp(placeholder, 'g'), value || `[${key.toUpperCase()}]`);
+      result = result.replace(
+        new RegExp(placeholder, 'g'),
+        value || `[${key.toUpperCase()}]`
+      );
     });
-    
+
     return result;
   };
 
@@ -245,8 +362,8 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
           <div className="container mx-auto px-6 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowPreview(false)}
                   className="gap-2"
@@ -254,19 +371,35 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                   <ArrowLeft className="h-4 w-4" />
                   Editar
                 </Button>
-                <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+                <h1 className="text-xl font-semibold text-foreground">
+                  {title}
+                </h1>
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  onClick={handleSave} 
-                  variant="outline" 
+                {!hideSaveButton && (
+                  <Button
+                    onClick={handleSave}
+                    variant="outline"
+                    className="gap-2"
+                    disabled={saving}
+                  >
+                    <Save className="h-4 w-4" />
+                    {saving ? 'Salvando...' : 'Salvar'}
+                  </Button>
+                )}
+                <Button
+                  onClick={handleCompact}
+                  variant="outline"
                   className="gap-2"
-                  disabled={saving}
+                  title="Compactar documento para economizar espaço"
                 >
-                  <Save className="h-4 w-4" />
-                  {saving ? 'Salvando...' : 'Salvar'}
+                  <Minimize2 className="h-4 w-4" />
+                  Compactar
                 </Button>
-                <Button onClick={handlePrint} className="gap-2 bg-gradient-primary">
+                <Button
+                  onClick={handlePrint}
+                  className="gap-2 bg-gradient-primary"
+                >
                   <Printer className="h-4 w-4" />
                   Imprimir
                 </Button>
@@ -279,10 +412,10 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
           <div className="max-w-4xl mx-auto">
             <Card className="shadow-card print:shadow-none print:border-none">
               <CardContent className="p-6 print:p-0">
-                <div 
-                  id="document-content" 
-                  className="max-w-none text-foreground print:text-black" 
-                  style={{ 
+                <div
+                  id="document-content"
+                  className="max-w-none text-foreground print:text-black"
+                  style={{
                     fontFamily: 'Arial, sans-serif',
                     backgroundColor: '#ffffff',
                     color: '#000000',
@@ -292,25 +425,28 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
                     margin: '0 auto',
                     boxSizing: 'border-box',
                     lineHeight: '1.6',
-                    fontSize: '14px'
+                    fontSize: `${dynamicFontSize}px`,
                   }}
                 >
-                  <div className="flex justify-end items-start mb-8" style={{ minHeight: '120px' }}>
-                    <img 
-                      src={companyLogo} 
-                      alt="Company Logo" 
-                      style={{ 
-                        height: 'auto', 
+                  <div
+                    className="flex justify-end items-start mb-8"
+                    style={{ minHeight: '120px' }}
+                  >
+                    <img
+                      src={companyLogo}
+                      alt="Company Logo"
+                      style={{
+                        height: 'auto',
                         width: 'auto',
                         maxHeight: '120px',
                         maxWidth: '300px',
-                        objectFit: 'contain'
+                        objectFit: 'contain',
                       }}
                     />
                   </div>
-                  <div 
-                    dangerouslySetInnerHTML={{ 
-                      __html: replaceTemplateVariables(template, formData)
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: replaceTemplateVariables(template, formData),
                     }}
                   />
                 </div>
@@ -327,10 +463,10 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
       <header className="bg-card shadow-card border-b">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
-              onClick={() => navigate("/")}
+              onClick={() => navigate('/')}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -354,97 +490,128 @@ const DocumentForm = ({ title, description, fields, fieldGroups, template, onGen
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {fieldGroups ? (
-                fieldGroups.map((group, groupIndex) => (
-                  <div key={groupIndex} className="space-y-4">
-                    <h3 className="text-sm font-semibold text-primary border-b border-border pb-2">
-                      {group.getDynamicTitle ? group.getDynamicTitle(formData) : group.title}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {group.fields.map((field) => (
-                        <div key={field.name} className="space-y-2">
-                          <Label htmlFor={field.name} className="text-sm font-medium">
-                            {field.label} {field.required && <span className="text-destructive">*</span>}
-                          </Label>
-                          {field.type === "textarea" ? (
-                            <Textarea
-                              id={field.name}
-                              placeholder={field.placeholder}
-                              value={formData[field.name] || ""}
-                              onChange={(e) => handleInputChange(field.name, e.target.value)}
-                              className="min-h-20"
-                            />
-                          ) : field.type === "select" ? (
-                            <select
-                              id={field.name}
-                              value={formData[field.name] || ""}
-                              onChange={(e) => handleInputChange(field.name, e.target.value)}
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              {fieldGroups
+                ? fieldGroups.map((group, groupIndex) => (
+                    <div key={groupIndex} className="space-y-4">
+                      <h3 className="text-sm font-semibold text-primary border-b border-border pb-2">
+                        {group.getDynamicTitle
+                          ? group.getDynamicTitle(formData)
+                          : group.title}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {group.fields.map((field) => (
+                          <div key={field.name} className="space-y-2">
+                            <Label
+                              htmlFor={field.name}
+                              className="text-sm font-medium"
                             >
-                              <option value="">{field.placeholder || "Selecione uma opção"}</option>
-                              {field.options?.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
+                              {field.label}{' '}
+                              {field.required && (
+                                <span className="text-destructive">*</span>
+                              )}
+                            </Label>
+                            {field.type === 'textarea' ? (
+                              <Textarea
+                                id={field.name}
+                                placeholder={field.placeholder}
+                                value={formData[field.name] || ''}
+                                onChange={(e) =>
+                                  handleInputChange(field.name, e.target.value)
+                                }
+                                className="min-h-20"
+                              />
+                            ) : field.type === 'select' ? (
+                              <select
+                                id={field.name}
+                                value={formData[field.name] || ''}
+                                onChange={(e) =>
+                                  handleInputChange(field.name, e.target.value)
+                                }
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <option value="">
+                                  {field.placeholder || 'Selecione uma opção'}
                                 </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <Input
-                              id={field.name}
-                              type={field.type}
-                              placeholder={field.placeholder}
-                              value={formData[field.name] || ""}
-                              onChange={(e) => handleInputChange(field.name, e.target.value)}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                fields?.map((field) => (
-                  <div key={field.name} className="space-y-2">
-                    <Label htmlFor={field.name} className="text-sm font-medium">
-                      {field.label} {field.required && <span className="text-destructive">*</span>}
-                    </Label>
-                    {field.type === "textarea" ? (
-                      <Textarea
-                        id={field.name}
-                        placeholder={field.placeholder}
-                        value={formData[field.name] || ""}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                        className="min-h-20"
-                      />
-                    ) : field.type === "select" ? (
-                      <select
-                        id={field.name}
-                        value={formData[field.name] || ""}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">{field.placeholder || "Selecione uma opção"}</option>
-                        {field.options?.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
+                                {field.options?.map((option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <Input
+                                id={field.name}
+                                type={field.type}
+                                placeholder={field.placeholder}
+                                value={formData[field.name] || ''}
+                                onChange={(e) =>
+                                  handleInputChange(field.name, e.target.value)
+                                }
+                              />
+                            )}
+                          </div>
                         ))}
-                      </select>
-                    ) : (
-                      <Input
-                        id={field.name}
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        value={formData[field.name] || ""}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      />
-                    )}
-                  </div>
-                ))
-              )}
-              
-              <Button 
-                onClick={handleGenerate} 
+                      </div>
+                    </div>
+                  ))
+                : fields?.map((field) => (
+                    <div key={field.name} className="space-y-2">
+                      <Label
+                        htmlFor={field.name}
+                        className="text-sm font-medium"
+                      >
+                        {field.label}{' '}
+                        {field.required && (
+                          <span className="text-destructive">*</span>
+                        )}
+                      </Label>
+                      {field.type === 'textarea' ? (
+                        <Textarea
+                          id={field.name}
+                          placeholder={field.placeholder}
+                          value={formData[field.name] || ''}
+                          onChange={(e) =>
+                            handleInputChange(field.name, e.target.value)
+                          }
+                          className="min-h-20"
+                        />
+                      ) : field.type === 'select' ? (
+                        <select
+                          id={field.name}
+                          value={formData[field.name] || ''}
+                          onChange={(e) =>
+                            handleInputChange(field.name, e.target.value)
+                          }
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">
+                            {field.placeholder || 'Selecione uma opção'}
+                          </option>
+                          {field.options?.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Input
+                          id={field.name}
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          value={formData[field.name] || ''}
+                          onChange={(e) =>
+                            handleInputChange(field.name, e.target.value)
+                          }
+                        />
+                      )}
+                    </div>
+                  ))}
+
+              <Button
+                onClick={handleGenerate}
                 className="w-full bg-gradient-primary hover:opacity-90"
                 size="lg"
               >

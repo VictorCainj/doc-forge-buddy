@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import DocumentForm from "@/components/DocumentForm";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import DocumentForm from '@/components/DocumentForm';
+import { useToast } from '@/hooks/use-toast';
 
 const EditTerm = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,12 +16,6 @@ const EditTerm = () => {
     content: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      fetchTerm();
-    }
-  }, [id, fetchTerm]);
-
   const fetchTerm = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -33,20 +27,27 @@ const EditTerm = () => {
       if (error) throw error;
       if (!data) {
         toast({
-          title: "Termo não encontrado",
-          description: "O termo que você está tentando editar não foi encontrado.",
-          variant: "destructive"
+          title: 'Termo não encontrado',
+          description:
+            'O termo que você está tentando editar não foi encontrado.',
+          variant: 'destructive',
         });
         navigate('/');
         return;
       }
 
-      setTermData(data);
+      setTermData({
+        ...data,
+        form_data:
+          typeof data.form_data === 'string'
+            ? JSON.parse(data.form_data)
+            : (data.form_data as Record<string, string>) || {},
+      });
     } catch (error) {
       toast({
-        title: "Erro ao carregar",
-        description: "Não foi possível carregar o termo para edição.",
-        variant: "destructive"
+        title: 'Erro ao carregar',
+        description: 'Não foi possível carregar o termo para edição.',
+        variant: 'destructive',
       });
       navigate('/termos-salvos');
     } finally {
@@ -54,15 +55,34 @@ const EditTerm = () => {
     }
   }, [id, navigate, toast]);
 
+  useEffect(() => {
+    if (id) {
+      fetchTerm();
+    }
+  }, [id, fetchTerm]);
+
   // Funções para detectar plural e gênero
   const isPlural = (text: string) => {
     return text.includes(',') || text.includes(' e ') || text.includes(' E ');
   };
 
   const isFeminine = (text: string) => {
-    const femaleNames = ['ana', 'maria', 'carla', 'sandra', 'patricia', 'fernanda', 'juliana', 'carolina', 'gabriela', 'mariana'];
+    const femaleNames = [
+      'ana',
+      'maria',
+      'carla',
+      'sandra',
+      'patricia',
+      'fernanda',
+      'juliana',
+      'carolina',
+      'gabriela',
+      'mariana',
+    ];
     const firstNameLower = text.split(' ')[0].toLowerCase();
-    return text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower);
+    return (
+      text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower)
+    );
   };
 
   const getLocadorTerm = (nomeLocador: string) => {
@@ -102,8 +122,18 @@ const EditTerm = () => {
     const today = new Date();
     const day = today.getDate();
     const months = [
-      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+      'janeiro',
+      'fevereiro',
+      'março',
+      'abril',
+      'maio',
+      'junho',
+      'julho',
+      'agosto',
+      'setembro',
+      'outubro',
+      'novembro',
+      'dezembro',
     ];
     const month = months[today.getMonth()];
     const year = today.getFullYear();
@@ -112,106 +142,257 @@ const EditTerm = () => {
 
   const fieldGroups = [
     {
-      title: "Dados do Contrato",
+      title: 'Dados do Contrato',
       fields: [
-        { name: "numeroContrato", label: "Número do Contrato", type: "text" as const, required: true, placeholder: "Ex: 13734" },
-        { name: "enderecoImovel", label: "Endereço do Imóvel", type: "textarea" as const, required: true, placeholder: "Endereço completo do imóvel" },
-        { name: "dataFirmamentoContrato", label: "Data de Firmamento do Contrato", type: "text" as const, required: true, placeholder: "Ex: 15/10/2024 ou 15 de outubro de 2024" },
-        { name: "incluirQuantidadeChaves", label: "Incluir quantidade de chaves no contrato?", type: "select" as const, required: true, options: [
-          { value: "sim", label: "Sim - Incluir quantidade de chaves" },
-          { value: "nao", label: "Não - Não incluir quantidade de chaves" }
-        ]},
-        { name: "quantidadeChaves", label: "Quantidade e tipo de chaves", type: "textarea" as const, required: false, placeholder: "Ex: 04 chaves simples, 02 chaves tetra" }
-      ]
+        {
+          name: 'numeroContrato',
+          label: 'Número do Contrato',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'Ex: 13734',
+        },
+        {
+          name: 'enderecoImovel',
+          label: 'Endereço do Imóvel',
+          type: 'textarea' as const,
+          required: true,
+          placeholder: 'Endereço completo do imóvel',
+        },
+        {
+          name: 'dataFirmamentoContrato',
+          label: 'Data de Firmamento do Contrato',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'Ex: 15/10/2024 ou 15 de outubro de 2024',
+        },
+        {
+          name: 'incluirQuantidadeChaves',
+          label: 'Incluir quantidade de chaves no contrato?',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'sim', label: 'Sim - Incluir quantidade de chaves' },
+            { value: 'nao', label: 'Não - Não incluir quantidade de chaves' },
+          ],
+        },
+        {
+          name: 'quantidadeChaves',
+          label: 'Quantidade e tipo de chaves',
+          type: 'textarea' as const,
+          required: false,
+          placeholder: 'Ex: 04 chaves simples, 02 chaves tetra',
+        },
+      ],
     },
     {
-      title: "Qualificação dos Locadores",
+      title: 'Qualificação dos Locadores',
       fields: [
-        { name: "generoProprietario", label: "Gênero dos Locadores", type: "select" as const, required: true, options: [
-          { value: "masculino", label: "Masculino" },
-          { value: "feminino", label: "Feminino" },
-          { value: "masculinos", label: "Masculinos (plural)" },
-          { value: "femininos", label: "Femininos (plural)" }
-        ]},
-        { name: "nomeProprietario", label: "Nome dos Locadores", type: "textarea" as const, required: true, placeholder: "Nome completo dos locadores" },
-        { name: "qualificacaoCompletaLocadores", label: "Qualificação Completa dos Locadores", type: "textarea" as const, required: true, placeholder: "Qualificação completa dos locadores conforme contrato" }
-      ]
+        {
+          name: 'generoProprietario',
+          label: 'Gênero dos Locadores',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'masculino', label: 'Masculino' },
+            { value: 'feminino', label: 'Feminino' },
+            { value: 'masculinos', label: 'Masculinos (plural)' },
+            { value: 'femininos', label: 'Femininos (plural)' },
+          ],
+        },
+        {
+          name: 'nomeProprietario',
+          label: 'Nome dos Locadores',
+          type: 'textarea' as const,
+          required: true,
+          placeholder: 'Nome completo dos locadores',
+        },
+        {
+          name: 'qualificacaoCompletaLocadores',
+          label: 'Qualificação Completa dos Locadores',
+          type: 'textarea' as const,
+          required: true,
+          placeholder: 'Qualificação completa dos locadores conforme contrato',
+        },
+      ],
     },
     {
-      title: "Qualificação dos Locatários",
+      title: 'Qualificação dos Locatários',
       fields: [
-        { name: "nomeLocatario", label: "Nome dos Locatários", type: "textarea" as const, required: true, placeholder: "Nome completo dos locatários" },
-        { name: "generoLocatario", label: "Gênero dos Locatários", type: "select" as const, required: true, options: [
-          { value: "masculino", label: "Masculino" },
-          { value: "feminino", label: "Feminino" },
-          { value: "masculinos", label: "Masculinos (plural)" },
-          { value: "femininos", label: "Femininos (plural)" }
-        ]},
-        { name: "qualificacaoCompletaLocatarios", label: "Qualificação Completa dos Locatários", type: "textarea" as const, required: false, placeholder: "Qualificação completa dos locatários conforme contrato" }
-      ]
+        {
+          name: 'nomeLocatario',
+          label: 'Nome dos Locatários',
+          type: 'textarea' as const,
+          required: true,
+          placeholder: 'Nome completo dos locatários',
+        },
+        {
+          name: 'generoLocatario',
+          label: 'Gênero dos Locatários',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'masculino', label: 'Masculino' },
+            { value: 'feminino', label: 'Feminino' },
+            { value: 'masculinos', label: 'Masculinos (plural)' },
+            { value: 'femininos', label: 'Femininos (plural)' },
+          ],
+        },
+        {
+          name: 'qualificacaoCompletaLocatarios',
+          label: 'Qualificação Completa dos Locatários',
+          type: 'textarea' as const,
+          required: false,
+          placeholder: 'Qualificação completa dos locatários conforme contrato',
+        },
+      ],
     },
     {
-      title: "Dados de Desocupação",
+      title: 'Dados de Desocupação',
       fields: [
-        { name: "dataInicioDesocupacao", label: "Data de Início da Desocupação", type: "text" as const, required: true, placeholder: "DD/MM/AAAA - Ex: 23/06/2025" },
-        { name: "dataTerminoDesocupacao", label: "Data de Término da Desocupação", type: "text" as const, required: true, placeholder: "DD/MM/AAAA - Ex: 22/07/2025" }
-      ]
+        {
+          name: 'dataInicioDesocupacao',
+          label: 'Data de Início da Desocupação',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'DD/MM/AAAA - Ex: 23/06/2025',
+        },
+        {
+          name: 'dataTerminoDesocupacao',
+          label: 'Data de Término da Desocupação',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'DD/MM/AAAA - Ex: 22/07/2025',
+        },
+      ],
     },
     {
-      title: "Contas de Consumo",
-      description: "Informações sobre as contas de consumo do imóvel",
+      title: 'Contas de Consumo',
+      description: 'Informações sobre as contas de consumo do imóvel',
       fields: [
-        { name: "cpfl", label: "CPFL", type: "select" as const, required: true, options: [
-          { value: "SIM", label: "SIM" },
-          { value: "NÃO", label: "NÃO" }
-        ]},
-        { name: "tipoAgua", label: "Tipo de Água", type: "select" as const, required: true, options: [
-          { value: "DAEV", label: "DAEV" },
-          { value: "SANASA", label: "SANASA" }
-        ]},
-        { name: "statusAgua", label: "Status da Água", type: "select" as const, required: true, options: [
-          { value: "SIM", label: "SIM" },
-          { value: "NÃO", label: "NÃO" },
-          { value: "No condomínio", label: "No condomínio" }
-        ]}
-      ]
+        {
+          name: 'cpfl',
+          label: 'CPFL',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'SIM', label: 'SIM' },
+            { value: 'NÃO', label: 'NÃO' },
+          ],
+        },
+        {
+          name: 'tipoAgua',
+          label: 'Tipo de Água',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'DAEV', label: 'DAEV' },
+            { value: 'SANASA', label: 'SANASA' },
+          ],
+        },
+        {
+          name: 'statusAgua',
+          label: 'Status da Água',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'SIM', label: 'SIM' },
+            { value: 'NÃO', label: 'NÃO' },
+            { value: 'No condomínio', label: 'No condomínio' },
+          ],
+        },
+      ],
     },
     {
-      title: "Vistoria e Entrega",
-      description: "Detalhes da vistoria e entrega das chaves",
+      title: 'Vistoria e Entrega',
+      description: 'Detalhes da vistoria e entrega das chaves',
       fields: [
-        { name: "tipoQuantidadeChaves", label: "Tipo e Quantidade de Chaves", type: "textarea" as const, required: true, placeholder: "Ex: 04 chaves simples" },
-        { name: "dataVistoria", label: "Data da Vistoria", type: "text" as const, required: true, placeholder: "Ex: 28/08/2025" },
-        { name: "nomeQuemRetira", label: "Nome de Quem Retira a Chave", type: "text" as const, required: true, placeholder: "Nome completo" },
-        { name: "tipoContrato", label: "Tipo de Contrato", type: "select" as const, required: false, options: [
-          { value: "residencial", label: "Residencial" },
-          { value: "comercial", label: "Comercial" }
-        ]},
-        { name: "nomeGestor", label: "Nome do Gestor", type: "text" as const, required: true, placeholder: "Ex: Victor Cain Jorge" }
-      ]
+        {
+          name: 'tipoQuantidadeChaves',
+          label: 'Tipo e Quantidade de Chaves',
+          type: 'textarea' as const,
+          required: true,
+          placeholder: 'Ex: 04 chaves simples',
+        },
+        {
+          name: 'dataVistoria',
+          label: 'Data da Vistoria',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'Ex: 28/08/2025',
+        },
+        {
+          name: 'nomeQuemRetira',
+          label: 'Nome de Quem Retira a Chave',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'Nome completo',
+        },
+        {
+          name: 'tipoContrato',
+          label: 'Tipo de Contrato',
+          type: 'select' as const,
+          required: false,
+          options: [
+            { value: 'residencial', label: 'Residencial' },
+            { value: 'comercial', label: 'Comercial' },
+          ],
+        },
+        {
+          name: 'nomeGestor',
+          label: 'Nome do Gestor',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'Ex: Victor Cain Jorge',
+        },
+      ],
     },
     {
-      title: "Documentos Solicitados",
-      description: "Configure quais documentos devem ser solicitados na devolutiva locatário (energia elétrica sempre é solicitada)",
+      title: 'Documentos Solicitados',
+      description:
+        'Configure quais documentos devem ser solicitados na devolutiva locatário (energia elétrica sempre é solicitada)',
       fields: [
-        { name: "solicitarCondominio", label: "Solicitar Comprovante de Condomínio", type: "select" as const, required: true, options: [
-          { value: "sim", label: "Sim - Locatário paga condomínio" },
-          { value: "nao", label: "Não - Condomínio no boleto do locador" }
-        ]},
-        { name: "solicitarAgua", label: "Solicitar Comprovante de Água", type: "select" as const, required: true, options: [
-          { value: "sim", label: "Sim - Locatário paga água" },
-          { value: "nao", label: "Não - Água inclusa no condomínio" }
-        ]},
-        { name: "solicitarGas", label: "Solicitar Comprovante de Gás", type: "select" as const, required: true, options: [
-          { value: "sim", label: "Sim - Locatário usa gás" },
-          { value: "nao", label: "Não - Gás não utilizado" }
-        ]},
-        { name: "solicitarCND", label: "Solicitar Certidão Negativa de Débitos (CND)", type: "select" as const, required: true, options: [
-          { value: "sim", label: "Sim - Solicitar CND" },
-          { value: "nao", label: "Não - CND não necessária" }
-        ]}
-      ]
-    }
+        {
+          name: 'solicitarCondominio',
+          label: 'Solicitar Comprovante de Condomínio',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'sim', label: 'Sim - Locatário paga condomínio' },
+            { value: 'nao', label: 'Não - Condomínio no boleto do locador' },
+          ],
+        },
+        {
+          name: 'solicitarAgua',
+          label: 'Solicitar Comprovante de Água',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'sim', label: 'Sim - Locatário paga água' },
+            { value: 'nao', label: 'Não - Água inclusa no condomínio' },
+          ],
+        },
+        {
+          name: 'solicitarGas',
+          label: 'Solicitar Comprovante de Gás',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'sim', label: 'Sim - Locatário usa gás' },
+            { value: 'nao', label: 'Não - Gás não utilizado' },
+          ],
+        },
+        {
+          name: 'solicitarCND',
+          label: 'Solicitar Certidão Negativa de Débitos (CND)',
+          type: 'select' as const,
+          required: true,
+          options: [
+            { value: 'sim', label: 'Sim - Solicitar CND' },
+            { value: 'nao', label: 'Não - CND não necessária' },
+          ],
+        },
+      ],
+    },
   ];
 
   const template = `
@@ -267,7 +448,7 @@ ________________________________________<br>
       locadorTerm: getLocadorTerm(data.nomeLocador),
       locatarioTerm: getLocatarioTerm(data.nomeLocatario),
       locatarioFieldTitle: getLocatarioFieldTitle(data.nomeLocatario),
-      locatarioPronoun: getLocatarioPronoun(data.nomeLocatario)
+      locatarioPronoun: getLocatarioPronoun(data.nomeLocatario),
     };
     return enhancedData;
   };
@@ -297,6 +478,7 @@ ________________________________________<br>
       initialData={termData.form_data}
       termId={termData.id}
       isEditing={true}
+      hideSaveButton={true}
     />
   );
 };
