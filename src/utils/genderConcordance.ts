@@ -20,7 +20,7 @@ export const applyGenderConcordance = (text: string, config: GenderConfig): stri
   result = result.replace(/\{\{locatario\}\}/gi, locatarioTerms.termo);
   result = result.replace(/\{\{locatarioArtigo\}\}/gi, locatarioTerms.artigo);
   result = result.replace(/\{\{locatarioContratante\}\}/gi, locatarioTerms.contratante);
-  result = result.replace(/\{\{locatarioInquilino\}\}/gi, locatarioTerms.inquilino);
+  result = result.replace(/\{\{locatarioInquilino\}\}/gi, locatarioTerms.locatario);
 
   // Pronomes e preposições
   result = result.replace(/\{\{aoLocatario\}\}/gi, getPreposition(config.generoLocatario));
@@ -76,35 +76,35 @@ const getLocatarioTerms = (genero: GenderConfig['generoLocatario']) => {
         termo: 'LOCATÁRIO',
         artigo: 'o',
         contratante: 'contratante',
-        inquilino: 'inquilino'
+        locatario: 'locatário'
       };
     case 'feminino':
       return {
         termo: 'LOCATÁRIA',
         artigo: 'a',
         contratante: 'contratante',
-        inquilino: 'inquilina'
+        locatario: 'locatária'
       };
     case 'masculinos':
       return {
         termo: 'LOCATÁRIOS',
         artigo: 'os',
         contratante: 'contratantes',
-        inquilino: 'inquilinos'
+        locatario: 'locatários'
       };
     case 'femininos':
       return {
         termo: 'LOCATÁRIAS',
         artigo: 'as',
         contratante: 'contratantes',
-        inquilino: 'inquilinas'
+        locatario: 'locatárias'
       };
     default:
       return {
         termo: 'LOCATÁRIO(A)',
         artigo: 'o(a)',
         contratante: 'contratante',
-        inquilino: 'inquilino(a)'
+        locatario: 'locatário(a)'
       };
   }
 };

@@ -47,40 +47,42 @@ const Index = () => {
         </div>
 
         {/* Document Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {documentTypes.map((doc) => {
-            const IconComponent = doc.icon;
-            return (
-              <Card 
-                key={doc.id} 
-                className="hover:shadow-soft transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border"
-                onClick={() => navigate(doc.route)}
-              >
-                <CardHeader className="text-center pb-4">
-                  <div className={`w-16 h-16 ${doc.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
-                    <IconComponent className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl font-semibold text-card-foreground">
-                    {doc.title}
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground">
-                    {doc.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button 
-                    className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(doc.route);
-                    }}
-                  >
-                    Gerar Documento
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="flex justify-center">
+          <div className="grid gap-6 max-w-md w-full">
+            {documentTypes.map((doc) => {
+              const IconComponent = doc.icon;
+              return (
+                <Card 
+                  key={doc.id} 
+                  className="hover:shadow-soft transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border"
+                  onClick={() => navigate(doc.route)}
+                >
+                  <CardHeader className="text-center pb-4">
+                    <div className={`w-16 h-16 ${doc.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
+                      <IconComponent className="h-8 w-8 text-white" />
+                    </div>
+                    <CardTitle className="text-xl font-semibold text-card-foreground">
+                      {doc.title}
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground">
+                      {doc.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Button 
+                      className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(doc.route);
+                      }}
+                    >
+                      Gerar Documento
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
       </main>

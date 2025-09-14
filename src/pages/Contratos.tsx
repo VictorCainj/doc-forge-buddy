@@ -137,7 +137,7 @@ const Contratos = () => {
     enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
     
     if (isMultipleLocatarios) {
-      enhancedData.locatarioTerm = "os inquilinos";
+      enhancedData.locatarioTerm = "os locatários";
       enhancedData.locatarioComunicou = "informaram";
       enhancedData.locatarioIra = "irão";
       enhancedData.locatarioTermo = "do locatário";
@@ -146,11 +146,11 @@ const Contratos = () => {
       // Usar o gênero do locatário para definir o termo correto
       const generoLocatario = formData.generoLocatario;
       if (generoLocatario === "feminino") {
-        enhancedData.locatarioTerm = "a inquilina";
+        enhancedData.locatarioTerm = "a locatária";
       } else if (generoLocatario === "masculino") {
-        enhancedData.locatarioTerm = "o inquilino";
+        enhancedData.locatarioTerm = "o locatário";
       } else {
-        enhancedData.locatarioTerm = "o inquilino"; // fallback
+        enhancedData.locatarioTerm = "o locatário"; // fallback
       }
       enhancedData.locatarioComunicou = "informou";
       enhancedData.locatarioIra = "irá";
@@ -168,16 +168,20 @@ const Contratos = () => {
     const isMultipleProprietarios = formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
     if (isMultipleProprietarios) {
       enhancedData.proprietarioTerm = "os proprietários";
+      enhancedData.locadorTerm = "os locadores";
       enhancedData.proprietarioPrezado = "Prezado";
     } else if (formData.nomeProprietario) {
       // Usar o gênero do proprietário para definir o termo correto
       const generoProprietario = formData.generoProprietario;
       if (generoProprietario === "feminino") {
         enhancedData.proprietarioTerm = "a proprietária";
+        enhancedData.locadorTerm = "a locadora";
       } else if (generoProprietario === "masculino") {
         enhancedData.proprietarioTerm = "o proprietário";
+        enhancedData.locadorTerm = "o locador";
       } else {
         enhancedData.proprietarioTerm = "o proprietário"; // fallback
+        enhancedData.locadorTerm = "o locador"; // fallback
       }
       enhancedData.proprietarioPrezado = "Prezado";
     }
@@ -567,9 +571,13 @@ const Contratos = () => {
     const primeiroNomeCapitalizado = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
     
     if (whatsAppType === 'locador') {
-      enhancedData.saudacaoProprietario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
+      const generoProprietario = formData.generoProprietario;
+      const tratamentoProprietario = generoProprietario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+      enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${primeiroNomeCapitalizado}</strong>`;
     } else {
-      enhancedData.saudacaoLocatario = `Prezado Sr <strong>${primeiroNomeCapitalizado}</strong>`;
+      const generoLocatario = formData.generoLocatario;
+      const tratamentoLocatario = generoLocatario === "feminino" ? "Prezada Sra" : "Prezado Sr";
+      enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${primeiroNomeCapitalizado}</strong>`;
     }
     
     const template = whatsAppType === 'locador' ? DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE : DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE;
@@ -1295,15 +1303,41 @@ const Contratos = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-dataFirmamentoContrato">Data de Firmamento do Contrato</Label>
-                <Input
-                  id="edit-dataFirmamentoContrato"
-                  value={editFormData.dataFirmamentoContrato || ''}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, dataFirmamentoContrato: e.target.value }))}
-                  placeholder="Ex: 15/10/2024 ou 15 de outubro de 2024"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dataFirmamentoContrato">Data de Firmamento do Contrato</Label>
+                  <Input
+                    id="edit-dataFirmamentoContrato"
+                    value={editFormData.dataFirmamentoContrato || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, dataFirmamentoContrato: e.target.value }))}
+                    placeholder="Ex: 15/10/2024 ou 15 de outubro de 2024"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-incluirQuantidadeChaves">Incluir quantidade de chaves no contrato?</Label>
+                  <Select
+                    value={editFormData.incluirQuantidadeChaves || ''}
+                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, incluirQuantidadeChaves: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sim">Sim - Incluir quantidade de chaves</SelectItem>
+                      <SelectItem value="nao">Não - Não incluir quantidade de chaves</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editFormData.incluirQuantidadeChaves === 'sim' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-quantidadeChaves">Quantidade e tipo de chaves</Label>
+                    <Textarea
+                      id="edit-quantidadeChaves"
+                      value={editFormData.quantidadeChaves || ''}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, quantidadeChaves: e.target.value }))}
+                      placeholder="Ex: 04 chaves simples, 02 chaves tetra"
+                    />
+                  </div>
+                )}
               <div className="space-y-2">
                 <Label htmlFor="edit-qualificacaoCompletaLocatarios">Qualificação Completa dos Locatários</Label>
                 <Textarea

@@ -582,7 +582,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             );
             
             if (hasTimoQuemRetira) {
-              // Lógica para formulários que têm tipoQuemRetira (como TermoInquilino)
+              // Lógica para formulários que têm tipoQuemRetira
               if (formData.tipoTermo === "locador") {
                 dynamicOptions = [];
               } else if (formData.tipoQuemRetira === "proprietario") {

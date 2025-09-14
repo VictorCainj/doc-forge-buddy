@@ -23,6 +23,10 @@ const TermoLocador: React.FC = () => {
     return null;
   }
 
+  // Debug: verificar dados do contrato
+  console.log("Dados do contrato no TermoLocador:", contractData);
+  console.log("Quantidade de chaves:", contractData.quantidadeChaves);
+
   // Função para detectar múltiplos proprietários baseado na quantidade adicionada
   const isMultipleProprietarios = (nomeProprietario: string) => {
     if (!nomeProprietario) return false;
@@ -48,7 +52,7 @@ const TermoLocador: React.FC = () => {
         },
         {
           name: "incluirNomeCompleto",
-          label: "Selecionar Locador Específico",
+          label: "Quem está retirando as chaves",
           type: "select",
           required: false,
           placeholder: "Selecione uma opção",
@@ -61,24 +65,26 @@ const TermoLocador: React.FC = () => {
           ]
         },
         {
-          name: "incluirNomeLocatario",
-          label: "Selecionar Locatário Específico",
+          name: "usarQuantidadeChavesContrato",
+          label: "Selecionar chaves entregues no início da locação",
           type: "select",
           required: false,
           placeholder: "Selecione uma opção",
           options: [
-            { value: "todos", label: "Todos os locatários" },
-            ...(contractData.nomeLocatario ? contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim()).filter(nome => nome && nome.length > 2).map(nome => ({
-              value: nome,
-              label: nome
-            })) : [])
+            { value: "nao", label: "Não - Digitar manualmente" },
+            { 
+              value: "sim", 
+              label: contractData.quantidadeChaves && contractData.quantidadeChaves !== "" 
+                ? `Sim - Todas as chaves: ${contractData.quantidadeChaves}`
+                : "Sim - Usar quantidade do contrato"
+            }
           ]
         },
         { 
           name: "tipoQuantidadeChaves", 
-          label: "Tipo e Quantidade de Chaves", 
+          label: "Tipo e Quantidade de Chaves (se não selecionou usar do contrato)", 
           type: "textarea", 
-          required: true, 
+          required: false, 
           placeholder: "Ex: 04 chaves simples, 02 chaves tetra"
         },
         {
@@ -122,8 +128,7 @@ Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}<br>
-<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeLocatario}}
+<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -177,27 +182,6 @@ __________________________________________<br>
       }
     }
 
-    // Definir título dos locatários baseado na quantidade e gênero (usando mesma lógica do termo do locatário)
-    let dadosLocatarioTitulo;
-    const isMultipleLocatarios = contractData.nomeLocatario && (
-      contractData.nomeLocatario.includes(',') || 
-      contractData.nomeLocatario.includes(' e ') || 
-      contractData.nomeLocatario.includes(' E ')
-    );
-    
-    if (isMultipleLocatarios) {
-      dadosLocatarioTitulo = "DADOS DOS LOCATÁRIOS";
-    } else {
-      // Usar o gênero do locatário cadastrado no contrato
-      const generoLocatario = contractData.generoLocatario;
-      if (generoLocatario === "feminino") {
-        dadosLocatarioTitulo = "DADOS DA LOCATÁRIA";
-      } else if (generoLocatario === "masculino") {
-        dadosLocatarioTitulo = "DADOS DO LOCATÁRIO";
-      } else {
-        dadosLocatarioTitulo = "DADOS DO LOCATÁRIO"; // fallback para neutro ou indefinido
-      }
-    }
 
     // Processar nome de quem retira baseado na opção selecionada
     let nomeQuemRetira = data.nomeQuemRetira;
@@ -208,6 +192,18 @@ __________________________________________<br>
       nomeQuemRetira = data.incluirNomeCompleto;
     }
 
+    // Processar quantidade de chaves baseado na opção selecionada
+    let tipoQuantidadeChaves = data.tipoQuantidadeChaves;
+    if (data.usarQuantidadeChavesContrato === "sim") {
+      // Se selecionou usar do contrato, usar sempre a quantidade do contrato
+      tipoQuantidadeChaves = contractData.quantidadeChaves || data.tipoQuantidadeChaves;
+      console.log("Usando quantidade de chaves do contrato:", contractData.quantidadeChaves);
+    } else {
+      // Se não selecionou, usar o que foi digitado manualmente
+      tipoQuantidadeChaves = data.tipoQuantidadeChaves;
+      console.log("Usando quantidade de chaves digitada manualmente:", data.tipoQuantidadeChaves);
+    }
+
     // Processar observação (só mostra se preenchida)
     const observacao = data.observacao && data.observacao.trim() !== "" 
       ? `<strong>OBS:</strong> ${data.observacao}` 
@@ -216,16 +212,6 @@ __________________________________________<br>
     // Aplicar formatação de nomes - sem negrito para o proprietário
     const nomeProprietarioFormatado = contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
 
-    // Formatar nome do locatário com negrito (igual ao termo do locatário)
-    const nomeLocatarioFormatado = contractData.nomeLocatario
-      ? (() => {
-          const nomesArray = contractData.nomeLocatario.split(/,| e | E /).map(nome => nome.trim());
-          return nomesArray.length > 1 
-            ? nomesArray.slice(0, -1).map(nome => `<strong>${nome}</strong>`).join(', ') + 
-              ' e ' + `<strong>${nomesArray[nomesArray.length - 1]}</strong>`
-            : `<strong>${nomesArray[0]}</strong>`;
-        })()
-      : '';
 
     const enhancedData = {
       ...contractData,
@@ -233,10 +219,9 @@ __________________________________________<br>
       
       // Dados específicos do termo do locador - devem vir por último para sobrescrever
       locadorTerm,
-      dadosLocatarioTitulo,
       nomeQuemRetira,
       nomeProprietario: nomeProprietarioFormatado, // Nome formatado
-      nomeLocatario: nomeLocatarioFormatado, // Nome formatado com negrito
+      tipoQuantidadeChaves, // Quantidade de chaves processada
       
       // Processar observação
       observacao,

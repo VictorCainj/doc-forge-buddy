@@ -40,6 +40,27 @@ const CadastrarContrato = () => {
           type: "text",
           required: true,
           placeholder: "Ex: 15/10/2024 ou 15 de outubro de 2024"
+        },
+        {
+          name: "incluirQuantidadeChaves",
+          label: "Incluir quantidade de chaves no contrato?",
+          type: "select",
+          required: true,
+          options: [
+            { value: "sim", label: "Sim - Incluir quantidade de chaves" },
+            { value: "nao", label: "Não - Não incluir quantidade de chaves" }
+          ]
+        },
+        {
+          name: "quantidadeChaves",
+          label: "Quantidade e tipo de chaves",
+          type: "textarea",
+          required: false,
+          placeholder: "Ex: 04 chaves simples, 02 chaves tetra",
+          conditional: {
+            field: "incluirQuantidadeChaves",
+            value: "sim"
+          }
         }
       ]
     },

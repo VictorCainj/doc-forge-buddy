@@ -10,7 +10,9 @@ interface ContractData {
   dataFirmamentoContrato: string;
   nomeProprietario: string;
   nomeLocatario: string;
-  [key: string]: string;
+  incluirQuantidadeChaves?: string;
+  quantidadeChaves?: string;
+  [key: string]: any;
 }
 
 const TermoLocatario: React.FC = () => {
@@ -116,8 +118,19 @@ const TermoLocatario: React.FC = () => {
           name: "tipoQuantidadeChaves", 
           label: "Tipo e Quantidade de Chaves", 
           type: "textarea", 
-          required: true, 
+          required: false, 
           placeholder: "Ex: 04 chaves simples, 02 chaves tetra"
+        },
+        {
+          name: "usarQuantidadeChavesContrato",
+          label: "Usar quantidade de chaves do contrato",
+          type: "select",
+          required: false,
+          placeholder: "Selecione uma opção",
+          options: [
+            { value: "nao", label: "Não - Digitar manualmente" },
+            { value: "sim", label: "Sim - Usar quantidade do contrato" }
+          ]
         },
         {
           name: "dataVistoria",
@@ -285,6 +298,18 @@ __________________________________________<br>
       nomeQuemRetira = data.incluirNomeCompleto;
     }
 
+    // Processar quantidade de chaves baseado na opção selecionada
+    let tipoQuantidadeChaves = data.tipoQuantidadeChaves;
+    if (data.usarQuantidadeChavesContrato === "sim") {
+      // Se selecionou usar do contrato, usar sempre a quantidade do contrato
+      tipoQuantidadeChaves = contractData.quantidadeChaves || data.tipoQuantidadeChaves;
+      console.log("Usando quantidade de chaves do contrato:", contractData.quantidadeChaves);
+    } else {
+      // Se não selecionou, usar o que foi digitado manualmente
+      tipoQuantidadeChaves = data.tipoQuantidadeChaves;
+      console.log("Usando quantidade de chaves digitada manualmente:", data.tipoQuantidadeChaves);
+    }
+
     // Processar status da vistoria
     const statusVistoria = data.statusVistoria || "aprovada";
     const statusVistoriaCheckboxes = statusVistoria === "aprovada" 
@@ -326,6 +351,7 @@ __________________________________________<br>
       nomeQuemRetira,
       nomeProprietario: nomeProprietarioFormatado, // Nome formatado com negrito
       nomeLocatario: nomeLocatarioFormatado, // Nome formatado com negrito
+      tipoQuantidadeChaves, // Quantidade de chaves processada
       
       // Processar observação
       observacao,

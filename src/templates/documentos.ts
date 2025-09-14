@@ -128,6 +128,12 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Ressaltamos que o imóvel deverá ser devolvido nas mesmas condições em que foi entregue, conforme o Art. 23 da Lei do Inquilinato "III - restituir o imóvel, finda a locação, no estado em que o recebeu, salvo as deteriorações decorrentes do seu uso normal;</p>
   
+  {{#if incluirQuantidadeChaves}}
+  {{#eq incluirQuantidadeChaves "sim"}}
+  <p style="margin-bottom: 20px;">Lembre-se de devolver todas as chaves que foram entregues no início da locação: <strong>{{quantidadeChaves}}</strong>.</p>
+  {{/eq}}
+  {{/if}}
+  
   <p style="margin-bottom: 20px;">Evite pendencias de reprova na vistoria e atente-se a entregar o imóvel nas condições iniciais - a entrega de chaves com reprova de laudo enseja direito ao(à) locador(a) o pedido <strong>DE LUCROS CESSANTES</strong>.</p>
   
   <p style="margin-bottom: 20px;">Para sua referência, segue também o laudo de vistoria de entrada.</p>
@@ -250,11 +256,11 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   <p style="margin-bottom: 20px;">Prezados, {{saudacaoComercial}}</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como {{proprietarioTerm}} {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e {{locatarioTerm}} {{nomeLocatarioFormatado}}{{/if}}.</p>
+  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como {{locadorTerm}} {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e {{locatarioTerm}} {{nomeLocatarioFormatado}}{{/if}}.</p>
   
   <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioDesocupacao}}</strong>, com prazo de desocupação até <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Solicito, por gentileza, que seja encaminhado ao Captador para que entre em contato com {{proprietarioTerm}}, a fim de averiguar novos valores para uma futura locação.</p>
+  <p style="margin-bottom: 20px;">Solicito, por gentileza, que seja encaminhado ao Captador para que entre em contato com {{locadorTerm}}, a fim de averiguar novos valores para uma futura locação.</p>
   
   <p style="margin-top: 40px;">Atenciosamente,</p>
   
