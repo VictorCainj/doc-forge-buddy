@@ -209,7 +209,7 @@ TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
 </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
-Pelo presente, recebo as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, devidamente qualificado no contrato de locação firmado em <strong>{{dataFirmamentoContrato}}</strong>.
+{{textoEntregaChaves}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -217,7 +217,8 @@ Pelo presente, recebo as chaves do imóvel sito à <strong>{{enderecoImovel}}</s
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}
+<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}<br>
+<strong>Celular:</strong> {{celularLocatario}} &nbsp;&nbsp;&nbsp;&nbsp; <strong>E-mail:</strong> {{emailLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">

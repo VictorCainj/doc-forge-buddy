@@ -154,7 +154,7 @@ TERMO DE RECEBIMENTO – {{numeroContrato}}
 </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
-Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, devidamente qualificado no contrato de locação firmado em <strong>{{dataFirmamentoContrato}}</strong>.
+{{textoEntregaChaves}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -251,6 +251,9 @@ __________________________________________<br>
         ? `<strong>OBS:</strong> ${data.observacao}`
         : '';
 
+    // Texto de entrega de chaves para termo do locador (simplificado)
+    const textoEntregaChaves = `Pelo presente, entrego as chaves do imóvel sito à <strong>${contractData.enderecoImovel}</strong>.`;
+
     // Aplicar formatação de nomes - sem negrito para o proprietário
     const nomeProprietarioFormatado =
       contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
@@ -267,6 +270,9 @@ __________________________________________<br>
 
       // Processar observação
       observacao,
+
+      // Texto de entrega de chaves com qualificações dos locatários
+      textoEntregaChaves,
     };
 
     return enhancedData;

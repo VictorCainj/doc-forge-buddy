@@ -126,6 +126,20 @@ const CadastrarContrato = () => {
           placeholder:
             'Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental, portador do RG. nº MG-14.837.051 SSP/MG, e inscrito no CPF sob o nº 096.402.496-96, nascido em 14/12/1988, com filiação de LUIS ANTONIO ORLANDO e MARIA TEREZA VIEIRA ORLANDO, residente e domiciliado na cidade de Campinas/SP, e BARBARA SIMINATTI DOS SANTOS, brasileira, solteira, servidora pública, portadora do RG. nº 36.153.912-5 SSP/SP, e inscrita no CPF sob o nº 395.076.738-06, nascida em 02/07/1990, com filiação de VALDIR CORREIA DOS SANTOS e VANIR SIMINATTI DOS SANTOS, residente e domiciliada na cidade de Campinas/SP',
         },
+        {
+          name: 'celularLocatario',
+          label: 'Celular do Locatário',
+          type: 'text',
+          required: true,
+          placeholder: 'Ex: (19) 99999-9999',
+        },
+        {
+          name: 'emailLocatario',
+          label: 'E-mail do Locatário',
+          type: 'text',
+          required: true,
+          placeholder: 'Ex: locatario@email.com',
+        },
       ],
     },
     {

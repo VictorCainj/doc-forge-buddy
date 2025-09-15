@@ -1554,6 +1554,40 @@ const Contratos = () => {
                     rows={3}
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-celularLocatario">
+                      Celular do Locatário
+                    </Label>
+                    <Input
+                      id="edit-celularLocatario"
+                      value={editFormData.celularLocatario || ''}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          celularLocatario: e.target.value,
+                        }))
+                      }
+                      placeholder="Ex: (19) 99999-9999"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-emailLocatario">
+                      E-mail do Locatário
+                    </Label>
+                    <Input
+                      id="edit-emailLocatario"
+                      value={editFormData.emailLocatario || ''}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          emailLocatario: e.target.value,
+                        }))
+                      }
+                      placeholder="Ex: locatario@email.com"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Dados dos Locadores */}
