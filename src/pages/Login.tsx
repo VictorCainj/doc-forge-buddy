@@ -66,16 +66,18 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-2">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-white">
         <CardHeader className="space-y-1 pb-4">
           <div className="flex items-center justify-center mb-2">
-            <div className="bg-blue-600 p-2 rounded-full">
+            <div className="bg-sky-500 p-2 rounded-full">
               <Lock className="h-5 w-5 text-white" />
             </div>
           </div>
-          <CardTitle className="text-xl text-center">Entrar</CardTitle>
-          <CardDescription className="text-center text-sm">
-            Digite suas credenciais para acessar o sistema
+          <CardTitle className="text-2xl font-bold text-center text-black">
+            Bem-vindo de Volta
+          </CardTitle>
+          <CardDescription className="text-center text-sm text-gray-600">
+            A magia espera por você.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,14 +89,16 @@ const Login = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-black font-medium">
+                Email
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
-                  className="pl-10"
+                  className="pl-10 border-gray-300"
                   {...register('email')}
                   disabled={isLoading}
                 />
@@ -105,14 +109,16 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-black font-medium">
+                Senha
+              </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Sua senha"
-                  className="pl-10 pr-10"
+                  placeholder="Sua senha secreta"
+                  className="pl-10 pr-10 border-gray-300"
                   {...register('password')}
                   disabled={isLoading}
                 />
@@ -120,7 +126,7 @@ const Login = () => {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
@@ -138,7 +144,11 @@ const Login = () => {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-teal-700 hover:bg-teal-800 text-white"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -150,22 +160,13 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center space-y-2">
+          <div className="mt-6 text-center">
             <Link
               to="/forgot-password"
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
               Esqueceu sua senha?
             </Link>
-            <div className="text-sm text-gray-600">
-              Não tem uma conta?{' '}
-              <Link
-                to="/register"
-                className="text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                Cadastre-se
-              </Link>
-            </div>
           </div>
         </CardContent>
       </Card>

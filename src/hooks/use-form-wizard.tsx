@@ -17,6 +17,10 @@ export interface FormField {
   mask?: string;
   options?: Array<{ value: string; label: string }>;
   tooltip?: string;
+  conditional?: {
+    field: string;
+    value: string;
+  };
 }
 
 export interface FormStep {

@@ -8,7 +8,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import Index from './pages/Index';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
 import EditTerm from './pages/EditTerm';
@@ -18,6 +17,7 @@ import ProcessoDesocupacao from './pages/ProcessoDesocupacao';
 import GerarDocumento from './pages/GerarDocumento';
 import TermoLocador from './pages/TermoLocador';
 import TermoLocatario from './pages/TermoLocatario';
+import Configuracoes from './pages/Configuracoes';
 
 const queryClient = new QueryClient();
 
@@ -35,14 +35,6 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth={false}>
                   <Login />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <Register />
                 </ProtectedRoute>
               }
             />
@@ -142,6 +134,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <EditTerm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Configuracoes />
                   </Layout>
                 </ProtectedRoute>
               }

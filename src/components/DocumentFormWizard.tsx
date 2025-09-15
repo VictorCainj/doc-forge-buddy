@@ -702,7 +702,9 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     // Substituir variáveis
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
-      let formattedValue = value || `[${key.toUpperCase()}]`;
+      // Para observações vazias, não exibir placeholder
+      let formattedValue =
+        value || (key === 'observacao' ? '' : `[${key.toUpperCase()}]`);
 
       // Formatar datas automaticamente
       if (
@@ -1041,25 +1043,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header com tema do site */}
-      <header className="bg-white text-gray-900 px-6 py-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3"></div>
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="text-gray-700 hover:bg-gray-100 gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Barra de progresso compacta */}
+      {/* Barra de progresso compacta com botão voltar */}
       <div className="bg-white px-6 py-1.5 border-b border-gray-200">
         <div className="flex items-center justify-between text-gray-700 text-xs">
           <span>Etapa 1 de 1</span>
@@ -1071,7 +1055,18 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
               ></div>
             </div>
           </div>
-          <span>100% concluído</span>
+          <div className="flex items-center gap-3">
+            <span>100% concluído</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="text-gray-700 hover:bg-gray-100 gap-1 h-6 px-2 text-xs"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Voltar
+            </Button>
+          </div>
         </div>
       </div>
 

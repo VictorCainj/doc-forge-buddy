@@ -21,7 +21,7 @@ const Sidebar = () => {
       name: 'Configurações',
       icon: Settings,
       path: '/configuracoes',
-      active: false,
+      active: location.pathname === '/configuracoes',
     },
   ];
 

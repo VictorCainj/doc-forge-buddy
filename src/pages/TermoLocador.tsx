@@ -103,53 +103,6 @@ const TermoLocador: React.FC = () => {
           placeholder: 'Ex: 04 chaves simples, 02 chaves tetra',
         },
         {
-          name: 'cpfl',
-          label: 'CPFL (Energia Elétrica)',
-          type: 'select',
-          required: true,
-          placeholder: 'Selecione uma opção',
-          options: [
-            { value: 'SIM', label: 'SIM - Locatário apresentou comprovante' },
-            {
-              value: 'NÃO',
-              label: 'NÃO - Locatário não apresentou comprovante',
-            },
-          ],
-        },
-        {
-          name: 'tipoAgua',
-          label: 'Tipo de Água',
-          type: 'select',
-          required: true,
-          placeholder: 'Selecione uma opção',
-          options: [
-            { value: 'DAEV', label: 'DAEV' },
-            { value: 'SANASA', label: 'SANASA' },
-          ],
-        },
-        {
-          name: 'statusAgua',
-          label: 'Status da Água',
-          type: 'select',
-          required: true,
-          placeholder: 'Selecione uma opção',
-          options: [
-            { value: 'SIM', label: 'SIM - Locatário apresentou comprovante' },
-            {
-              value: 'NÃO',
-              label: 'NÃO - Locatário não apresentou comprovante',
-            },
-            { value: 'No condomínio', label: 'No condomínio - Água inclusa' },
-          ],
-        },
-        {
-          name: 'dataVistoria',
-          label: 'Data da Vistoria',
-          type: 'text',
-          required: true,
-          placeholder: 'Ex: 14 de setembro de 2025',
-        },
-        {
           name: 'observacao',
           label: 'Observação (Opcional)',
           type: 'textarea',
@@ -187,16 +140,21 @@ const TermoLocador: React.FC = () => {
     const signatureSize = Math.max(fontSize - 2, 10);
 
     return `
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+  <div style="flex: 0 0 auto;">
+    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+  </div>
+  <div style="flex: 1; text-align: right; font-size: ${fontSize}px; margin-left: 20px;">
+    Valinhos, ${getCurrentDate()}.
+  </div>
+</div>
+
 <div style="text-align: center; margin-bottom: 20px; font-size: ${titleSize}px; font-weight: bold;">
 TERMO DE RECEBIMENTO – {{numeroContrato}}
 </div>
 
-<div style="text-align: right; margin-bottom: 20px; font-size: ${fontSize}px;">
-Valinhos, ${getCurrentDate()}.
-</div>
-
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
-Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>.
+Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, devidamente qualificado no contrato de locação firmado em <strong>{{dataFirmamentoContrato}}</strong>.
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -204,19 +162,12 @@ Pelo presente, entrego as chaves do imóvel sito à <strong>{{enderecoImovel}}</
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS:</strong><br>
-<strong>CPFL:</strong> {{cpfl}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>{{tipoAgua}}:</strong> {{statusAgua}}<br>
-<br>
-<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade do locatário.
+<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>Entregue na Madia Imóveis a relação de chaves:</strong><br>
 {{tipoQuantidadeChaves}}
-</div>
-
-<div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>Vistoria realizada em</strong> {{dataVistoria}}.
 </div>
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
@@ -298,7 +249,7 @@ __________________________________________<br>
     const observacao =
       data.observacao && data.observacao.trim() !== ''
         ? `<strong>OBS:</strong> ${data.observacao}`
-        : '<!-- SEM OBSERVACAO -->';
+        : '';
 
     // Aplicar formatação de nomes - sem negrito para o proprietário
     const nomeProprietarioFormatado =

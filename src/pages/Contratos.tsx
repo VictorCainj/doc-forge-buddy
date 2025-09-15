@@ -337,13 +337,14 @@ const Contratos = () => {
       nomeProprietarioCompletoSaudacao.includes(' e ') ||
       nomeProprietarioCompletoSaudacao.includes(' E ');
 
+    // Determinar tratamento baseado na quantidade e gênero
     let tratamentoProprietario;
     if (isMultipleProprietariosSaudacao) {
       tratamentoProprietario =
-        generoProprietario === 'feminino' ? 'Prezadas Sras' : 'Prezados Srs';
+        generoProprietario === 'feminino' ? 'Prezadas' : 'Prezados';
     } else {
       tratamentoProprietario =
-        generoProprietario === 'feminino' ? 'Prezada Sra' : 'Prezado Sr';
+        generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
     }
 
     // Para múltiplos proprietários, incluir apenas o primeiro nome de cada pessoa na saudação
@@ -380,13 +381,14 @@ const Contratos = () => {
       nomeLocatarioCompletoSaudacao.includes(' e ') ||
       nomeLocatarioCompletoSaudacao.includes(' E ');
 
+    // Determinar tratamento baseado na quantidade e gênero
     let tratamentoLocatario;
     if (isMultipleLocatariosSaudacao) {
       tratamentoLocatario =
-        generoLocatario === 'feminino' ? 'Prezadas Sras' : 'Prezados Srs';
+        generoLocatario === 'feminino' ? 'Prezadas' : 'Prezados';
     } else {
       tratamentoLocatario =
-        generoLocatario === 'feminino' ? 'Prezada Sra' : 'Prezado Sr';
+        generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
     }
 
     // Para múltiplos locatários, incluir apenas o primeiro nome de cada pessoa na saudação
@@ -437,13 +439,10 @@ const Contratos = () => {
       .map((nome) => nome.trim());
     const nomeLocatarioFormatado =
       nomesLocatarioArray.length > 1
-        ? nomesLocatarioArray
-            .slice(0, -1)
-            .map((nome) => `<strong>${nome}</strong>`)
-            .join(', ') +
+        ? nomesLocatarioArray.slice(0, -1).join(', ') +
           ' e ' +
-          `<strong>${nomesLocatarioArray[nomesLocatarioArray.length - 1]}</strong>`
-        : `<strong>${nomesLocatarioArray[0]}</strong>`;
+          nomesLocatarioArray[nomesLocatarioArray.length - 1]
+        : nomesLocatarioArray[0];
     enhancedData.nomeLocatarioFormatado = nomeLocatarioFormatado;
 
     // Formatar nome do proprietário com negrito apenas nos nomes, seguindo gramática portuguesa
@@ -490,6 +489,44 @@ const Contratos = () => {
     // Adicionar campos de gênero para uso nos termos
     enhancedData.generoProprietario = formData.generoProprietario;
     enhancedData.generoLocatario = formData.generoLocatario;
+
+    // Adicionar variáveis de tratamento para pronomes de gênero
+    const generoProp = formData.generoProprietario;
+    const generoLoc = formData.generoLocatario;
+
+    // Tratamento para proprietário (senhor/senhora)
+    if (generoProp === 'feminino') {
+      enhancedData.tratamentoProprietarioGenero = 'a senhora';
+    } else {
+      enhancedData.tratamentoProprietarioGenero = 'o senhor';
+    }
+
+    // Tratamento para locatário (sua/seu)
+    if (generoLoc === 'feminino') {
+      enhancedData.tratamentoLocatarioGenero = 'sua';
+      enhancedData.tratamentoLocatarioGeneroPlural = 'suas';
+    } else if (generoLoc === 'masculino') {
+      enhancedData.tratamentoLocatarioGenero = 'seu';
+      enhancedData.tratamentoLocatarioGeneroPlural = 'seus';
+    } else {
+      // Fallback para casos não definidos - usar masculino como padrão
+      enhancedData.tratamentoLocatarioGenero = 'seu';
+      enhancedData.tratamentoLocatarioGeneroPlural = 'seus';
+    }
+
+    // Tratamento para locador (ao locador/à locadora)
+    if (generoProp === 'feminino') {
+      enhancedData.tratamentoLocadorGenero = 'à locadora';
+    } else {
+      enhancedData.tratamentoLocadorGenero = 'ao locador';
+    }
+
+    // Tratamento para notificação (V.Sa/V.S)
+    if (generoLoc === 'feminino') {
+      enhancedData.tratamentoLocatarioNotificacao = 'V.Sa';
+    } else {
+      enhancedData.tratamentoLocatarioNotificacao = 'V.S';
+    }
 
     // Adicionar campos de nomes resumidos para uso nos termos
     enhancedData.nomesResumidosLocadores = formData.nomesResumidosLocadores;
@@ -662,7 +699,9 @@ const Contratos = () => {
     // Substituir variáveis
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
-      let formattedValue = value || `[${key.toUpperCase()}]`;
+      // Para observações vazias, não exibir placeholder
+      let formattedValue =
+        value || (key === 'observacao' ? '' : `[${key.toUpperCase()}]`);
 
       // Formatar datas automaticamente
       if (
@@ -761,13 +800,10 @@ const Contratos = () => {
       .map((nome) => nome.trim());
     enhancedData.nomeLocatarioFormatado =
       nomesLocatarioArray.length > 1
-        ? nomesLocatarioArray
-            .slice(0, -1)
-            .map((nome) => `<strong>${nome}</strong>`)
-            .join(', ') +
+        ? nomesLocatarioArray.slice(0, -1).join(', ') +
           ' e ' +
-          `<strong>${nomesLocatarioArray[nomesLocatarioArray.length - 1]}</strong>`
-        : `<strong>${nomesLocatarioArray[0]}</strong>`;
+          nomesLocatarioArray[nomesLocatarioArray.length - 1]
+        : nomesLocatarioArray[0];
 
     // Definir título para notificação de agendamento baseado na quantidade de locatários adicionados
     const isMultipleLocatarios =
@@ -836,15 +872,16 @@ const Contratos = () => {
       primeiroNome.slice(1).toLowerCase();
 
     if (whatsAppType === 'locador') {
+      // Para WhatsApp, sempre é uma pessoa selecionada, então usar singular baseado no gênero
       const generoProprietario = formData.generoProprietario;
-      const tratamentoProprietario =
-        generoProprietario === 'feminino' ? 'Prezada Sra' : 'Prezado Sr';
-      enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${primeiroNomeCapitalizado}</strong>`;
+      const tratamento =
+        generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
+      enhancedData.saudacaoProprietario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
     } else {
+      // Para WhatsApp, sempre é uma pessoa selecionada, então usar singular baseado no gênero
       const generoLocatario = formData.generoLocatario;
-      const tratamentoLocatario =
-        generoLocatario === 'feminino' ? 'Prezada Sra' : 'Prezado Sr';
-      enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${primeiroNomeCapitalizado}</strong>`;
+      const tratamento = generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
+      enhancedData.saudacaoLocatario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
     }
 
     const template =
@@ -1174,6 +1211,25 @@ const Contratos = () => {
                           console.log(
                             `Navigate to ${termType} for contract ${contractId}`
                           );
+                        }}
+                        onEditContract={(contractId) => {
+                          const contractData = contracts.find(
+                            (c) => c.id === contractId
+                          );
+                          if (contractData) {
+                            handleEditContract(contractData);
+                          }
+                        }}
+                        onDeleteContract={(contractId) => {
+                          const contractData = contracts.find(
+                            (c) => c.id === contractId
+                          );
+                          if (contractData) {
+                            handleDeleteContract(
+                              contractId,
+                              contractData.title
+                            );
+                          }
                         }}
                         generatingDocument={generatingDocument}
                       />

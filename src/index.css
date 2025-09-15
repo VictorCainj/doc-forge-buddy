@@ -135,4 +135,21 @@ All colors MUST be HSL.
     overflow-wrap: break-word !important;
     hyphens: auto !important;
   }
+
+  /* Animação para as estrelas na tela de login */
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+
+  .animate-twinkle {
+    animation: twinkle 2s ease-in-out infinite;
+  }
 }

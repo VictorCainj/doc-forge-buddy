@@ -16,10 +16,6 @@ interface AuthContextType {
     email: string,
     password: string
   ) => Promise<{ error: AuthError | null }>;
-  signUp: (
-    email: string,
-    password: string
-  ) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
 }
@@ -86,18 +82,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
-  };
-
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -123,7 +107,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     loading,
     signIn,
-    signUp,
     signOut,
     resetPassword,
   };

@@ -10,6 +10,9 @@ import {
   NotebookPen,
   FileText,
   Briefcase,
+  Edit,
+  Trash2,
+  Receipt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -21,6 +24,7 @@ import {
   DEVOLUTIVA_COMERCIAL_TEMPLATE,
   DEVOLUTIVA_CADERNINHO_TEMPLATE,
   DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
+  DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
 } from '@/templates/documentos';
 
 interface QuickAction {
@@ -41,6 +45,8 @@ interface QuickActionsDropdownProps {
     title: string
   ) => void;
   onNavigateToTerm: (contractId: string, termType: string) => void;
+  onEditContract?: (contractId: string) => void;
+  onDeleteContract?: (contractId: string) => void;
   generatingDocument?: string;
   className?: string;
 }
@@ -50,6 +56,8 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
   contractNumber,
   onGenerateDocument,
   onNavigateToTerm,
+  onEditContract,
+  onDeleteContract,
   generatingDocument,
   className,
 }) => {
@@ -160,6 +168,21 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
       loading:
         generatingDocument === `${contractId}-Devolutiva Locatário WhatsApp`,
     },
+    {
+      id: 'cobranca-consumo',
+      label: 'Cobrança de Consumo',
+      icon: Receipt,
+      onClick: () =>
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+          'Devolutiva Cobrança de Consumo'
+        ),
+      disabled:
+        generatingDocument === `${contractId}-Devolutiva Cobrança de Consumo`,
+      loading:
+        generatingDocument === `${contractId}-Devolutiva Cobrança de Consumo`,
+    },
     // DOCUMENTOS
     {
       id: 'caderninho',
@@ -188,6 +211,22 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
         generatingDocument === `${contractId}-Distrato de Contrato de Locação`,
       loading:
         generatingDocument === `${contractId}-Distrato de Contrato de Locação`,
+    },
+  ];
+
+  // Ações de gerenciamento do contrato
+  const managementActions: QuickAction[] = [
+    {
+      id: 'edit',
+      label: 'Editar',
+      icon: Edit,
+      onClick: () => onEditContract?.(contractId),
+    },
+    {
+      id: 'delete',
+      label: 'Excluir',
+      icon: Trash2,
+      onClick: () => onDeleteContract?.(contractId),
     },
   ];
 
@@ -220,8 +259,8 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
 
   // Agrupar ações por categoria
   const termActions = quickActions.slice(0, 4);
-  const communicationActions = quickActions.slice(4, 8);
-  const documentActions = quickActions.slice(8, 10);
+  const communicationActions = quickActions.slice(4, 9); // Inclui cobrança de consumo
+  const documentActions = quickActions.slice(9, 11);
 
   return (
     <div
@@ -344,7 +383,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
               </div>
 
               {/* DOCUMENTOS */}
-              <div>
+              <div className="mb-6">
                 <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
                   DOCUMENTOS
                 </p>
@@ -368,6 +407,46 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                   ))}
                 </div>
               </div>
+
+              {/* GERENCIAMENTO */}
+              {onEditContract && onDeleteContract && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
+                    GERENCIAMENTO
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 px-4">
+                    {managementActions.map((action) => (
+                      <button
+                        key={action.id}
+                        onClick={() => handleActionClick(action)}
+                        disabled={action.disabled}
+                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg transition-colors disabled:opacity-50 border ${
+                          action.id === 'delete'
+                            ? 'border-red-100 hover:border-red-200 hover:bg-red-50'
+                            : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <action.icon
+                          className={`h-5 w-5 ${
+                            action.id === 'delete'
+                              ? 'text-red-500'
+                              : 'text-gray-500'
+                          }`}
+                        />
+                        <span
+                          className={`text-xs text-center leading-tight ${
+                            action.id === 'delete'
+                              ? 'text-red-700'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {action.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>

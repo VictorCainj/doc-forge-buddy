@@ -67,7 +67,7 @@ const TermoLocatario: React.FC = () => {
         {
           name: 'incluirNomeCompleto',
           label: 'Quem está retirando as chaves',
-          type: 'arrowDropdown' as const,
+          type: 'select',
           required: false,
           placeholder: 'Selecione uma opção',
           options: [
@@ -87,7 +87,7 @@ const TermoLocatario: React.FC = () => {
         {
           name: 'usarQuantidadeChavesContrato',
           label: 'Selecionar chaves entregues no início da locação',
-          type: 'arrowDropdown' as const,
+          type: 'select',
           required: false,
           placeholder: 'Selecione uma opção',
           options: [
@@ -113,7 +113,7 @@ const TermoLocatario: React.FC = () => {
         {
           name: 'cpfl',
           label: 'CPFL (Energia Elétrica)',
-          type: 'arrowDropdown' as const,
+          type: 'select',
           required: true,
           placeholder: 'Selecione uma opção',
           options: [
@@ -127,7 +127,7 @@ const TermoLocatario: React.FC = () => {
         {
           name: 'tipoAgua',
           label: 'Tipo de Água',
-          type: 'arrowDropdown' as const,
+          type: 'select',
           required: true,
           placeholder: 'Selecione uma opção',
           options: [
@@ -138,7 +138,7 @@ const TermoLocatario: React.FC = () => {
         {
           name: 'statusAgua',
           label: 'Status da Água',
-          type: 'arrowDropdown' as const,
+          type: 'select',
           required: true,
           placeholder: 'Selecione uma opção',
           options: [
@@ -195,21 +195,29 @@ const TermoLocatario: React.FC = () => {
     const signatureSize = Math.max(fontSize - 2, 10);
 
     return `
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+  <div style="flex: 0 0 auto;">
+    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+  </div>
+  <div style="flex: 1; text-align: right; font-size: ${fontSize}px; margin-left: 20px;">
+    Valinhos, ${getCurrentDate()}.
+  </div>
+</div>
+
 <div style="text-align: center; margin-bottom: 20px; font-size: ${titleSize}px; font-weight: bold;">
 TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
 </div>
 
-<div style="text-align: right; margin-bottom: 20px; font-size: ${fontSize}px;">
-Valinhos, ${getCurrentDate()}.
-</div>
-
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
-{{textoEntregaChaves}}
+Pelo presente, recebo as chaves do imóvel sito à <strong>{{enderecoImovel}}</strong>, devidamente qualificado no contrato de locação firmado em <strong>{{dataFirmamentoContrato}}</strong>.
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}<br>
-<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeQuemRetira}}
+<strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}
+</div>
+
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
+<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -341,27 +349,13 @@ __________________________________________<br>
     const observacao =
       data.observacao && data.observacao.trim() !== ''
         ? `<strong>OBS:</strong> ${data.observacao}`
-        : '<!-- SEM OBSERVACAO -->';
+        : '';
 
-    // Aplicar formatação de nomes - apenas locatário com negrito
+    // Aplicar formatação de nomes - sem negrito nos nomes
     const nomeProprietarioFormatado =
       contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
 
-    const nomeLocatarioFormatado = contractData.nomeLocatario
-      ? (() => {
-          const nomesArray = contractData.nomeLocatario
-            .split(/ e | E /)
-            .map((nome) => nome.trim());
-          return nomesArray.length > 1
-            ? nomesArray
-                .slice(0, -1)
-                .map((nome) => `<strong>${nome}</strong>`)
-                .join(', ') +
-                ' e ' +
-                `<strong>${nomesArray[nomesArray.length - 1]}</strong>`
-            : `<strong>${nomesArray[0]}</strong>`;
-        })()
-      : '';
+    const nomeLocatarioFormatado = contractData.nomeLocatario || '';
 
     // Texto de entrega de chaves para termo do locatário
     const tipoContrato = data.tipoContrato || 'residencial';
@@ -379,8 +373,8 @@ __________________________________________<br>
       dadosLocatarioTitulo,
       locatarioResponsabilidade,
       nomeQuemRetira,
-      nomeProprietario: nomeProprietarioFormatado, // Nome formatado com negrito
-      nomeLocatario: nomeLocatarioFormatado, // Nome formatado com negrito
+      nomeProprietario: nomeProprietarioFormatado, // Nome sem negrito
+      nomeLocatario: nomeLocatarioFormatado, // Nome sem negrito
       tipoQuantidadeChaves, // Quantidade de chaves processada
 
       // Processar observação

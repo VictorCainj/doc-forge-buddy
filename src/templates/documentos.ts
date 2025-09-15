@@ -28,12 +28,6 @@ Pelo presente, recebemos as chaves do imóvel sito à <strong>{{enderecoImovel}}
 {{/if}}
 </div>
 
-<div style="margin: 15px 0; font-size: 14px;">
-<strong>COMPROVANTES DE CONTAS DE CONSUMO APRESENTADAS:</strong><br>
-{{cpflDaev}}<br>
-<br>
-<strong>OBS:</strong> Caso haja valor integral ou proporcional das contas de consumo, referente ao período do contrato até a efetiva entrega de chaves será de responsabilidade {{locatarioResponsabilidade}}.
-</div>
 
 <div style="margin: 15px 0; font-size: 14px;">
 <strong>Entregue na Madia Imóveis a relação de chaves:</strong><br>
@@ -80,7 +74,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoProprietario}}, tudo bem?</p>
   
   {{#if nomeLocatarioFormatado}}
-  <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTerm}} {{nomeLocatarioFormatado}}, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
+  <p style="margin-bottom: 20px;">Venho comunicar que os locatários <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
   {{/if}}
   
   <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>
@@ -91,7 +85,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Anexo a esse e-mail o laudo de vistoria de entrada para seu conhecimento. O vistoriador na data da vistoria irá seguir conforme esse laudo inicial de entrada.</p>
   
-  <p style="margin-bottom: 20px;">Se o senhor tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  <p style="margin-bottom: 20px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
   
   <p style="margin-bottom: 20px;">Todos os documentos enviados deverão ser assinados pelas partes, no que se refere a data de agendamento de vistoria, termo de comparecimento de vistoria e conclusão de vistoria, pois a Madia deve documentar que, todos os processos administrativos, como contratante serão efetuados e realizados por todas as partes.</p>
   
@@ -116,9 +110,9 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Confirmamos o recebimento da sua notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Confirmamos o recebimento da {{tratamentoLocatarioGenero}} notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Informamos que, como forma de facilitar sua organização e viabilizar o agendamento da vistoria, solicitamos a gentileza de encaminhar os comprovantes de pagamento acompanhados das respectivas faturas referentes aos meses de <strong>{{mesesComprovantes}}</strong> (tais como <strong>{{documentosSolicitados}}</strong>){{#if solicitarCND}}{{#eq solicitarCND "sim"}} bem como a <strong>Certidão Negativa de Débitos (CND)</strong>{{/eq}}{{/if}}, conforme estabelecido em contrato.</p>
+  <p style="margin-bottom: 20px;">Informamos que, como forma de facilitar {{tratamentoLocatarioGenero}} organização e viabilizar o agendamento da vistoria, solicitamos a gentileza de encaminhar os comprovantes de pagamento acompanhados das respectivas faturas referentes aos meses de <strong>{{mesesComprovantes}}</strong> (tais como <strong>{{documentosSolicitados}}</strong>){{#if solicitarCND}}{{#eq solicitarCND "sim"}} bem como a <strong>Certidão Negativa de Débitos (CND)</strong>{{/eq}}{{/if}}, conforme estabelecido em contrato.</p>
   
   <p style="margin-bottom: 20px;">Após o recebimento e a devida confirmação dos documentos, procederemos com o agendamento da vistoria dentro do prazo de {{prazoDias}} (trinta) dias. </p>
 
@@ -134,15 +128,17 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   {{/eq}}
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Evite pendencias de reprova na vistoria e atente-se a entregar o imóvel nas condições iniciais - a entrega de chaves com reprova de laudo enseja direito ao(à) locador(a) o pedido <strong>DE LUCROS CESSANTES</strong>.</p>
+  <p style="margin-bottom: 20px;">Evite pendencias de reprova na vistoria e atente-se a entregar o imóvel nas condições iniciais - a entrega de chaves com reprova de laudo enseja direito {{tratamentoLocadorGenero}} o pedido <strong>DE LUCROS CESSANTES</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Para sua referência, segue também o laudo de vistoria de entrada.</p>
+  <p style="margin-bottom: 20px;">Para {{tratamentoLocatarioGenero}} referência, segue também o laudo de vistoria de entrada.</p>
   
   <p style="margin-bottom: 20px;">Caso o imóvel não seja desocupado dentro do prazo legal, será necessário o envio de nova notificação com uma nova data. A ausência dessa comunicação poderá ser interpretada como <strong>desistência da desocupação</strong>.</p>
   
   <p style="margin-bottom: 20px;">Nossa intenção é garantir que todo o processo ocorra de forma tranquila e transparente. Portanto, recomendamos a leitura atenta do informativo anexo e, se houver qualquer dúvida, permanecemos à disposição pelos nossos canais de atendimento.</p>
   
   <p style="margin-bottom: 20px;">Agradecemos desde já pela colaboração!</p>
+  
+  <p style="margin-bottom: 20px; font-weight: bold; text-transform: uppercase;">POR FAVOR CONFIRMAR O RECEBIMENTO DESTE E-MAIL.</p>
   
   <p style="margin-top: 40px;">Atenciosamente,</p>
 </div>
@@ -163,7 +159,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato Nº <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
   
   <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de desocupação, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de julho, agosto e setembro de 2025.</p>
   
@@ -238,7 +234,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da Vistoria Final do Imóvel situado {{enderecoImovel}}, Contrato {{numeroContrato}}, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de V.Sas.</p>
+    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da Vistoria Final do Imóvel situado {{enderecoImovel}}, Contrato {{numeroContrato}}, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de {{tratamentoLocatarioNotificacao}}.</p>
     
     <p style="margin: 10px 0; font-size: 14px;">Pelo presente a notificação tem por finalidade comunicar as partes, ou de seus representantes a constata-se à Vistoria Final do imóvel citado, que assistirão à produção das fotos que embasam o Laudo de Vistoria e acompanharam a constatação das divergências. O não comparecimento ao ato, e nem dos representantes, <strong><u>aceitarão antecipadamente os termos integrais da VISTORIA FINAL, tal como for apurada.</u></strong></p>
     
@@ -255,6 +251,15 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
 
 export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
   {{#if primeiroNomeProprietario}}
   <p style="margin-bottom: 25px;">{{saudacaoProprietario}}, tudo bem?</p>
   {{/if}}
@@ -265,7 +270,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
   
   <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
   
-  <p style="margin-bottom: 25px;">Se o senhor tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  <p style="margin-bottom: 25px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
   
   <p style="margin-top: 50px;">Atenciosamente,</p>
   
@@ -279,11 +284,20 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 
 export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
   {{#if primeiroNomeLocatario}}
   <p style="margin-bottom: 25px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de desocupação do imóvel situado em <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
+  <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de desocupação do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
   <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
   
@@ -316,7 +330,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   <p style="margin-bottom: 20px;">Prezados, {{saudacaoComercial}}</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como {{locadorTerm}} {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e {{locatarioTerm}} {{nomeLocatarioFormatado}}{{/if}}.</p>
+  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como LOCADORES {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e LOCATÁRIOS <strong>{{nomeLocatarioFormatado}}</strong>{{/if}}.</p>
   
   <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioDesocupacao}}</strong>, com prazo de desocupação até <strong>{{dataTerminoDesocupacao}}</strong>.</p>
   
@@ -350,7 +364,7 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 30px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 14px;">Formalizo que o(s) locatário(s) {{nomeLocatarioFormatado}} do contrato <strong>{{numeroContrato}}</strong>, imóvel situado à <strong>{{enderecoImovel}}</strong>, comunicou(aram) a desocupação em <strong>{{dataComunicacao}}</strong> com prazo de <strong>{{prazoDias}} dias</strong> ({{dataInicioDesocupacao}} a {{dataTerminoDesocupacao}}). Realizei a devolutiva ao(s) locador(es) {{nomeProprietarioFormatado}}, ao(s) locatário(s) {{nomeLocatarioFormatado}} e ao setor comercial para captação.</p>
+    <p style="margin: 10px 0; font-size: 14px;">Os locatários {{nomeLocatarioFormatado}}, do contrato {{numeroContrato}}, comunicaram a desocupação do imóvel na {{enderecoImovel}}, em {{dataComunicacao}}, com prazo até {{dataTerminoDesocupacao}}. A informação foi repassada ao locador e ao setor comercial.</p>
   </div>
   
   <div style="margin-top: 40px; text-align: center;">

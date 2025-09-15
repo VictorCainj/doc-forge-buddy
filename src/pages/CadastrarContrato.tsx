@@ -56,10 +56,6 @@ const CadastrarContrato = () => {
           type: 'textarea',
           required: false,
           placeholder: 'Ex: 04 chaves simples, 02 chaves tetra',
-          conditional: {
-            field: 'incluirQuantidadeChaves',
-            value: 'sim',
-          },
         },
       ],
     },

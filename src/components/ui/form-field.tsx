@@ -195,6 +195,12 @@ export const FormField: React.FC<FormFieldProps> = ({
         }
       };
 
+      const handleEscape = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setIsOpen(false);
+        }
+      };
+
       const calculatePosition = () => {
         if (dropdownRef.current && isOpen) {
           const rect = dropdownRef.current.getBoundingClientRect();
@@ -212,9 +218,12 @@ export const FormField: React.FC<FormFieldProps> = ({
 
       if (isOpen) {
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
         calculatePosition();
-        return () =>
+        return () => {
           document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('keydown', handleEscape);
+        };
       }
     }, [isOpen]);
 
@@ -224,16 +233,24 @@ export const FormField: React.FC<FormFieldProps> = ({
     };
 
     return (
-      <div ref={dropdownRef} className="relative overflow-visible">
+      <div
+        ref={dropdownRef}
+        className="relative"
+        style={{ zIndex: isOpen ? 99999 : 'auto' }}
+      >
         {/* Botão da seta */}
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
           disabled={disabled}
           className={cn(
             'w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg',
             'hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'transition-all duration-200',
+            'transition-all duration-200 cursor-pointer',
             hasError && 'border-red-500 focus:ring-red-500',
             isValid && 'border-green-500 focus:ring-green-500',
             disabled && 'opacity-50 cursor-not-allowed',
@@ -260,18 +277,23 @@ export const FormField: React.FC<FormFieldProps> = ({
         {isOpen && (
           <div
             className={cn(
-              'absolute top-0 z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl min-w-[200px] max-w-[300px] transform translate-x-0',
+              'absolute top-0 z-[99999] bg-white border border-gray-200 rounded-lg shadow-xl min-w-[200px] max-w-[300px] transform translate-x-0',
               menuPosition === 'right' ? 'left-full ml-1' : 'right-full mr-1'
             )}
+            style={{ zIndex: 99999 }}
           >
             <div className="py-1 max-h-60 overflow-auto">
               {options.map((option) => (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => handleOptionClick(option.value)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOptionClick(option.value);
+                  }}
                   className={cn(
-                    'w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors',
+                    'w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer',
                     value === option.value && 'bg-blue-50 text-blue-600'
                   )}
                 >

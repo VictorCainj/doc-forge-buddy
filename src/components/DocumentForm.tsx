@@ -19,6 +19,10 @@ interface FormField {
   placeholder?: string;
   options?: Array<{ value: string; label: string }>;
   tooltip?: string;
+  conditional?: {
+    field: string;
+    value: string;
+  };
 }
 
 interface FieldGroup {
