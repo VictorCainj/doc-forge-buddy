@@ -18,6 +18,7 @@ import GerarDocumento from './pages/GerarDocumento';
 import TermoLocador from './pages/TermoLocador';
 import TermoLocatario from './pages/TermoLocatario';
 import Configuracoes from './pages/Configuracoes';
+import MultaRescisoria from './pages/MultaRescisoria';
 
 const queryClient = new QueryClient();
 
@@ -144,6 +145,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <Configuracoes />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/multa-rescisoria"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <MultaRescisoria />
                   </Layout>
                 </ProtectedRoute>
               }

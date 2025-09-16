@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Settings } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, Calculator } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -16,6 +16,12 @@ const Sidebar = () => {
       icon: FileText,
       path: '/contratos',
       active: location.pathname === '/contratos',
+    },
+    {
+      name: 'Multa Rescisória',
+      icon: Calculator,
+      path: '/multa-rescisoria',
+      active: location.pathname === '/multa-rescisoria',
     },
     {
       name: 'Configurações',

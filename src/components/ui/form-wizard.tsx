@@ -1,8 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, ComponentProps } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+
+function Step({ step, currentStep }: { step: number; currentStep: number }) {
+  const status =
+    currentStep === step
+      ? 'active'
+      : currentStep < step
+        ? 'inactive'
+        : 'complete';
+
+  return (
+    <motion.div animate={status} className="relative">
+      <motion.div
+        variants={{
+          active: {
+            scale: 1,
+            transition: {
+              delay: 0,
+              duration: 0.2,
+            },
+          },
+          complete: {
+            scale: 1.25,
+          },
+        }}
+        transition={{
+          duration: 0.6,
+          delay: 0.2,
+          type: 'tween',
+          ease: 'circOut',
+        }}
+        className="absolute inset-0 rounded-full bg-blue-200"
+      />
+
+      <motion.div
+        initial={false}
+        variants={{
+          inactive: {
+            backgroundColor: '#fff',
+            borderColor: '#e5e5e5',
+            color: '#a3a3a3',
+          },
+          active: {
+            backgroundColor: '#fff',
+            borderColor: '#3b82f6',
+            color: '#3b82f6',
+          },
+          complete: {
+            backgroundColor: '#3b82f6',
+            borderColor: '#3b82f6',
+            color: '#3b82f6',
+          },
+        }}
+        transition={{ duration: 0.2 }}
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 font-semibold"
+      >
+        <div className="flex items-center justify-center">
+          {status === 'complete' ? (
+            <CheckIcon className="h-6 w-6 text-white" />
+          ) : (
+            <span>{step}</span>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function CheckIcon(props: ComponentProps<'svg'>) {
+  return (
+    <svg
+      {...props}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={3}
+    >
+      <motion.path
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{
+          delay: 0.2,
+          type: 'tween',
+          ease: 'easeOut',
+          duration: 0.3,
+        }}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
+}
 
 export interface WizardStep {
   id: string;
@@ -76,21 +169,37 @@ export const FormWizard: React.FC<FormWizardProps> = ({
 
   return (
     <div className="w-full">
+      {/* Step Progress */}
+      <div className="flex justify-between rounded p-8 mb-6">
+        {steps.map((_, index) => (
+          <Step key={index} step={index + 1} currentStep={currentStep + 1} />
+        ))}
+      </div>
+
       {/* Step Content */}
-      <div className="space-y-6">{currentStepData.content}</div>
+      <div className="space-y-6 mb-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {currentStepData.title}
+          </h2>
+          {currentStepData.description && (
+            <p className="text-gray-600">{currentStepData.description}</p>
+          )}
+        </div>
+        {currentStepData.content}
+      </div>
 
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center pt-8 mt-8 border-t border-gray-200">
-        <Button
-          type="button"
-          variant="outline"
+        <button
           onClick={handlePrevious}
           disabled={currentStep === 0}
-          className="gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300"
+          className={`${
+            currentStep === 0 ? 'pointer-events-none opacity-50' : ''
+          } duration-350 rounded px-2 py-1 text-neutral-400 transition hover:text-neutral-700`}
         >
-          <ChevronLeft className="h-4 w-4" />
           Anterior
-        </Button>
+        </button>
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">
@@ -98,26 +207,26 @@ export const FormWizard: React.FC<FormWizardProps> = ({
           </span>
         </div>
 
-        <Button
-          type="button"
+        <button
           onClick={handleNext}
           disabled={currentStepData.isValid === false || isSubmitting}
-          className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
+          className={`${
+            currentStepData.isValid === false || isSubmitting
+              ? 'pointer-events-none opacity-50'
+              : ''
+          } bg duration-350 flex items-center justify-center rounded-full bg-blue-500 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-blue-600 active:bg-blue-700`}
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
               {submitButtonText}
             </>
           ) : (
             <>
               {currentStep === steps.length - 1 ? submitButtonText : 'Próximo'}
-              {currentStep < steps.length - 1 && (
-                <ChevronRight className="h-4 w-4" />
-              )}
             </>
           )}
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, Search } from 'lucide-react';
+import { LogOut, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
@@ -41,7 +41,7 @@ const Header = () => {
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <div className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
-            Madia Imóveis
+            Desocupação 1.0
           </div>
         </div>
 
@@ -81,21 +81,6 @@ const Header = () => {
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => navigate('/profile')}
-                className="cursor-pointer"
-              >
-                <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => navigate('/settings')}
-                className="cursor-pointer"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Configurações</span>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleSignOut}

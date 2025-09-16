@@ -1,8 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { FileCheck, Search } from 'lucide-react';
+import { FileCheck, Search, Phone, Mail } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContractData {
   numeroContrato: string;
@@ -19,11 +31,23 @@ const TermoLocatario: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const contractData = location.state?.contractData as ContractData;
+  const { toast } = useToast();
 
   // Estado para gerenciar auto-preenchimento
   const [autoFillData, setAutoFillData] = React.useState<
     Record<string, string>
   >({});
+
+  // Estados para validação de contato
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactData, setContactData] = useState({
+    celularLocatario: contractData?.celularLocatario || '',
+    emailLocatario: contractData?.emailLocatario || '',
+  });
+  const [pendingFormData, setPendingFormData] = useState<Record<
+    string,
+    string
+  > | null>(null);
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
@@ -48,6 +72,99 @@ const TermoLocatario: React.FC = () => {
       nomeProprietario.includes(' e ') ||
       nomeProprietario.includes(' E ')
     );
+  };
+
+  // Função para validar campos de contato
+  const validateContactFields = (data: Record<string, string>) => {
+    const celular =
+      contractData.celularLocatario || contactData.celularLocatario;
+    const email = contractData.emailLocatario || contactData.emailLocatario;
+
+    return {
+      isValid: !!(celular && celular.trim() && email && email.trim()),
+      missingFields: {
+        celular: !celular || !celular.trim(),
+        email: !email || !email.trim(),
+      },
+    };
+  };
+
+  // Função para atualizar dados de contato no contrato
+  const updateContractContactData = async (newContactData: {
+    celularLocatario: string;
+    emailLocatario: string;
+  }) => {
+    try {
+      // Buscar o contrato na tabela saved_terms
+      const { data: contractRecord, error: fetchError } = await supabase
+        .from('saved_terms')
+        .select('*')
+        .eq('document_type', 'contrato')
+        .contains('form_data', { numeroContrato: contractData.numeroContrato })
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Atualizar os dados de contato no form_data
+      const updatedFormData = {
+        ...contractRecord.form_data,
+        celularLocatario: newContactData.celularLocatario,
+        emailLocatario: newContactData.emailLocatario,
+      };
+
+      // Atualizar o registro na tabela saved_terms
+      const { error: updateError } = await supabase
+        .from('saved_terms')
+        .update({
+          form_data: updatedFormData,
+          content: JSON.stringify(updatedFormData),
+        })
+        .eq('id', contractRecord.id);
+
+      if (updateError) throw updateError;
+
+      // Atualizar os dados locais do contrato
+      Object.assign(contractData, newContactData);
+
+      toast({
+        title: 'Dados atualizados',
+        description: 'Os dados de contato foram atualizados no contrato.',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar dados de contato:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar os dados de contato.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  // Função para salvar dados de contato e continuar
+  const handleSaveContactData = async () => {
+    if (
+      !contactData.celularLocatario.trim() ||
+      !contactData.emailLocatario.trim()
+    ) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Por favor, preencha todos os campos de contato.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = await updateContractContactData(contactData);
+    if (success && pendingFormData) {
+      setShowContactModal(false);
+      // Continuar com a geração do documento
+      const processedData = handleGenerate(pendingFormData);
+      setPendingFormData(null);
+      return processedData;
+    }
   };
 
   const steps: FormStep[] = [
@@ -158,6 +275,25 @@ const TermoLocatario: React.FC = () => {
           placeholder: 'Ex: 14 de setembro de 2025',
         },
         {
+          name: 'statusVistoria',
+          label: 'Status da Vistoria',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione uma opção',
+          options: [
+            {
+              value: 'aprovada',
+              label:
+                'Aprovada - Imóvel entregue de acordo com a vistoria inicial',
+            },
+            {
+              value: 'reprovada',
+              label:
+                'Reprovada - Imóvel não foi entregue de acordo com a vistoria inicial',
+            },
+          ],
+        },
+        {
           name: 'observacao',
           label: 'Observação (Opcional)',
           type: 'textarea',
@@ -263,6 +399,16 @@ __________________________________________<br>
   };
 
   const handleGenerate = (data: Record<string, string>) => {
+    // Validar campos de contato antes de gerar o documento
+    const contactValidation = validateContactFields(data);
+
+    if (!contactValidation.isValid) {
+      // Mostrar modal para preenchimento dos campos de contato
+      setPendingFormData(data);
+      setShowContactModal(true);
+      return null; // Impede a geração do documento
+    }
+
     // Detectar se há múltiplos locatários baseado na quantidade adicionada
     const isMultipleLocatarios =
       contractData.primeiroLocatario &&
@@ -424,6 +570,82 @@ __________________________________________<br>
           </div>
         </div>
       </div>
+
+      {/* Modal de Validação de Contato */}
+      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5 text-blue-600" />
+              Dados de Contato Obrigatórios
+            </DialogTitle>
+            <DialogDescription>
+              Para gerar o termo do locatário, é necessário preencher os dados
+              de contato. Estes dados serão atualizados no contrato.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label
+                htmlFor="celularLocatario"
+                className="flex items-center gap-2"
+              >
+                <Phone className="h-4 w-4" />
+                Celular do Locatário *
+              </Label>
+              <Input
+                id="celularLocatario"
+                value={contactData.celularLocatario}
+                onChange={(e) =>
+                  setContactData((prev) => ({
+                    ...prev,
+                    celularLocatario: e.target.value,
+                  }))
+                }
+                placeholder="Ex: (19) 99999-9999"
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="emailLocatario"
+                className="flex items-center gap-2"
+              >
+                <Mail className="h-4 w-4" />
+                E-mail do Locatário *
+              </Label>
+              <Input
+                id="emailLocatario"
+                type="email"
+                value={contactData.emailLocatario}
+                onChange={(e) =>
+                  setContactData((prev) => ({
+                    ...prev,
+                    emailLocatario: e.target.value,
+                  }))
+                }
+                placeholder="Ex: locatario@email.com"
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowContactModal(false);
+                setPendingFormData(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveContactData}>Salvar e Continuar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -25,9 +25,6 @@ interface UserProfile {
   id: string;
   email: string;
   full_name?: string;
-  phone?: string;
-  company?: string;
-  address?: string;
   avatar_url?: string;
 }
 
@@ -49,9 +46,6 @@ const Configuracoes = () => {
     id: '',
     email: '',
     full_name: '',
-    phone: '',
-    company: '',
-    address: '',
     avatar_url: '',
   });
 
@@ -81,9 +75,6 @@ const Configuracoes = () => {
           id: user.id,
           email: user.email || '',
           full_name: user.user_metadata?.full_name || '',
-          phone: user.user_metadata?.phone || '',
-          company: user.user_metadata?.company || '',
-          address: user.user_metadata?.address || '',
           avatar_url: user.user_metadata?.avatar_url || '',
         }));
       }
@@ -107,9 +98,6 @@ const Configuracoes = () => {
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: profile.full_name,
-          phone: profile.phone,
-          company: profile.company,
-          address: profile.address,
         },
       });
 
@@ -222,49 +210,6 @@ const Configuracoes = () => {
                         className="bg-gray-50"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input
-                        id="phone"
-                        value={profile.phone}
-                        onChange={(e) =>
-                          setProfile((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                        placeholder="(11) 99999-9999"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Empresa</Label>
-                      <Input
-                        id="company"
-                        value={profile.company}
-                        onChange={(e) =>
-                          setProfile((prev) => ({
-                            ...prev,
-                            company: e.target.value,
-                          }))
-                        }
-                        placeholder="Nome da empresa"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Endereço</Label>
-                    <Textarea
-                      id="address"
-                      value={profile.address}
-                      onChange={(e) =>
-                        setProfile((prev) => ({
-                          ...prev,
-                          address: e.target.value,
-                        }))
-                      }
-                      placeholder="Seu endereço completo"
-                      rows={3}
-                    />
                   </div>
                   <Button
                     onClick={saveProfile}
