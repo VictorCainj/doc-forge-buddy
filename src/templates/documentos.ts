@@ -161,7 +161,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato Nº <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de desocupação, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de julho, agosto e setembro de 2025.</p>
+  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de desocupação, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de <strong>{{mesesComprovantes}}</strong>.</p>
   
   <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
     <p style="margin-bottom: 10px; font-weight: bold; color: #007bff;">DOCUMENTOS SOLICITADOS:</p>
@@ -234,7 +234,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da Vistoria Final do Imóvel situado {{enderecoImovel}}, Contrato {{numeroContrato}}, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de {{tratamentoLocatarioNotificacao}}.</p>
+    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da Vistoria Final do Imóvel situado <strong>{{enderecoImovel}}</strong>, Contrato <strong>{{numeroContrato}}</strong>, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de {{tratamentoLocatarioNotificacao}}.</p>
     
     <p style="margin: 10px 0; font-size: 14px;">Pelo presente a notificação tem por finalidade comunicar as partes, ou de seus representantes a constata-se à Vistoria Final do imóvel citado, que assistirão à produção das fotos que embasam o Laudo de Vistoria e acompanharam a constatação das divergências. O não comparecimento ao ato, e nem dos representantes, <strong><u>aceitarão antecipadamente os termos integrais da VISTORIA FINAL, tal como for apurada.</u></strong></p>
     

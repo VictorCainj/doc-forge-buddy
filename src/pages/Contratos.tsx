@@ -541,6 +541,7 @@ const Contratos = () => {
       formData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
 
     // Adicionar campos de energia e água para o template de cobrança
+    // Usar os dados cadastrados no contrato ou valores padrão
     enhancedData.cpfl = formData.cpfl || 'SIM';
     enhancedData.statusAgua = formData.statusAgua || 'SIM';
     enhancedData.tipoAgua = formData.tipoAgua || 'DAEV';
@@ -549,24 +550,24 @@ const Contratos = () => {
     enhancedData.dataLiquidacao =
       formData.dataLiquidacao || formatDateBrazilian(new Date());
 
-    // Gerar lista personalizada de documentos solicitados para devolutiva locatário
+    // Gerar lista personalizada de documentos solicitados baseada nas contas cadastradas
     const configDocumentos: ConfiguracaoDocumentos = {
-      solicitarCondominio: formData.solicitarCondominio,
-      solicitarAgua: formData.solicitarAgua,
-      solicitarEnergia: 'sim', // Energia sempre deve ser solicitada
-      solicitarGas: formData.solicitarGas,
-      solicitarCND: formData.solicitarCND,
+      solicitarCondominio: formData.solicitarCondominio || 'nao',
+      solicitarAgua: formData.statusAgua === 'SIM' ? 'sim' : 'nao',
+      solicitarEnergia: formData.cpfl === 'SIM' ? 'sim' : 'nao',
+      solicitarGas: formData.solicitarGas || 'nao',
+      solicitarCND: formData.solicitarCND || 'nao',
     };
 
     enhancedData.documentosSolicitados =
       gerarDocumentosSolicitados(configDocumentos);
 
     // Manter os campos individuais para uso em condicionais do template
-    enhancedData.solicitarCondominio = formData.solicitarCondominio;
-    enhancedData.solicitarAgua = formData.solicitarAgua;
-    enhancedData.solicitarEnergia = 'sim'; // Energia sempre deve ser solicitada
-    enhancedData.solicitarGas = formData.solicitarGas;
-    enhancedData.solicitarCND = formData.solicitarCND;
+    enhancedData.solicitarCondominio = formData.solicitarCondominio || 'nao';
+    enhancedData.solicitarAgua = formData.statusAgua === 'SIM' ? 'sim' : 'nao';
+    enhancedData.solicitarEnergia = formData.cpfl === 'SIM' ? 'sim' : 'nao';
+    enhancedData.solicitarGas = formData.solicitarGas || 'nao';
+    enhancedData.solicitarCND = formData.solicitarCND || 'nao';
 
     return enhancedData;
   };
@@ -763,7 +764,25 @@ const Contratos = () => {
 
     // Adicionar campos específicos para notificação de agendamento
     enhancedData.dataAtual = formatDateBrazilian(new Date());
-    enhancedData.dataVistoria = formatDateBrazilian(new Date(dataVistoria));
+
+    // Corrigir o processamento da data da vistoria para evitar problemas de fuso horário
+    let dataVistoriaFormatada = dataVistoria;
+    if (dataVistoria) {
+      // Se a data está no formato YYYY-MM-DD (do input date), converter corretamente
+      if (dataVistoria.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dataVistoria.split('-');
+        const dateObj = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day)
+        );
+        dataVistoriaFormatada = formatDateBrazilian(dateObj);
+      } else {
+        // Se já está em outro formato, usar convertDateToBrazilian
+        dataVistoriaFormatada = convertDateToBrazilian(dataVistoria);
+      }
+    }
+    enhancedData.dataVistoria = dataVistoriaFormatada;
     enhancedData.horaVistoria = horaVistoria;
     enhancedData.enderecoImovel =
       formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
@@ -1692,6 +1711,146 @@ const Contratos = () => {
                       }
                       placeholder="DD/MM/AAAA - Ex: 22/07/2025"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Contas de Consumo */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Contas de Consumo</h3>
+                <p className="text-sm text-gray-600">
+                  Configure quais contas de consumo devem ser solicitadas na
+                  cobrança
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-cpfl">CPFL (Energia Elétrica)</Label>
+                    <Select
+                      value={editFormData.cpfl || ''}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          cpfl: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SIM">SIM</SelectItem>
+                        <SelectItem value="NÃO">NÃO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-tipoAgua">Tipo de Água</Label>
+                    <Select
+                      value={editFormData.tipoAgua || ''}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          tipoAgua: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DAEV">DAEV</SelectItem>
+                        <SelectItem value="SANASA">SANASA</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-statusAgua">Status da Água</Label>
+                    <Select
+                      value={editFormData.statusAgua || ''}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          statusAgua: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SIM">SIM</SelectItem>
+                        <SelectItem value="NÃO">NÃO</SelectItem>
+                        <SelectItem value="No condomínio">
+                          No condomínio
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-solicitarGas">Solicitar Gás</Label>
+                    <Select
+                      value={editFormData.solicitarGas || ''}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          solicitarGas: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sim">SIM</SelectItem>
+                        <SelectItem value="nao">NÃO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-solicitarCondominio">
+                      Solicitar Condomínio
+                    </Label>
+                    <Select
+                      value={editFormData.solicitarCondominio || ''}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          solicitarCondominio: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sim">SIM</SelectItem>
+                        <SelectItem value="nao">NÃO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-solicitarCND">Solicitar CND</Label>
+                    <Select
+                      value={editFormData.solicitarCND || ''}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          solicitarCND: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sim">SIM</SelectItem>
+                        <SelectItem value="nao">NÃO</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
