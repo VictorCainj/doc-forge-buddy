@@ -74,7 +74,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoProprietario}}, tudo bem?</p>
   
   {{#if nomeLocatarioFormatado}}
-  <p style="margin-bottom: 20px;">Venho comunicar que os locatários <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
+  <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTermNoArtigo}} <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
   {{/if}}
   
   <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>

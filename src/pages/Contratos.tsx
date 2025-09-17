@@ -241,6 +241,7 @@ const Contratos = () => {
 
     if (isMultipleLocatarios) {
       enhancedData.locatarioTerm = 'LOCATÁRIOS';
+      enhancedData.locatarioTermNoArtigo = 'os locatários';
       enhancedData.locatarioComunicou = 'informaram';
       enhancedData.locatarioIra = 'irão';
       enhancedData.locatarioTermo = 'do locatário';
@@ -252,14 +253,17 @@ const Contratos = () => {
       const generoLocatario = formData.generoLocatario;
       if (generoLocatario === 'feminino') {
         enhancedData.locatarioTerm = 'LOCATÁRIA';
+        enhancedData.locatarioTermNoArtigo = 'a locatária';
         enhancedData.locatarioDocumentacao = 'da locatária';
         enhancedData.locatarioResponsabilidade = 'da locatária';
       } else if (generoLocatario === 'masculino') {
         enhancedData.locatarioTerm = 'LOCATÁRIO';
+        enhancedData.locatarioTermNoArtigo = 'o locatário';
         enhancedData.locatarioDocumentacao = 'do locatário';
         enhancedData.locatarioResponsabilidade = 'do locatário';
       } else {
         enhancedData.locatarioTerm = 'LOCATÁRIO'; // fallback
+        enhancedData.locatarioTermNoArtigo = 'o locatário';
         enhancedData.locatarioDocumentacao = 'do locatário';
         enhancedData.locatarioResponsabilidade = 'do locatário';
       }

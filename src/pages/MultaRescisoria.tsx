@@ -15,7 +15,7 @@ interface CalculationResult {
 }
 
 const MultaRescisoria = () => {
-  const [valorAluguel, setValorAluguel] = useState<string>('2700.00');
+  const [valorAluguel, setValorAluguel] = useState<string>('2.700,00');
   const [periodoTotal, setPeriodoTotal] = useState<string>('30');
   const [dataInicio, setDataInicio] = useState<string>('2024-12-27');
   const [dataFim, setDataFim] = useState<string>('2027-06-27');
@@ -43,6 +43,14 @@ const MultaRescisoria = () => {
     return { anos, meses, dias };
   };
 
+  // Função para converter valor brasileiro para número
+  const parseBrazilianCurrency = (value: string): number => {
+    if (!value) return 0;
+    // Remove pontos de milhares e substitui vírgula por ponto
+    const cleanValue = value.replace(/\./g, '').replace(',', '.');
+    return parseFloat(cleanValue) || 0;
+  };
+
   // Função para validar entrada
   const validateInput = (): { isValid: boolean; errorMessage?: string } => {
     if (
@@ -59,7 +67,7 @@ const MultaRescisoria = () => {
       };
     }
 
-    const aluguelValue = parseFloat(valorAluguel);
+    const aluguelValue = parseBrazilianCurrency(valorAluguel);
     const periodoValue = parseInt(periodoTotal);
     const mesesMultaValue = parseInt(mesesMulta);
 
@@ -131,7 +139,7 @@ const MultaRescisoria = () => {
       };
     }
 
-    const aluguelValue = parseFloat(valorAluguel);
+    const aluguelValue = parseBrazilianCurrency(valorAluguel);
     const mesesMultaValue = parseInt(mesesMulta);
 
     // Calcular tempo restante até o fim do contrato
@@ -167,12 +175,12 @@ const MultaRescisoria = () => {
   };
 
   const handleClear = () => {
-    setValorAluguel('');
-    setPeriodoTotal('');
-    setDataInicio('');
-    setDataFim('');
-    setDataRescisao('');
-    setMesesMulta('');
+    setValorAluguel('2.700,00');
+    setPeriodoTotal('30');
+    setDataInicio('2024-12-27');
+    setDataFim('2027-06-27');
+    setDataRescisao('2025-09-12');
+    setMesesMulta('3');
     setResultado(null);
     toast.info('Formulário limpo');
   };
@@ -191,219 +199,229 @@ const MultaRescisoria = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Cálculo para Rescisão de Contrato de Aluguel
-        </h1>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Formulário - Lado Esquerdo */}
-        <div className="space-y-6">
-          {/* Valor do Aluguel mensal */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="valorAluguel"
-              className="text-sm font-medium text-gray-700"
-            >
-              Valor do Aluguel mensal
-            </Label>
-            <div className="relative">
-              <Input
-                id="valorAluguel"
-                type="number"
-                step="0.01"
-                min="0"
-                value={valorAluguel}
-                onChange={(e) => setValorAluguel(e.target.value)}
-                className="w-full pr-10"
-              />
-              {valorAluguel && (
-                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-              )}
-            </div>
-          </div>
-
-          {/* Período total do contrato em meses */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="periodoTotal"
-              className="text-sm font-medium text-gray-700"
-            >
-              Período total do contrato em meses
-            </Label>
-            <div className="relative">
-              <Input
-                id="periodoTotal"
-                type="number"
-                min="1"
-                value={periodoTotal}
-                onChange={(e) => setPeriodoTotal(e.target.value)}
-                className="w-full pr-10"
-              />
-              {periodoTotal && (
-                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-              )}
-            </div>
-          </div>
-
-          {/* Data de início do contrato */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="dataInicio"
-              className="text-sm font-medium text-gray-700"
-            >
-              Data de início do contrato
-            </Label>
-            <div className="relative">
-              <Input
-                id="dataInicio"
-                type="date"
-                value={dataInicio}
-                onChange={(e) => setDataInicio(e.target.value)}
-                className="w-full pr-10"
-              />
-              {dataInicio && (
-                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-              )}
-            </div>
-          </div>
-
-          {/* Data fim do contrato */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="dataFim"
-              className="text-sm font-medium text-gray-700"
-            >
-              Data fim do contrato
-            </Label>
-            <div className="relative">
-              <Input
-                id="dataFim"
-                type="date"
-                value={dataFim}
-                onChange={(e) => setDataFim(e.target.value)}
-                className="w-full pr-10"
-              />
-              {dataFim && (
-                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-              )}
-            </div>
-          </div>
-
-          {/* Data de Rescisão do contrato */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="dataRescisao"
-              className="text-sm font-medium text-gray-700"
-            >
-              Data de Rescisão do contrato
-            </Label>
-            <div className="relative">
-              <Input
-                id="dataRescisao"
-                type="date"
-                value={dataRescisao}
-                onChange={(e) => setDataRescisao(e.target.value)}
-                className="w-full pr-10"
-              />
-              {dataRescisao && (
-                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-              )}
-            </div>
-          </div>
-
-          {/* A multa será calculada em quantos meses de aluguel? */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="mesesMulta"
-              className="text-sm font-medium text-gray-700"
-            >
-              A multa será calculada em quantos meses de aluguel?
-            </Label>
-            <div className="relative">
-              <Input
-                id="mesesMulta"
-                type="number"
-                min="1"
-                value={mesesMulta}
-                onChange={(e) => setMesesMulta(e.target.value)}
-                className="w-full pr-10"
-              />
-              {mesesMulta && (
-                <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-              )}
-            </div>
-          </div>
-
-          {/* Botões */}
-          <div className="flex gap-3 pt-4">
-            <Button
-              onClick={handleCalculate}
-              disabled={isCalculating}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {isCalculating ? 'Calculando...' : 'Calcular'}
-            </Button>
-            <Button onClick={handleClear} variant="outline" className="flex-1">
-              Limpar Formulário
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Cálculo para Rescisão de Contrato de Aluguel
+          </h1>
         </div>
 
-        {/* Resultado - Lado Direito */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-green-800 mb-4">
-            Informações sobre Multa Rescisória do Aluguel
-          </h3>
-
-          {resultado && resultado.isValid ? (
-            <div className="space-y-4">
-              <div className="bg-white p-3 rounded border">
-                <p className="text-sm text-gray-600">
-                  Total de anos restantes para o término do contrato
-                </p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {resultado.anosRestantes}
-                </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Formulário - Lado Esquerdo */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="space-y-6">
+              {/* Valor do Aluguel mensal */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="valorAluguel"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Valor do Aluguel mensal
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="valorAluguel"
+                    type="text"
+                    value={valorAluguel}
+                    onChange={(e) => setValorAluguel(e.target.value)}
+                    className="w-full pr-10"
+                    placeholder="2.700,00"
+                  />
+                  {valorAluguel && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+                  )}
+                </div>
               </div>
 
-              <div className="bg-white p-3 rounded border">
-                <p className="text-sm text-gray-600">
-                  Total de meses restantes para o término do contrato
-                </p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {resultado.mesesRestantes}
-                </p>
+              {/* Período total do contrato em meses */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="periodoTotal"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Período total do contrato em meses
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="periodoTotal"
+                    type="number"
+                    min="1"
+                    value={periodoTotal}
+                    onChange={(e) => setPeriodoTotal(e.target.value)}
+                    className="w-full pr-10"
+                  />
+                  {periodoTotal && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+                  )}
+                </div>
               </div>
 
-              <div className="bg-white p-3 rounded border">
-                <p className="text-sm text-gray-600">
-                  Total de dias restantes para o término do contrato
-                </p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {resultado.diasRestantes}
-                </p>
+              {/* Data de início do contrato */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="dataInicio"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Data de início do contrato
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="dataInicio"
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                    className="w-full pr-10"
+                  />
+                  {dataInicio && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+                  )}
+                </div>
               </div>
 
-              <div className="bg-white p-3 rounded border">
-                <p className="text-sm text-gray-600">
-                  Valor da Multa Rescisória
-                </p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(resultado.multa)}
-                </p>
+              {/* Data fim do contrato */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="dataFim"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Data fim do contrato
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="dataFim"
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                    className="w-full pr-10"
+                  />
+                  {dataFim && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+                  )}
+                </div>
+              </div>
+
+              {/* Data de Rescisão do contrato */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="dataRescisao"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Data de Rescisão do contrato
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="dataRescisao"
+                    type="date"
+                    value={dataRescisao}
+                    onChange={(e) => setDataRescisao(e.target.value)}
+                    className="w-full pr-10"
+                  />
+                  {dataRescisao && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+                  )}
+                </div>
+              </div>
+
+              {/* A multa será calculada em quantos meses de aluguel? */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="mesesMulta"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  A multa será calculada em quantos meses de aluguel?
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="mesesMulta"
+                    type="number"
+                    min="1"
+                    value={mesesMulta}
+                    onChange={(e) => setMesesMulta(e.target.value)}
+                    className="w-full pr-10"
+                  />
+                  {mesesMulta && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+                  )}
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={handleCalculate}
+                  disabled={isCalculating}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                >
+                  {isCalculating ? 'Calculando...' : 'Calcular'}
+                </Button>
+                <Button
+                  onClick={handleClear}
+                  variant="outline"
+                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Limpar Formulário
+                </Button>
               </div>
             </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              <p>
-                Preencha os dados e clique em "Calcular" para ver os resultados.
-              </p>
-            </div>
-          )}
+          </div>
+
+          {/* Resultado - Lado Direito */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-blue-600 mb-6">
+              Informações sobre Multa Rescisória do Aluguel
+            </h3>
+
+            {resultado && resultado.isValid ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-600">
+                    Total de anos restantes para o término do contrato
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {resultado.anosRestantes}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-600">
+                    Total de meses restantes para o término do contrato
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {resultado.mesesRestantes}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-600">
+                    Total de dias restantes para o término do contrato
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {resultado.diasRestantes}
+                  </span>
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      Valor da Multa Rescisória
+                    </span>
+                    <span className="text-xl font-bold text-blue-600">
+                      {formatCurrency(resultado.multa)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <p>
+                  Preencha os dados e clique em "Calcular" para ver os
+                  resultados.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
