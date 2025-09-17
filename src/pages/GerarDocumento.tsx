@@ -25,11 +25,14 @@ const GerarDocumento = () => {
 
     switch (documentType) {
       case 'Devolutiva Locatário':
-        return `Título: Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato ${contractNumber}`;
+        return `Título: Confirmação de Notificação de Rescisão e Procedimentos Finais - Contrato ${contractNumber}`;
       case 'Devolutiva Proprietário':
-        return `Título: Notificação de Desocupação e Agendamento de Vistoria - Contrato ${contractNumber}`;
+        return `Título: Notificação de Rescisão e Agendamento de Vistoria - Contrato ${contractNumber}`;
       case 'Notificação de Agendamento':
-        return `Título: Notificação para Realização de Vistoria Final - Contrato ${contractNumber}`;
+        // Verificar se é revistoria ou vistoria final baseado no título
+        const isRevistoria = title?.includes('Revistoria');
+        const tipoVistoria = isRevistoria ? 'Revistoria' : 'Vistoria Final';
+        return `Título: Notificação para Realização de ${tipoVistoria} - Contrato ${contractNumber}`;
       case 'Distrato de Contrato de Locação':
         return `Título: Instrumento Particular de Rescisão de Contrato de Locação - Contrato ${contractNumber}`;
       default:

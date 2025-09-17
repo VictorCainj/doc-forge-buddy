@@ -41,7 +41,7 @@ const Header = () => {
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <div className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
-            Desocupação 1.1
+            Rescisão 1.2
           </div>
         </div>
 

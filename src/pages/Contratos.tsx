@@ -108,6 +108,7 @@ const Contratos = () => {
   );
   const [dataVistoria, setDataVistoria] = useState('');
   const [horaVistoria, setHoraVistoria] = useState('');
+  const [tipoVistoria, setTipoVistoria] = useState('final');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [whatsAppType, setWhatsAppType] = useState<
     'locador' | 'locatario' | null
@@ -472,10 +473,10 @@ const Contratos = () => {
     enhancedData.dataAtual = formatDateBrazilian(new Date());
     enhancedData.dataComunicacao =
       formData.dataComunicacao || formatDateBrazilian(new Date());
-    enhancedData.dataInicioDesocupacao =
-      formData.dataInicioDesocupacao || formatDateBrazilian(new Date());
-    enhancedData.dataTerminoDesocupacao =
-      formData.dataTerminoDesocupacao || formatDateBrazilian(new Date());
+    enhancedData.dataInicioRescisao =
+      formData.dataInicioRescisao || formatDateBrazilian(new Date());
+    enhancedData.dataTerminoRescisao =
+      formData.dataTerminoRescisao || formatDateBrazilian(new Date());
     enhancedData.prazoDias = formData.prazoDias || '30';
 
     // Adicionar variáveis de endereço e contrato
@@ -645,7 +646,7 @@ const Contratos = () => {
       // Personalizar título para devolutiva comercial
       let documentTitle = `${documentType} - ${contract.title}`;
       if (documentType === 'Devolutiva Comercial') {
-        documentTitle = `${documentType} - Desocupação - ${contract.title}`;
+        documentTitle = `${documentType} - Rescisão - ${contract.title}`;
       }
 
       setTimeout(() => {
@@ -788,6 +789,18 @@ const Contratos = () => {
     }
     enhancedData.dataVistoria = dataVistoriaFormatada;
     enhancedData.horaVistoria = horaVistoria;
+    enhancedData.tipoVistoria = tipoVistoria;
+
+    // Adicionar variáveis de texto formatadas para o template
+    if (tipoVistoria === 'revistoria') {
+      enhancedData.tipoVistoriaTexto = 'REVISTORIA';
+      enhancedData.tipoVistoriaTextoMaiusculo = 'REVISTORIA';
+      enhancedData.tipoVistoriaTextoMinusculo = 'revistoria';
+    } else {
+      enhancedData.tipoVistoriaTexto = 'VISTORIA FINAL';
+      enhancedData.tipoVistoriaTextoMaiusculo = 'VISTORIA FINAL';
+      enhancedData.tipoVistoriaTextoMinusculo = 'vistoria final';
+    }
     enhancedData.enderecoImovel =
       formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
     enhancedData.numeroContrato =
@@ -854,7 +867,9 @@ const Contratos = () => {
       NOTIFICACAO_AGENDAMENTO_TEMPLATE,
       enhancedData
     );
-    const documentTitle = `Notificação de Agendamento - ${selectedContract.title}`;
+    const tipoVistoriaTexto =
+      tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
+    const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${selectedContract.title}`;
 
     navigate('/gerar-documento', {
       state: {
@@ -877,6 +892,7 @@ const Contratos = () => {
     setSelectedContract(null);
     setDataVistoria('');
     setHoraVistoria('');
+    setTipoVistoria('final');
   };
 
   const handleGenerateWhatsApp = () => {
@@ -952,7 +968,7 @@ const Contratos = () => {
       const enhancedData = {
         ...editFormData,
         prazoDias: '30', // Sempre 30 dias
-        dataComunicacao: editFormData.dataInicioDesocupacao, // Data de comunicação = data de início
+        dataComunicacao: editFormData.dataInicioRescisao, // Data de comunicação = data de início
       };
 
       const { error } = await supabase
@@ -1173,7 +1189,7 @@ const Contratos = () => {
                                 INÍCIO
                               </p>
                               <p className="text-xs font-bold text-gray-900">
-                                {contract.form_data.dataInicioDesocupacao ||
+                                {contract.form_data.dataInicioRescisao ||
                                   '01/09/2026'}
                               </p>
                             </div>
@@ -1185,7 +1201,7 @@ const Contratos = () => {
                                 TÉRMINO
                               </p>
                               <p className="text-xs font-bold text-gray-900">
-                                {contract.form_data.dataTerminoDesocupacao ||
+                                {contract.form_data.dataTerminoRescisao ||
                                   '01/10/2026'}
                               </p>
                             </div>
@@ -1278,6 +1294,20 @@ const Contratos = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tipoVistoria" className="text-right">
+                  Tipo de Vistoria
+                </Label>
+                <Select value={tipoVistoria} onValueChange={setTipoVistoria}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione o tipo de vistoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="final">Vistoria Final</SelectItem>
+                    <SelectItem value="revistoria">Revistoria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="dataVistoria" className="text-right">
                   Data da Vistoria
@@ -1680,37 +1710,37 @@ const Contratos = () => {
                 </div>
               </div>
 
-              {/* Dados de Desocupação */}
+              {/* Dados de Rescisão */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Dados de Desocupação</h3>
+                <h3 className="text-lg font-semibold">Dados de Rescisão</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-dataInicioDesocupacao">
-                      Data de Início da Desocupação
+                    <Label htmlFor="edit-dataInicioRescisao">
+                      Data de Início da Rescisão
                     </Label>
                     <Input
-                      id="edit-dataInicioDesocupacao"
-                      value={editFormData.dataInicioDesocupacao || ''}
+                      id="edit-dataInicioRescisao"
+                      value={editFormData.dataInicioRescisao || ''}
                       onChange={(e) =>
                         setEditFormData((prev) => ({
                           ...prev,
-                          dataInicioDesocupacao: e.target.value,
+                          dataInicioRescisao: e.target.value,
                         }))
                       }
                       placeholder="DD/MM/AAAA - Ex: 23/06/2025"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-dataTerminoDesocupacao">
-                      Data de Término da Desocupação
+                    <Label htmlFor="edit-dataTerminoRescisao">
+                      Data de Término da Rescisão
                     </Label>
                     <Input
-                      id="edit-dataTerminoDesocupacao"
-                      value={editFormData.dataTerminoDesocupacao || ''}
+                      id="edit-dataTerminoRescisao"
+                      value={editFormData.dataTerminoRescisao || ''}
                       onChange={(e) =>
                         setEditFormData((prev) => ({
                           ...prev,
-                          dataTerminoDesocupacao: e.target.value,
+                          dataTerminoRescisao: e.target.value,
                         }))
                       }
                       placeholder="DD/MM/AAAA - Ex: 22/07/2025"

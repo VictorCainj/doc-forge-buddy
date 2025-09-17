@@ -261,18 +261,18 @@ const EditTerm = () => {
       ],
     },
     {
-      title: 'Dados de Desocupação',
+      title: 'Dados de Rescisão',
       fields: [
         {
-          name: 'dataInicioDesocupacao',
-          label: 'Data de Início da Desocupação',
+          name: 'dataInicioRescisao',
+          label: 'Data de Início da Rescisão',
           type: 'text' as const,
           required: true,
           placeholder: 'DD/MM/AAAA - Ex: 23/06/2025',
         },
         {
-          name: 'dataTerminoDesocupacao',
-          label: 'Data de Término da Desocupação',
+          name: 'dataTerminoRescisao',
+          label: 'Data de Término da Rescisão',
           type: 'text' as const,
           required: true,
           placeholder: 'DD/MM/AAAA - Ex: 22/07/2025',

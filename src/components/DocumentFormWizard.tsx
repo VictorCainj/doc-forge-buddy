@@ -767,7 +767,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
         <div
           className={cn(
             'grid gap-6 overflow-visible',
-            step.id === 'desocupacao'
+            step.id === 'rescisao'
               ? 'grid-cols-1 md:grid-cols-2'
               : 'grid-cols-1 md:grid-cols-2'
           )}

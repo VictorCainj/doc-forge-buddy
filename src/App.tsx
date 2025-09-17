@@ -13,7 +13,7 @@ import NotFound from './pages/NotFound';
 import EditTerm from './pages/EditTerm';
 import Contratos from './pages/Contratos';
 import CadastrarContrato from './pages/CadastrarContrato';
-import ProcessoDesocupacao from './pages/ProcessoDesocupacao';
+import ProcessoRescisao from './pages/ProcessoRescisao';
 import GerarDocumento from './pages/GerarDocumento';
 import TermoLocador from './pages/TermoLocador';
 import TermoLocatario from './pages/TermoLocatario';
@@ -114,7 +114,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <ProcessoDesocupacao />
+                    <ProcessoRescisao />
                   </Layout>
                 </ProtectedRoute>
               }

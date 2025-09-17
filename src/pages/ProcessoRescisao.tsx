@@ -27,7 +27,7 @@ interface Contract {
   created_at: string;
 }
 
-const ProcessoDesocupacao = () => {
+const ProcessoRescisao = () => {
   const { contratoId } = useParams();
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,7 +116,7 @@ const ProcessoDesocupacao = () => {
           </div>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Processo de Desocupação
+              Processo de Rescisão
             </h1>
             <p className="text-muted-foreground mt-2">
               Contrato #{contratoId} - Gerencie todos os documentos necessários
@@ -192,12 +192,12 @@ const ProcessoDesocupacao = () => {
                   {contract.form_data.enderecoImovel || 'N/A'}
                 </div>
                 <div>
-                  <span className="font-medium">Início da Desocupação:</span>{' '}
-                  {contract.form_data.dataInicioDesocupacao || 'N/A'}
+                  <span className="font-medium">Início da Rescisão:</span>{' '}
+                  {contract.form_data.dataInicioRescisao || 'N/A'}
                 </div>
                 <div>
-                  <span className="font-medium">Término da Desocupação:</span>{' '}
-                  {contract.form_data.dataTerminoDesocupacao || 'N/A'}
+                  <span className="font-medium">Término da Rescisão:</span>{' '}
+                  {contract.form_data.dataTerminoRescisao || 'N/A'}
                 </div>
               </div>
             ) : (
@@ -217,4 +217,4 @@ const ProcessoDesocupacao = () => {
   );
 };
 
-export default ProcessoDesocupacao;
+export default ProcessoRescisao;

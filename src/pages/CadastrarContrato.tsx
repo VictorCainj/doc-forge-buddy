@@ -143,21 +143,21 @@ const CadastrarContrato = () => {
       ],
     },
     {
-      id: 'desocupacao',
-      title: 'Dados de Desocupação',
-      description: 'Informações para processo de desocupação',
+      id: 'rescisao',
+      title: 'Dados de Rescisão',
+      description: 'Informações para processo de rescisão',
       icon: FileText,
       fields: [
         {
-          name: 'dataInicioDesocupacao',
-          label: 'Data de Início da Desocupação',
+          name: 'dataInicioRescisao',
+          label: 'Data de Início da Rescisão',
           type: 'text',
           required: true,
           placeholder: 'DD/MM/AAAA - Ex: 23/06/2025',
         },
         {
-          name: 'dataTerminoDesocupacao',
-          label: 'Data de Término da Desocupação',
+          name: 'dataTerminoRescisao',
+          label: 'Data de Término da Rescisão',
           type: 'text',
           required: true,
           placeholder: 'DD/MM/AAAA - Ex: 22/07/2025',
@@ -232,7 +232,7 @@ const CadastrarContrato = () => {
       const enhancedData = {
         ...data,
         prazoDias: '30', // Sempre 30 dias
-        dataComunicacao: data.dataInicioDesocupacao, // Data de comunicação = data de início
+        dataComunicacao: data.dataInicioRescisao, // Data de comunicação = data de início
       };
 
       // Salvar o contrato no banco de dados usando a tabela saved_terms
@@ -277,7 +277,7 @@ const CadastrarContrato = () => {
             <p className="text-muted-foreground text-sm">
               Preencha as informações essenciais incluindo a qualificação
               completa dos locadores e locatários para gerar os documentos de
-              notificação de desocupação e devolutiva do proprietário
+              notificação de rescisão e devolutiva do proprietário
             </p>
           </div>
 

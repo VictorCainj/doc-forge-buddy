@@ -1,4 +1,4 @@
-// Templates para os documentos de desocupação
+// Templates para os documentos de rescisão
 
 export const TERMO_RECEBIMENTO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
@@ -77,7 +77,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">Venho comunicar que {{locatarioTermNoArtigo}} <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} na data de <strong>{{dataComunicacao}}</strong> que {{locatarioIra}} desocupar o imóvel.</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioDesocupacao}}</strong>, e termina no dia <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  <p style="margin-bottom: 20px;">O prazo é de <strong>{{prazoDias}} dias</strong> e se inicia no dia <strong>{{dataInicioRescisao}}</strong>, e termina no dia <strong>{{dataTerminoRescisao}}</strong>.</p>
   
   <p style="margin-bottom: 20px;">A vistoria de Saída do imóvel será agendada após o envio de algumas documentações por parte {{locatarioDocumentacao}} dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. Comunicaremos a data da vistoria com antecedência.</p>
   
@@ -85,7 +85,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Anexo a esse e-mail o laudo de vistoria de entrada para seu conhecimento. O vistoriador na data da vistoria irá seguir conforme esse laudo inicial de entrada.</p>
   
-  <p style="margin-bottom: 20px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  <p style="margin-bottom: 20px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de rescisão.</p>
   
   <p style="margin-bottom: 20px;">Todos os documentos enviados deverão ser assinados pelas partes, no que se refere a data de agendamento de vistoria, termo de comparecimento de vistoria e conclusão de vistoria, pois a Madia deve documentar que, todos os processos administrativos, como contratante serão efetuados e realizados por todas as partes.</p>
   
@@ -110,7 +110,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Confirmamos o recebimento da {{tratamentoLocatarioGenero}} notificação de desocupação do imóvel. O prazo de {{prazoDias}} dias para desocupação terá início em <strong>{{dataInicioDesocupacao}}</strong>, com término em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Confirmamos o recebimento da {{tratamentoLocatarioGenero}} notificação de rescisão do imóvel. O prazo de {{prazoDias}} dias para rescisão terá início em <strong>{{dataInicioRescisao}}</strong>, com término em <strong>{{dataTerminoRescisao}}</strong>.</p>
   
   <p style="margin-bottom: 20px;">Informamos que, como forma de facilitar {{tratamentoLocatarioGenero}} organização e viabilizar o agendamento da vistoria, solicitamos a gentileza de encaminhar os comprovantes de pagamento acompanhados das respectivas faturas referentes aos meses de <strong>{{mesesComprovantes}}</strong> (tais como <strong>{{documentosSolicitados}}</strong>){{#if solicitarCND}}{{#eq solicitarCND "sim"}} bem como a <strong>Certidão Negativa de Débitos (CND)</strong>{{/eq}}{{/if}}, conforme estabelecido em contrato.</p>
   
@@ -118,7 +118,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
 
   <p style="margin-bottom: 20px;">Informar a data desejada para a vistoria de saída com <strong>5 dias de antecedência</strong> a data pretendida.</p>
   
-  <p style="margin-bottom: 20px;">Também solicitamos o envio da <strong>Notificação de Rescisão</strong> preenchida e assinada. Todas essas orientações constam no <strong>Informativo de Desocupação</strong> anexo.</p>
+  <p style="margin-bottom: 20px;">Também solicitamos o envio da <strong>Notificação de Rescisão</strong> preenchida e assinada. Todas essas orientações constam no <strong>Informativo de Rescisão</strong> anexo.</p>
   
   <p style="margin-bottom: 20px;">Ressaltamos que o imóvel deverá ser devolvido nas mesmas condições em que foi entregue, conforme o Art. 23 da Lei do Inquilinato "III - restituir o imóvel, finda a locação, no estado em que o recebeu, salvo as deteriorações decorrentes do seu uso normal;</p>
   
@@ -132,7 +132,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Para {{tratamentoLocatarioGenero}} referência, segue também o laudo de vistoria de entrada.</p>
   
-  <p style="margin-bottom: 20px;">Caso o imóvel não seja desocupado dentro do prazo legal, será necessário o envio de nova notificação com uma nova data. A ausência dessa comunicação poderá ser interpretada como <strong>desistência da desocupação</strong>.</p>
+  <p style="margin-bottom: 20px;">Caso o imóvel não seja desocupado dentro do prazo legal, será necessário o envio de nova notificação com uma nova data. A ausência dessa comunicação poderá ser interpretada como <strong>desistência da rescisão</strong>.</p>
   
   <p style="margin-bottom: 20px;">Nossa intenção é garantir que todo o processo ocorra de forma tranquila e transparente. Portanto, recomendamos a leitura atenta do informativo anexo e, se houver qualquer dúvida, permanecemos à disposição pelos nossos canais de atendimento.</p>
   
@@ -161,7 +161,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato Nº <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de desocupação, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de <strong>{{mesesComprovantes}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de rescisão, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de <strong>{{mesesComprovantes}}</strong>.</p>
   
   <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
     <p style="margin-bottom: 10px; font-weight: bold; color: #007bff;">DOCUMENTOS SOLICITADOS:</p>
@@ -192,7 +192,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
     {{/if}}
   </div>
   
-  <p style="margin-bottom: 20px;">Solicitamos que encaminhe esses documentos o mais breve possível, pois são essenciais para a finalização do processo de desocupação.</p>
+  <p style="margin-bottom: 20px;">Solicitamos que encaminhe esses documentos o mais breve possível, pois são essenciais para a finalização do processo de rescisão.</p>
   
   <p style="margin-bottom: 20px;">Conforme estabelecido no contrato de locação, o locatário é responsável pelo pagamento das contas de consumo durante todo o período de ocupação do imóvel.</p>
   
@@ -217,7 +217,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   
   <div style="text-align: center; margin-bottom: 30px;">
     <h1 style="color: #d32f2f; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
-      NOTIFICAÇÃO PARA REALIZAÇÃO DE VISTORIA FINAL
+      NOTIFICAÇÃO PARA REALIZAÇÃO DE {{tipoVistoriaTexto}}
     </h1>
   </div>
   
@@ -234,17 +234,17 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da Vistoria Final do Imóvel situado <strong>{{enderecoImovel}}</strong>, Contrato <strong>{{numeroContrato}}</strong>, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de {{tratamentoLocatarioNotificacao}}.</p>
+    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da {{tipoVistoriaTexto}} do Imóvel situado <strong>{{enderecoImovel}}</strong>, Contrato <strong>{{numeroContrato}}</strong>, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de {{tratamentoLocatarioNotificacao}}.</p>
     
-    <p style="margin: 10px 0; font-size: 14px;">Pelo presente a notificação tem por finalidade comunicar as partes, ou de seus representantes a constata-se à Vistoria Final do imóvel citado, que assistirão à produção das fotos que embasam o Laudo de Vistoria e acompanharam a constatação das divergências. O não comparecimento ao ato, e nem dos representantes, <strong><u>aceitarão antecipadamente os termos integrais da VISTORIA FINAL, tal como for apurada.</u></strong></p>
+    <p style="margin: 10px 0; font-size: 14px;">Pelo presente a notificação tem por finalidade comunicar as partes, ou de seus representantes a constata-se à {{tipoVistoriaTexto}} do imóvel citado, que assistirão à produção das fotos que embasam o Laudo de Vistoria e acompanharam a constatação das divergências. O não comparecimento ao ato, e nem dos representantes, <strong><u>aceitarão antecipadamente os termos integrais da {{tipoVistoriaTextoMaiusculo}}, tal como for apurada.</u></strong></p>
     
-    <p style="margin: 10px 0; font-size: 14px;">Esta notificação integra o laudo de vistoria final para fins de comparecimento do ato realizado, tal qual das assinaturas realizadas no laudo de conclusão da vistoria, sendo ela Aprovada ou Reprovada.</p>
+    <p style="margin: 10px 0; font-size: 14px;">Esta notificação integra o laudo de {{tipoVistoriaTextoMinusculo}} para fins de comparecimento do ato realizado, tal qual das assinaturas realizadas no laudo de conclusão da vistoria, sendo ela Aprovada ou Reprovada.</p>
   </div>
   
   <div style="margin-top: 40px;">
     <p style="margin: 5px 0; font-size: 14px;">Cordiais saudações,</p>
     <p style="margin: 5px 0; font-size: 14px;"><strong>MADIA IMÓVEIS LTDA</strong></p>
-    <p style="margin: 5px 0; font-size: 14px;">Setor de Desocupação</p>
+    <p style="margin: 5px 0; font-size: 14px;">Setor de Rescisão</p>
   </div>
 </div>
 `;
@@ -264,19 +264,19 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
   <p style="margin-bottom: 25px;">{{saudacaoProprietario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 25px;">Enviamos um e-mail informando sobre a desocupação do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
+  <p style="margin-bottom: 25px;">Enviamos um e-mail informando sobre a rescisão do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
-  <p style="margin-bottom: 25px;">O prazo de <strong>30 dias</strong> para desocupação se inicia em <strong>{{dataInicioDesocupacao}}</strong> e termina em <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  <p style="margin-bottom: 25px;">O prazo de <strong>30 dias</strong> para rescisão se inicia em <strong>{{dataInicioRescisao}}</strong> e termina em <strong>{{dataTerminoRescisao}}</strong>.</p>
   
   <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
   
-  <p style="margin-bottom: 25px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de desocupação.</p>
+  <p style="margin-bottom: 25px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de rescisão.</p>
   
   <p style="margin-top: 50px;">Atenciosamente,</p>
   
   <div style="margin-top: 30px;">
     <p style="margin-bottom: 8px;"><strong>VICTOR</strong></p>
-    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
 </div>
@@ -297,7 +297,7 @@ export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
   <p style="margin-bottom: 25px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de desocupação do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
+  <p style="margin-bottom: 25px;">Enviamos um e-mail com informações sobre o processo de rescisão do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
   <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
   
@@ -309,7 +309,7 @@ export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
   
   <div style="margin-top: 30px;">
     <p style="margin-bottom: 8px;"><strong>VICTOR</strong></p>
-    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
 </div>
@@ -330,9 +330,9 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   <p style="margin-bottom: 20px;">Prezados, {{saudacaoComercial}}</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Anexo a notificação de desocupação referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como LOCADORES {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e LOCATÁRIOS <strong>{{nomeLocatarioFormatado}}</strong>{{/if}}.</p>
+  <p style="margin-bottom: 20px;">Anexo a notificação de rescisão referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como LOCADORES {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e LOCATÁRIOS <strong>{{nomeLocatarioFormatado}}</strong>{{/if}}.</p>
   
-  <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioDesocupacao}}</strong>, com prazo de desocupação até <strong>{{dataTerminoDesocupacao}}</strong>.</p>
+  <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioRescisao}}</strong>, com prazo de rescisão até <strong>{{dataTerminoRescisao}}</strong>.</p>
   
   <p style="margin-bottom: 20px;">Solicito, por gentileza, que seja encaminhado ao Captador para que entre em contato com {{locadorTerm}}, a fim de averiguar novos valores para uma futura locação.</p>
   
@@ -340,7 +340,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   
   <div style="margin-top: 30px;">
     <p style="margin-bottom: 8px;"><strong>VICTOR CAIN JORGE</strong></p>
-    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Desocupação</p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
 </div>
@@ -359,17 +359,17 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
   
   <div style="text-align: center; margin-bottom: 30px;">
     <h1 style="color: #d32f2f; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
-      FORMALIZAÇÃO INTERNA - PROCESSO DE DESOCUPAÇÃO
+      FORMALIZAÇÃO INTERNA - PROCESSO DE RESCISÃO
     </h1>
   </div>
   
   <div style="margin-bottom: 30px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 14px;">Os locatários {{nomeLocatarioFormatado}}, do contrato {{numeroContrato}}, comunicaram a desocupação do imóvel na {{enderecoImovel}}, em {{dataComunicacao}}, com prazo até {{dataTerminoDesocupacao}}. A informação foi repassada ao locador e ao setor comercial.</p>
+    <p style="margin: 10px 0; font-size: 14px;">Os locatários {{nomeLocatarioFormatado}}, do contrato {{numeroContrato}}, comunicaram a rescisão do imóvel na {{enderecoImovel}}, em {{dataComunicacao}}, com prazo até {{dataTerminoRescisao}}. A informação foi repassada ao locador e ao setor comercial.</p>
   </div>
   
   <div style="margin-top: 40px; text-align: center;">
     <p style="margin: 5px 0; font-size: 14px;"><strong>MADIA IMÓVEIS LTDA</strong></p>
-    <p style="margin: 5px 0; font-size: 14px;">Setor de Desocupação</p>
+    <p style="margin: 5px 0; font-size: 14px;">Setor de Rescisão</p>
   </div>
 </div>
 `;
