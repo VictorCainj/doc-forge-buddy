@@ -36,6 +36,10 @@ const GerarDocumento = () => {
       }
       case 'Distrato de Contrato de Locação':
         return `Título: Instrumento Particular de Rescisão de Contrato de Locação - Contrato ${contractNumber}`;
+      case 'Termo de Recusa de Assinatura - E-mail':
+        return `Título: Termo de Recusa de Assinatura - E-mail (Etapa 1) - Contrato ${contractNumber}`;
+      case 'Termo de Recusa de Assinatura - PDF':
+        return `Título: Registro de Vistoria de Saída - Recusa de Assinatura (Etapa 2) - Contrato ${contractNumber}`;
       default:
         return `Título: ${documentType} - Contrato ${contractNumber}`;
     }

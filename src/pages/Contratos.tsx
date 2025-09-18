@@ -114,6 +114,7 @@ const Contratos = () => {
     'locador' | 'locatario' | null
   >(null);
   const [selectedPerson, setSelectedPerson] = useState<string>('');
+  const [assinanteSelecionado, setAssinanteSelecionado] = useState<string>('');
   const [_deletingContract, setDeletingContract] = useState<string | null>(
     null
   );
@@ -182,7 +183,7 @@ const Contratos = () => {
   // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
   const generateMesesComprovantes = () => {
     const hoje = new Date();
-    const meses = [];
+    const meses: string[] = [];
     const nomesMeses = [
       'janeiro',
       'fevereiro',
@@ -636,6 +637,30 @@ const Contratos = () => {
         });
         setGeneratingDocument(null);
       }, 800);
+    } else if (
+      documentType === 'Termo de Recusa de Assinatura - E-mail' ||
+      documentType === 'Termo de Recusa de Assinatura - PDF'
+    ) {
+      // Aplicar conjunções verbais antes de processar o template
+      const enhancedData = applyConjunctions(formData);
+
+      const processedTemplate = replaceTemplateVariables(
+        template,
+        enhancedData
+      );
+      const documentTitle = `${documentType} - ${contract.title}`;
+
+      setTimeout(() => {
+        navigate('/gerar-documento', {
+          state: {
+            title: documentTitle,
+            template: processedTemplate,
+            formData: enhancedData,
+            documentType: documentType,
+          },
+        });
+        setGeneratingDocument(null);
+      }, 800);
     } else {
       // Aplicar conjunções verbais antes de processar o template
       const enhancedData = applyConjunctions(formData);
@@ -899,13 +924,21 @@ const Contratos = () => {
   };
 
   const handleGenerateWhatsApp = () => {
-    if (!selectedContract || !selectedPerson || !whatsAppType) {
-      toast.error('Por favor, selecione uma pessoa');
+    if (
+      !selectedContract ||
+      !selectedPerson ||
+      !whatsAppType ||
+      !assinanteSelecionado
+    ) {
+      toast.error('Por favor, selecione uma pessoa e um assinante');
       return;
     }
 
     const formData = selectedContract.form_data;
-    const enhancedData = applyConjunctions(formData);
+    const enhancedData = {
+      ...applyConjunctions(formData),
+      assinanteSelecionado,
+    } as Record<string, string>;
 
     // Personalizar saudação para a pessoa selecionada
     const primeiroNome = selectedPerson.split(' ')[0];
@@ -947,6 +980,7 @@ const Contratos = () => {
     setSelectedContract(null);
     setWhatsAppType(null);
     setSelectedPerson('');
+    setAssinanteSelecionado('');
   };
 
   const handleCancelWhatsApp = () => {
@@ -954,6 +988,7 @@ const Contratos = () => {
     setSelectedContract(null);
     setWhatsAppType(null);
     setSelectedPerson('');
+    setAssinanteSelecionado('');
   };
 
   const handleEditContract = (contract: Contract) => {
@@ -1021,8 +1056,9 @@ const Contratos = () => {
   // Função auxiliar para renderizar ícone com loading
   const _renderIconWithLoading = (
     _icon: React.ReactNode,
-    _contractId: string,
-    _documentType: string
+    contractId: string,
+    documentType: string,
+    icon: React.ReactNode
   ) => {
     const isGenerating = generatingDocument === `${contractId}-${documentType}`;
     return isGenerating ? (
@@ -1273,7 +1309,7 @@ const Contratos = () => {
                             );
                           }
                         }}
-                        generatingDocument={generatingDocument}
+                        generatingDocument={generatingDocument || undefined}
                       />
                     </div>
                   </CardContent>
@@ -1428,6 +1464,27 @@ const Contratos = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="assinanteSelecionado" className="text-right">
+                  Assinante
+                </Label>
+                <Select
+                  value={assinanteSelecionado}
+                  onValueChange={setAssinanteSelecionado}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione quem irá assinar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="VICTOR CAIN JORGE">
+                      Victor Cain Jorge
+                    </SelectItem>
+                    <SelectItem value="FABIANA SALOTTI MARTINS">
+                      Fabiana Salotti Martins
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleCancelWhatsApp}>
@@ -1435,7 +1492,7 @@ const Contratos = () => {
               </Button>
               <Button
                 onClick={handleGenerateWhatsApp}
-                disabled={!selectedPerson}
+                disabled={!selectedPerson || !assinanteSelecionado}
               >
                 Gerar WhatsApp
               </Button>

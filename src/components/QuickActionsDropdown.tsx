@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   Receipt,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -25,6 +26,8 @@ import {
   DEVOLUTIVA_CADERNINHO_TEMPLATE,
   DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
   DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+  TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
+  TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
 } from '@/templates/documentos';
 
 interface QuickAction {
@@ -212,6 +215,41 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
       loading:
         generatingDocument === `${contractId}-Distrato de Contrato de Locação`,
     },
+    // TERMO DE RECUSA DE ASSINATURA
+    {
+      id: 'recusa-email',
+      label: 'Termo de Recusa - E-mail',
+      icon: AlertTriangle,
+      onClick: () =>
+        onGenerateDocument(
+          contractId,
+          TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
+          'Termo de Recusa de Assinatura - E-mail'
+        ),
+      disabled:
+        generatingDocument ===
+        `${contractId}-Termo de Recusa de Assinatura - E-mail`,
+      loading:
+        generatingDocument ===
+        `${contractId}-Termo de Recusa de Assinatura - E-mail`,
+    },
+    {
+      id: 'recusa-pdf',
+      label: 'Termo de Recusa - PDF',
+      icon: AlertTriangle,
+      onClick: () =>
+        onGenerateDocument(
+          contractId,
+          TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
+          'Termo de Recusa de Assinatura - PDF'
+        ),
+      disabled:
+        generatingDocument ===
+        `${contractId}-Termo de Recusa de Assinatura - PDF`,
+      loading:
+        generatingDocument ===
+        `${contractId}-Termo de Recusa de Assinatura - PDF`,
+    },
   ];
 
   // Ações de gerenciamento do contrato
@@ -260,7 +298,8 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
   // Agrupar ações por categoria
   const termActions = quickActions.slice(0, 4);
   const communicationActions = quickActions.slice(4, 9); // Inclui cobrança de consumo
-  const documentActions = quickActions.slice(9, 11);
+  const documentActions = quickActions.slice(9, 11); // Caderninho e Distrato
+  const recusaActions = quickActions.slice(11, 13); // Recusa E-mail e PDF
 
   return (
     <div
@@ -401,6 +440,32 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                         <action.icon className="h-5 w-5 text-gray-500" />
                       )}
                       <span className="text-xs text-gray-700 text-center leading-tight">
+                        {action.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* TERMO DE RECUSA DE ASSINATURA */}
+              <div className="mb-6">
+                <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
+                  TERMO DE RECUSA
+                </p>
+                <div className="grid grid-cols-2 gap-3 px-4">
+                  {recusaActions.map((action) => (
+                    <button
+                      key={action.id}
+                      onClick={() => handleActionClick(action)}
+                      disabled={action.disabled}
+                      className="flex flex-col items-center justify-center gap-2 hover:bg-red-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-red-100 hover:border-red-200"
+                    >
+                      {action.loading ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600" />
+                      ) : (
+                        <action.icon className="h-5 w-5 text-red-500" />
+                      )}
+                      <span className="text-xs text-red-700 text-center leading-tight">
                         {action.label}
                       </span>
                     </button>

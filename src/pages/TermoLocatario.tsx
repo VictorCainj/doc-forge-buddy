@@ -300,6 +300,20 @@ const TermoLocatario: React.FC = () => {
           required: false,
           placeholder: 'Digite observações adicionais se necessário',
         },
+        {
+          name: 'assinanteSelecionado',
+          label: 'Assinante do Termo',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione quem irá assinar o termo',
+          options: [
+            { value: 'VICTOR CAIN JORGE', label: 'Victor Cain Jorge' },
+            {
+              value: 'FABIANA SALOTTI MARTINS',
+              label: 'Fabiana Salotti Martins',
+            },
+          ],
+        },
       ],
     },
   ];
@@ -392,7 +406,7 @@ Foi entregue {{tipoQuantidadeChaves}}
 
 <div>
 __________________________________________<br>
-<span style="font-size: ${signatureSize}px; text-transform: uppercase;">VICTOR CAIN JORGE</span>
+<span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{assinanteSelecionado}}</span>
 </div>
 </div>
 `;

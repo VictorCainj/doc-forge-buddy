@@ -54,7 +54,7 @@ Foi entregue {{quantidadeChaves}}
 
     <div>
       __________________________________________<br>
-      <span style="font-size: 12px; text-transform: uppercase;">VICTOR CAIN JORGE</span>
+      <span style="font-size: 12px; text-transform: uppercase;">{{assinanteSelecionado}}</span>
     </div>
   </div>
 </div>
@@ -275,7 +275,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
   <p style="margin-top: 50px;">Atenciosamente,</p>
   
   <div style="margin-top: 30px;">
-    <p style="margin-bottom: 8px;"><strong>VICTOR</strong></p>
+    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}}</strong></p>
     <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
@@ -308,7 +308,7 @@ export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
   <p style="margin-top: 50px;">Atenciosamente,</p>
   
   <div style="margin-top: 30px;">
-    <p style="margin-bottom: 8px;"><strong>VICTOR</strong></p>
+    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}}</strong></p>
     <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
@@ -339,7 +339,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   <p style="margin-top: 40px;">Atenciosamente,</p>
   
   <div style="margin-top: 30px;">
-    <p style="margin-bottom: 8px;"><strong>VICTOR CAIN JORGE</strong></p>
+    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}} CAIN JORGE</strong></p>
     <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
@@ -482,6 +482,71 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
         </div>
       </div>
     </div>
+  </div>
+</div>
+`;
+
+// Termo de Recusa de Assinatura - Etapa 1: E-mail
+export const TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <p style="margin-bottom: 20px;">Prezados,</p>
+  
+  <p style="margin-bottom: 20px; text-align: justify;">Nos termos do artigo 23, inciso III, da Lei nº 8.245/91 (Lei do Inquilinato), o locatário é responsável por devolver o imóvel nas mesmas condições em que o recebeu, salvo deteriorações decorrentes do uso normal. A vistoria de saída tem como objetivo verificar o cumprimento dessa obrigação legal.</p>
+  
+  <p style="margin-bottom: 20px; text-align: justify;">A administradora Madia reafirma que todos os procedimentos foram conduzidos com imparcialidade, boa-fé e em estrita observância às normas contratuais e legais, resguardando os interesses de ambas as partes.</p>
+  
+  <p style="margin-bottom: 20px;">Atenciosamente,</p>
+  
+  <div style="margin-top: 40px;">
+    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}}</strong></p>
+    <p style="margin-bottom: 8px; font-size: 14px;">Departamento de Rescisão</p>
+  </div>
+</div>
+`;
+
+// Termo de Recusa de Assinatura - Etapa 2: PDF
+export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #d32f2f; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
+      Registro de Vistoria de Saída – Recusa de Assinatura
+    </h1>
+  </div>
+  
+  <p style="margin-bottom: 20px;">Prezado (a) - {{nomeLocatarioFormatado}}</p>
+  
+  <p style="margin-bottom: 20px; text-align: justify;">Informamos que a vistoria de saída do imóvel localizado em {{enderecoImovel}} foi realizada na data de {{dataVistoria}}, conforme previsto em contrato.</p>
+  
+  <p style="margin-bottom: 20px; text-align: justify;">O laudo correspondente foi apresentado para ciência e assinatura do locatário, porém houve recusa formal em assiná-lo. Em razão das limitações do sistema de assinatura eletrônica, a recusa será registrada administrativamente pela Madia e arquivada como parte integrante do processo de desocupação, servindo como comprovação da condição do imóvel na data da vistoria.</p>
+  
+  <p style="margin-bottom: 20px; text-align: justify;">Ressaltamos que o laudo está acompanhado de documentação fotográfica e demais evidências que comprovam o estado do imóvel no momento da devolução.</p>
+  
+  <p style="margin-bottom: 20px;">Atenciosamente,</p>
+  
+  <div style="margin-top: 40px;">
+    <p style="margin-bottom: 8px;"><strong>Nome do Gestor:</strong> {{assinanteSelecionado}}</p>
+    <p style="margin-bottom: 8px; font-size: 14px;"><strong>Setor:</strong> Rescisão</p>
+    <p style="margin-bottom: 8px; font-size: 14px;"><strong>Madia Imóveis</strong></p>
+    <p style="margin-bottom: 8px; font-size: 14px;"><strong>Telefone:</strong> 19-3869-3555</p>
+    <p style="font-size: 14px;"><strong>E-mail:</strong> rescisao@madia.com.br</p>
   </div>
 </div>
 `;

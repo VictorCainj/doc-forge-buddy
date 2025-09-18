@@ -1,11 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  FileText,
-  Settings,
-  Calculator,
-  MessageSquare,
-} from 'lucide-react';
+import { LayoutDashboard, FileText, MessageSquare } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -24,22 +18,10 @@ const Sidebar = () => {
       active: location.pathname === '/contratos',
     },
     {
-      name: 'Multa Rescisória',
-      icon: Calculator,
-      path: '/multa-rescisoria',
-      active: location.pathname === '/multa-rescisoria',
-    },
-    {
       name: 'Chat',
       icon: MessageSquare,
       path: '/chat',
       active: location.pathname === '/chat',
-    },
-    {
-      name: 'Configurações',
-      icon: Settings,
-      path: '/configuracoes',
-      active: location.pathname === '/configuracoes',
     },
   ];
 
