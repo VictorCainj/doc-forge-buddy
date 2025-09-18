@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { authLogger } from '@/utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         error,
       } = await supabase.auth.getSession();
       if (error) {
-        console.error('Erro ao obter sessão inicial:', error);
+        authLogger.error('Erro ao obter sessão inicial:', error);
       } else {
         setSession(session);
         setUser(session?.user ?? null);
@@ -62,7 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
+      authLogger.debug('Auth state changed:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);

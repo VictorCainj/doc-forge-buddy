@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer, MessageCircle, Minimize2 } from 'lucide-react';
+import { ArrowLeft, Printer, Minimize2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const GerarDocumento = () => {
@@ -28,11 +28,12 @@ const GerarDocumento = () => {
         return `Título: Confirmação de Notificação de Rescisão e Procedimentos Finais - Contrato ${contractNumber}`;
       case 'Devolutiva Proprietário':
         return `Título: Notificação de Rescisão e Agendamento de Vistoria - Contrato ${contractNumber}`;
-      case 'Notificação de Agendamento':
+      case 'Notificação de Agendamento': {
         // Verificar se é revistoria ou vistoria final baseado no título
         const isRevistoria = title?.includes('Revistoria');
         const tipoVistoria = isRevistoria ? 'Revistoria' : 'Vistoria Final';
         return `Título: Notificação para Realização de ${tipoVistoria} - Contrato ${contractNumber}`;
+      }
       case 'Distrato de Contrato de Locação':
         return `Título: Instrumento Particular de Rescisão de Contrato de Locação - Contrato ${contractNumber}`;
       default:
@@ -164,7 +165,7 @@ const GerarDocumento = () => {
       toast.success(
         'Abrindo janela de impressão... Dica: Nas opções de impressão, desmarque "Cabeçalhos e rodapés" para uma impressão mais limpa.'
       );
-    } catch (error) {
+    } catch {
       toast.error('Erro ao abrir impressão. Tente novamente.');
     } finally {
       setIsPrinting(false);

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { FileCheck, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
 
 interface ContractData {
@@ -29,11 +29,11 @@ const TermoLocador: React.FC = () => {
   }
 
   // Debug: verificar dados do contrato
-  console.log('Dados do contrato no TermoLocador:', contractData);
-  console.log('Quantidade de chaves:', contractData.quantidadeChaves);
+  // console.log('Dados do contrato no TermoLocador:', contractData);
+  // console.log('Quantidade de chaves:', contractData.quantidadeChaves);
 
   // Função para detectar múltiplos proprietários baseado na quantidade adicionada
-  const isMultipleProprietarios = (nomeProprietario: string) => {
+  const _isMultipleProprietarios = (nomeProprietario: string) => {
     if (!nomeProprietario) return false;
     return nomeProprietario.includes(' e ');
   };
@@ -232,17 +232,17 @@ __________________________________________<br>
       // Se selecionou usar do contrato, usar sempre a quantidade do contrato
       tipoQuantidadeChaves =
         contractData.quantidadeChaves || data.tipoQuantidadeChaves;
-      console.log(
-        'Usando quantidade de chaves do contrato:',
-        contractData.quantidadeChaves
-      );
+      // console.log(
+      //   'Usando quantidade de chaves do contrato:',
+      //   contractData.quantidadeChaves
+      // );
     } else {
       // Se não selecionou, usar o que foi digitado manualmente
       tipoQuantidadeChaves = data.tipoQuantidadeChaves;
-      console.log(
-        'Usando quantidade de chaves digitada manualmente:',
-        data.tipoQuantidadeChaves
-      );
+      // console.log(
+      //   'Usando quantidade de chaves digitada manualmente:',
+      //   data.tipoQuantidadeChaves
+      // );
     }
 
     // Processar observação (só mostra se preenchida)

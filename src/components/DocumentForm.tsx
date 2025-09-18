@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, FileText, Printer, Save, Minimize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-const companyLogo = 'https://i.imgur.com/xwz1P7v.png';
+import { getCompanyLogo } from '@/utils/logoManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
+import { calculateOptimalFontSize } from '@/utils/fontSizeCalculator';
 
 interface FormField {
   name: string;
@@ -69,38 +70,8 @@ const DocumentForm = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Função para verificar se o conteúdo excede uma página e ajustar a fonte
-  const checkAndAdjustFontSize = (content: string, fontSize: number) => {
-    // Criar um elemento temporário para medir o conteúdo
-    const tempElement = document.createElement('div');
-    tempElement.style.cssText = `
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-      width: 794px;
-      font-family: Arial, sans-serif;
-      font-size: ${fontSize}px;
-      line-height: 1.4;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow: hidden;
-    `;
-    tempElement.innerHTML = content;
-    document.body.appendChild(tempElement);
-
-    const contentHeight = tempElement.offsetHeight;
-    const maxHeight = 1050; // Altura máxima de uma página A4 (297mm - margens) em pixels
-
-    document.body.removeChild(tempElement);
-
-    // Se exceder uma página, reduzir a fonte
-    if (contentHeight > maxHeight && fontSize > 10) {
-      const newFontSize = Math.max(10, fontSize - 1);
-      return newFontSize;
-    }
-
-    return fontSize;
-  };
+  // Usar função segura para cálculo de fonte
+  const checkAndAdjustFontSize = calculateOptimalFontSize;
 
   const handleGenerate = () => {
     const processedData = onGenerate(formData);
@@ -297,7 +268,7 @@ const DocumentForm = ({
             "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar o documento. Tente novamente.',
@@ -437,7 +408,7 @@ const DocumentForm = ({
                     style={{ minHeight: '120px' }}
                   >
                     <img
-                      src={companyLogo}
+                      src={getCompanyLogo()}
                       alt="Company Logo"
                       style={{
                         height: 'auto',

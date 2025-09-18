@@ -19,6 +19,7 @@ import TermoLocador from './pages/TermoLocador';
 import TermoLocatario from './pages/TermoLocatario';
 import Configuracoes from './pages/Configuracoes';
 import MultaRescisoria from './pages/MultaRescisoria';
+import Chat from './pages/Chat';
 
 const queryClient = new QueryClient();
 
@@ -155,6 +156,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <MultaRescisoria />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Chat />
                   </Layout>
                 </ProtectedRoute>
               }

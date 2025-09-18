@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { validatePhoneNumber } from '@/utils/phoneValidator';
 
 export interface FormField {
   name: string;
@@ -71,8 +72,11 @@ export const useFormWizard = ({
           }
           break;
         case 'tel':
-          if (value && !/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(value)) {
-            return 'Telefone inválido. Use o formato (XX) XXXXX-XXXX';
+          if (value) {
+            const phoneError = validatePhoneNumber(value);
+            if (phoneError) {
+              return phoneError;
+            }
           }
           break;
       }

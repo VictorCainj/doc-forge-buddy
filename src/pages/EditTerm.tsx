@@ -43,7 +43,7 @@ const EditTerm = () => {
             ? JSON.parse(data.form_data)
             : (data.form_data as Record<string, string>) || {},
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao carregar',
         description: 'Não foi possível carregar o termo para edição.',

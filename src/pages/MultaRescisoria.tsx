@@ -192,7 +192,7 @@ const MultaRescisoria = () => {
     }).format(value);
   };
 
-  const formatDate = (dateString: string): string => {
+  const _formatDate = (dateString: string): string => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');

@@ -78,8 +78,8 @@ const Configuracoes = () => {
           avatar_url: user.user_metadata?.avatar_url || '',
         }));
       }
-    } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+    } catch {
+      // console.error('Erro ao carregar perfil:', error);
     }
   };
 
@@ -107,7 +107,7 @@ const Configuracoes = () => {
         title: 'Perfil atualizado',
         description: 'Suas informações foram salvas com sucesso.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro',
         description: 'Não foi possível atualizar o perfil.',

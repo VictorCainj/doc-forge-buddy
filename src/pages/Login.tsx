@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { parseAuthError } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,18 +48,14 @@ const Login = () => {
       const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          setError('Email ou senha incorretos');
-        } else if (error.message.includes('Email not confirmed')) {
-          setError('Por favor, verifique seu email antes de fazer login');
-        } else {
-          setError('Erro ao fazer login. Tente novamente.');
-        }
+        const loginError = parseAuthError(error);
+        setError(loginError.message);
       } else {
         navigate('/');
       }
     } catch (err) {
-      setError('Erro inesperado. Tente novamente.');
+      const loginError = parseAuthError(err);
+      setError(loginError.message);
     } finally {
       setIsLoading(false);
     }

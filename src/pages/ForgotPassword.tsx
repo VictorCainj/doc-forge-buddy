@@ -49,7 +49,7 @@ const ForgotPassword = () => {
       } else {
         setSuccess(true);
       }
-    } catch (err) {
+    } catch {
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setIsLoading(false);

@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  // CardDescription,
+  // CardHeader,
+  // CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,57 +26,57 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Tooltip,
-  TooltipContent,
+  // Tooltip,
+  // TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
+  // TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
   Plus,
   FileText,
-  Users,
-  Building,
-  Briefcase,
-  Download,
-  Eye,
+  // Users,
+  // Building,
+  // Briefcase,
+  // Download,
+  // Eye,
   Search,
-  Trash2,
-  MessageCircle,
-  Edit,
-  Calendar,
+  // Trash2,
+  // MessageCircle,
+  // Edit,
+  // Calendar,
   Clock,
   MapPin,
   User,
-  UserCheck,
-  FileCheck,
-  FileX,
-  NotebookPen,
-  Handshake,
-  AlertCircle,
-  CheckCircle,
+  // UserCheck,
+  // FileCheck,
+  // FileX,
+  // NotebookPen,
+  // Handshake,
+  // AlertCircle,
+  // CheckCircle,
   Timer,
-  Home,
+  // Home,
   User2,
-  Building2,
+  // Building2,
   CalendarDays,
-  Phone,
-  Mail,
-  Receipt,
+  // Phone,
+  // Mail,
+  // Receipt,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
 import {
-  DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
-  DEVOLUTIVA_LOCATARIO_TEMPLATE,
+  // DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
+  // DEVOLUTIVA_LOCATARIO_TEMPLATE,
   NOTIFICACAO_AGENDAMENTO_TEMPLATE,
   DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
   DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
-  DEVOLUTIVA_COMERCIAL_TEMPLATE,
-  DEVOLUTIVA_CADERNINHO_TEMPLATE,
-  DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
-  DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+  // DEVOLUTIVA_COMERCIAL_TEMPLATE,
+  // DEVOLUTIVA_CADERNINHO_TEMPLATE,
+  // DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
+  // DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
 } from '@/templates/documentos';
 import {
   formatDateBrazilian,
@@ -170,7 +170,7 @@ const Contratos = () => {
       }));
 
       setContracts(contracts);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao carregar contratos');
     } finally {
       setLoading(false);
@@ -730,6 +730,7 @@ const Contratos = () => {
     contractTitle: string
   ) => {
     if (
+      // eslint-disable-next-line no-alert
       window.confirm(
         `Tem certeza que deseja excluir o contrato "${contractTitle}"? Esta ação não pode ser desfeita.`
       )
@@ -748,7 +749,7 @@ const Contratos = () => {
           prev.filter((contract) => contract.id !== contractId)
         );
         toast.success('Contrato excluído com sucesso!');
-      } catch (error) {
+      } catch {
         toast.error('Erro ao excluir contrato');
       } finally {
         setDeletingContract(null);
@@ -1001,9 +1002,9 @@ const Contratos = () => {
       setShowEditModal(false);
       setEditingContract(null);
       setEditFormData({});
-    } catch (error) {
+    } catch {
       toast.error('Erro ao atualizar contrato');
-      console.error('Erro ao atualizar contrato:', error);
+      // console.error('Erro ao atualizar contrato:', error);
     } finally {
       setIsUpdating(false);
     }
@@ -1016,10 +1017,10 @@ const Contratos = () => {
   };
 
   // Função auxiliar para renderizar ícone com loading
-  const renderIconWithLoading = (
-    icon: React.ReactNode,
-    contractId: string,
-    documentType: string
+  const _renderIconWithLoading = (
+    _icon: React.ReactNode,
+    _contractId: string,
+    _documentType: string
   ) => {
     const isGenerating = generatingDocument === `${contractId}-${documentType}`;
     return isGenerating ? (
@@ -1245,11 +1246,11 @@ const Contratos = () => {
                             generateDocument(contractData, template, title);
                           }
                         }}
-                        onNavigateToTerm={(contractId, termType) => {
+                        onNavigateToTerm={(_contractId, _termType) => {
                           // Implementar navegação para termos se necessário
-                          console.log(
-                            `Navigate to ${termType} for contract ${contractId}`
-                          );
+                          // console.log(
+                          //   `Navigate to ${termType} for contract ${contractId}`
+                          // );
                         }}
                         onEditContract={(contractId) => {
                           const contractData = contracts.find(

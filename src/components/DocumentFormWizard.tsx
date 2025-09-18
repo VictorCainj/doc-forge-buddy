@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
-  FileText,
   Printer,
   Save,
   Home,
@@ -18,6 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FormWizard, WizardStep } from '@/components/ui/form-wizard';
+// import { useTimeoutWithCleanup } from '@/utils/fontSizeCalculator';
+import { formLogger } from '@/utils/logger';
 import { FormField } from '@/components/ui/form-field';
 import { PersonManager } from '@/components/ui/person-manager';
 import {
@@ -52,7 +52,6 @@ interface DocumentFormWizardProps {
 
 const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   title,
-  description,
   steps,
   template,
   getTemplate,
@@ -64,7 +63,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   onFormDataChange,
   isSubmitting = false,
   submitButtonText = 'Gerar Documento',
-  externalFormData,
   hideSaveButton = false,
 }) => {
   const navigate = useNavigate();
@@ -91,20 +89,12 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const {
     currentStep,
     formData,
-    errors,
-    touched,
     completedSteps,
-    isCurrentStepValid,
     isFormValid,
     updateField,
-    nextStep,
-    previousStep,
     goToStep,
-    getCurrentStep,
     getFieldError,
     isFieldTouched,
-    isLastStep,
-    isFirstStep,
   } = useFormWizard({
     steps,
     initialData,
@@ -420,7 +410,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
         setShowPreview(true);
 
-        // Verificação adicional após o preview ser exibido
+        // Verificação adicional após o preview ser exibido com cleanup automático
         setTimeout(() => {
           const documentElement = document.getElementById('document-content');
           if (documentElement) {
@@ -439,7 +429,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
         }, 100);
       } catch (error) {
         // Erro já tratado no onGenerate
-        console.error('Erro ao processar formulário:', error);
+        formLogger.error('Erro ao processar formulário:', error);
       }
     } else if (!isFormValid) {
       toast({
@@ -599,7 +589,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
         description:
           "Abrindo janela de impressão... Dica: Nas opções de impressão, desmarque 'Cabeçalhos e rodapés' para uma impressão mais limpa.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro',
         description: 'Erro ao abrir impressão. Tente novamente.',
@@ -649,7 +639,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             "O termo foi salvo com sucesso e pode ser acessado em 'Termos Salvos'.",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar o documento. Tente novamente.',
@@ -669,7 +659,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     // Processar condicionais Handlebars {{#eq}} (igualdade)
     result = result.replace(
       /\{\{#eq\s+(\w+)\s+"([^"]+)"\}\}([\s\S]*?)\{\{\/eq\}\}/g,
-      (match, variable, expectedValue, content) => {
+      (_match, variable, expectedValue, content) => {
         if (data[variable] === expectedValue) {
           return content;
         }
@@ -680,7 +670,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     // Processar condicionais Handlebars com else
     result = result.replace(
       /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g,
-      (match, variable, ifContent, elseContent) => {
+      (_match, variable, ifContent, elseContent) => {
         if (data[variable] && data[variable].trim()) {
           return ifContent;
         }
@@ -691,7 +681,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     // Processar condicionais Handlebars simples (sem else)
     result = result.replace(
       /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
-      (match, variable, content) => {
+      (_match, variable, content) => {
         if (data[variable] && data[variable].trim()) {
           return content;
         }
@@ -785,7 +775,9 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             ) {
               shouldShowField = false;
             } else if (field.name === 'statusAgua') {
-              shouldShowField = formData.tipoAgua && formData.tipoAgua !== '';
+              shouldShowField = Boolean(
+                formData.tipoAgua && formData.tipoAgua !== ''
+              );
             } else if (
               field.name === 'cpfl' ||
               field.name === 'tipoAgua' ||

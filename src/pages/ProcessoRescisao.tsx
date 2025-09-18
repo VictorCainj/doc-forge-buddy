@@ -91,9 +91,9 @@ const ProcessoRescisao = () => {
         };
 
         setContract(contractData);
-      } catch (error) {
+      } catch {
         toast.error('Erro ao carregar contrato');
-        console.error('Erro ao carregar contrato:', error);
+        // console.error('Erro ao carregar contrato:', error);
       } finally {
         setLoading(false);
       }

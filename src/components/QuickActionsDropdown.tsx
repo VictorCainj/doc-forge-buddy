@@ -55,7 +55,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
   contractId,
   contractNumber,
   onGenerateDocument,
-  onNavigateToTerm,
+  onNavigateToTerm: _onNavigateToTerm,
   onEditContract,
   onDeleteContract,
   generatingDocument,

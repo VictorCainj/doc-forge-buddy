@@ -1,24 +1,18 @@
 import {
   Card,
   CardContent,
-  CardDescription,
+  // CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { Users, CheckSquare, AlertTriangle, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-
-interface Contract {
-  id: string;
-  title: string;
-  form_data: Record<string, string>;
-  created_at: string;
-  document_type: string;
-}
+import { validateContractsList, type Contract } from '@/utils/dataValidator';
+import { dbLogger } from '@/utils/logger';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -44,17 +38,11 @@ const Index = () => {
 
       if (error) throw error;
 
-      const contractsData: Contract[] = (data || []).map((row) => ({
-        ...row,
-        form_data:
-          typeof row.form_data === 'string'
-            ? JSON.parse(row.form_data)
-            : (row.form_data as Record<string, string>) || {},
-      }));
-
+      // Usar validação robusta para processar os dados
+      const contractsData = validateContractsList(data || []);
       setContracts(contractsData);
     } catch (error) {
-      console.error('Erro ao carregar contratos:', error);
+      dbLogger.error('Erro ao carregar contratos:', error);
       setContracts([]);
     } finally {
       setLoading(false);
@@ -62,7 +50,7 @@ const Index = () => {
   };
 
   // Função para converter data DD/MM/AAAA para objeto Date
-  const parseDate = (dateStr: string): Date | null => {
+  const parseBrazilianDate = (dateStr: string): Date | null => {
     if (!dateStr) return null;
     const parts = dateStr.split('/');
     if (parts.length !== 3) return null;
@@ -99,16 +87,16 @@ const Index = () => {
     const expiredContracts = contracts.filter((contract) => {
       // Tentar usar dataTerminoRescisao primeiro, depois dataTermino como fallback
       const terminoDate =
-        parseDate(contract.form_data.dataTerminoRescisao) ||
-        parseDate(contract.form_data.dataTermino);
+        parseBrazilianDate(contract.form_data.dataTerminoRescisao) ||
+        parseBrazilianDate(contract.form_data.dataTermino);
       return terminoDate && terminoDate < now;
     });
 
     // Contratos próximos do vencimento (próximos 7 dias)
     const upcomingContracts = contracts.filter((contract) => {
       const terminoDate =
-        parseDate(contract.form_data.dataTerminoRescisao) ||
-        parseDate(contract.form_data.dataTermino);
+        parseBrazilianDate(contract.form_data.dataTerminoRescisao) ||
+        parseBrazilianDate(contract.form_data.dataTermino);
       if (!terminoDate) return false;
       const daysUntilExpiry = Math.ceil(
         (terminoDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
@@ -185,7 +173,9 @@ const Index = () => {
     return months.map((month) => {
       const contractsInMonth = contracts.filter((contract) => {
         // Usar data de início da rescisão se disponível, senão usar data de criação
-        const rescisaoDate = parseDate(contract.form_data.dataInicioRescisao);
+        const rescisaoDate = parseBrazilianDate(
+          contract.form_data.dataInicioRescisao
+        );
         const contractDate = rescisaoDate || new Date(contract.created_at);
 
         return (
@@ -205,14 +195,16 @@ const Index = () => {
   const maxValue = Math.max(...chartData.map((d) => d.value), 1);
 
   // Debug: verificar dados do gráfico
-  console.log('Chart data:', chartData);
-  console.log('Max value:', maxValue);
+  dbLogger.debug('Chart data:', chartData);
+  dbLogger.debug('Max value:', maxValue);
 
   // Calcular desocupações que ultrapassaram 30 dias
   const getRescisoesExpiradas = () => {
     const now = new Date();
     return contracts.filter((contract) => {
-      const terminoDate = parseDate(contract.form_data.dataTerminoRescisao);
+      const terminoDate = parseBrazilianDate(
+        contract.form_data.dataTerminoRescisao
+      );
       if (!terminoDate) return false;
       return terminoDate < now;
     });
@@ -224,7 +216,9 @@ const Index = () => {
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     return contracts.filter((contract) => {
-      const terminoDate = parseDate(contract.form_data.dataTerminoRescisao);
+      const terminoDate = parseBrazilianDate(
+        contract.form_data.dataTerminoRescisao
+      );
       if (!terminoDate) return false;
       return terminoDate >= now && terminoDate <= sevenDaysFromNow;
     });
@@ -390,7 +384,7 @@ const Index = () => {
                   </div>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {rescisoesExpiradas.slice(0, 3).map((contract) => {
-                      const terminoDate = parseDate(
+                      const terminoDate = parseBrazilianDate(
                         contract.form_data.dataTerminoRescisao
                       );
                       const daysOverdue = terminoDate
@@ -437,7 +431,7 @@ const Index = () => {
                   </div>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {rescisoesProximasVencimento.slice(0, 3).map((contract) => {
-                      const terminoDate = parseDate(
+                      const terminoDate = parseBrazilianDate(
                         contract.form_data.dataTerminoRescisao
                       );
                       const daysUntilDue = terminoDate
@@ -489,10 +483,10 @@ const Index = () => {
             <CardContent>
               <div className="space-y-3">
                 {contracts.slice(0, 5).map((contract) => {
-                  const inicioDate = parseDate(
-                    contract.form_data.dataInicioRescisao
-                  );
-                  const terminoDate = parseDate(
+                  // const inicioDate = parseBrazilianDate(
+                  //   contract.form_data.dataInicioRescisao
+                  // );
+                  const terminoDate = parseBrazilianDate(
                     contract.form_data.dataTerminoRescisao
                   );
                   const isExpired = terminoDate && terminoDate < new Date();

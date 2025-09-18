@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { FileCheck, Search, Phone, Mail } from 'lucide-react';
+import { Search, Phone, Mail } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
 import {
   Dialog,
@@ -55,7 +55,7 @@ const TermoLocatario: React.FC = () => {
   }
 
   // Função para detectar múltiplos locatários
-  const isMultipleLocatarios = (nomeLocatario: string) => {
+  const _isMultipleLocatarios = (nomeLocatario: string) => {
     if (!nomeLocatario) return false;
     return (
       nomeLocatario.includes(',') ||
@@ -65,7 +65,7 @@ const TermoLocatario: React.FC = () => {
   };
 
   // Função para detectar múltiplos proprietários
-  const isMultipleProprietarios = (nomeProprietario: string) => {
+  const _isMultipleProprietarios = (nomeProprietario: string) => {
     if (!nomeProprietario) return false;
     return (
       nomeProprietario.includes(',') ||
@@ -75,7 +75,7 @@ const TermoLocatario: React.FC = () => {
   };
 
   // Função para validar campos de contato
-  const validateContactFields = (data: Record<string, string>) => {
+  const validateContactFields = (_data: Record<string, string>) => {
     const celular =
       contractData.celularLocatario || contactData.celularLocatario;
     const email = contractData.emailLocatario || contactData.emailLocatario;
@@ -132,8 +132,8 @@ const TermoLocatario: React.FC = () => {
       });
 
       return true;
-    } catch (error) {
-      console.error('Erro ao atualizar dados de contato:', error);
+    } catch {
+      // console.error('Erro ao atualizar dados de contato:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível atualizar os dados de contato.',
@@ -472,17 +472,17 @@ __________________________________________<br>
       // Se selecionou usar do contrato, usar sempre a quantidade do contrato
       tipoQuantidadeChaves =
         contractData.quantidadeChaves || data.tipoQuantidadeChaves;
-      console.log(
-        'Usando quantidade de chaves do contrato:',
-        contractData.quantidadeChaves
-      );
+      // console.log(
+      //   'Usando quantidade de chaves do contrato:',
+      //   contractData.quantidadeChaves
+      // );
     } else {
       // Se não selecionou, usar o que foi digitado manualmente
       tipoQuantidadeChaves = data.tipoQuantidadeChaves;
-      console.log(
-        'Usando quantidade de chaves digitada manualmente:',
-        data.tipoQuantidadeChaves
-      );
+      // console.log(
+      //   'Usando quantidade de chaves digitada manualmente:',
+      //   data.tipoQuantidadeChaves
+      // );
     }
 
     // Processar status da vistoria

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import DocumentFormWizard from '@/components/DocumentFormWizard';
 import { FormStep } from '@/hooks/use-form-wizard';
-import { Home, Users, FileText } from 'lucide-react';
+import { Users, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 
 const CadastrarContrato = () => {
   const navigate = useNavigate();
@@ -243,10 +243,10 @@ const CadastrarContrato = () => {
         document_type: 'contrato',
       };
 
-      console.log('Salvando contrato no banco:', contractData);
+      // console.log('Salvando contrato no banco:', contractData);
       const { error } = await supabase.from('saved_terms').insert(contractData);
 
-      console.log('Resultado do salvamento:', { error });
+      // console.log('Resultado do salvamento:', { error });
 
       if (error) throw error;
 
@@ -256,7 +256,7 @@ const CadastrarContrato = () => {
       return enhancedData;
     } catch (error) {
       toast.error('Erro ao cadastrar contrato');
-      console.error('Erro ao cadastrar contrato:', error);
+      // console.error('Erro ao cadastrar contrato:', error);
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -264,7 +264,7 @@ const CadastrarContrato = () => {
   };
 
   // Template vazio para o cadastro (não gera documento)
-  const getTemplate = () => '';
+  const _getTemplate = () => '';
 
   return (
     <div className="min-h-screen bg-gradient-secondary">

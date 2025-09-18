@@ -1,9 +1,9 @@
 import React, { useState, ComponentProps } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Progress } from '@/components/ui/progress';
+// import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 function Step({ step, currentStep }: { step: number; currentStep: number }) {
   const status =
@@ -122,9 +122,9 @@ export const FormWizard: React.FC<FormWizardProps> = ({
   steps,
   onComplete,
   onStepChange,
-  completedSteps = [],
+  completedSteps: _completedSteps = [],
   currentStep: controlledStep,
-  showProgress = true,
+  showProgress: _showProgress = true,
   allowStepNavigation = true,
   isSubmitting = false,
   submitButtonText = 'Gerar Documento',
@@ -155,16 +155,16 @@ export const FormWizard: React.FC<FormWizardProps> = ({
     }
   };
 
-  const goToStep = (stepIndex: number) => {
+  const _goToStep = (_stepIndex: number) => {
     if (allowStepNavigation) {
       if (controlledStep === undefined) {
-        setInternalStep(stepIndex);
+        // setInternalStep(stepIndex);
       }
-      onStepChange?.(stepIndex);
+      // onStepChange?.(stepIndex);
     }
   };
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  // const progress = ((currentStep + 1) / steps.length) * 100;
   const currentStepData = steps[currentStep];
 
   return (
