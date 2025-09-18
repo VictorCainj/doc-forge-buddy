@@ -11,19 +11,6 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-select',
-            '@radix-ui/react-toast',
-          ],
-          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
-        },
-      },
-    },
     chunkSizeWarningLimit: 1000,
   },
 });
