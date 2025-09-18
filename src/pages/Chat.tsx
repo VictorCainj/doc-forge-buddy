@@ -5,9 +5,9 @@ import {
   User,
   Loader2,
   Sparkles,
-  FileText,
   Copy,
   Check,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,7 +76,7 @@ const Chat = () => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content:
@@ -96,6 +96,19 @@ const Chat = () => {
     }
   };
 
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: '1',
+        content:
+          'Olá! Sou seu assistente de correção de texto. Cole ou digite o texto que deseja corrigir e eu ajudarei com gramática, ortografia e estilo.',
+        role: 'assistant',
+        timestamp: new Date(),
+      },
+    ]);
+    setInputText('');
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
@@ -105,29 +118,20 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Sparkles className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Chat - Corretor de Texto
-            </h1>
-            <p className="text-gray-600">
-              Correção inteligente de textos com IA
-            </p>
-          </div>
-        </div>
-        <Badge variant="secondary" className="mb-4">
-          <FileText className="h-3 w-3 mr-1" />
-          Powered by OpenAI
-        </Badge>
-      </div>
-
       <Card className="flex-1 flex flex-col">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Conversa</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Conversa</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearChat}
+              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              title="Limpar conversa"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-0">
           {/* Messages Area */}
@@ -263,9 +267,6 @@ const Chat = () => {
                 )}
               </Button>
             </form>
-            <p className="text-xs text-gray-500 mt-2">
-              Pressione Enter para enviar, Shift+Enter para nova linha
-            </p>
           </div>
         </CardContent>
       </Card>

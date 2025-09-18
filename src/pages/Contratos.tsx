@@ -114,7 +114,9 @@ const Contratos = () => {
     'locador' | 'locatario' | null
   >(null);
   const [selectedPerson, setSelectedPerson] = useState<string>('');
-  const [deletingContract, setDeletingContract] = useState<string | null>(null);
+  const [_deletingContract, setDeletingContract] = useState<string | null>(
+    null
+  );
   const [generatingDocument, setGeneratingDocument] = useState<string | null>(
     null
   );

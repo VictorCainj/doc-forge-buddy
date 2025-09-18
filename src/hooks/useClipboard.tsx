@@ -44,8 +44,8 @@ export const useClipboard = (): UseClipboardReturn => {
         description: 'O texto foi copiado para a área de transferência.',
       });
       setTimeout(() => setCopiedMessageId(null), 2000);
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
+    } catch {
+      // console.error('Erro ao copiar:', err);
       toast({
         title: 'Erro ao copiar',
         description:

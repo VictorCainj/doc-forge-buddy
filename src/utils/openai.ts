@@ -40,8 +40,8 @@ export const correctTextWithAI = async (text: string): Promise<string> => {
     }
 
     return correctedText.trim();
-  } catch (error) {
-    console.error('Erro na API da OpenAI:', error);
+  } catch {
+    // console.error('Erro na API da OpenAI:', error);
     throw new Error('Erro ao corrigir o texto. Tente novamente.');
   }
 };
