@@ -130,9 +130,9 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Evite pendencias de reprova na vistoria e atente-se a entregar o imóvel nas condições iniciais - a entrega de chaves com reprova de laudo enseja direito {{tratamentoLocadorGenero}} o pedido <strong>DE LUCROS CESSANTES</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Para {{tratamentoLocatarioGenero}} referência, segue também o laudo de vistoria de entrada.</p>
+  <p style="margin-bottom: 20px;">Para sua referência, segue também o laudo de vistoria de entrada.</p>
   
-  <p style="margin-bottom: 20px;">Caso o imóvel não seja desocupado dentro do prazo legal, será necessário o envio de nova notificação com uma nova data. A ausência dessa comunicação poderá ser interpretada como <strong>desistência da rescisão</strong>.</p>
+  <p style="margin-bottom: 20px;">Caso o imóvel não seja desocupado dentro do prazo legal, será necessário o envio de nova notificação com uma nova data. A ausência dessa comunicação poderá ser interpretada como <strong>desistência da Desocupação</strong>.</p>
   
   <p style="margin-bottom: 20px;">Nossa intenção é garantir que todo o processo ocorra de forma tranquila e transparente. Portanto, recomendamos a leitura atenta do informativo anexo e, se houver qualquer dúvida, permanecemos à disposição pelos nossos canais de atendimento.</p>
   
