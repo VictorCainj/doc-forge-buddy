@@ -330,7 +330,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   <p style="margin-bottom: 20px;">Prezados, {{saudacaoComercial}}</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Anexo a notificação de rescisão referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como LOCADORES {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e LOCATÁRIOS <strong>{{nomeLocatarioFormatado}}</strong>{{/if}}.</p>
+  <p style="margin-bottom: 20px;">Anexo a notificação de rescisão referente ao Contrato nº <strong>{{numeroContrato}}</strong>, do imóvel situado à <strong>{{enderecoImovel}}</strong>{{#if nomeProprietarioFormatado}}, tendo como {{locadorTermComercial}} {{nomeProprietarioFormatado}}{{/if}}{{#if nomeLocatarioFormatado}} e {{locatarioTermComercial}} <strong>{{nomeLocatarioFormatado}}</strong>{{/if}}.</p>
   
   <p style="margin-bottom: 20px;">A notificação foi realizada em <strong>{{dataInicioRescisao}}</strong>, com prazo de rescisão até <strong>{{dataTerminoRescisao}}</strong>.</p>
   

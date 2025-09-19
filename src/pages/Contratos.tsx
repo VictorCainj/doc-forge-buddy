@@ -272,6 +272,7 @@ const Contratos = () => {
 
     if (isMultipleLocatarios) {
       enhancedData.locatarioTerm = 'LOCATÁRIOS';
+      enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
       enhancedData.locatarioTermNoArtigo = 'os locatários';
       enhancedData.locatarioComunicou = 'informaram';
       enhancedData.locatarioIra = 'irão';
@@ -284,16 +285,19 @@ const Contratos = () => {
       const generoLocatario = formData.generoLocatario;
       if (generoLocatario === 'feminino') {
         enhancedData.locatarioTerm = 'LOCATÁRIA';
+        enhancedData.locatarioTermComercial = 'LOCATÁRIA';
         enhancedData.locatarioTermNoArtigo = 'a locatária';
         enhancedData.locatarioDocumentacao = 'da locatária';
         enhancedData.locatarioResponsabilidade = 'da locatária';
       } else if (generoLocatario === 'masculino') {
         enhancedData.locatarioTerm = 'LOCATÁRIO';
+        enhancedData.locatarioTermComercial = 'LOCATÁRIO';
         enhancedData.locatarioTermNoArtigo = 'o locatário';
         enhancedData.locatarioDocumentacao = 'do locatário';
         enhancedData.locatarioResponsabilidade = 'do locatário';
       } else {
         enhancedData.locatarioTerm = 'LOCATÁRIO'; // fallback
+        enhancedData.locatarioTermComercial = 'LOCATÁRIO'; // fallback
         enhancedData.locatarioTermNoArtigo = 'o locatário';
         enhancedData.locatarioDocumentacao = 'do locatário';
         enhancedData.locatarioResponsabilidade = 'do locatário';
@@ -316,6 +320,7 @@ const Contratos = () => {
     if (isMultipleProprietarios) {
       enhancedData.proprietarioTerm = 'os proprietários';
       enhancedData.locadorTerm = 'LOCADORES';
+      enhancedData.locadorTermComercial = 'LOCADORES';
       enhancedData.proprietarioPrezado = 'Prezado';
     } else if (formData.nomeProprietario) {
       // Usar o gênero do proprietário para definir o termo correto
@@ -323,12 +328,15 @@ const Contratos = () => {
       if (generoProprietario === 'feminino') {
         enhancedData.proprietarioTerm = 'a proprietária';
         enhancedData.locadorTerm = 'LOCADORA';
+        enhancedData.locadorTermComercial = 'LOCADORA';
       } else if (generoProprietario === 'masculino') {
         enhancedData.proprietarioTerm = 'o proprietário';
         enhancedData.locadorTerm = 'LOCADOR';
+        enhancedData.locadorTermComercial = 'LOCADOR';
       } else {
         enhancedData.proprietarioTerm = 'o proprietário'; // fallback
         enhancedData.locadorTerm = 'LOCADOR'; // fallback
+        enhancedData.locadorTermComercial = 'LOCADOR'; // fallback
       }
       enhancedData.proprietarioPrezado = 'Prezado';
     }
