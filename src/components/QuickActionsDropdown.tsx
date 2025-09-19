@@ -467,14 +467,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                       key={action.id}
                       onClick={() => handleActionClick(action)}
                       disabled={action.disabled}
-                      className="flex flex-col items-center justify-center gap-2 hover:bg-red-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-red-100 hover:border-red-200"
+                      className="flex flex-col items-center justify-center gap-2 hover:bg-gray-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 hover:border-gray-200"
                     >
                       {action.loading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600" />
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
                       ) : (
-                        <action.icon className="h-5 w-5 text-red-500" />
+                        <action.icon className="h-5 w-5 text-gray-500" />
                       )}
-                      <span className="text-xs text-red-700 text-center leading-tight">
+                      <span className="text-xs text-gray-700 text-center leading-tight">
                         {action.label}
                       </span>
                     </button>
