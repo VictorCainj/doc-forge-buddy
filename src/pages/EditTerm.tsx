@@ -213,6 +213,13 @@ const EditTerm = () => {
           required: true,
           placeholder: 'Qualificação completa dos locadores conforme contrato',
         },
+        {
+          name: 'celularProprietario',
+          label: 'Celular do Locador',
+          type: 'text' as const,
+          required: true,
+          placeholder: 'Ex: (19) 99999-9999',
+        },
       ],
     },
     {

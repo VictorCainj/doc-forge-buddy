@@ -339,7 +339,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
   <p style="margin-top: 40px;">Atenciosamente,</p>
   
   <div style="margin-top: 30px;">
-    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}} CAIN JORGE</strong></p>
+    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}}</strong></p>
     <p style="margin-bottom: 8px; font-size: 14px;">Setor de Rescisão</p>
     <p style="font-size: 14px;">MADIA IMÓVEIS LTDA</p>
   </div>
@@ -547,6 +547,54 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
     <p style="margin-bottom: 8px; font-size: 14px;"><strong>Madia Imóveis</strong></p>
     <p style="margin-bottom: 8px; font-size: 14px;"><strong>Telefone:</strong> 19-3869-3555</p>
     <p style="font-size: 14px;"><strong>E-mail:</strong> rescisao@madia.com.br</p>
+  </div>
+</div>
+`;
+
+// NPS WhatsApp Template
+export const NPS_WHATSAPP_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 40px;">
+    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 70px; width: auto;" />
+  </div>
+  
+  <div style="text-align: center; margin: 50px 0;">
+    <p style="font-size: 18px; line-height: 1.6; margin: 0; color: #333;">{{mensagemNPSWhatsApp}}</p>
+  </div>
+</div>
+`;
+
+// NPS E-mail Template
+export const NPS_EMAIL_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 40px;">
+    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 70px; width: auto;" />
+  </div>
+  
+  <div style="text-align: left; margin: 40px 0;">
+    <p style="font-size: 18px; line-height: 1.6; margin-bottom: 25px; color: #333;">Prezadas, tudo bem?</p>
+    
+    <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #333;">Enviei a pesquisa de satisfação para as partes do contrato <strong>{{numeroContrato}}</strong>:</p>
+    
+    <div style="margin: 30px 0; font-size: 16px; line-height: 1.8; background-color: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #007bff;">
+      {{#if nomesLocadoresNPS}}
+      <div style="margin-bottom: 20px;">
+        <p style="margin-bottom: 8px; font-weight: bold; color: #007bff;">{{termoLocadorNPS}}:</p>
+        <div style="margin-bottom: 0; color: #333;">{{{nomesLocadoresNPS}}}</div>
+      </div>
+      {{/if}}
+      
+      {{#if nomesLocatariosNPS}}
+      <div>
+        <p style="margin-bottom: 8px; font-weight: bold; color: #007bff;">{{termoLocatarioNPS}}:</p>
+        <div style="margin-bottom: 0; color: #333;">{{{nomesLocatariosNPS}}}</div>
+      </div>
+      {{/if}}
+    </div>
+    
+    <div style="text-align: left; margin-top: 50px;">
+      <p style="font-size: 16px; color: #666; margin: 0;">Atenciosamente,</p>
+    </div>
   </div>
 </div>
 `;

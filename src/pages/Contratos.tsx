@@ -59,7 +59,7 @@ import {
   User2,
   // Building2,
   CalendarDays,
-  // Phone,
+  Phone,
   // Mail,
   // Receipt,
 } from 'lucide-react';
@@ -77,6 +77,8 @@ import {
   // DEVOLUTIVA_CADERNINHO_TEMPLATE,
   // DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
   // DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+  NPS_WHATSAPP_TEMPLATE,
+  NPS_EMAIL_TEMPLATE,
 } from '@/templates/documentos';
 import {
   formatDateBrazilian,
@@ -115,6 +117,29 @@ const Contratos = () => {
   >(null);
   const [selectedPerson, setSelectedPerson] = useState<string>('');
   const [assinanteSelecionado, setAssinanteSelecionado] = useState<string>('');
+  const [showAssinanteModal, setShowAssinanteModal] = useState(false);
+  const [pendingDocumentData, setPendingDocumentData] = useState<{
+    contract: Contract;
+    template: string;
+    documentType: string;
+  } | null>(null);
+  const [showNPSModal, setShowNPSModal] = useState(false);
+  const [selectedNPSContract, setSelectedNPSContract] =
+    useState<Contract | null>(null);
+  const [npsMethod, setNpsMethod] = useState<'email' | 'whatsapp' | null>(null);
+  const [npsWhatsAppType, setNpsWhatsAppType] = useState<
+    'locador' | 'locatario' | null
+  >(null);
+  const [selectedNPSPerson, setSelectedNPSPerson] = useState<string>('');
+  const [selectedNPSParties, setSelectedNPSParties] = useState<{
+    locadores: string[];
+    locatarios: string[];
+  }>({ locadores: [], locatarios: [] });
+  const [showNPSNumbersModal, setShowNPSNumbersModal] = useState(false);
+  const [npsNumbers, setNpsNumbers] = useState<Record<string, string>>({});
+  const [npsSelectedParties, setNpsSelectedParties] = useState<
+    Record<string, boolean>
+  >({});
   const [_deletingContract, setDeletingContract] = useState<string | null>(
     null
   );
@@ -233,6 +258,8 @@ const Contratos = () => {
     // Obter qualificação completa dos proprietários (texto livre)
     enhancedData.qualificacaoCompletaProprietario =
       getProprietarioQualificacao(formData);
+
+    // O assinante será definido pelo usuário em cada geração de documento
 
     // Aplicar conjunções para locatários baseado na quantidade adicionada
     const isMultipleLocatarios = !!(
@@ -580,6 +607,96 @@ const Contratos = () => {
     return enhancedData;
   };
 
+  const generateDocumentWithAssinante = (
+    contract: Contract,
+    template: string,
+    documentType: string,
+    assinante: string
+  ) => {
+    const formData = contract.form_data;
+
+    // Aplicar conjunções verbais antes de processar o template
+    const enhancedData = applyConjunctions(formData);
+    enhancedData.assinanteSelecionado = assinante;
+
+    // Se for notificação de agendamento, adicionar dados específicos
+    if (documentType.includes('Notificação de Agendamento')) {
+      enhancedData.dataAtual = formatDateBrazilian(new Date());
+      enhancedData.dataVistoria = dataVistoria;
+      enhancedData.horaVistoria = horaVistoria;
+      enhancedData.tipoVistoria = tipoVistoria;
+
+      // Configurar tipo de vistoria
+      const tipoVistoriaTexto =
+        tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
+      enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
+      enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
+      enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
+
+      // Configurar tratamento do locatário para notificação
+      const isMultipleLocatarios = !!(
+        formData.primeiroLocatario &&
+        (formData.segundoLocatario ||
+          formData.terceiroLocatario ||
+          formData.quartoLocatario)
+      );
+      const generoLocatario = formData.generoLocatario;
+
+      if (isMultipleLocatarios) {
+        enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
+        enhancedData.tratamentoLocatarioNotificacao = 'dos locatários';
+      } else if (formData.primeiroLocatario) {
+        if (generoLocatario === 'masculino') {
+          enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
+          enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
+        } else if (generoLocatario === 'feminino') {
+          enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
+          enhancedData.tratamentoLocatarioNotificacao = 'da locatária';
+        } else {
+          enhancedData.notificadoLocatarioTitulo = 'Notificado(a) Locatário(a)';
+          enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
+        }
+      }
+    }
+
+    // Se for WhatsApp, adicionar dados específicos
+    if (documentType.includes('WhatsApp')) {
+      const primeiroNome = selectedPerson.split(' ')[0];
+      const primeiroNomeCapitalizado =
+        primeiroNome.charAt(0).toUpperCase() +
+        primeiroNome.slice(1).toLowerCase();
+
+      if (whatsAppType === 'locador') {
+        const generoProprietario = formData.generoProprietario;
+        const tratamento =
+          generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
+        enhancedData.saudacaoProprietario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
+      } else {
+        const generoLocatario = formData.generoLocatario;
+        const tratamento =
+          generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
+        enhancedData.saudacaoLocatario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
+      }
+    }
+
+    const processedTemplate = replaceTemplateVariables(template, enhancedData);
+
+    // Usar o título que já foi definido (já vem com formatação correta)
+    const documentTitle = documentType;
+
+    setTimeout(() => {
+      navigate('/gerar-documento', {
+        state: {
+          title: documentTitle,
+          template: processedTemplate,
+          formData: enhancedData,
+          documentType: documentType,
+        },
+      });
+      setGeneratingDocument(null);
+    }, 800);
+  };
+
   const generateDocument = (
     contract: Contract,
     template: string,
@@ -587,6 +704,16 @@ const Contratos = () => {
   ) => {
     setGeneratingDocument(`${contract.id}-${documentType}`);
     const formData = contract.form_data;
+
+    // Documentos que não precisam de assinatura
+    const documentosSemAssinatura = [
+      'Devolutiva Proprietário',
+      'Devolutiva Locatário',
+      'Devolutiva Cobrança de Consumo',
+      'Devolutiva Caderninho',
+      'Distrato de Contrato de Locação',
+      'Notificação de Agendamento',
+    ];
 
     if (documentType === 'Termo do Locador') {
       navigate('/termo-locador', {
@@ -616,61 +743,14 @@ const Contratos = () => {
       setSelectedPerson('');
       setShowWhatsAppModal(true);
       setGeneratingDocument(null);
-    } else if (documentType === 'Distrato de Contrato de Locação') {
-      // Aplicar conjunções verbais antes de processar o template
+    } else if (documentosSemAssinatura.includes(documentType)) {
+      // Documentos que não precisam de assinatura - gerar diretamente
       const enhancedData = applyConjunctions(formData);
-
-      const processedTemplate = replaceTemplateVariables(
-        template,
-        enhancedData
-      );
-      const documentTitle = `${documentType} - ${contract.title}`;
-
-      setTimeout(() => {
-        navigate('/gerar-documento', {
-          state: {
-            title: documentTitle,
-            template: processedTemplate,
-            formData: enhancedData,
-            documentType: documentType,
-          },
-        });
-        setGeneratingDocument(null);
-      }, 800);
-    } else if (
-      documentType === 'Termo de Recusa de Assinatura - E-mail' ||
-      documentType === 'Termo de Recusa de Assinatura - PDF'
-    ) {
-      // Aplicar conjunções verbais antes de processar o template
-      const enhancedData = applyConjunctions(formData);
-
-      const processedTemplate = replaceTemplateVariables(
-        template,
-        enhancedData
-      );
-      const documentTitle = `${documentType} - ${contract.title}`;
-
-      setTimeout(() => {
-        navigate('/gerar-documento', {
-          state: {
-            title: documentTitle,
-            template: processedTemplate,
-            formData: enhancedData,
-            documentType: documentType,
-          },
-        });
-        setGeneratingDocument(null);
-      }, 800);
-    } else {
-      // Aplicar conjunções verbais antes de processar o template
-      const enhancedData = applyConjunctions(formData);
-
       const processedTemplate = replaceTemplateVariables(
         template,
         enhancedData
       );
 
-      // Personalizar título para devolutiva comercial
       let documentTitle = `${documentType} - ${contract.title}`;
       if (documentType === 'Devolutiva Comercial') {
         documentTitle = `${documentType} - Rescisão - ${contract.title}`;
@@ -687,6 +767,11 @@ const Contratos = () => {
         });
         setGeneratingDocument(null);
       }, 800);
+    } else {
+      // Para todos os outros documentos, mostrar modal de seleção de assinante
+      setPendingDocumentData({ contract, template, documentType });
+      setShowAssinanteModal(true);
+      setGeneratingDocument(null);
     }
   };
 
@@ -748,6 +833,9 @@ const Contratos = () => {
 
       result = result.replace(new RegExp(placeholder, 'g'), formattedValue);
     });
+
+    // Limpeza final de símbolos indesejados (chaves {})
+    result = result.replace(/[{}]/g, '');
 
     return result;
   };
@@ -891,13 +979,43 @@ const Contratos = () => {
       }
     }
 
+    const tipoVistoriaTexto =
+      tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
+    const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${selectedContract.title}`;
+
+    // Adicionar dados específicos da vistoria
+    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.dataVistoria = dataVistoria;
+    enhancedData.horaVistoria = horaVistoria;
+    enhancedData.tipoVistoria = tipoVistoria;
+
+    // Configurar tipo de vistoria
+    enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
+    enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
+    enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
+
+    // Configurar tratamento do locatário para notificação (usar variável já declarada)
+
+    if (isMultipleLocatarios) {
+      enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
+      enhancedData.tratamentoLocatarioNotificacao = 'dos locatários';
+    } else if (formData.primeiroLocatario) {
+      if (generoLocatario === 'masculino') {
+        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
+        enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
+      } else if (generoLocatario === 'feminino') {
+        enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
+        enhancedData.tratamentoLocatarioNotificacao = 'da locatária';
+      } else {
+        enhancedData.notificadoLocatarioTitulo = 'Notificado(a) Locatário(a)';
+        enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
+      }
+    }
+
     const processedTemplate = replaceTemplateVariables(
       NOTIFICACAO_AGENDAMENTO_TEMPLATE,
       enhancedData
     );
-    const tipoVistoriaTexto =
-      tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
-    const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${selectedContract.title}`;
 
     navigate('/gerar-documento', {
       state: {
@@ -991,10 +1109,55 @@ const Contratos = () => {
     setAssinanteSelecionado('');
   };
 
+  const handleGenerateWithAssinante = () => {
+    if (!pendingDocumentData || !assinanteSelecionado) {
+      toast.error('Por favor, selecione um assinante');
+      return;
+    }
+
+    generateDocumentWithAssinante(
+      pendingDocumentData.contract,
+      pendingDocumentData.template,
+      pendingDocumentData.documentType,
+      assinanteSelecionado
+    );
+
+    // Fechar modal e limpar campos
+    setShowAssinanteModal(false);
+    setPendingDocumentData(null);
+    setAssinanteSelecionado('');
+  };
+
+  const handleCancelAssinante = () => {
+    setShowAssinanteModal(false);
+    setPendingDocumentData(null);
+    setAssinanteSelecionado('');
+  };
+
   const handleEditContract = (contract: Contract) => {
     setEditingContract(contract);
     setEditFormData(contract.form_data);
     setShowEditModal(true);
+  };
+
+  // Função para detectar múltiplos locatários
+  const isMultipleLocatarios = (nomeLocatario: string) => {
+    if (!nomeLocatario) return false;
+    return (
+      nomeLocatario.includes(',') ||
+      nomeLocatario.includes(' e ') ||
+      nomeLocatario.includes(' E ')
+    );
+  };
+
+  // Função para detectar múltiplos proprietários
+  const isMultipleProprietarios = (nomeProprietario: string) => {
+    if (!nomeProprietario) return false;
+    return (
+      nomeProprietario.includes(',') ||
+      nomeProprietario.includes(' e ') ||
+      nomeProprietario.includes(' E ')
+    );
   };
 
   const handleUpdateContract = async () => {
@@ -1051,6 +1214,258 @@ const Contratos = () => {
     setShowEditModal(false);
     setEditingContract(null);
     setEditFormData({});
+  };
+
+  const handleGenerateNPS = (contractId: string) => {
+    const contract = contracts.find((c) => c.id === contractId);
+    if (contract) {
+      setSelectedNPSContract(contract);
+      setNpsMethod(null);
+      setNpsWhatsAppType(null);
+      setSelectedNPSPerson('');
+      setSelectedNPSParties({ locadores: [], locatarios: [] });
+      setNpsNumbers({});
+      setNpsSelectedParties({});
+      setShowNPSModal(true);
+    }
+  };
+
+  const handleGenerateNPSWhatsApp = () => {
+    if (!selectedNPSContract || !npsWhatsAppType || !selectedNPSPerson) {
+      toast.error('Por favor, selecione uma pessoa');
+      return;
+    }
+
+    const formData = selectedNPSContract.form_data;
+    const primeiroNome = selectedNPSPerson.split(' ')[0];
+    const primeiroNomeCapitalizado =
+      primeiroNome.charAt(0).toUpperCase() +
+      primeiroNome.slice(1).toLowerCase();
+
+    const mensagem = `Olá ${primeiroNomeCapitalizado}, tudo bem? Posso enviar a você nossa pesquisa de satisfação? Seu feedback nos ajudará a aprimorar nossos processos internos`;
+
+    // Aplicar conjunções verbais antes de processar o template
+    const enhancedData = applyConjunctions(formData);
+
+    // Adicionar dados específicos do NPS WhatsApp
+    enhancedData.nomePessoaSelecionada = primeiroNomeCapitalizado;
+    enhancedData.tipoPessoaNPS =
+      npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário';
+    enhancedData.mensagemNPSWhatsApp = mensagem;
+
+    const processedTemplate = replaceTemplateVariables(
+      NPS_WHATSAPP_TEMPLATE,
+      enhancedData
+    );
+    const documentTitle = `NPS WhatsApp - ${npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário'} - ${selectedNPSContract.title}`;
+
+    // Navegar para a página de geração de documento
+    setTimeout(() => {
+      navigate('/gerar-documento', {
+        state: {
+          title: documentTitle,
+          template: processedTemplate,
+          formData: enhancedData,
+          documentType: 'NPS WhatsApp',
+        },
+      });
+    }, 800);
+
+    // Fechar modal e limpar campos
+    setShowNPSModal(false);
+    setSelectedNPSContract(null);
+    setNpsMethod(null);
+    setNpsWhatsAppType(null);
+    setSelectedNPSPerson('');
+  };
+
+  const handleGenerateNPSEmail = () => {
+    if (!selectedNPSContract) {
+      toast.error('Erro ao gerar e-mail');
+      return;
+    }
+
+    const formData = selectedNPSContract.form_data;
+    const numeroContrato = formData.numeroContrato || '[NÚMERO]';
+
+    // Extrair nomes dos locadores
+    const nomesLocadores =
+      formData.nomesResumidosLocadores || formData.nomeProprietario || '';
+    const nomesLocadoresArray = nomesLocadores
+      .split(/ e | E /)
+      .map((nome) => nome.trim())
+      .filter((nome) => nome);
+
+    // Extrair nomes dos locatários
+    const nomesLocatarios = formData.nomeLocatario || '';
+    const nomesLocatariosArray = nomesLocatarios
+      .split(/ e | E /)
+      .map((nome) => nome.trim())
+      .filter((nome) => nome);
+
+    // Verificar se há números cadastrados
+    const hasLocadorNumbers = nomesLocadoresArray.some(
+      (nome) =>
+        formData[`numeroLocador_${nome.replace(/\s+/g, '_')}`] ||
+        formData.celularProprietario ||
+        formData.telefoneProprietario ||
+        formData.celularLocador ||
+        formData.telefoneLocador
+    );
+
+    const hasLocatarioNumbers = nomesLocatariosArray.some(
+      (nome) =>
+        formData[`numeroLocatario_${nome.replace(/\s+/g, '_')}`] ||
+        formData.celularLocatario ||
+        formData.telefoneLocatario ||
+        formData.celularLocatario ||
+        formData.telefoneLocatario
+    );
+
+    // Sempre mostrar modal de números com checkboxes para seleção
+    setShowNPSNumbersModal(true);
+  };
+
+  const generateNPSEmailWithData = () => {
+    if (!selectedNPSContract) return;
+
+    const formData = selectedNPSContract.form_data;
+    const numeroContrato = formData.numeroContrato || '[NÚMERO]';
+
+    // Usar apenas as partes selecionadas no modal de números
+    const nomesLocadoresArray = Object.keys(npsSelectedParties)
+      .filter((key) => key.startsWith('locador_') && npsSelectedParties[key])
+      .map((key) => key.replace('locador_', ''));
+
+    const nomesLocatariosArray = Object.keys(npsSelectedParties)
+      .filter((key) => key.startsWith('locatario_') && npsSelectedParties[key])
+      .map((key) => key.replace('locatario_', ''));
+
+    // Extrair números dos locadores selecionados do estado npsNumbers
+    const numerosLocadoresArray = nomesLocadoresArray.map(
+      (nome) => npsNumbers[`locador_${nome}`] || '[NÚMERO]'
+    );
+
+    // Extrair números dos locatários selecionados do estado npsNumbers
+    const numerosLocatariosArray = nomesLocatariosArray.map(
+      (nome) => npsNumbers[`locatario_${nome}`] || '[NÚMERO]'
+    );
+
+    // Aplicar conjunções verbais antes de processar o template
+    const enhancedData = applyConjunctions(formData);
+
+    // Funções para detectar gênero e plural
+    const isPlural = (text: string) => {
+      return text.includes(',') || text.includes(' e ') || text.includes(' E ');
+    };
+
+    const isFeminine = (text: string) => {
+      const femaleNames = [
+        'ana',
+        'maria',
+        'carla',
+        'sandra',
+        'patricia',
+        'fernanda',
+        'juliana',
+        'carolina',
+        'gabriela',
+        'mariana',
+        'raquel',
+        'thais',
+        'adriana',
+      ];
+      const firstNameLower = text.split(' ')[0].toLowerCase();
+      return (
+        text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower)
+      );
+    };
+
+    // Calcular termos corretos baseados no gênero
+    const getLocadorTerm = (nomes: string[]) => {
+      if (nomes.length === 0) return 'LOCADOR(a)';
+      const nomeCompleto = nomes.join(', ');
+      if (isPlural(nomeCompleto)) {
+        return 'LOCADORES';
+      }
+      return isFeminine(nomeCompleto) ? 'LOCADORA' : 'LOCADOR';
+    };
+
+    const getLocatarioTerm = (nomes: string[]) => {
+      if (nomes.length === 0) return 'LOCATÁRIO(a)';
+      const nomeCompleto = nomes.join(', ');
+      if (isPlural(nomeCompleto)) {
+        return 'LOCATÁRIOS';
+      }
+      return isFeminine(nomeCompleto) ? 'LOCATÁRIA' : 'LOCATÁRIO';
+    };
+
+    // Criar formato "Nome Número" para cada pessoa
+    const formatarPessoasComNumeros = (nomes: string[], numeros: string[]) => {
+      return nomes
+        .map((nome, index) => {
+          const numero = numeros[index] || '[NÚMERO]';
+          return `${nome}<br>Número: ${numero}`;
+        })
+        .join('<br><br>');
+    };
+
+    // Adicionar dados específicos do NPS E-mail
+    enhancedData.numeroContratoNPS = numeroContrato;
+    enhancedData.nomesLocadoresNPS =
+      nomesLocadoresArray.length > 0
+        ? formatarPessoasComNumeros(nomesLocadoresArray, numerosLocadoresArray)
+        : '';
+    enhancedData.nomesLocatariosNPS =
+      nomesLocatariosArray.length > 0
+        ? formatarPessoasComNumeros(
+            nomesLocatariosArray,
+            numerosLocatariosArray
+          )
+        : '';
+    enhancedData.numerosLocadoresNPS = numerosLocadoresArray.join(', ');
+    enhancedData.numerosLocatariosNPS = numerosLocatariosArray.join(', ');
+    enhancedData.termoLocadorNPS = getLocadorTerm(nomesLocadoresArray);
+    enhancedData.termoLocatarioNPS = getLocatarioTerm(nomesLocatariosArray);
+
+    const processedTemplate = replaceTemplateVariables(
+      NPS_EMAIL_TEMPLATE,
+      enhancedData
+    );
+    const documentTitle = `NPS E-mail - Contrato ${numeroContrato} - ${selectedNPSContract.title}`;
+
+    // Navegar para a página de geração de documento
+    setTimeout(() => {
+      navigate('/gerar-documento', {
+        state: {
+          title: documentTitle,
+          template: processedTemplate,
+          formData: enhancedData,
+          documentType: 'NPS E-mail',
+        },
+      });
+    }, 800);
+
+    // Fechar modal e limpar campos
+    setShowNPSModal(false);
+    setSelectedNPSContract(null);
+    setNpsMethod(null);
+    setNpsWhatsAppType(null);
+    setSelectedNPSPerson('');
+    setSelectedNPSParties({ locadores: [], locatarios: [] });
+    setNpsNumbers({});
+  };
+
+  const handleCancelNPS = () => {
+    setShowNPSModal(false);
+    setSelectedNPSContract(null);
+    setNpsMethod(null);
+    setNpsWhatsAppType(null);
+    setSelectedNPSPerson('');
+    setSelectedNPSParties({ locadores: [], locatarios: [] });
+    setNpsNumbers({});
+    setNpsSelectedParties({});
+    setShowNPSNumbersModal(false);
   };
 
   // Função auxiliar para renderizar ícone com loading
@@ -1182,7 +1597,11 @@ const Contratos = () => {
                           <User2 className="h-3 w-3 text-gray-400 mt-0.5" />
                           <div>
                             <p className="text-xs font-medium text-gray-600 uppercase">
-                              LOCATÁRIO
+                              {isMultipleLocatarios(
+                                contract.form_data.nomeLocatario
+                              )
+                                ? 'LOCATÁRIOS'
+                                : 'LOCATÁRIO'}
                             </p>
                             <p className="text-xs font-bold text-gray-900">
                               {contract.form_data.nomeLocatario}
@@ -1193,7 +1612,11 @@ const Contratos = () => {
                           <User className="h-3 w-3 text-gray-400 mt-0.5" />
                           <div>
                             <p className="text-xs font-medium text-gray-600 uppercase">
-                              PROPRIETÁRIO
+                              {isMultipleProprietarios(
+                                contract.form_data.nomeProprietario
+                              )
+                                ? 'PROPRIETÁRIOS'
+                                : 'PROPRIETÁRIO'}
                             </p>
                             <p className="text-xs font-bold text-gray-900">
                               {contract.form_data.nomeProprietario}
@@ -1309,6 +1732,7 @@ const Contratos = () => {
                             );
                           }
                         }}
+                        onGenerateNPS={handleGenerateNPS}
                         generatingDocument={generatingDocument || undefined}
                       />
                     </div>
@@ -1495,6 +1919,53 @@ const Contratos = () => {
                 disabled={!selectedPerson || !assinanteSelecionado}
               >
                 Gerar WhatsApp
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para Seleção de Assinante */}
+        <Dialog open={showAssinanteModal} onOpenChange={setShowAssinanteModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Selecionar Assinante do Documento</DialogTitle>
+              <DialogDescription>
+                Selecione quem irá assinar o documento:{' '}
+                {pendingDocumentData?.documentType}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="assinanteSelecionado" className="text-right">
+                  Assinante
+                </Label>
+                <Select
+                  value={assinanteSelecionado}
+                  onValueChange={setAssinanteSelecionado}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione quem irá assinar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="VICTOR CAIN JORGE">
+                      Victor Cain Jorge
+                    </SelectItem>
+                    <SelectItem value="FABIANA SALOTTI MARTINS">
+                      Fabiana Salotti Martins
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelAssinante}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleGenerateWithAssinante}
+                disabled={!assinanteSelecionado}
+              >
+                Gerar Documento
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1955,6 +2426,459 @@ const Contratos = () => {
               </Button>
               <Button onClick={handleUpdateContract} disabled={isUpdating}>
                 {isUpdating ? 'Atualizando...' : 'Atualizar Contrato'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para NPS */}
+        <Dialog open={showNPSModal} onOpenChange={setShowNPSModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Pesquisa de Satisfação (NPS)</DialogTitle>
+              <DialogDescription>
+                Selecione o método para enviar a pesquisa de satisfação.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {!npsMethod ? (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium">Escolha o método:</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setNpsMethod('email')}
+                      className="flex flex-col items-center gap-2 p-4 h-auto"
+                    >
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="text-sm">E-mail</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setNpsMethod('whatsapp')}
+                      className="flex flex-col items-center gap-2 p-4 h-auto"
+                    >
+                      <Phone className="h-6 w-6" />
+                      <span className="text-sm">WhatsApp</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : npsMethod === 'whatsapp' && !npsWhatsAppType ? (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium">
+                    Selecione para quem enviar:
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setNpsWhatsAppType('locador')}
+                      className="flex flex-col items-center gap-2 p-4 h-auto"
+                    >
+                      <User className="h-6 w-6" />
+                      <span className="text-sm">Locador</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setNpsWhatsAppType('locatario')}
+                      className="flex flex-col items-center gap-2 p-4 h-auto"
+                    >
+                      <User2 className="h-6 w-6" />
+                      <span className="text-sm">Locatário</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : npsMethod === 'whatsapp' &&
+                npsWhatsAppType &&
+                !selectedNPSPerson ? (
+                <div className="grid gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="selectedNPSPerson" className="text-right">
+                      {npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário'}
+                    </Label>
+                    <Select
+                      value={selectedNPSPerson}
+                      onValueChange={setSelectedNPSPerson}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue
+                          placeholder={`Selecione um ${npsWhatsAppType === 'locador' ? 'locador' : 'locatário'}`}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {npsWhatsAppType === 'locador'
+                          ? (() => {
+                              const nomesLocadores =
+                                selectedNPSContract?.form_data
+                                  .nomesResumidosLocadores ||
+                                selectedNPSContract?.form_data.nomeProprietario;
+                              if (nomesLocadores) {
+                                const nomesArray = nomesLocadores
+                                  .split(/ e | E /)
+                                  .map((nome) => nome.trim())
+                                  .filter((nome) => nome);
+                                return nomesArray.map((nome, index) => (
+                                  <SelectItem key={index} value={nome}>
+                                    {nome}
+                                  </SelectItem>
+                                ));
+                              }
+                              return (
+                                <SelectItem
+                                  value="Nenhum locador encontrado"
+                                  disabled
+                                >
+                                  Nenhum locador encontrado
+                                </SelectItem>
+                              );
+                            })()
+                          : (() => {
+                              const nomesLocatarios =
+                                selectedNPSContract?.form_data.nomeLocatario ||
+                                selectedNPSContract?.form_data
+                                  .primeiroLocatario;
+                              if (nomesLocatarios) {
+                                const nomesArray = nomesLocatarios
+                                  .split(/ e | E /)
+                                  .map((nome) => nome.trim())
+                                  .filter((nome) => nome);
+                                return nomesArray.map((nome, index) => (
+                                  <SelectItem key={index} value={nome}>
+                                    {nome}
+                                  </SelectItem>
+                                ));
+                              }
+                              return (
+                                <SelectItem
+                                  value="Nenhum locatário encontrado"
+                                  disabled
+                                >
+                                  Nenhum locatário encontrado
+                                </SelectItem>
+                              );
+                            })()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelNPS}>
+                Cancelar
+              </Button>
+              {npsMethod === 'email' ? (
+                <Button onClick={handleGenerateNPSEmail}>Gerar E-mail</Button>
+              ) : npsMethod === 'whatsapp' && selectedNPSPerson ? (
+                <Button onClick={handleGenerateNPSWhatsApp}>
+                  Gerar WhatsApp
+                </Button>
+              ) : null}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal para Preenchimento de Números NPS */}
+        <Dialog
+          open={showNPSNumbersModal}
+          onOpenChange={setShowNPSNumbersModal}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Preencher Números para NPS</DialogTitle>
+              <DialogDescription>
+                Preencha os números de telefone das partes para incluir no
+                e-mail NPS.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {selectedNPSContract &&
+                (() => {
+                  const formData = selectedNPSContract.form_data;
+                  const nomesLocadores =
+                    formData.nomesResumidosLocadores ||
+                    formData.nomeProprietario ||
+                    '';
+                  const nomesLocadoresArray = nomesLocadores
+                    .split(/ e | E |,/)
+                    .map((nome) => nome.trim())
+                    .filter((nome) => nome);
+                  const nomesLocatarios = formData.nomeLocatario || '';
+                  const nomesLocatariosArray = nomesLocatarios
+                    .split(/ e | E |,/)
+                    .map((nome) => nome.trim())
+                    .filter((nome) => nome);
+
+                  // Inicializar números e seleções se não estiverem no estado
+                  if (Object.keys(npsNumbers).length === 0) {
+                    const initialNumbers: Record<string, string> = {};
+                    const initialSelections: Record<string, boolean> = {};
+
+                    // Preencher números dos locadores
+                    nomesLocadoresArray.forEach((nome) => {
+                      const key = `locador_${nome}`;
+                      initialNumbers[key] =
+                        formData[
+                          `numeroLocador_${nome.replace(/\s+/g, '_')}`
+                        ] ||
+                        formData.celularProprietario ||
+                        formData.telefoneProprietario ||
+                        formData.celularLocador ||
+                        formData.telefoneLocador ||
+                        '';
+                      // Marcar como selecionado por padrão
+                      initialSelections[key] = true;
+                    });
+
+                    // Preencher números dos locatários
+                    nomesLocatariosArray.forEach((nome) => {
+                      const key = `locatario_${nome}`;
+                      initialNumbers[key] =
+                        formData[
+                          `numeroLocatario_${nome.replace(/\s+/g, '_')}`
+                        ] ||
+                        formData.celularLocatario ||
+                        formData.telefoneLocatario ||
+                        '';
+                      // Marcar como selecionado por padrão
+                      initialSelections[key] = true;
+                    });
+
+                    setNpsNumbers(initialNumbers);
+                    setNpsSelectedParties(initialSelections);
+                  }
+
+                  return (
+                    <>
+                      {/* Locadores */}
+                      {nomesLocadoresArray.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm text-gray-700">
+                            Locadores
+                          </h4>
+                          {nomesLocadoresArray.map((nome, index) => (
+                            <div
+                              key={index}
+                              className="grid grid-cols-3 gap-4 items-center"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`nps-locador-${index}`}
+                                  checked={
+                                    npsSelectedParties[`locador_${nome}`] ||
+                                    false
+                                  }
+                                  onChange={(e) =>
+                                    setNpsSelectedParties((prev) => ({
+                                      ...prev,
+                                      [`locador_${nome}`]: e.target.checked,
+                                    }))
+                                  }
+                                  className="rounded border-gray-300"
+                                />
+                                <Label
+                                  htmlFor={`nps-locador-${index}`}
+                                  className="text-sm"
+                                >
+                                  {nome}
+                                </Label>
+                              </div>
+                              <Input
+                                placeholder="(19) 99999-9999"
+                                value={npsNumbers[`locador_${nome}`] || ''}
+                                onChange={(e) =>
+                                  setNpsNumbers((prev) => ({
+                                    ...prev,
+                                    [`locador_${nome}`]: e.target.value,
+                                  }))
+                                }
+                                disabled={
+                                  !npsSelectedParties[`locador_${nome}`]
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Locatários */}
+                      {nomesLocatariosArray.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm text-gray-700">
+                            Locatários
+                          </h4>
+                          {nomesLocatariosArray.map((nome, index) => (
+                            <div
+                              key={index}
+                              className="grid grid-cols-3 gap-4 items-center"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`nps-locatario-${index}`}
+                                  checked={
+                                    npsSelectedParties[`locatario_${nome}`] ||
+                                    false
+                                  }
+                                  onChange={(e) =>
+                                    setNpsSelectedParties((prev) => ({
+                                      ...prev,
+                                      [`locatario_${nome}`]: e.target.checked,
+                                    }))
+                                  }
+                                  className="rounded border-gray-300"
+                                />
+                                <Label
+                                  htmlFor={`nps-locatario-${index}`}
+                                  className="text-sm"
+                                >
+                                  {nome}
+                                </Label>
+                              </div>
+                              <Input
+                                placeholder="(19) 99999-9999"
+                                value={npsNumbers[`locatario_${nome}`] || ''}
+                                onChange={(e) =>
+                                  setNpsNumbers((prev) => ({
+                                    ...prev,
+                                    [`locatario_${nome}`]: e.target.value,
+                                  }))
+                                }
+                                disabled={
+                                  !npsSelectedParties[`locatario_${nome}`]
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowNPSNumbersModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => {
+                  // Salvar números no contrato e gerar e-mail
+                  if (selectedNPSContract) {
+                    const formData = selectedNPSContract.form_data;
+                    const nomesLocadores =
+                      formData.nomesResumidosLocadores ||
+                      formData.nomeProprietario ||
+                      '';
+                    const nomesLocadoresArray = nomesLocadores
+                      .split(/ e | E /)
+                      .map((nome) => nome.trim())
+                      .filter((nome) => nome);
+                    const nomesLocatarios = formData.nomeLocatario || '';
+                    const nomesLocatariosArray = nomesLocatarios
+                      .split(/ e | E /)
+                      .map((nome) => nome.trim())
+                      .filter((nome) => nome);
+
+                    const updatedFormData = {
+                      ...selectedNPSContract.form_data,
+                    };
+                    Object.entries(npsNumbers).forEach(([key, value]) => {
+                      if (value && npsSelectedParties[key]) {
+                        if (key.startsWith('locador_')) {
+                          const nome = key.replace('locador_', '');
+                          updatedFormData[
+                            `numeroLocador_${nome.replace(/\s+/g, '_')}`
+                          ] = value;
+                          // Também atualizar campos gerais se for o primeiro locador
+                          if (nome === nomesLocadoresArray[0]) {
+                            updatedFormData.celularProprietario = value;
+                            updatedFormData.celularLocador = value;
+                          }
+                        } else if (key.startsWith('locatario_')) {
+                          const nome = key.replace('locatario_', '');
+                          updatedFormData[
+                            `numeroLocatario_${nome.replace(/\s+/g, '_')}`
+                          ] = value;
+                          // Também atualizar campos gerais se for o primeiro locatário
+                          if (nome === nomesLocatariosArray[0]) {
+                            updatedFormData.celularLocatario = value;
+                          }
+                        }
+                      }
+                    });
+
+                    // Atualizar o contrato no banco
+                    supabase
+                      .from('saved_terms')
+                      .update({ form_data: updatedFormData })
+                      .eq('id', selectedNPSContract.id)
+                      .then(() => {
+                        // Atualizar o contrato local
+                        setContracts((prev) =>
+                          prev.map((c) =>
+                            c.id === selectedNPSContract.id
+                              ? { ...c, form_data: updatedFormData }
+                              : c
+                          )
+                        );
+
+                        // Atualizar o contrato selecionado
+                        setSelectedNPSContract((prev) =>
+                          prev ? { ...prev, form_data: updatedFormData } : null
+                        );
+
+                        // Definir as partes selecionadas no estado principal
+                        const selectedLocadores = Object.keys(
+                          npsSelectedParties
+                        )
+                          .filter(
+                            (key) =>
+                              key.startsWith('locador_') &&
+                              npsSelectedParties[key]
+                          )
+                          .map((key) => key.replace('locador_', ''));
+
+                        const selectedLocatarios = Object.keys(
+                          npsSelectedParties
+                        )
+                          .filter(
+                            (key) =>
+                              key.startsWith('locatario_') &&
+                              npsSelectedParties[key]
+                          )
+                          .map((key) => key.replace('locatario_', ''));
+
+                        setSelectedNPSParties({
+                          locadores: selectedLocadores,
+                          locatarios: selectedLocatarios,
+                        });
+
+                        // Fechar modal e gerar e-mail
+                        setShowNPSNumbersModal(false);
+                        generateNPSEmailWithData();
+                      })
+                      .catch(() => {
+                        toast.error('Erro ao salvar números');
+                      });
+                  }
+                }}
+              >
+                Salvar e Gerar E-mail
               </Button>
             </DialogFooter>
           </DialogContent>

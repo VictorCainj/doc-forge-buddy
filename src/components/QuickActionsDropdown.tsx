@@ -14,6 +14,7 @@ import {
   Trash2,
   Receipt,
   AlertTriangle,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -50,6 +51,7 @@ interface QuickActionsDropdownProps {
   onNavigateToTerm: (contractId: string, termType: string) => void;
   onEditContract?: (contractId: string) => void;
   onDeleteContract?: (contractId: string) => void;
+  onGenerateNPS?: (contractId: string) => void;
   generatingDocument?: string;
   className?: string;
 }
@@ -61,6 +63,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
   onNavigateToTerm: _onNavigateToTerm,
   onEditContract,
   onDeleteContract,
+  onGenerateNPS,
   generatingDocument,
   className,
 }) => {
@@ -186,6 +189,12 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
       loading:
         generatingDocument === `${contractId}-Devolutiva Cobrança de Consumo`,
     },
+    {
+      id: 'nps',
+      label: 'NPS',
+      icon: Star,
+      onClick: () => onGenerateNPS?.(contractId),
+    },
     // DOCUMENTOS
     {
       id: 'caderninho',
@@ -297,9 +306,9 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
 
   // Agrupar ações por categoria
   const termActions = quickActions.slice(0, 4);
-  const communicationActions = quickActions.slice(4, 9); // Inclui cobrança de consumo
-  const documentActions = quickActions.slice(9, 11); // Caderninho e Distrato
-  const recusaActions = quickActions.slice(11, 13); // Recusa E-mail e PDF
+  const communicationActions = quickActions.slice(4, 10); // Inclui cobrança de consumo e NPS
+  const documentActions = quickActions.slice(10, 12); // Caderninho e Distrato
+  const recusaActions = quickActions.slice(12, 14); // Recusa E-mail e PDF
 
   return (
     <div

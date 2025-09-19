@@ -176,7 +176,7 @@ TERMO DE RECEBIMENTO – {{numeroContrato}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>DADOS DOS LOCATÁRIOS:</strong> {{nomeLocatario}}
+<strong>{{dadosLocatarioTitulo}}:</strong> {{nomeLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -215,6 +215,14 @@ __________________________________________<br>
         nomeProprietario.includes(' e ') ||
         nomeProprietario.includes(' E '));
 
+    // Detectar se há múltiplos locatários baseado no nome dos locatários
+    const nomeLocatario = contractData.nomeLocatario || '';
+    const isMultipleLocatarios =
+      nomeLocatario &&
+      (nomeLocatario.includes(',') ||
+        nomeLocatario.includes(' e ') ||
+        nomeLocatario.includes(' E '));
+
     // Definir termo do locador baseado na quantidade e gênero
     let locadorTerm;
     if (isMultipleProprietarios) {
@@ -228,6 +236,22 @@ __________________________________________<br>
         locadorTerm = 'LOCADOR';
       } else {
         locadorTerm = 'LOCADOR'; // fallback para neutro ou indefinido
+      }
+    }
+
+    // Definir título baseado na quantidade e gênero dos locatários
+    let dadosLocatarioTitulo;
+    if (isMultipleLocatarios) {
+      dadosLocatarioTitulo = 'DADOS DOS LOCATÁRIOS';
+    } else {
+      // Usar o gênero do locatário cadastrado no contrato
+      const generoLocatario = contractData.generoLocatario;
+      if (generoLocatario === 'feminino') {
+        dadosLocatarioTitulo = 'DADOS DA LOCATÁRIA';
+      } else if (generoLocatario === 'masculino') {
+        dadosLocatarioTitulo = 'DADOS DO LOCATÁRIO';
+      } else {
+        dadosLocatarioTitulo = 'DADOS DO LOCATÁRIO'; // fallback para neutro ou indefinido
       }
     }
 
@@ -278,6 +302,7 @@ __________________________________________<br>
 
       // Dados específicos do termo do locador - devem vir por último para sobrescrever
       locadorTerm,
+      dadosLocatarioTitulo,
       nomeQuemRetira,
       nomeProprietario: nomeProprietarioFormatado, // Nome formatado
       tipoQuantidadeChaves, // Quantidade de chaves processada
