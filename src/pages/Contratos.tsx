@@ -54,6 +54,7 @@ import {
   // DEVOLUTIVA_CADERNINHO_TEMPLATE,
   // DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
   // DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+  TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
   NPS_WHATSAPP_TEMPLATE,
   NPS_EMAIL_TEMPLATE,
 } from '@/templates/documentos';
@@ -88,12 +89,16 @@ const Contratos = () => {
   const [contractsPerPage] = useState(8); // Mostrar 8 contratos por vez
   const [loadingMore, setLoadingMore] = useState(false);
   const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
+  const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] =
+    useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null
   );
   const [dataVistoria, setDataVistoria] = useState('');
   const [horaVistoria, setHoraVistoria] = useState('');
   const [tipoVistoria, setTipoVistoria] = useState('final');
+  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState('vistoria');
+  const [dataRealizacaoVistoria, setDataRealizacaoVistoria] = useState('');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [whatsAppType, setWhatsAppType] = useState<
     'locador' | 'locatario' | null
@@ -529,6 +534,12 @@ const Contratos = () => {
       formData.dataTerminoRescisao || formatDateBrazilian(new Date());
     enhancedData.prazoDias = formData.prazoDias || '30';
 
+    // Adicionar variáveis específicas para Termo de Recusa de Assinatura - E-mail
+    enhancedData.dataRealizacaoVistoria =
+      formData.dataRealizacaoVistoria || formatDateBrazilian(new Date());
+    enhancedData.assinanteSelecionado =
+      formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
+
     // Adicionar variáveis de endereço e contrato
     enhancedData.enderecoImovel =
       formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
@@ -748,11 +759,9 @@ const Contratos = () => {
         },
       });
     } else if (documentType === 'Termo de Recusa de Assinatura - E-mail') {
-      navigate('/termo-recusa-assinatura-email', {
-        state: {
-          contractData: formData,
-        },
-      });
+      // Abrir modal para preencher data da vistoria e selecionar assinante
+      setSelectedContract(contract);
+      setShowRecusaAssinaturaModal(true);
     } else if (documentType === 'Notificação de Agendamento') {
       // Abrir modal para preencher data e hora da vistoria
       setSelectedContract(contract);
@@ -1090,6 +1099,61 @@ const Contratos = () => {
     setDataVistoria('');
     setHoraVistoria('');
     setTipoVistoria('final');
+  };
+
+  const handleGenerateRecusaAssinatura = () => {
+    if (!selectedContract || !dataRealizacaoVistoria || !assinanteSelecionado) {
+      toast.error(
+        'Por favor, preencha a data da vistoria e selecione o assinante'
+      );
+      return;
+    }
+
+    const formData = selectedContract.form_data;
+    const enhancedData = applyConjunctions(formData);
+
+    // Adicionar dados específicos para recusa de assinatura
+    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.dataRealizacaoVistoria = dataRealizacaoVistoria;
+    enhancedData.assinanteSelecionado = assinanteSelecionado;
+
+    // Configurar tipo de vistoria no texto
+    const tipoVistoriaTexto =
+      tipoVistoriaRecusa === 'revistoria' ? 'revistoria' : 'vistoria';
+    enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
+
+    // Processar o template
+    const processedTemplate = replaceTemplateVariables(
+      TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
+      enhancedData
+    );
+
+    const documentTitle = `Termo de Recusa de Assinatura - E-mail - ${selectedContract.title}`;
+
+    // Navegar para a página de geração do documento
+    navigate('/gerar-documento', {
+      state: {
+        title: documentTitle,
+        template: processedTemplate,
+        formData: enhancedData,
+        documentType: 'Termo de Recusa de Assinatura - E-mail',
+      },
+    });
+
+    // Fechar modal e limpar campos
+    setShowRecusaAssinaturaModal(false);
+    setSelectedContract(null);
+    setDataRealizacaoVistoria('');
+    setAssinanteSelecionado('');
+    setTipoVistoriaRecusa('vistoria');
+  };
+
+  const handleCancelRecusaAssinatura = () => {
+    setShowRecusaAssinaturaModal(false);
+    setSelectedContract(null);
+    setDataRealizacaoVistoria('');
+    setAssinanteSelecionado('');
+    setTipoVistoriaRecusa('vistoria');
   };
 
   const handleGenerateWhatsApp = () => {
@@ -1864,6 +1928,87 @@ const Contratos = () => {
             </Button>
             <Button onClick={handleGenerateAgendamento}>
               Gerar Notificação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Termo de Recusa de Assinatura - E-mail */}
+      <Dialog
+        open={showRecusaAssinaturaModal}
+        onOpenChange={setShowRecusaAssinaturaModal}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Termo de Recusa de Assinatura - E-mail</DialogTitle>
+            <DialogDescription>
+              Preencha a data da vistoria/revistoria e selecione quem vai
+              assinar o documento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="tipoVistoriaRecusa" className="text-right">
+                Tipo
+              </Label>
+              <Select
+                value={tipoVistoriaRecusa}
+                onValueChange={setTipoVistoriaRecusa}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vistoria">Vistoria</SelectItem>
+                  <SelectItem value="revistoria">Revistoria</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dataRealizacaoVistoria" className="text-right">
+                Data da{' '}
+                {tipoVistoriaRecusa === 'revistoria'
+                  ? 'Revistoria'
+                  : 'Vistoria'}
+              </Label>
+              <Input
+                id="dataRealizacaoVistoria"
+                type="text"
+                value={dataRealizacaoVistoria}
+                onChange={(e) => setDataRealizacaoVistoria(e.target.value)}
+                className="col-span-3"
+                placeholder="Ex: 19 de setembro de 2025"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assinanteSelecionado" className="text-right">
+                Assinante
+              </Label>
+              <Select
+                value={assinanteSelecionado}
+                onValueChange={setAssinanteSelecionado}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione quem irá assinar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VICTOR CAIN JORGE">
+                    Victor Cain Jorge
+                  </SelectItem>
+                  <SelectItem value="FABIANA SALOTTI MARTINS">
+                    Fabiana Salotti Martins
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelRecusaAssinatura}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGenerateRecusaAssinatura}>
+              Gerar Documento
             </Button>
           </DialogFooter>
         </DialogContent>

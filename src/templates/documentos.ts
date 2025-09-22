@@ -504,7 +504,7 @@ export const TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE = `
   
   <p style="margin-bottom: 20px; text-align: justify;">A administradora Madia reafirma que todos os procedimentos foram conduzidos com imparcialidade, boa-fé e em estrita observância às normas contratuais e legais, resguardando os interesses de ambas as partes.</p>
   
-  <p style="margin-bottom: 20px; text-align: justify;">Informamos que a vistoria de saída do imóvel localizado em <strong>{{enderecoImovel}}</strong> foi realizada na data de <strong>{{dataRealizacaoVistoria}}</strong>, conforme previsto em contrato.</p>
+  <p style="margin-bottom: 20px; text-align: justify;">Informamos que a {{tipoVistoriaTexto}} de saída do imóvel localizado em <strong>{{enderecoImovel}}</strong> foi realizada na data de <strong>{{dataRealizacaoVistoria}}</strong>, conforme previsto em contrato.</p>
   
   <p style="margin-bottom: 20px;">Atenciosamente,</p>
   

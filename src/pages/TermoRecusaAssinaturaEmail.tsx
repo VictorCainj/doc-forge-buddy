@@ -21,13 +21,6 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
   // Campos do formulário
   const fields = [
     {
-      name: 'enderecoImovel',
-      label: 'Endereço do Imóvel',
-      type: 'textarea' as const,
-      required: true,
-      placeholder: 'Endereço completo do imóvel',
-    },
-    {
       name: 'dataRealizacaoVistoria',
       label: 'Data da Realização da Vistoria/Revistoria',
       type: 'text' as const,
