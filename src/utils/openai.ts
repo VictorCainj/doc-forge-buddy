@@ -9,7 +9,7 @@ const openai = new OpenAI({
 export const correctTextWithAI = async (text: string): Promise<string> => {
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -43,5 +43,47 @@ export const correctTextWithAI = async (text: string): Promise<string> => {
   } catch {
     // console.error('Erro na API da OpenAI:', error);
     throw new Error('Erro ao corrigir o texto. Tente novamente.');
+  }
+};
+
+export const improveTextWithAI = async (text: string): Promise<string> => {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente especializado em melhorar textos para máxima clareza e compreensão do destinatário em português brasileiro.
+          
+          Suas tarefas são:
+          1. Corrigir erros de gramática, ortografia e pontuação
+          2. Reestruturar o texto para máxima clareza e compreensão
+          3. Melhorar a organização das ideias e fluxo lógico
+          4. Tornar o texto mais direto e objetivo quando apropriado
+          5. Garantir que o destinatário entenda perfeitamente a mensagem
+          6. Manter o tom profissional e adequado ao contexto
+          7. Preservar todas as informações importantes
+          
+          Responda APENAS com o texto melhorado, sem explicações adicionais.`,
+        },
+        {
+          role: 'user',
+          content: `Por favor, melhore o seguinte texto para que o destinatário entenda perfeitamente a mensagem:\n\n${text}`,
+        },
+      ],
+      max_tokens: 2000,
+      temperature: 0.4,
+    });
+
+    const improvedText = completion.choices[0]?.message?.content;
+
+    if (!improvedText) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    return improvedText.trim();
+  } catch {
+    // console.error('Erro na API da OpenAI:', error);
+    throw new Error('Erro ao melhorar o texto. Tente novamente.');
   }
 };

@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  // CardDescription,
-  // CardHeader,
-  // CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -34,39 +29,21 @@ import {
 import {
   Plus,
   FileText,
-  // Users,
-  // Building,
-  // Briefcase,
-  // Download,
-  // Eye,
-  Search,
-  // Trash2,
-  // MessageCircle,
-  // Edit,
-  // Calendar,
   Clock,
   MapPin,
   User,
-  // UserCheck,
-  // FileCheck,
-  // FileX,
-  // NotebookPen,
-  // Handshake,
-  // AlertCircle,
-  // CheckCircle,
   Timer,
-  // Home,
   User2,
-  // Building2,
   CalendarDays,
   Phone,
-  // Mail,
-  // Receipt,
+  Search,
+  Edit,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
+import { useSearchContext } from '@/components/Layout';
 import {
   // DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
   // DEVOLUTIVA_LOCATARIO_TEMPLATE,
@@ -102,8 +79,14 @@ interface Contract {
 const Contratos = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
+  const [displayedContracts, setDisplayedContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { searchTerm } = useSearchContext(); // Usar busca da sidebar
+  const [localSearchTerm, setLocalSearchTerm] = useState(''); // Busca local adicional
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [contractsPerPage] = useState(8); // Mostrar 8 contratos por vez
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null
@@ -131,7 +114,7 @@ const Contratos = () => {
     'locador' | 'locatario' | null
   >(null);
   const [selectedNPSPerson, setSelectedNPSPerson] = useState<string>('');
-  const [selectedNPSParties, setSelectedNPSParties] = useState<{
+  const [_selectedNPSParties, setSelectedNPSParties] = useState<{
     locadores: string[];
     locatarios: string[];
   }>({ locadores: [], locatarios: [] });
@@ -157,26 +140,44 @@ const Contratos = () => {
   }, []);
 
   useEffect(() => {
-    // Filtrar contratos baseado no termo de busca
-    if (searchTerm.trim() === '') {
-      setFilteredContracts(contracts);
-    } else {
-      const filtered = contracts.filter(
+    // Combinar busca da sidebar e busca local
+    const combinedSearchTerm = `${searchTerm} ${localSearchTerm}`.trim();
+
+    let filtered = contracts;
+
+    // Aplicar busca por texto
+    if (combinedSearchTerm) {
+      filtered = filtered.filter(
         (contract) =>
-          contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contract.title
+            .toLowerCase()
+            .includes(combinedSearchTerm.toLowerCase()) ||
           contract.form_data.nomeLocatario
             ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
+            .includes(combinedSearchTerm.toLowerCase()) ||
           contract.form_data.nomeProprietario
             ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
+            .includes(combinedSearchTerm.toLowerCase()) ||
           contract.form_data.numeroContrato
             ?.toLowerCase()
-            .includes(searchTerm.toLowerCase())
+            .includes(combinedSearchTerm.toLowerCase()) ||
+          contract.form_data.enderecoImovel
+            ?.toLowerCase()
+            .includes(combinedSearchTerm.toLowerCase())
       );
-      setFilteredContracts(filtered);
     }
-  }, [contracts, searchTerm]);
+
+    setFilteredContracts(filtered);
+    // Resetar página quando buscar
+    setCurrentPage(1);
+  }, [contracts, searchTerm, localSearchTerm]);
+
+  // Atualizar contratos exibidos baseado na página atual
+  useEffect(() => {
+    const startIndex = 0;
+    const endIndex = currentPage * contractsPerPage;
+    setDisplayedContracts(filteredContracts.slice(startIndex, endIndex));
+  }, [filteredContracts, currentPage, contractsPerPage]);
 
   const fetchContracts = async () => {
     try {
@@ -204,6 +205,17 @@ const Contratos = () => {
       setLoading(false);
     }
   };
+
+  const loadMoreContracts = () => {
+    setLoadingMore(true);
+    // Simular delay para melhor UX
+    setTimeout(() => {
+      setCurrentPage((prev) => prev + 1);
+      setLoadingMore(false);
+    }, 300);
+  };
+
+  const hasMoreContracts = displayedContracts.length < filteredContracts.length;
 
   // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
   const generateMesesComprovantes = () => {
@@ -466,7 +478,7 @@ const Contratos = () => {
     // Gerar saudação para WhatsApp do locatário (com Sr/Sra)
     enhancedData.locatarioPrezadoWhatsapp = tratamentoLocatario;
 
-    // Gerar saudação para devolutiva comercial (bom dia/boa tarde)
+    // Gerar saudação para processo de rescisão (bom dia/boa tarde)
     const agora = new Date();
     const hora = agora.getHours();
     const saudacaoComercial = hora < 12 ? 'bom dia' : 'boa tarde';
@@ -715,8 +727,8 @@ const Contratos = () => {
 
     // Documentos que não precisam de assinatura
     const documentosSemAssinatura = [
-      'Devolutiva Proprietário',
-      'Devolutiva Locatário',
+      'Devolutiva via E-mail - Locador',
+      'Devolutiva via E-mail - Locatário',
       'Devolutiva Cobrança de Consumo',
       'Devolutiva Caderninho',
       'Distrato de Contrato de Locação',
@@ -735,21 +747,51 @@ const Contratos = () => {
           contractData: formData,
         },
       });
+    } else if (documentType === 'Termo de Recusa de Assinatura - E-mail') {
+      navigate('/termo-recusa-assinatura-email', {
+        state: {
+          contractData: formData,
+        },
+      });
     } else if (documentType === 'Notificação de Agendamento') {
       // Abrir modal para preencher data e hora da vistoria
       setSelectedContract(contract);
       setShowAgendamentoModal(true);
     } else if (
       documentType === 'Devolutiva Locador WhatsApp' ||
-      documentType === 'Devolutiva Locatário WhatsApp'
+      documentType === 'Devolutiva Locatário WhatsApp' ||
+      documentType === 'WhatsApp - Proprietária' ||
+      documentType === 'WhatsApp - Locatária' ||
+      documentType === 'WhatsApp - Comercial'
     ) {
       // Abrir modal para selecionar pessoa específica
       setSelectedContract(contract);
-      setWhatsAppType(
-        documentType === 'Devolutiva Locador WhatsApp' ? 'locador' : 'locatario'
-      );
+      let whatsAppType: 'locador' | 'locatario' | null = 'locador';
+      if (
+        documentType === 'Devolutiva Locatário WhatsApp' ||
+        documentType === 'WhatsApp - Locatária'
+      ) {
+        whatsAppType = 'locatario';
+      } else if (documentType === 'WhatsApp - Comercial') {
+        whatsAppType = null; // Comercial não tem tipo específico
+      }
+      setWhatsAppType(whatsAppType);
       setSelectedPerson('');
       setShowWhatsAppModal(true);
+      setGeneratingDocument(null);
+    } else if (documentType === 'NPS WhatsApp') {
+      // NPS WhatsApp - usar modal específico
+      setSelectedNPSContract(contract);
+      setNpsMethod('whatsapp');
+      setNpsWhatsAppType(null);
+      setSelectedNPSPerson('');
+      setShowNPSModal(true);
+      setGeneratingDocument(null);
+    } else if (documentType === 'NPS E-mail') {
+      // NPS E-mail - usar modal específico
+      setSelectedNPSContract(contract);
+      setNpsMethod('email');
+      setShowNPSModal(true);
       setGeneratingDocument(null);
     } else if (documentosSemAssinatura.includes(documentType)) {
       // Documentos que não precisam de assinatura - gerar diretamente
@@ -842,8 +884,9 @@ const Contratos = () => {
       result = result.replace(new RegExp(placeholder, 'g'), formattedValue);
     });
 
-    // Limpeza final de símbolos indesejados (chaves {})
-    result = result.replace(/[{}]/g, '');
+    // Limpeza final de símbolos indesejados (apenas chaves que não fazem parte de placeholders válidos)
+    // Remover apenas chaves que não estão dentro de tags HTML válidas
+    result = result.replace(/\{\{[^}]*\}\}/g, '');
 
     return result;
   };
@@ -1142,12 +1185,6 @@ const Contratos = () => {
     setAssinanteSelecionado('');
   };
 
-  const handleEditContract = (contract: Contract) => {
-    setEditingContract(contract);
-    setEditFormData(contract.form_data);
-    setShowEditModal(true);
-  };
-
   // Função para detectar múltiplos locatários
   const isMultipleLocatarios = (nomeLocatario: string) => {
     if (!nomeLocatario) return false;
@@ -1224,20 +1261,6 @@ const Contratos = () => {
     setEditFormData({});
   };
 
-  const handleGenerateNPS = (contractId: string) => {
-    const contract = contracts.find((c) => c.id === contractId);
-    if (contract) {
-      setSelectedNPSContract(contract);
-      setNpsMethod(null);
-      setNpsWhatsAppType(null);
-      setSelectedNPSPerson('');
-      setSelectedNPSParties({ locadores: [], locatarios: [] });
-      setNpsNumbers({});
-      setNpsSelectedParties({});
-      setShowNPSModal(true);
-    }
-  };
-
   const handleGenerateNPSWhatsApp = () => {
     if (!selectedNPSContract || !npsWhatsAppType || !selectedNPSPerson) {
       toast.error('Por favor, selecione uma pessoa');
@@ -1294,7 +1317,7 @@ const Contratos = () => {
     }
 
     const formData = selectedNPSContract.form_data;
-    const numeroContrato = formData.numeroContrato || '[NÚMERO]';
+    const _numeroContrato = formData.numeroContrato || '[NÚMERO]';
 
     // Extrair nomes dos locadores
     const nomesLocadores =
@@ -1312,7 +1335,7 @@ const Contratos = () => {
       .filter((nome) => nome);
 
     // Verificar se há números cadastrados
-    const hasLocadorNumbers = nomesLocadoresArray.some(
+    const _hasLocadorNumbers = nomesLocadoresArray.some(
       (nome) =>
         formData[`numeroLocador_${nome.replace(/\s+/g, '_')}`] ||
         formData.celularProprietario ||
@@ -1321,7 +1344,7 @@ const Contratos = () => {
         formData.telefoneLocador
     );
 
-    const hasLocatarioNumbers = nomesLocatariosArray.some(
+    const _hasLocatarioNumbers = nomesLocatariosArray.some(
       (nome) =>
         formData[`numeroLocatario_${nome.replace(/\s+/g, '_')}`] ||
         formData.celularLocatario ||
@@ -1493,608 +1516,840 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="p-6">
-        {/* Header da Página */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                Contratos Cadastrados
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-                  {filteredContracts.length}
-                </span>
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Gerencie e monitore todos os contratos de locação.
-              </p>
-            </div>
-            <Link to="/cadastrar-contrato">
-              <Button
-                size="lg"
-                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 h-12 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
-              >
-                <Plus className="h-5 w-5" />
-                Novo Contrato
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Barra de Busca */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar contratos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
-            />
-          </div>
-        </div>
-
-        {/* Lista de Contratos */}
-        <div>
-          {loading ? (
-            <div className="text-center py-16">
-              <div className="relative inline-block">
-                <div className="p-4 bg-slate-100 rounded-xl mx-auto mb-4 w-16 h-16 flex items-center justify-center">
-                  <FileText className="h-8 w-8 text-slate-600 animate-pulse" />
-                </div>
+      <div className="min-h-screen bg-background">
+        {/* Main Content */}
+        <div className="p-6">
+          {/* Lista de Contratos */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <h2 className="text-xl font-semibold text-foreground">
+                  Contratos Cadastrados
+                </h2>
+                <Link to="/cadastrar-contrato">
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Contrato
+                  </Button>
+                </Link>
               </div>
-              <p className="text-lg font-medium text-slate-700">
-                Carregando contratos...
-              </p>
-              <p className="text-sm text-slate-500 mt-1">Aguarde um momento</p>
-            </div>
-          ) : filteredContracts.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="p-4 bg-slate-100 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                <FileText className="h-8 w-8 text-slate-500" />
-              </div>
-              {searchTerm ? (
-                <>
-                  <p className="text-lg font-semibold text-slate-900 mb-2">
-                    Nenhum contrato encontrado para "{searchTerm}"
-                  </p>
-                  <p className="text-slate-600">Tente outro termo de busca</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-semibold text-slate-900 mb-2">
-                    Nenhum contrato cadastrado ainda
-                  </p>
-                  <p className="text-slate-600">
-                    Clique em "Novo Contrato" para começar
-                  </p>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-              {filteredContracts.map((contract) => (
-                <Card
-                  key={contract.id}
-                  className="border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 bg-white rounded-lg overflow-visible"
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSearchModal(true)}
                 >
-                  <CardContent className="p-4">
-                    {/* Header do Contrato */}
-                    <div className="flex items-start gap-2 mb-4">
-                      <FileText className="h-4 w-4 text-gray-400 mt-0.5" />
-                      <div>
-                        <h3 className="font-bold text-sm text-gray-900">
-                          Contrato{' '}
-                          {contract.form_data.numeroContrato || '[NÚMERO]'}
-                        </h3>
-                        <p className="text-xs text-gray-400">
-                          ID: {contract.id}
-                        </p>
-                      </div>
+                  <Search className="h-4 w-4 mr-2" />
+                  Buscar
+                </Button>
+              </div>
+            </div>
+
+            {loading ? (
+              <Card className="glass-card">
+                <CardContent className="p-12">
+                  <div className="text-center">
+                    <div className="p-4 bg-primary/10 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-primary animate-pulse" />
                     </div>
-
-                    {/* Separador */}
-                    <div className="border-t border-gray-200 mb-4"></div>
-
-                    {/* PARTES ENVOLVIDAS */}
-                    <div className="mb-4">
-                      <h4 className="text-xs font-medium text-gray-600 uppercase mb-2">
-                        PARTES ENVOLVIDAS
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <User2 className="h-3 w-3 text-gray-400 mt-0.5" />
-                          <div>
-                            <p className="text-xs font-medium text-gray-600 uppercase">
-                              {isMultipleLocatarios(
-                                contract.form_data.nomeLocatario
-                              )
-                                ? 'LOCATÁRIOS'
-                                : 'LOCATÁRIO'}
-                            </p>
-                            <p className="text-xs font-bold text-gray-900">
-                              {contract.form_data.nomeLocatario}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <User className="h-3 w-3 text-gray-400 mt-0.5" />
-                          <div>
-                            <p className="text-xs font-medium text-gray-600 uppercase">
-                              {isMultipleProprietarios(
-                                contract.form_data.nomeProprietario
-                              )
-                                ? 'PROPRIETÁRIOS'
-                                : 'PROPRIETÁRIO'}
-                            </p>
-                            <p className="text-xs font-bold text-gray-900">
-                              {contract.form_data.nomeProprietario}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                    <p className="text-lg font-medium text-foreground">
+                      Carregando contratos...
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Aguarde um momento
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : displayedContracts.length === 0 &&
+              filteredContracts.length === 0 ? (
+              <Card className="glass-card">
+                <CardContent className="p-12">
+                  <div className="text-center">
+                    <div className="p-4 bg-muted rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-muted-foreground" />
                     </div>
-
-                    {/* TERMOS DO CONTRATO */}
-                    <div className="mb-4">
-                      <h4 className="text-xs font-medium text-gray-600 uppercase mb-2">
-                        TERMOS DO CONTRATO
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <Timer className="h-3 w-3 text-gray-400 mt-0.5" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Nenhum contrato cadastrado ainda
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      Comece criando seu primeiro contrato no sistema
+                    </p>
+                    <Link to="/cadastrar-contrato">
+                      <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Criar Primeiro Contrato
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {displayedContracts.map((contract) => (
+                  <Card
+                    key={contract.id}
+                    className="metric-card glass-card border-border hover:shadow-soft transition-all duration-300 overflow-visible"
+                  >
+                    <CardContent className="p-6">
+                      {/* Header do Contrato */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <FileText className="h-4 w-4 text-primary" />
+                          </div>
                           <div>
-                            <p className="text-xs font-medium text-gray-600 uppercase">
-                              PRAZO
-                            </p>
-                            <p className="text-xs font-bold text-gray-900">
-                              {contract.form_data.prazoDias} dias
+                            <h3 className="font-bold text-sm text-foreground">
+                              Contrato{' '}
+                              {contract.form_data.numeroContrato || '[NÚMERO]'}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              ID: {contract.id.slice(0, 8)}...
                             </p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="flex items-start gap-2">
-                            <CalendarDays className="h-3 w-3 text-gray-400 mt-0.5" />
-                            <div>
-                              <p className="text-xs font-medium text-gray-600 uppercase">
-                                INÍCIO
+                        <Badge variant="secondary" className="text-xs">
+                          Ativo
+                        </Badge>
+                      </div>
+
+                      {/* Separador */}
+                      <div className="border-t border-border mb-4"></div>
+
+                      {/* PARTES ENVOLVIDAS */}
+                      <div className="mb-4">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                          Partes Envolvidas
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 rounded-md bg-blue-500/10">
+                              <User2 className="h-3 w-3 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                {isMultipleLocatarios(
+                                  contract.form_data.nomeLocatario
+                                )
+                                  ? 'Locatários'
+                                  : 'Locatário'}
                               </p>
-                              <p className="text-xs font-bold text-gray-900">
+                              <p className="text-xs font-bold text-foreground truncate">
+                                {contract.form_data.nomeLocatario}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 rounded-md bg-green-500/10">
+                              <User className="h-3 w-3 text-green-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                {isMultipleProprietarios(
+                                  contract.form_data.nomeProprietario
+                                )
+                                  ? 'Proprietários'
+                                  : 'Proprietário'}
+                              </p>
+                              <p className="text-xs font-bold text-foreground truncate">
+                                {contract.form_data.nomeProprietario}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* TERMOS DO CONTRATO */}
+                      <div className="mb-4">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                          Termos do Contrato
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1 rounded bg-yellow-500/10">
+                                <Timer className="h-3 w-3 text-yellow-600" />
+                              </div>
+                              <span className="text-xs font-medium text-muted-foreground">
+                                Prazo
+                              </span>
+                            </div>
+                            <span className="text-xs font-bold text-foreground">
+                              {contract.form_data.prazoDias} dias
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <div className="p-1 rounded bg-green-500/10">
+                                  <CalendarDays className="h-3 w-3 text-green-600" />
+                                </div>
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  Início
+                                </span>
+                              </div>
+                              <span className="text-xs font-bold text-foreground">
                                 {contract.form_data.dataInicioRescisao ||
                                   '01/09/2026'}
-                              </p>
+                              </span>
                             </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Clock className="h-3 w-3 text-gray-400 mt-0.5" />
-                            <div>
-                              <p className="text-xs font-medium text-gray-600 uppercase">
-                                TÉRMINO
-                              </p>
-                              <p className="text-xs font-bold text-gray-900">
+                            <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <div className="p-1 rounded bg-red-500/10">
+                                  <Clock className="h-3 w-3 text-red-600" />
+                                </div>
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  Término
+                                </span>
+                              </div>
+                              <span className="text-xs font-bold text-foreground">
                                 {contract.form_data.dataTerminoRescisao ||
                                   '01/10/2026'}
-                              </p>
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* LOCALIZAÇÃO */}
-                    <div className="mb-4">
-                      <h4 className="text-xs font-medium text-gray-600 uppercase mb-2">
-                        LOCALIZAÇÃO
-                      </h4>
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-3 w-3 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-medium text-gray-600 uppercase">
-                            ENDEREÇO
-                          </p>
-                          <p className="text-xs font-bold text-gray-900">
-                            {contract.form_data.endereco ||
-                              contract.form_data.enderecoImovel ||
-                              '460 - Rua Interna: Rua dos Sablas, Casa 421 - Condomínio Green Valley, Bairro Flores, Manaus - AM'}
-                          </p>
+                      {/* LOCALIZAÇÃO */}
+                      <div className="mb-4">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                          Localização
+                        </h4>
+                        <div className="flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
+                          <div className="p-1 rounded bg-purple-500/10">
+                            <MapPin className="h-3 w-3 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Endereço
+                            </p>
+                            <p className="text-xs font-bold text-foreground line-clamp-2">
+                              {contract.form_data.endereco ||
+                                contract.form_data.enderecoImovel ||
+                                '460 - Rua Interna: Rua dos Sablas, Casa 421 - Condomínio Green Valley, Bairro Flores, Manaus - AM'}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* AÇÕES RÁPIDAS */}
-                    <div className="border-t border-gray-200 pt-4 relative overflow-visible flex justify-center">
-                      <QuickActionsDropdown
-                        contractId={contract.id}
-                        contractNumber={
-                          contract.form_data.numeroContrato || '[NÚMERO]'
-                        }
-                        onGenerateDocument={(contractId, template, title) => {
-                          const contractData = contracts.find(
-                            (c) => c.id === contractId
-                          );
-                          if (contractData) {
-                            generateDocument(contractData, template, title);
-                          }
-                        }}
-                        onNavigateToTerm={(_contractId, _termType) => {
-                          // Implementar navegação para termos se necessário
-                          // console.log(
-                          //   `Navigate to ${termType} for contract ${contractId}`
-                          // );
-                        }}
-                        onEditContract={(contractId) => {
-                          const contractData = contracts.find(
-                            (c) => c.id === contractId
-                          );
-                          if (contractData) {
-                            handleEditContract(contractData);
-                          }
-                        }}
-                        onDeleteContract={(contractId) => {
-                          const contractData = contracts.find(
-                            (c) => c.id === contractId
-                          );
-                          if (contractData) {
-                            handleDeleteContract(
+                      {/* AÇÕES RÁPIDAS */}
+                      <div className="border-t border-border pt-4 relative overflow-visible">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                setEditingContract(contract);
+                                setEditFormData(contract.form_data);
+                                setShowEditModal(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <QuickActionsDropdown
+                            contractId={contract.id}
+                            contractNumber={
+                              contract.form_data.numeroContrato || '[NÚMERO]'
+                            }
+                            onGenerateDocument={(
                               contractId,
-                              contractData.title
-                            );
-                          }
-                        }}
-                        onGenerateNPS={handleGenerateNPS}
-                        generatingDocument={generatingDocument || undefined}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                              template,
+                              title
+                            ) => {
+                              const contractData = contracts.find(
+                                (c) => c.id === contractId
+                              );
+                              if (contractData) {
+                                generateDocument(contractData, template, title);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Botão Ver Mais */}
+          {hasMoreContracts && (
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={loadMoreContracts}
+                disabled={loadingMore}
+                variant="outline"
+                className="px-8 py-3 text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Carregando...
+                  </>
+                ) : (
+                  `Ver mais (${filteredContracts.length - displayedContracts.length} restantes)`
+                )}
+              </Button>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Modal para Notificação de Agendamento */}
-        <Dialog
-          open={showAgendamentoModal}
-          onOpenChange={setShowAgendamentoModal}
-        >
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Agendar Vistoria</DialogTitle>
-              <DialogDescription>
-                Preencha a data e hora da vistoria de saída para gerar a
-                notificação.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tipoVistoria" className="text-right">
-                  Tipo de Vistoria
-                </Label>
-                <Select value={tipoVistoria} onValueChange={setTipoVistoria}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Selecione o tipo de vistoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="final">Vistoria Final</SelectItem>
-                    <SelectItem value="revistoria">Revistoria</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="dataVistoria" className="text-right">
-                  Data da Vistoria
-                </Label>
-                <Input
-                  id="dataVistoria"
-                  type="date"
-                  value={dataVistoria}
-                  onChange={(e) => setDataVistoria(e.target.value)}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="horaVistoria" className="text-right">
-                  Hora da Vistoria
-                </Label>
-                <Input
-                  id="horaVistoria"
-                  type="time"
-                  value={horaVistoria}
-                  onChange={(e) => setHoraVistoria(e.target.value)}
-                  className="col-span-3"
-                  required
-                />
-              </div>
+      {/* Modal para Notificação de Agendamento */}
+      <Dialog
+        open={showAgendamentoModal}
+        onOpenChange={setShowAgendamentoModal}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Agendar Vistoria</DialogTitle>
+            <DialogDescription>
+              Preencha a data e hora da vistoria de saída para gerar a
+              notificação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="tipoVistoria" className="text-right">
+                Tipo de Vistoria
+              </Label>
+              <Select value={tipoVistoria} onValueChange={setTipoVistoria}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione o tipo de vistoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="final">Vistoria Final</SelectItem>
+                  <SelectItem value="revistoria">Revistoria</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCancelAgendamento}>
-                Cancelar
-              </Button>
-              <Button onClick={handleGenerateAgendamento}>
-                Gerar Notificação
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dataVistoria" className="text-right">
+                Data da Vistoria
+              </Label>
+              <Input
+                id="dataVistoria"
+                type="date"
+                value={dataVistoria}
+                onChange={(e) => setDataVistoria(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="horaVistoria" className="text-right">
+                Hora da Vistoria
+              </Label>
+              <Input
+                id="horaVistoria"
+                type="time"
+                value={horaVistoria}
+                onChange={(e) => setHoraVistoria(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelAgendamento}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGenerateAgendamento}>
+              Gerar Notificação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* Modal para Seleção de WhatsApp */}
-        <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Selecionar Pessoa para WhatsApp</DialogTitle>
-              <DialogDescription>
-                Selecione para qual{' '}
-                {whatsAppType === 'locador' ? 'locador' : 'locatário'} você
-                deseja enviar a mensagem do WhatsApp.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="selectedPerson" className="text-right">
-                  {whatsAppType === 'locador' ? 'Locador' : 'Locatário'}
-                </Label>
-                <Select
-                  value={selectedPerson}
-                  onValueChange={setSelectedPerson}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue
-                      placeholder={`Selecione um ${whatsAppType === 'locador' ? 'locador' : 'locatário'}`}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {whatsAppType === 'locador'
-                      ? (() => {
-                          const nomesLocadores =
-                            selectedContract?.form_data
-                              .nomesResumidosLocadores ||
-                            selectedContract?.form_data.nomeProprietario;
-                          if (nomesLocadores) {
-                            const nomesArray = nomesLocadores
-                              .split(/ e | E /)
-                              .map((nome) => nome.trim())
-                              .filter((nome) => nome);
-                            return nomesArray.map((nome, index) => (
-                              <SelectItem key={index} value={nome}>
-                                {nome}
-                              </SelectItem>
-                            ));
-                          }
-                          return (
-                            <SelectItem
-                              value="Nenhum locador encontrado"
-                              disabled
-                            >
-                              Nenhum locador encontrado
+      {/* Modal para Seleção de WhatsApp */}
+      <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Selecionar Pessoa para WhatsApp</DialogTitle>
+            <DialogDescription>
+              Selecione para qual{' '}
+              {whatsAppType === 'locador' ? 'locador' : 'locatário'} você deseja
+              enviar a mensagem do WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="selectedPerson" className="text-right">
+                {whatsAppType === 'locador' ? 'Locador' : 'Locatário'}
+              </Label>
+              <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue
+                    placeholder={`Selecione um ${whatsAppType === 'locador' ? 'locador' : 'locatário'}`}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {whatsAppType === 'locador'
+                    ? (() => {
+                        const nomesLocadores =
+                          selectedContract?.form_data.nomesResumidosLocadores ||
+                          selectedContract?.form_data.nomeProprietario;
+                        if (nomesLocadores) {
+                          const nomesArray = nomesLocadores
+                            .split(/ e | E /)
+                            .map((nome) => nome.trim())
+                            .filter((nome) => nome);
+                          return nomesArray.map((nome, index) => (
+                            <SelectItem key={index} value={nome}>
+                              {nome}
                             </SelectItem>
-                          );
-                        })()
-                      : (() => {
-                          const nomesLocatarios =
-                            selectedContract?.form_data.nomeLocatario ||
-                            selectedContract?.form_data.primeiroLocatario;
-                          if (nomesLocatarios) {
-                            const nomesArray = nomesLocatarios
-                              .split(/ e | E /)
-                              .map((nome) => nome.trim())
-                              .filter((nome) => nome);
-                            return nomesArray.map((nome, index) => (
-                              <SelectItem key={index} value={nome}>
-                                {nome}
-                              </SelectItem>
-                            ));
-                          }
-                          return (
-                            <SelectItem
-                              value="Nenhum locatário encontrado"
-                              disabled
-                            >
-                              Nenhum locatário encontrado
+                          ));
+                        }
+                        return (
+                          <SelectItem
+                            value="Nenhum locador encontrado"
+                            disabled
+                          >
+                            Nenhum locador encontrado
+                          </SelectItem>
+                        );
+                      })()
+                    : (() => {
+                        const nomesLocatarios =
+                          selectedContract?.form_data.nomeLocatario ||
+                          selectedContract?.form_data.primeiroLocatario;
+                        if (nomesLocatarios) {
+                          const nomesArray = nomesLocatarios
+                            .split(/ e | E /)
+                            .map((nome) => nome.trim())
+                            .filter((nome) => nome);
+                          return nomesArray.map((nome, index) => (
+                            <SelectItem key={index} value={nome}>
+                              {nome}
                             </SelectItem>
-                          );
-                        })()}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="assinanteSelecionado" className="text-right">
-                  Assinante
-                </Label>
-                <Select
-                  value={assinanteSelecionado}
-                  onValueChange={setAssinanteSelecionado}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Selecione quem irá assinar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="VICTOR CAIN JORGE">
-                      Victor Cain Jorge
-                    </SelectItem>
-                    <SelectItem value="FABIANA SALOTTI MARTINS">
-                      Fabiana Salotti Martins
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                          ));
+                        }
+                        return (
+                          <SelectItem
+                            value="Nenhum locatário encontrado"
+                            disabled
+                          >
+                            Nenhum locatário encontrado
+                          </SelectItem>
+                        );
+                      })()}
+                </SelectContent>
+              </Select>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCancelWhatsApp}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleGenerateWhatsApp}
-                disabled={!selectedPerson || !assinanteSelecionado}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assinanteSelecionado" className="text-right">
+                Assinante
+              </Label>
+              <Select
+                value={assinanteSelecionado}
+                onValueChange={setAssinanteSelecionado}
               >
-                Gerar WhatsApp
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal para Seleção de Assinante */}
-        <Dialog open={showAssinanteModal} onOpenChange={setShowAssinanteModal}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Selecionar Assinante do Documento</DialogTitle>
-              <DialogDescription>
-                Selecione quem irá assinar o documento:{' '}
-                {pendingDocumentData?.documentType}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="assinanteSelecionado" className="text-right">
-                  Assinante
-                </Label>
-                <Select
-                  value={assinanteSelecionado}
-                  onValueChange={setAssinanteSelecionado}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Selecione quem irá assinar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="VICTOR CAIN JORGE">
-                      Victor Cain Jorge
-                    </SelectItem>
-                    <SelectItem value="FABIANA SALOTTI MARTINS">
-                      Fabiana Salotti Martins
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione quem irá assinar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VICTOR CAIN JORGE">
+                    Victor Cain Jorge
+                  </SelectItem>
+                  <SelectItem value="FABIANA SALOTTI MARTINS">
+                    Fabiana Salotti Martins
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCancelAssinante}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleGenerateWithAssinante}
-                disabled={!assinanteSelecionado}
-              >
-                Gerar Documento
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelWhatsApp}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleGenerateWhatsApp}
+              disabled={!selectedPerson || !assinanteSelecionado}
+            >
+              Gerar WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* Modal para Edição de Contrato */}
-        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Editar Contrato</DialogTitle>
-              <DialogDescription>
-                Edite as informações do contrato. Todos os campos são editáveis.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-6 py-4">
-              {/* Dados do Contrato */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Dados do Contrato</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-numeroContrato">
-                      Número do Contrato
-                    </Label>
-                    <Input
-                      id="edit-numeroContrato"
-                      value={editFormData.numeroContrato || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          numeroContrato: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: 13734"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-nomeLocatario">
-                      Nome do Locatário
-                    </Label>
-                    <Input
-                      id="edit-nomeLocatario"
-                      value={editFormData.nomeLocatario || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          nomeLocatario: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: Beatriz ou INSERVICE LIMPEZA E INFRA-ESTRUTURA LTDA"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-generoLocatario">
-                      Gênero do Locatário
-                    </Label>
-                    <Select
-                      value={editFormData.generoLocatario || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          generoLocatario: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o gênero" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="masculino">Masculino</SelectItem>
-                        <SelectItem value="feminino">Feminino</SelectItem>
-                        <SelectItem value="neutro">
-                          Neutro (múltiplos locatários)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-enderecoImovel">
-                      Endereço do Imóvel
-                    </Label>
-                    <Input
-                      id="edit-enderecoImovel"
-                      value={editFormData.enderecoImovel || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          enderecoImovel: e.target.value,
-                        }))
-                      }
-                      placeholder="Endereço completo do imóvel"
-                    />
-                  </div>
-                </div>
+      {/* Modal para Seleção de Assinante */}
+      <Dialog open={showAssinanteModal} onOpenChange={setShowAssinanteModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Selecionar Assinante do Documento</DialogTitle>
+            <DialogDescription>
+              Selecione quem irá assinar o documento:{' '}
+              {pendingDocumentData?.documentType}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assinanteSelecionado" className="text-right">
+                Assinante
+              </Label>
+              <Select
+                value={assinanteSelecionado}
+                onValueChange={setAssinanteSelecionado}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione quem irá assinar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VICTOR CAIN JORGE">
+                    Victor Cain Jorge
+                  </SelectItem>
+                  <SelectItem value="FABIANA SALOTTI MARTINS">
+                    Fabiana Salotti Martins
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelAssinante}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleGenerateWithAssinante}
+              disabled={!assinanteSelecionado}
+            >
+              Gerar Documento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Edição de Contrato */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Contrato</DialogTitle>
+            <DialogDescription>
+              Edite as informações do contrato. Todos os campos são editáveis.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            {/* Dados do Contrato */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Dados do Contrato</h3>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-dataFirmamentoContrato">
-                    Data de Firmamento do Contrato
+                  <Label htmlFor="edit-numeroContrato">
+                    Número do Contrato
                   </Label>
                   <Input
-                    id="edit-dataFirmamentoContrato"
-                    value={editFormData.dataFirmamentoContrato || ''}
+                    id="edit-numeroContrato"
+                    value={editFormData.numeroContrato || ''}
                     onChange={(e) =>
                       setEditFormData((prev) => ({
                         ...prev,
-                        dataFirmamentoContrato: e.target.value,
+                        numeroContrato: e.target.value,
                       }))
                     }
-                    placeholder="Ex: 15/10/2024 ou 15 de outubro de 2024"
+                    placeholder="Ex: 13734"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-incluirQuantidadeChaves">
-                    Incluir quantidade de chaves no contrato?
+                  <Label htmlFor="edit-nomeLocatario">Nome do Locatário</Label>
+                  <Input
+                    id="edit-nomeLocatario"
+                    value={editFormData.nomeLocatario || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        nomeLocatario: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: Beatriz ou INSERVICE LIMPEZA E INFRA-ESTRUTURA LTDA"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-generoLocatario">
+                    Gênero do Locatário
                   </Label>
                   <Select
-                    value={editFormData.incluirQuantidadeChaves || ''}
+                    value={editFormData.generoLocatario || ''}
                     onValueChange={(value) =>
                       setEditFormData((prev) => ({
                         ...prev,
-                        incluirQuantidadeChaves: value,
+                        generoLocatario: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="neutro">
+                        Neutro (múltiplos locatários)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-enderecoImovel">
+                    Endereço do Imóvel
+                  </Label>
+                  <Input
+                    id="edit-enderecoImovel"
+                    value={editFormData.enderecoImovel || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        enderecoImovel: e.target.value,
+                      }))
+                    }
+                    placeholder="Endereço completo do imóvel"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-dataFirmamentoContrato">
+                  Data de Firmamento do Contrato
+                </Label>
+                <Input
+                  id="edit-dataFirmamentoContrato"
+                  value={editFormData.dataFirmamentoContrato || ''}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      dataFirmamentoContrato: e.target.value,
+                    }))
+                  }
+                  placeholder="Ex: 15/10/2024 ou 15 de outubro de 2024"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-incluirQuantidadeChaves">
+                  Incluir quantidade de chaves no contrato?
+                </Label>
+                <Select
+                  value={editFormData.incluirQuantidadeChaves || ''}
+                  onValueChange={(value) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      incluirQuantidadeChaves: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma opção" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sim">
+                      Sim - Incluir quantidade de chaves
+                    </SelectItem>
+                    <SelectItem value="nao">
+                      Não - Não incluir quantidade de chaves
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editFormData.incluirQuantidadeChaves === 'sim' && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-quantidadeChaves">
+                    Quantidade e tipo de chaves
+                  </Label>
+                  <Textarea
+                    id="edit-quantidadeChaves"
+                    value={editFormData.quantidadeChaves || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        quantidadeChaves: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: 04 chaves simples, 02 chaves tetra"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="edit-qualificacaoCompletaLocatarios">
+                  Qualificação Completa dos Locatários
+                </Label>
+                <Textarea
+                  id="edit-qualificacaoCompletaLocatarios"
+                  value={editFormData.qualificacaoCompletaLocatarios || ''}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      qualificacaoCompletaLocatarios: e.target.value,
+                    }))
+                  }
+                  placeholder="Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental..."
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-celularLocatario">
+                    Celular do Locatário
+                  </Label>
+                  <Input
+                    id="edit-celularLocatario"
+                    value={editFormData.celularLocatario || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        celularLocatario: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: (19) 99999-9999"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-emailLocatario">
+                    E-mail do Locatário
+                  </Label>
+                  <Input
+                    id="edit-emailLocatario"
+                    value={editFormData.emailLocatario || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        emailLocatario: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: locatario@email.com"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Dados dos Locadores */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                Qualificação dos Locadores
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nomesResumidosLocadores">
+                    Nomes dos Locadores
+                  </Label>
+                  <Input
+                    id="edit-nomesResumidosLocadores"
+                    value={editFormData.nomesResumidosLocadores || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        nomesResumidosLocadores: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: JOÃO SILVA SANTOS e MARIA SILVA SANTOS"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-generoProprietario">
+                    Gênero dos Locadores
+                  </Label>
+                  <Select
+                    value={editFormData.generoProprietario || ''}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        generoProprietario: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="neutro">
+                        Neutro (múltiplos locadores)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-qualificacaoCompletaLocadores">
+                  Qualificação Completa dos Locadores
+                </Label>
+                <Textarea
+                  id="edit-qualificacaoCompletaLocadores"
+                  value={editFormData.qualificacaoCompletaLocadores || ''}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      qualificacaoCompletaLocadores: e.target.value,
+                    }))
+                  }
+                  placeholder="Ex: JOÃO SILVA SANTOS, brasileiro, casado, empresário..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Dados de Rescisão */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Dados de Rescisão</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dataInicioRescisao">
+                    Data de Início da Rescisão
+                  </Label>
+                  <Input
+                    id="edit-dataInicioRescisao"
+                    value={editFormData.dataInicioRescisao || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        dataInicioRescisao: e.target.value,
+                      }))
+                    }
+                    placeholder="DD/MM/AAAA - Ex: 23/06/2025"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dataTerminoRescisao">
+                    Data de Término da Rescisão
+                  </Label>
+                  <Input
+                    id="edit-dataTerminoRescisao"
+                    value={editFormData.dataTerminoRescisao || ''}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        dataTerminoRescisao: e.target.value,
+                      }))
+                    }
+                    placeholder="DD/MM/AAAA - Ex: 22/07/2025"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contas de Consumo */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Contas de Consumo</h3>
+              <p className="text-sm text-gray-600">
+                Configure quais contas de consumo devem ser solicitadas na
+                cobrança
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cpfl">CPFL (Energia Elétrica)</Label>
+                  <Select
+                    value={editFormData.cpfl || ''}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        cpfl: value,
                       }))
                     }
                   >
@@ -2102,796 +2357,631 @@ const Contratos = () => {
                       <SelectValue placeholder="Selecione uma opção" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sim">
-                        Sim - Incluir quantidade de chaves
-                      </SelectItem>
-                      <SelectItem value="nao">
-                        Não - Não incluir quantidade de chaves
+                      <SelectItem value="SIM">SIM</SelectItem>
+                      <SelectItem value="NÃO">NÃO</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tipoAgua">Tipo de Água</Label>
+                  <Select
+                    value={editFormData.tipoAgua || ''}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        tipoAgua: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DAEV">DAEV</SelectItem>
+                      <SelectItem value="SANASA">SANASA</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-statusAgua">Status da Água</Label>
+                  <Select
+                    value={editFormData.statusAgua || ''}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        statusAgua: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SIM">SIM</SelectItem>
+                      <SelectItem value="NÃO">NÃO</SelectItem>
+                      <SelectItem value="No condomínio">
+                        No condomínio
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                {editFormData.incluirQuantidadeChaves === 'sim' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-quantidadeChaves">
-                      Quantidade e tipo de chaves
-                    </Label>
-                    <Textarea
-                      id="edit-quantidadeChaves"
-                      value={editFormData.quantidadeChaves || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          quantidadeChaves: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: 04 chaves simples, 02 chaves tetra"
-                    />
-                  </div>
-                )}
                 <div className="space-y-2">
-                  <Label htmlFor="edit-qualificacaoCompletaLocatarios">
-                    Qualificação Completa dos Locatários
-                  </Label>
-                  <Textarea
-                    id="edit-qualificacaoCompletaLocatarios"
-                    value={editFormData.qualificacaoCompletaLocatarios || ''}
-                    onChange={(e) =>
+                  <Label htmlFor="edit-solicitarGas">Solicitar Gás</Label>
+                  <Select
+                    value={editFormData.solicitarGas || ''}
+                    onValueChange={(value) =>
                       setEditFormData((prev) => ({
                         ...prev,
-                        qualificacaoCompletaLocatarios: e.target.value,
+                        solicitarGas: value,
                       }))
                     }
-                    placeholder="Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental..."
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-celularLocatario">
-                      Celular do Locatário
-                    </Label>
-                    <Input
-                      id="edit-celularLocatario"
-                      value={editFormData.celularLocatario || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          celularLocatario: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: (19) 99999-9999"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-emailLocatario">
-                      E-mail do Locatário
-                    </Label>
-                    <Input
-                      id="edit-emailLocatario"
-                      value={editFormData.emailLocatario || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          emailLocatario: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: locatario@email.com"
-                    />
-                  </div>
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sim">SIM</SelectItem>
+                      <SelectItem value="nao">NÃO</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-
-              {/* Dados dos Locadores */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">
-                  Qualificação dos Locadores
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-nomesResumidosLocadores">
-                      Nomes dos Locadores
-                    </Label>
-                    <Input
-                      id="edit-nomesResumidosLocadores"
-                      value={editFormData.nomesResumidosLocadores || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          nomesResumidosLocadores: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: JOÃO SILVA SANTOS e MARIA SILVA SANTOS"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-generoProprietario">
-                      Gênero dos Locadores
-                    </Label>
-                    <Select
-                      value={editFormData.generoProprietario || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          generoProprietario: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o gênero" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="masculino">Masculino</SelectItem>
-                        <SelectItem value="feminino">Feminino</SelectItem>
-                        <SelectItem value="neutro">
-                          Neutro (múltiplos locadores)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-qualificacaoCompletaLocadores">
-                    Qualificação Completa dos Locadores
+                  <Label htmlFor="edit-solicitarCondominio">
+                    Solicitar Condomínio
                   </Label>
-                  <Textarea
-                    id="edit-qualificacaoCompletaLocadores"
-                    value={editFormData.qualificacaoCompletaLocadores || ''}
-                    onChange={(e) =>
+                  <Select
+                    value={editFormData.solicitarCondominio || ''}
+                    onValueChange={(value) =>
                       setEditFormData((prev) => ({
                         ...prev,
-                        qualificacaoCompletaLocadores: e.target.value,
+                        solicitarCondominio: value,
                       }))
                     }
-                    placeholder="Ex: JOÃO SILVA SANTOS, brasileiro, casado, empresário..."
-                    rows={3}
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sim">SIM</SelectItem>
+                      <SelectItem value="nao">NÃO</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-
-              {/* Dados de Rescisão */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Dados de Rescisão</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-dataInicioRescisao">
-                      Data de Início da Rescisão
-                    </Label>
-                    <Input
-                      id="edit-dataInicioRescisao"
-                      value={editFormData.dataInicioRescisao || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          dataInicioRescisao: e.target.value,
-                        }))
-                      }
-                      placeholder="DD/MM/AAAA - Ex: 23/06/2025"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-dataTerminoRescisao">
-                      Data de Término da Rescisão
-                    </Label>
-                    <Input
-                      id="edit-dataTerminoRescisao"
-                      value={editFormData.dataTerminoRescisao || ''}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          dataTerminoRescisao: e.target.value,
-                        }))
-                      }
-                      placeholder="DD/MM/AAAA - Ex: 22/07/2025"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Contas de Consumo */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Contas de Consumo</h3>
-                <p className="text-sm text-gray-600">
-                  Configure quais contas de consumo devem ser solicitadas na
-                  cobrança
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-cpfl">CPFL (Energia Elétrica)</Label>
-                    <Select
-                      value={editFormData.cpfl || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          cpfl: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SIM">SIM</SelectItem>
-                        <SelectItem value="NÃO">NÃO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-tipoAgua">Tipo de Água</Label>
-                    <Select
-                      value={editFormData.tipoAgua || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          tipoAgua: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DAEV">DAEV</SelectItem>
-                        <SelectItem value="SANASA">SANASA</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-statusAgua">Status da Água</Label>
-                    <Select
-                      value={editFormData.statusAgua || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          statusAgua: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SIM">SIM</SelectItem>
-                        <SelectItem value="NÃO">NÃO</SelectItem>
-                        <SelectItem value="No condomínio">
-                          No condomínio
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-solicitarGas">Solicitar Gás</Label>
-                    <Select
-                      value={editFormData.solicitarGas || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          solicitarGas: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sim">SIM</SelectItem>
-                        <SelectItem value="nao">NÃO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-solicitarCondominio">
-                      Solicitar Condomínio
-                    </Label>
-                    <Select
-                      value={editFormData.solicitarCondominio || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          solicitarCondominio: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sim">SIM</SelectItem>
-                        <SelectItem value="nao">NÃO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-solicitarCND">Solicitar CND</Label>
-                    <Select
-                      value={editFormData.solicitarCND || ''}
-                      onValueChange={(value) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          solicitarCND: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sim">SIM</SelectItem>
-                        <SelectItem value="nao">NÃO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-solicitarCND">Solicitar CND</Label>
+                  <Select
+                    value={editFormData.solicitarCND || ''}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        solicitarCND: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sim">SIM</SelectItem>
+                      <SelectItem value="nao">NÃO</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
-            <DialogFooter>
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (editingContract) {
+                  handleDeleteContract(
+                    editingContract.id,
+                    editingContract.title
+                  );
+                  setShowEditModal(false);
+                  setEditingContract(null);
+                }
+              }}
+              disabled={isUpdating}
+            >
+              Excluir Contrato
+            </Button>
+            <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancelEdit}>
                 Cancelar
               </Button>
               <Button onClick={handleUpdateContract} disabled={isUpdating}>
                 {isUpdating ? 'Atualizando...' : 'Atualizar Contrato'}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal para NPS */}
-        <Dialog open={showNPSModal} onOpenChange={setShowNPSModal}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Pesquisa de Satisfação (NPS)</DialogTitle>
-              <DialogDescription>
-                Selecione o método para enviar a pesquisa de satisfação.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {!npsMethod ? (
-                <div className="space-y-4">
-                  <p className="text-sm font-medium">Escolha o método:</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setNpsMethod('email')}
-                      className="flex flex-col items-center gap-2 p-4 h-auto"
-                    >
-                      <svg
-                        className="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span className="text-sm">E-mail</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setNpsMethod('whatsapp')}
-                      className="flex flex-col items-center gap-2 p-4 h-auto"
-                    >
-                      <Phone className="h-6 w-6" />
-                      <span className="text-sm">WhatsApp</span>
-                    </Button>
-                  </div>
-                </div>
-              ) : npsMethod === 'whatsapp' && !npsWhatsAppType ? (
-                <div className="space-y-4">
-                  <p className="text-sm font-medium">
-                    Selecione para quem enviar:
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setNpsWhatsAppType('locador')}
-                      className="flex flex-col items-center gap-2 p-4 h-auto"
-                    >
-                      <User className="h-6 w-6" />
-                      <span className="text-sm">Locador</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setNpsWhatsAppType('locatario')}
-                      className="flex flex-col items-center gap-2 p-4 h-auto"
-                    >
-                      <User2 className="h-6 w-6" />
-                      <span className="text-sm">Locatário</span>
-                    </Button>
-                  </div>
-                </div>
-              ) : npsMethod === 'whatsapp' &&
-                npsWhatsAppType &&
-                !selectedNPSPerson ? (
-                <div className="grid gap-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="selectedNPSPerson" className="text-right">
-                      {npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário'}
-                    </Label>
-                    <Select
-                      value={selectedNPSPerson}
-                      onValueChange={setSelectedNPSPerson}
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue
-                          placeholder={`Selecione um ${npsWhatsAppType === 'locador' ? 'locador' : 'locatário'}`}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {npsWhatsAppType === 'locador'
-                          ? (() => {
-                              const nomesLocadores =
-                                selectedNPSContract?.form_data
-                                  .nomesResumidosLocadores ||
-                                selectedNPSContract?.form_data.nomeProprietario;
-                              if (nomesLocadores) {
-                                const nomesArray = nomesLocadores
-                                  .split(/ e | E /)
-                                  .map((nome) => nome.trim())
-                                  .filter((nome) => nome);
-                                return nomesArray.map((nome, index) => (
-                                  <SelectItem key={index} value={nome}>
-                                    {nome}
-                                  </SelectItem>
-                                ));
-                              }
-                              return (
-                                <SelectItem
-                                  value="Nenhum locador encontrado"
-                                  disabled
-                                >
-                                  Nenhum locador encontrado
-                                </SelectItem>
-                              );
-                            })()
-                          : (() => {
-                              const nomesLocatarios =
-                                selectedNPSContract?.form_data.nomeLocatario ||
-                                selectedNPSContract?.form_data
-                                  .primeiroLocatario;
-                              if (nomesLocatarios) {
-                                const nomesArray = nomesLocatarios
-                                  .split(/ e | E /)
-                                  .map((nome) => nome.trim())
-                                  .filter((nome) => nome);
-                                return nomesArray.map((nome, index) => (
-                                  <SelectItem key={index} value={nome}>
-                                    {nome}
-                                  </SelectItem>
-                                ));
-                              }
-                              return (
-                                <SelectItem
-                                  value="Nenhum locatário encontrado"
-                                  disabled
-                                >
-                                  Nenhum locatário encontrado
-                                </SelectItem>
-                              );
-                            })()}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              ) : null}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCancelNPS}>
-                Cancelar
-              </Button>
-              {npsMethod === 'email' ? (
-                <Button onClick={handleGenerateNPSEmail}>Gerar E-mail</Button>
-              ) : npsMethod === 'whatsapp' && selectedNPSPerson ? (
-                <Button onClick={handleGenerateNPSWhatsApp}>
-                  Gerar WhatsApp
-                </Button>
-              ) : null}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* Modal para Preenchimento de Números NPS */}
-        <Dialog
-          open={showNPSNumbersModal}
-          onOpenChange={setShowNPSNumbersModal}
-        >
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Preencher Números para NPS</DialogTitle>
-              <DialogDescription>
-                Preencha os números de telefone das partes para incluir no
-                e-mail NPS.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {selectedNPSContract &&
-                (() => {
+      {/* Modal para NPS */}
+      <Dialog open={showNPSModal} onOpenChange={setShowNPSModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Pesquisa de Satisfação (NPS)</DialogTitle>
+            <DialogDescription>
+              Selecione o método para enviar a pesquisa de satisfação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {!npsMethod ? (
+              <div className="space-y-4">
+                <p className="text-sm font-medium">Escolha o método:</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setNpsMethod('email')}
+                    className="flex flex-col items-center gap-2 p-4 h-auto"
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="text-sm">E-mail</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setNpsMethod('whatsapp')}
+                    className="flex flex-col items-center gap-2 p-4 h-auto"
+                  >
+                    <Phone className="h-6 w-6" />
+                    <span className="text-sm">WhatsApp</span>
+                  </Button>
+                </div>
+              </div>
+            ) : npsMethod === 'whatsapp' && !npsWhatsAppType ? (
+              <div className="space-y-4">
+                <p className="text-sm font-medium">
+                  Selecione para quem enviar:
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setNpsWhatsAppType('locador')}
+                    className="flex flex-col items-center gap-2 p-4 h-auto"
+                  >
+                    <User className="h-6 w-6" />
+                    <span className="text-sm">Locador</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setNpsWhatsAppType('locatario')}
+                    className="flex flex-col items-center gap-2 p-4 h-auto"
+                  >
+                    <User2 className="h-6 w-6" />
+                    <span className="text-sm">Locatário</span>
+                  </Button>
+                </div>
+              </div>
+            ) : npsMethod === 'whatsapp' &&
+              npsWhatsAppType &&
+              !selectedNPSPerson ? (
+              <div className="grid gap-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="selectedNPSPerson" className="text-right">
+                    {npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário'}
+                  </Label>
+                  <Select
+                    value={selectedNPSPerson}
+                    onValueChange={setSelectedNPSPerson}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue
+                        placeholder={`Selecione um ${npsWhatsAppType === 'locador' ? 'locador' : 'locatário'}`}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {npsWhatsAppType === 'locador'
+                        ? (() => {
+                            const nomesLocadores =
+                              selectedNPSContract?.form_data
+                                .nomesResumidosLocadores ||
+                              selectedNPSContract?.form_data.nomeProprietario;
+                            if (nomesLocadores) {
+                              const nomesArray = nomesLocadores
+                                .split(/ e | E /)
+                                .map((nome) => nome.trim())
+                                .filter((nome) => nome);
+                              return nomesArray.map((nome, index) => (
+                                <SelectItem key={index} value={nome}>
+                                  {nome}
+                                </SelectItem>
+                              ));
+                            }
+                            return (
+                              <SelectItem
+                                value="Nenhum locador encontrado"
+                                disabled
+                              >
+                                Nenhum locador encontrado
+                              </SelectItem>
+                            );
+                          })()
+                        : (() => {
+                            const nomesLocatarios =
+                              selectedNPSContract?.form_data.nomeLocatario ||
+                              selectedNPSContract?.form_data.primeiroLocatario;
+                            if (nomesLocatarios) {
+                              const nomesArray = nomesLocatarios
+                                .split(/ e | E /)
+                                .map((nome) => nome.trim())
+                                .filter((nome) => nome);
+                              return nomesArray.map((nome, index) => (
+                                <SelectItem key={index} value={nome}>
+                                  {nome}
+                                </SelectItem>
+                              ));
+                            }
+                            return (
+                              <SelectItem
+                                value="Nenhum locatário encontrado"
+                                disabled
+                              >
+                                Nenhum locatário encontrado
+                              </SelectItem>
+                            );
+                          })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelNPS}>
+              Cancelar
+            </Button>
+            {npsMethod === 'email' ? (
+              <Button onClick={handleGenerateNPSEmail}>Gerar E-mail</Button>
+            ) : npsMethod === 'whatsapp' && selectedNPSPerson ? (
+              <Button onClick={handleGenerateNPSWhatsApp}>
+                Gerar WhatsApp
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Preenchimento de Números NPS */}
+      <Dialog open={showNPSNumbersModal} onOpenChange={setShowNPSNumbersModal}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Preencher Números para NPS</DialogTitle>
+            <DialogDescription>
+              Preencha os números de telefone das partes para incluir no e-mail
+              NPS.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {selectedNPSContract &&
+              (() => {
+                const formData = selectedNPSContract.form_data;
+                const nomesLocadores =
+                  formData.nomesResumidosLocadores ||
+                  formData.nomeProprietario ||
+                  '';
+                const nomesLocadoresArray = nomesLocadores
+                  .split(/ e | E |,/)
+                  .map((nome) => nome.trim())
+                  .filter((nome) => nome);
+                const nomesLocatarios = formData.nomeLocatario || '';
+                const nomesLocatariosArray = nomesLocatarios
+                  .split(/ e | E |,/)
+                  .map((nome) => nome.trim())
+                  .filter((nome) => nome);
+
+                // Inicializar números e seleções se não estiverem no estado
+                if (Object.keys(npsNumbers).length === 0) {
+                  const initialNumbers: Record<string, string> = {};
+                  const initialSelections: Record<string, boolean> = {};
+
+                  // Preencher números dos locadores
+                  nomesLocadoresArray.forEach((nome) => {
+                    const key = `locador_${nome}`;
+                    initialNumbers[key] =
+                      formData[`numeroLocador_${nome.replace(/\s+/g, '_')}`] ||
+                      formData.celularProprietario ||
+                      formData.telefoneProprietario ||
+                      formData.celularLocador ||
+                      formData.telefoneLocador ||
+                      '';
+                    // Marcar como selecionado por padrão
+                    initialSelections[key] = true;
+                  });
+
+                  // Preencher números dos locatários
+                  nomesLocatariosArray.forEach((nome) => {
+                    const key = `locatario_${nome}`;
+                    initialNumbers[key] =
+                      formData[
+                        `numeroLocatario_${nome.replace(/\s+/g, '_')}`
+                      ] ||
+                      formData.celularLocatario ||
+                      formData.telefoneLocatario ||
+                      '';
+                    // Marcar como selecionado por padrão
+                    initialSelections[key] = true;
+                  });
+
+                  setNpsNumbers(initialNumbers);
+                  setNpsSelectedParties(initialSelections);
+                }
+
+                return (
+                  <>
+                    {/* Locadores */}
+                    {nomesLocadoresArray.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-sm text-gray-700">
+                          Locadores
+                        </h4>
+                        {nomesLocadoresArray.map((nome, index) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-3 gap-4 items-center"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`nps-locador-${index}`}
+                                checked={
+                                  npsSelectedParties[`locador_${nome}`] || false
+                                }
+                                onChange={(e) =>
+                                  setNpsSelectedParties((prev) => ({
+                                    ...prev,
+                                    [`locador_${nome}`]: e.target.checked,
+                                  }))
+                                }
+                                className="rounded border-gray-300"
+                              />
+                              <Label
+                                htmlFor={`nps-locador-${index}`}
+                                className="text-sm"
+                              >
+                                {nome}
+                              </Label>
+                            </div>
+                            <Input
+                              placeholder="(19) 99999-9999"
+                              value={npsNumbers[`locador_${nome}`] || ''}
+                              onChange={(e) =>
+                                setNpsNumbers((prev) => ({
+                                  ...prev,
+                                  [`locador_${nome}`]: e.target.value,
+                                }))
+                              }
+                              disabled={!npsSelectedParties[`locador_${nome}`]}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Locatários */}
+                    {nomesLocatariosArray.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-sm text-gray-700">
+                          Locatários
+                        </h4>
+                        {nomesLocatariosArray.map((nome, index) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-3 gap-4 items-center"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`nps-locatario-${index}`}
+                                checked={
+                                  npsSelectedParties[`locatario_${nome}`] ||
+                                  false
+                                }
+                                onChange={(e) =>
+                                  setNpsSelectedParties((prev) => ({
+                                    ...prev,
+                                    [`locatario_${nome}`]: e.target.checked,
+                                  }))
+                                }
+                                className="rounded border-gray-300"
+                              />
+                              <Label
+                                htmlFor={`nps-locatario-${index}`}
+                                className="text-sm"
+                              >
+                                {nome}
+                              </Label>
+                            </div>
+                            <Input
+                              placeholder="(19) 99999-9999"
+                              value={npsNumbers[`locatario_${nome}`] || ''}
+                              onChange={(e) =>
+                                setNpsNumbers((prev) => ({
+                                  ...prev,
+                                  [`locatario_${nome}`]: e.target.value,
+                                }))
+                              }
+                              disabled={
+                                !npsSelectedParties[`locatario_${nome}`]
+                              }
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowNPSNumbersModal(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                // Salvar números no contrato e gerar e-mail
+                if (selectedNPSContract) {
                   const formData = selectedNPSContract.form_data;
                   const nomesLocadores =
                     formData.nomesResumidosLocadores ||
                     formData.nomeProprietario ||
                     '';
                   const nomesLocadoresArray = nomesLocadores
-                    .split(/ e | E |,/)
+                    .split(/ e | E /)
                     .map((nome) => nome.trim())
                     .filter((nome) => nome);
                   const nomesLocatarios = formData.nomeLocatario || '';
                   const nomesLocatariosArray = nomesLocatarios
-                    .split(/ e | E |,/)
+                    .split(/ e | E /)
                     .map((nome) => nome.trim())
                     .filter((nome) => nome);
 
-                  // Inicializar números e seleções se não estiverem no estado
-                  if (Object.keys(npsNumbers).length === 0) {
-                    const initialNumbers: Record<string, string> = {};
-                    const initialSelections: Record<string, boolean> = {};
-
-                    // Preencher números dos locadores
-                    nomesLocadoresArray.forEach((nome) => {
-                      const key = `locador_${nome}`;
-                      initialNumbers[key] =
-                        formData[
+                  const updatedFormData = {
+                    ...selectedNPSContract.form_data,
+                  };
+                  Object.entries(npsNumbers).forEach(([key, value]) => {
+                    if (value && npsSelectedParties[key]) {
+                      if (key.startsWith('locador_')) {
+                        const nome = key.replace('locador_', '');
+                        updatedFormData[
                           `numeroLocador_${nome.replace(/\s+/g, '_')}`
-                        ] ||
-                        formData.celularProprietario ||
-                        formData.telefoneProprietario ||
-                        formData.celularLocador ||
-                        formData.telefoneLocador ||
-                        '';
-                      // Marcar como selecionado por padrão
-                      initialSelections[key] = true;
-                    });
-
-                    // Preencher números dos locatários
-                    nomesLocatariosArray.forEach((nome) => {
-                      const key = `locatario_${nome}`;
-                      initialNumbers[key] =
-                        formData[
+                        ] = value;
+                        // Também atualizar campos gerais se for o primeiro locador
+                        if (nome === nomesLocadoresArray[0]) {
+                          updatedFormData.celularProprietario = value;
+                          updatedFormData.celularLocador = value;
+                        }
+                      } else if (key.startsWith('locatario_')) {
+                        const nome = key.replace('locatario_', '');
+                        updatedFormData[
                           `numeroLocatario_${nome.replace(/\s+/g, '_')}`
-                        ] ||
-                        formData.celularLocatario ||
-                        formData.telefoneLocatario ||
-                        '';
-                      // Marcar como selecionado por padrão
-                      initialSelections[key] = true;
-                    });
-
-                    setNpsNumbers(initialNumbers);
-                    setNpsSelectedParties(initialSelections);
-                  }
-
-                  return (
-                    <>
-                      {/* Locadores */}
-                      {nomesLocadoresArray.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-sm text-gray-700">
-                            Locadores
-                          </h4>
-                          {nomesLocadoresArray.map((nome, index) => (
-                            <div
-                              key={index}
-                              className="grid grid-cols-3 gap-4 items-center"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  id={`nps-locador-${index}`}
-                                  checked={
-                                    npsSelectedParties[`locador_${nome}`] ||
-                                    false
-                                  }
-                                  onChange={(e) =>
-                                    setNpsSelectedParties((prev) => ({
-                                      ...prev,
-                                      [`locador_${nome}`]: e.target.checked,
-                                    }))
-                                  }
-                                  className="rounded border-gray-300"
-                                />
-                                <Label
-                                  htmlFor={`nps-locador-${index}`}
-                                  className="text-sm"
-                                >
-                                  {nome}
-                                </Label>
-                              </div>
-                              <Input
-                                placeholder="(19) 99999-9999"
-                                value={npsNumbers[`locador_${nome}`] || ''}
-                                onChange={(e) =>
-                                  setNpsNumbers((prev) => ({
-                                    ...prev,
-                                    [`locador_${nome}`]: e.target.value,
-                                  }))
-                                }
-                                disabled={
-                                  !npsSelectedParties[`locador_${nome}`]
-                                }
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Locatários */}
-                      {nomesLocatariosArray.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-sm text-gray-700">
-                            Locatários
-                          </h4>
-                          {nomesLocatariosArray.map((nome, index) => (
-                            <div
-                              key={index}
-                              className="grid grid-cols-3 gap-4 items-center"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  id={`nps-locatario-${index}`}
-                                  checked={
-                                    npsSelectedParties[`locatario_${nome}`] ||
-                                    false
-                                  }
-                                  onChange={(e) =>
-                                    setNpsSelectedParties((prev) => ({
-                                      ...prev,
-                                      [`locatario_${nome}`]: e.target.checked,
-                                    }))
-                                  }
-                                  className="rounded border-gray-300"
-                                />
-                                <Label
-                                  htmlFor={`nps-locatario-${index}`}
-                                  className="text-sm"
-                                >
-                                  {nome}
-                                </Label>
-                              </div>
-                              <Input
-                                placeholder="(19) 99999-9999"
-                                value={npsNumbers[`locatario_${nome}`] || ''}
-                                onChange={(e) =>
-                                  setNpsNumbers((prev) => ({
-                                    ...prev,
-                                    [`locatario_${nome}`]: e.target.value,
-                                  }))
-                                }
-                                disabled={
-                                  !npsSelectedParties[`locatario_${nome}`]
-                                }
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowNPSNumbersModal(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => {
-                  // Salvar números no contrato e gerar e-mail
-                  if (selectedNPSContract) {
-                    const formData = selectedNPSContract.form_data;
-                    const nomesLocadores =
-                      formData.nomesResumidosLocadores ||
-                      formData.nomeProprietario ||
-                      '';
-                    const nomesLocadoresArray = nomesLocadores
-                      .split(/ e | E /)
-                      .map((nome) => nome.trim())
-                      .filter((nome) => nome);
-                    const nomesLocatarios = formData.nomeLocatario || '';
-                    const nomesLocatariosArray = nomesLocatarios
-                      .split(/ e | E /)
-                      .map((nome) => nome.trim())
-                      .filter((nome) => nome);
-
-                    const updatedFormData = {
-                      ...selectedNPSContract.form_data,
-                    };
-                    Object.entries(npsNumbers).forEach(([key, value]) => {
-                      if (value && npsSelectedParties[key]) {
-                        if (key.startsWith('locador_')) {
-                          const nome = key.replace('locador_', '');
-                          updatedFormData[
-                            `numeroLocador_${nome.replace(/\s+/g, '_')}`
-                          ] = value;
-                          // Também atualizar campos gerais se for o primeiro locador
-                          if (nome === nomesLocadoresArray[0]) {
-                            updatedFormData.celularProprietario = value;
-                            updatedFormData.celularLocador = value;
-                          }
-                        } else if (key.startsWith('locatario_')) {
-                          const nome = key.replace('locatario_', '');
-                          updatedFormData[
-                            `numeroLocatario_${nome.replace(/\s+/g, '_')}`
-                          ] = value;
-                          // Também atualizar campos gerais se for o primeiro locatário
-                          if (nome === nomesLocatariosArray[0]) {
-                            updatedFormData.celularLocatario = value;
-                          }
+                        ] = value;
+                        // Também atualizar campos gerais se for o primeiro locatário
+                        if (nome === nomesLocatariosArray[0]) {
+                          updatedFormData.celularLocatario = value;
                         }
                       }
-                    });
+                    }
+                  });
 
-                    // Atualizar o contrato no banco
-                    supabase
-                      .from('saved_terms')
-                      .update({ form_data: updatedFormData })
-                      .eq('id', selectedNPSContract.id)
-                      .then(() => {
-                        // Atualizar o contrato local
-                        setContracts((prev) =>
-                          prev.map((c) =>
-                            c.id === selectedNPSContract.id
-                              ? { ...c, form_data: updatedFormData }
-                              : c
-                          )
-                        );
+                  // Atualizar o contrato no banco
+                  const updateContract = async () => {
+                    try {
+                      await supabase
+                        .from('saved_terms')
+                        .update({ form_data: updatedFormData })
+                        .eq('id', selectedNPSContract.id);
 
-                        // Atualizar o contrato selecionado
-                        setSelectedNPSContract((prev) =>
-                          prev ? { ...prev, form_data: updatedFormData } : null
-                        );
-
-                        // Definir as partes selecionadas no estado principal
-                        const selectedLocadores = Object.keys(
-                          npsSelectedParties
+                      // Atualizar o contrato local
+                      setContracts((prev) =>
+                        prev.map((c) =>
+                          c.id === selectedNPSContract.id
+                            ? { ...c, form_data: updatedFormData }
+                            : c
                         )
-                          .filter(
-                            (key) =>
-                              key.startsWith('locador_') &&
-                              npsSelectedParties[key]
-                          )
-                          .map((key) => key.replace('locador_', ''));
+                      );
 
-                        const selectedLocatarios = Object.keys(
-                          npsSelectedParties
+                      // Atualizar o contrato selecionado
+                      setSelectedNPSContract((prev) =>
+                        prev ? { ...prev, form_data: updatedFormData } : null
+                      );
+
+                      // Definir as partes selecionadas no estado principal
+                      const selectedLocadores = Object.keys(npsSelectedParties)
+                        .filter(
+                          (key) =>
+                            key.startsWith('locador_') &&
+                            npsSelectedParties[key]
                         )
-                          .filter(
-                            (key) =>
-                              key.startsWith('locatario_') &&
-                              npsSelectedParties[key]
-                          )
-                          .map((key) => key.replace('locatario_', ''));
+                        .map((key) => key.replace('locador_', ''));
 
-                        setSelectedNPSParties({
-                          locadores: selectedLocadores,
-                          locatarios: selectedLocatarios,
-                        });
+                      const selectedLocatarios = Object.keys(npsSelectedParties)
+                        .filter(
+                          (key) =>
+                            key.startsWith('locatario_') &&
+                            npsSelectedParties[key]
+                        )
+                        .map((key) => key.replace('locatario_', ''));
 
-                        // Fechar modal e gerar e-mail
-                        setShowNPSNumbersModal(false);
-                        generateNPSEmailWithData();
-                      })
-                      .catch(() => {
-                        toast.error('Erro ao salvar números');
+                      setSelectedNPSParties({
+                        locadores: selectedLocadores,
+                        locatarios: selectedLocatarios,
                       });
-                  }
-                }}
-              >
-                Salvar e Gerar E-mail
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+
+                      // Fechar modal e gerar e-mail
+                      setShowNPSNumbersModal(false);
+                      generateNPSEmailWithData();
+                    } catch {
+                      toast.error('Erro ao salvar números');
+                    }
+                  };
+
+                  updateContract();
+                }
+              }}
+            >
+              Salvar e Gerar E-mail
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Busca */}
+      <Dialog open={showSearchModal} onOpenChange={setShowSearchModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Buscar Contratos</DialogTitle>
+            <DialogDescription>
+              Digite o termo para buscar nos contratos
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="localSearch">Termo de Busca</Label>
+              <Input
+                id="localSearch"
+                placeholder="Nome do locatário, proprietário, endereço..."
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Busca em: título, nome do locatário, proprietário, número do
+                contrato e endereço
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLocalSearchTerm('')}>
+              Limpar Busca
+            </Button>
+            <Button onClick={() => setShowSearchModal(false)}>Buscar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 };

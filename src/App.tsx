@@ -17,6 +17,7 @@ import ProcessoRescisao from './pages/ProcessoRescisao';
 import GerarDocumento from './pages/GerarDocumento';
 import TermoLocador from './pages/TermoLocador';
 import TermoLocatario from './pages/TermoLocatario';
+import TermoRecusaAssinaturaEmail from './pages/TermoRecusaAssinaturaEmail';
 import Chat from './pages/Chat';
 
 const queryClient = new QueryClient();
@@ -104,6 +105,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <TermoLocatario />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/termo-recusa-assinatura-email"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <TermoRecusaAssinaturaEmail />
                   </Layout>
                 </ProtectedRoute>
               }

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { correctTextWithAI } from '@/utils/openai';
+import { correctTextWithAI, improveTextWithAI } from '@/utils/openai';
 
 interface UseOpenAIReturn {
   correctText: (text: string) => Promise<string>;
+  improveText: (text: string) => Promise<string>;
   isLoading: boolean;
   error: string | null;
 }
@@ -28,8 +29,26 @@ export const useOpenAI = (): UseOpenAIReturn => {
     }
   };
 
+  const improveText = async (text: string): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const improvedText = await improveTextWithAI(text);
+      return improvedText;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     correctText,
+    improveText,
     isLoading,
     error,
   };

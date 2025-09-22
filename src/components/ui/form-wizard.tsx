@@ -34,26 +34,28 @@ function Step({ step, currentStep }: { step: number; currentStep: number }) {
           type: 'tween',
           ease: 'circOut',
         }}
-        className="absolute inset-0 rounded-full bg-blue-200"
+        className="absolute inset-0 rounded-full bg-primary/20"
       />
 
       <motion.div
         initial={false}
         variants={{
           inactive: {
-            backgroundColor: '#fff',
-            borderColor: '#e5e5e5',
-            color: '#a3a3a3',
+            backgroundColor: 'hsl(var(--muted))',
+            borderColor: 'hsl(var(--border))',
+            color: 'hsl(var(--muted-foreground))',
           },
           active: {
-            backgroundColor: '#fff',
-            borderColor: '#3b82f6',
-            color: '#3b82f6',
+            backgroundColor: 'hsl(var(--primary))',
+            borderColor: 'hsl(var(--primary))',
+            color: 'hsl(var(--primary-foreground))',
+            boxShadow: '0 0 0 4px hsl(var(--primary) / 0.2)',
           },
           complete: {
-            backgroundColor: '#3b82f6',
-            borderColor: '#3b82f6',
-            color: '#3b82f6',
+            backgroundColor: 'hsl(var(--primary))',
+            borderColor: 'hsl(var(--primary))',
+            color: 'hsl(var(--primary-foreground))',
+            boxShadow: '0 0 0 4px hsl(var(--primary) / 0.3)',
           },
         }}
         transition={{ duration: 0.2 }}
@@ -179,30 +181,32 @@ export const FormWizard: React.FC<FormWizardProps> = ({
       {/* Step Content */}
       <div className="space-y-6 mb-8">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             {currentStepData.title}
           </h2>
           {currentStepData.description && (
-            <p className="text-gray-600">{currentStepData.description}</p>
+            <p className="text-foreground/80 font-medium">
+              {currentStepData.description}
+            </p>
           )}
         </div>
         {currentStepData.content}
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between items-center pt-8 mt-8 border-t border-gray-200">
+      <div className="flex justify-between items-center pt-8 mt-8 border-t border-border">
         <button
           onClick={handlePrevious}
           disabled={currentStep === 0}
           className={`${
             currentStep === 0 ? 'pointer-events-none opacity-50' : ''
-          } duration-350 rounded px-2 py-1 text-neutral-400 transition hover:text-neutral-700`}
+          } duration-350 rounded px-2 py-1 text-muted-foreground transition hover:text-foreground`}
         >
           Anterior
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground font-medium">
             {currentStep + 1} / {steps.length}
           </span>
         </div>
@@ -214,11 +218,11 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             currentStepData.isValid === false || isSubmitting
               ? 'pointer-events-none opacity-50'
               : ''
-          } bg duration-350 flex items-center justify-center rounded-full bg-blue-500 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-blue-600 active:bg-blue-700`}
+          } bg duration-350 flex items-center justify-center rounded-full bg-primary py-1.5 px-3.5 font-medium tracking-tight text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80`}
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent mr-2" />
               {submitButtonText}
             </>
           ) : (

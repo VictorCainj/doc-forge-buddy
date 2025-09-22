@@ -11,7 +11,7 @@ export const getCompanyLogo = (): string => {
     return localLogo;
   } catch {
     // Fallback para logo externo
-    return 'https://i.imgur.com/xwz1P7v.png';
+    return 'https://i.imgur.com/jSbw2Ec.jpeg';
   }
 };
 
@@ -42,7 +42,7 @@ export const useCompanyLogo = (): string => {
 
       if (!isLocalWorking) {
         const isExternalWorking = await checkImageLoad(
-          'https://i.imgur.com/xwz1P7v.png'
+          'https://i.imgur.com/jSbw2Ec.jpeg'
         );
 
         if (!isExternalWorking) {

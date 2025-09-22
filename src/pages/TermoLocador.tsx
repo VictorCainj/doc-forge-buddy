@@ -1,8 +1,11 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft, Key, User, FileText } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface ContractData {
   numeroContrato: string;
@@ -101,6 +104,10 @@ const TermoLocador: React.FC = () => {
           type: 'textarea',
           required: false,
           placeholder: 'Ex: 04 chaves simples, 02 chaves tetra',
+          conditional: {
+            field: 'usarQuantidadeChavesContrato',
+            value: 'nao',
+          },
         },
         {
           name: 'observacao',
@@ -156,7 +163,7 @@ const TermoLocador: React.FC = () => {
     return `
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
   <div style="flex: 0 0 auto;">
-    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
   </div>
   <div style="flex: 1; text-align: right; font-size: ${fontSize}px; margin-left: 20px;">
     Valinhos, ${getCurrentDate()}.
@@ -318,22 +325,119 @@ __________________________________________<br>
   };
 
   return (
-    <div className="min-h-screen bg-gradient-secondary">
-      <div className="container mx-auto px-6 py-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white shadow-card rounded-lg border-b">
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900">
-                    Termo de Recebimento de Chaves - Locador
-                  </h1>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Contrato #{contractData.numeroContrato}
-                  </p>
+    <div className="min-h-screen bg-background">
+      {/* Professional Header */}
+      <div className="professional-header">
+        <div className="relative px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  Termo de Recebimento de Chaves
+                </h1>
+                <p className="text-white/80 text-lg">
+                  Documento para formalizar o recebimento das chaves pelo
+                  locador
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="p-3 rounded-xl bg-white/10">
+                  <Key className="h-6 w-6 text-white" />
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="bg-white/20 text-white border-white/30"
+                >
+                  <User className="h-3 w-3 mr-1" />
+                  Locador
+                </Badge>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="text-right text-white/90">
+                <p className="text-sm">
+                  Contrato #{contractData.numeroContrato}
+                </p>
+                <p className="text-xs text-white/70">
+                  Documento oficial de entrega
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                  onClick={() => navigate('/contratos')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Info Card */}
+          <Card className="glass-card mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                Informações do Termo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/10">
+                    <Search className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">
+                      Vistoria
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Detalhes da vistoria e entrega das chaves
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/10">
+                    <User className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">
+                      Responsável
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Identificação de quem retira as chaves
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/10">
+                    <Key className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">
+                      Chaves
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Controle de entrega e recebimento
+                    </p>
+                  </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
+          {/* Form Wizard */}
+          <Card className="glass-card">
+            <CardContent className="p-0">
               <DocumentFormWizard
                 title="Termo de Recebimento de Chaves - Locador"
                 description="Preencha os dados para gerar o termo"
@@ -346,8 +450,8 @@ __________________________________________<br>
                 onFormDataChange={setAutoFillData}
                 hideSaveButton={true}
               />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer, Minimize2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Printer,
+  Minimize2,
+  FileText,
+  Download,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const GerarDocumento = () => {
   const location = useLocation();
@@ -182,75 +190,135 @@ const GerarDocumento = () => {
   const isWhatsAppMessage = documentType?.includes('WhatsApp');
 
   return (
-    <div className="min-h-screen bg-gradient-secondary p-2">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white p-4 rounded-lg shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold">{title}</h1>
-              <p className="text-gray-600 mt-1 text-sm">
-                Gerando {documentType} baseado nos dados do contrato
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <>
-                <Button
-                  onClick={handleCompact}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  title="Compactar documento para economizar espaço"
+    <div className="min-h-screen bg-background">
+      {/* Professional Header */}
+      <div className="professional-header">
+        <div className="relative px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  Gerador de Documentos
+                </h1>
+                <p className="text-white/80 text-lg">
+                  Visualização e impressão de documentos gerados
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge
+                  variant="secondary"
+                  className="bg-white/20 text-white border-white/30"
                 >
-                  <Minimize2 className="h-4 w-4" />
-                  Compactar
-                </Button>
-                <Button
-                  onClick={handlePrint}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  disabled={isPrinting}
-                >
-                  {isPrinting ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  ) : (
-                    <Printer className="h-4 w-4" />
-                  )}
-                  {isPrinting ? 'Preparando...' : 'Imprimir'}
-                </Button>
-              </>
-              <Button
-                onClick={() => navigate('/contratos')}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Voltar aos Contratos
-              </Button>
+                  <FileText className="h-3 w-3 mr-1" />
+                  {documentType}
+                </Badge>
+              </div>
             </div>
-          </div>
 
-          <div className="border rounded-lg p-6 bg-gray-50">
-            <div className="mb-4">
-              <h1 className="text-xl font-bold text-gray-800 mb-2">
-                {getDocumentTitle()}
-              </h1>
-              <h2 className="text-lg font-semibold">
-                {isWhatsAppMessage
-                  ? 'Mensagem para WhatsApp:'
-                  : 'Documento Gerado:'}
-              </h2>
-            </div>
-            <div
-              className={`p-6 rounded border max-h-96 overflow-auto ${
-                isWhatsAppMessage ? 'bg-green-50 border-green-200' : 'bg-white'
-              }`}
-              style={{ fontSize: `${fontSize}px` }}
-            >
-              <div dangerouslySetInnerHTML={{ __html: template }} />
+            <div className="flex items-center space-x-4">
+              <div className="text-right text-white/90">
+                <p className="text-sm">
+                  Contrato {formData?.numeroContrato || '[Número]'}
+                </p>
+                <p className="text-xs text-white/70">
+                  Documento gerado automaticamente
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                  onClick={() => navigate('/contratos')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar
+                </Button>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Document Controls */}
+          <Card className="glass-card mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" />
+                    {title}
+                  </CardTitle>
+                  <p className="text-muted-foreground mt-1">
+                    Gerando {documentType} baseado nos dados do contrato
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={handleCompact}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    title="Compactar documento para economizar espaço"
+                  >
+                    <Minimize2 className="h-4 w-4" />
+                    Compactar
+                  </Button>
+                  <Button
+                    onClick={handlePrint}
+                    variant="default"
+                    size="sm"
+                    className="gap-2"
+                    disabled={isPrinting}
+                  >
+                    {isPrinting ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                    ) : (
+                      <Printer className="h-4 w-4" />
+                    )}
+                    {isPrinting ? 'Preparando...' : 'Imprimir'}
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Document Preview */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-foreground">
+                {getDocumentTitle()}
+              </CardTitle>
+              <p className="text-muted-foreground">
+                {isWhatsAppMessage
+                  ? 'Mensagem para WhatsApp'
+                  : 'Visualização do documento gerado'}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`p-6 rounded-lg border max-h-[600px] overflow-auto ${
+                  isWhatsAppMessage
+                    ? 'bg-white border-green-200/50'
+                    : 'bg-white border-gray-300'
+                }`}
+                style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
+                id="document-content"
+              >
+                <div
+                  dangerouslySetInnerHTML={{ __html: template }}
+                  style={{ backgroundColor: 'white', color: 'black' }}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

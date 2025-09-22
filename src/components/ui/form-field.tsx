@@ -249,7 +249,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           disabled={disabled}
           className={cn(
             'w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg',
-            'hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
             'transition-all duration-200 cursor-pointer',
             hasError && 'border-red-500 focus:ring-red-500',
             isValid && 'border-green-500 focus:ring-green-500',
@@ -277,7 +277,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         {isOpen && (
           <div
             className={cn(
-              'absolute top-0 z-[99999] bg-white border border-gray-200 rounded-lg shadow-xl min-w-[200px] max-w-[300px] transform translate-x-0',
+              'absolute top-0 z-[99999] bg-background border border-border rounded-lg shadow-xl min-w-[200px] max-w-[300px] transform translate-x-0',
               menuPosition === 'right' ? 'left-full ml-1' : 'right-full mr-1'
             )}
             style={{ zIndex: 99999 }}
@@ -293,7 +293,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                     handleOptionClick(option.value);
                   }}
                   className={cn(
-                    'w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer',
+                    'w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors cursor-pointer',
                     value === option.value && 'bg-blue-50 text-blue-600'
                   )}
                 >
@@ -362,12 +362,12 @@ export const FormField: React.FC<FormFieldProps> = ({
           {showSuggestions && filteredOptions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+              className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto"
             >
               {filteredOptions.map((option) => (
                 <div
                   key={option.value}
-                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                  className="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
                   onClick={() => handleSuggestionClick(option.value)}
                 >
                   {option.label}
@@ -404,7 +404,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         <Label
           htmlFor={name}
           className={cn(
-            'text-sm font-medium text-gray-700 transition-colors',
+            'text-sm font-semibold text-foreground transition-colors',
             hasError && 'text-red-600',
             isValid && 'text-green-600'
           )}
@@ -417,7 +417,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <div className="text-sm whitespace-pre-line">{tooltip}</div>
@@ -428,7 +428,10 @@ export const FormField: React.FC<FormFieldProps> = ({
       </div>
 
       {description && !hasError && (
-        <p id={`${name}-description`} className="text-xs text-gray-500 -mt-1">
+        <p
+          id={`${name}-description`}
+          className="text-xs text-muted-foreground font-medium -mt-1"
+        >
           {description}
         </p>
       )}

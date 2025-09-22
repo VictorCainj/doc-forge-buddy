@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search, Phone, Mail } from 'lucide-react';
+import { Search, Phone, Mail, ArrowLeft, Key, User } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
 import {
   Dialog,
@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -104,10 +106,13 @@ const TermoLocatario: React.FC = () => {
         .single();
 
       if (fetchError) throw fetchError;
+      if (!contractRecord) throw new Error('Contrato não encontrado');
 
       // Atualizar os dados de contato no form_data
+      const formData =
+        (contractRecord.form_data as Record<string, string>) || {};
       const updatedFormData = {
-        ...contractRecord.form_data,
+        ...formData,
         celularLocatario: newContactData.celularLocatario,
         emailLocatario: newContactData.emailLocatario,
       };
@@ -226,6 +231,43 @@ const TermoLocatario: React.FC = () => {
           type: 'textarea',
           required: false,
           placeholder: 'Ex: 04 chaves simples, 02 chaves tetra',
+          conditional: {
+            field: 'usarQuantidadeChavesContrato',
+            value: 'nao',
+          },
+        },
+        {
+          name: 'tipoVistoria',
+          label: 'Tipo de Vistoria',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione o tipo de vistoria',
+          options: [
+            { value: 'vistoria', label: 'Vistoria' },
+            { value: 'revistoria', label: 'Revistoria' },
+          ],
+        },
+        {
+          name: 'dataVistoria',
+          label: 'Data da Vistoria',
+          type: 'text',
+          required: true,
+          placeholder: 'Ex: 19 de setembro de 2025',
+          conditional: {
+            field: 'tipoVistoria',
+            value: 'vistoria',
+          },
+        },
+        {
+          name: 'dataRevistoria',
+          label: 'Data da Revistoria',
+          type: 'text',
+          required: true,
+          placeholder: 'Ex: 19 de setembro de 2025',
+          conditional: {
+            field: 'tipoVistoria',
+            value: 'revistoria',
+          },
         },
         {
           name: 'cpfl',
@@ -268,13 +310,6 @@ const TermoLocatario: React.FC = () => {
           ],
         },
         {
-          name: 'dataVistoria',
-          label: 'Data da Vistoria',
-          type: 'text',
-          required: true,
-          placeholder: 'Ex: 14 de setembro de 2025',
-        },
-        {
           name: 'statusVistoria',
           label: 'Status da Vistoria',
           type: 'select',
@@ -292,6 +327,32 @@ const TermoLocatario: React.FC = () => {
                 'Reprovada - Imóvel não foi entregue de acordo com a vistoria inicial',
             },
           ],
+          conditional: {
+            field: 'tipoVistoria',
+            value: 'vistoria',
+          },
+        },
+        {
+          name: 'statusRevistoria',
+          label: 'Status da Revistoria',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione uma opção',
+          options: [
+            {
+              value: 'aprovada',
+              label: 'Aprovada - Imóvel entregue de acordo com a revistoria',
+            },
+            {
+              value: 'reprovada',
+              label:
+                'Reprovada - Imóvel não foi entregue de acordo com a revistoria',
+            },
+          ],
+          conditional: {
+            field: 'tipoVistoria',
+            value: 'revistoria',
+          },
         },
         {
           name: 'observacao',
@@ -299,6 +360,17 @@ const TermoLocatario: React.FC = () => {
           type: 'textarea',
           required: false,
           placeholder: 'Digite observações adicionais se necessário',
+        },
+        {
+          name: 'tipoContrato',
+          label: 'Tipo de Contrato',
+          type: 'select',
+          required: true,
+          placeholder: 'Selecione o tipo de contrato',
+          options: [
+            { value: 'residencial', label: 'Residencial' },
+            { value: 'comercial', label: 'Comercial' },
+          ],
         },
         {
           name: 'assinanteSelecionado',
@@ -347,7 +419,7 @@ const TermoLocatario: React.FC = () => {
     return `
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
   <div style="flex: 0 0 auto;">
-    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
   </div>
   <div style="flex: 1; text-align: right; font-size: ${fontSize}px; margin-left: 20px;">
     Valinhos, ${getCurrentDate()}.
@@ -384,7 +456,7 @@ Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>Vistoria realizada em</strong> {{dataVistoria}}.
+<strong>{{tipoVistoriaTexto}} realizada em</strong> {{dataVistoria}}.
 </div>
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
@@ -420,7 +492,7 @@ __________________________________________<br>
       // Mostrar modal para preenchimento dos campos de contato
       setPendingFormData(data);
       setShowContactModal(true);
-      return null; // Impede a geração do documento
+      return {}; // Retorna objeto vazio para evitar erro de tipo
     }
 
     // Detectar se há múltiplos locatários baseado na quantidade adicionada
@@ -499,12 +571,25 @@ __________________________________________<br>
       // );
     }
 
-    // Processar status da vistoria
-    const statusVistoria = data.statusVistoria || 'aprovada';
+    // Processar tipo de vistoria
+    const tipoVistoria = data.tipoVistoria || 'vistoria';
+    const tipoVistoriaTexto =
+      tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria';
+
+    // Processar status da vistoria baseado no tipo selecionado
+    const statusVistoria =
+      tipoVistoria === 'revistoria'
+        ? data.statusRevistoria || 'aprovada'
+        : data.statusVistoria || 'aprovada';
+
     const statusVistoriaCheckboxes =
       statusVistoria === 'aprovada'
         ? '( ✓ ) Imóvel entregue de acordo com a vistoria inicial<br>( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.'
         : '( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>( ✓ ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.';
+
+    // Processar data baseada no tipo selecionado
+    const dataVistoria =
+      tipoVistoria === 'revistoria' ? data.dataRevistoria : data.dataVistoria;
 
     // Processar observação (só mostra se preenchida)
     const observacao =
@@ -546,28 +631,77 @@ __________________________________________<br>
 
       // Texto de entrega de chaves baseado em quem está retirando
       textoEntregaChaves,
+
+      // Tipo de vistoria processado
+      tipoVistoriaTexto,
+
+      // Data da vistoria processada (baseada no tipo selecionado)
+      dataVistoria,
     };
 
     return enhancedData;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-secondary">
-      <div className="container mx-auto px-6 py-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white shadow-card rounded-lg border-b">
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900">
-                    Termo de Recebimento de Chaves - Locatário
-                  </h1>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Contrato #{contractData.numeroContrato}
-                  </p>
-                </div>
+    <div className="min-h-screen bg-background">
+      {/* Professional Header */}
+      <div className="professional-header">
+        <div className="relative px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  Termo de Recebimento de Chaves
+                </h1>
+                <p className="text-white/80 text-lg">
+                  Documento para formalizar o recebimento das chaves pelo
+                  locatário
+                </p>
               </div>
+              <div className="flex items-center space-x-2">
+                <div className="p-3 rounded-xl bg-white/10">
+                  <Key className="h-6 w-6 text-white" />
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="bg-white/20 text-white border-white/30"
+                >
+                  <User className="h-3 w-3 mr-1" />
+                  Locatário
+                </Badge>
+              </div>
+            </div>
 
+            <div className="flex items-center space-x-4">
+              <div className="text-right text-white/90">
+                <p className="text-sm">
+                  Contrato #{contractData.numeroContrato}
+                </p>
+                <p className="text-xs text-white/70">
+                  Documento oficial de entrega
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                  onClick={() => navigate('/contratos')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto">
+          <Card className="glass-card">
+            <CardContent className="p-0">
               <DocumentFormWizard
                 title="Termo de Recebimento de Chaves - Locatário"
                 description="Preencha os dados para gerar o termo"
@@ -575,13 +709,13 @@ __________________________________________<br>
                 template=""
                 onGenerate={handleGenerate}
                 getTemplate={getTemplate}
-                contractData={contractData}
+                contractData={contractData as Record<string, string>}
                 initialData={autoFillData}
                 onFormDataChange={setAutoFillData}
                 hideSaveButton={true}
               />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

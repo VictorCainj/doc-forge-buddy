@@ -4,7 +4,7 @@ export const TERMO_RECEBIMENTO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -64,7 +64,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -85,7 +85,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Anexo a esse e-mail o laudo de vistoria de entrada para seu conhecimento. O vistoriador na data da vistoria irá seguir conforme esse laudo inicial de entrada.</p>
   
-  <p style="margin-bottom: 20px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de rescisão.</p>
+  <p style="margin-bottom: 20px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante o processo de rescisão.</p>
   
   <p style="margin-bottom: 20px;">Todos os documentos enviados deverão ser assinados pelas partes, no que se refere a data de agendamento de vistoria, termo de comparecimento de vistoria e conclusão de vistoria, pois a Madia deve documentar que, todos os processos administrativos, como contratante serão efetuados e realizados por todas as partes.</p>
   
@@ -99,7 +99,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -148,7 +148,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -161,7 +161,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato Nº <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
   
-  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de rescisão, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas, referentes aos meses de <strong>{{mesesComprovantes}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Para darmos continuidade ao agendamento da vistoria de saída, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas (conta completa), referentes aos meses de <strong>{{mesesComprovantes}}</strong>.</p>
   
   <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
     <p style="margin-bottom: 10px; font-weight: bold; color: #007bff;">DOCUMENTOS SOLICITADOS:</p>
@@ -192,7 +192,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
     {{/if}}
   </div>
   
-  <p style="margin-bottom: 20px;">Solicitamos que encaminhe esses documentos o mais breve possível, pois são essenciais para a finalização do processo de rescisão.</p>
+  <p style="margin-bottom: 20px;">Solicitamos que encaminhe esses documentos o mais breve possível, pois são essenciais para o agendamento da vistoria de saída.</p>
   
   <p style="margin-bottom: 20px;">Conforme estabelecido no contrato de locação, o locatário é responsável pelo pagamento das contas de consumo durante todo o período de ocupação do imóvel.</p>
   
@@ -208,7 +208,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -234,7 +234,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da {{tipoVistoriaTexto}} do Imóvel situado <strong>{{enderecoImovel}}</strong>, Contrato <strong>{{numeroContrato}}</strong>, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de {{tratamentoLocatarioNotificacao}}.</p>
+    <p style="margin: 10px 0; font-size: 14px;">No uso de suas atribuições administrativas, a Imobiliária Madia Imóveis, informa formalmente da realização da {{tipoVistoriaTexto}} do Imóvel situado <strong>{{enderecoImovel}}</strong>, Contrato <strong>{{numeroContrato}}</strong>, agendada para o dia <strong>{{dataVistoria}}</strong>, às <strong>{{horaVistoria}}</strong>, cuja locação, ora em vias de finalização, é de responsabilidade de V.Sas.</p>
     
     <p style="margin: 10px 0; font-size: 14px;">Pelo presente a notificação tem por finalidade comunicar as partes, ou de seus representantes a constata-se à {{tipoVistoriaTexto}} do imóvel citado, que assistirão à produção das fotos que embasam o Laudo de Vistoria e acompanharam a constatação das divergências. O não comparecimento ao ato, e nem dos representantes, <strong><u>aceitarão antecipadamente os termos integrais da {{tipoVistoriaTextoMaiusculo}}, tal como for apurada.</u></strong></p>
     
@@ -253,7 +253,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -270,7 +270,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
   
   <p style="margin-bottom: 25px;">Por favor, verifique seu e-mail e confirme a ciência do recebimento.</p>
   
-  <p style="margin-bottom: 25px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante a vigência do processo de rescisão.</p>
+  <p style="margin-bottom: 25px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante o processo de rescisão.</p>
   
   <p style="margin-top: 50px;">Atenciosamente,</p>
   
@@ -286,7 +286,7 @@ export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -319,7 +319,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -350,7 +350,7 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -359,7 +359,7 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
   
   <div style="text-align: center; margin-bottom: 30px;">
     <h1 style="color: #d32f2f; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
-      FORMALIZAÇÃO INTERNA - PROCESSO DE RESCISÃO
+      FORMALIZAÇÃO INTERNA - DEVOLUTIVA COMERCIAL
     </h1>
   </div>
   
@@ -378,7 +378,7 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -491,7 +491,7 @@ export const TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -503,6 +503,8 @@ export const TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE = `
   <p style="margin-bottom: 20px; text-align: justify;">Nos termos do artigo 23, inciso III, da Lei nº 8.245/91 (Lei do Inquilinato), o locatário é responsável por devolver o imóvel nas mesmas condições em que o recebeu, salvo deteriorações decorrentes do uso normal. A vistoria de saída tem como objetivo verificar o cumprimento dessa obrigação legal.</p>
   
   <p style="margin-bottom: 20px; text-align: justify;">A administradora Madia reafirma que todos os procedimentos foram conduzidos com imparcialidade, boa-fé e em estrita observância às normas contratuais e legais, resguardando os interesses de ambas as partes.</p>
+  
+  <p style="margin-bottom: 20px; text-align: justify;">Informamos que a vistoria de saída do imóvel localizado em <strong>{{enderecoImovel}}</strong> foi realizada na data de <strong>{{dataRealizacaoVistoria}}</strong>, conforme previsto em contrato.</p>
   
   <p style="margin-bottom: 20px;">Atenciosamente,</p>
   
@@ -518,7 +520,7 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 60px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 14px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -555,7 +557,7 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
 export const NPS_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 40px;">
-    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 70px; width: auto;" />
+    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
   </div>
   
   <div style="text-align: center; margin: 50px 0;">
@@ -568,7 +570,7 @@ export const NPS_WHATSAPP_TEMPLATE = `
 export const NPS_EMAIL_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 40px;">
-    <img src="https://i.imgur.com/xwz1P7v.png" alt="Madia Imóveis" style="height: 70px; width: auto;" />
+    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
   </div>
   
   <div style="text-align: left; margin: 40px 0;">

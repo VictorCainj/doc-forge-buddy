@@ -35,12 +35,14 @@ export interface FormStep {
 interface UseFormWizardProps {
   steps: FormStep[];
   initialData?: Record<string, string>;
+  contractData?: Record<string, string>;
   onStepValidation?: (stepIndex: number, isValid: boolean) => void;
 }
 
 export const useFormWizard = ({
   steps,
   initialData = {},
+  contractData = {},
   onStepValidation,
 }: UseFormWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -88,7 +90,11 @@ export const useFormWizard = ({
 
   // Validar uma etapa específica (sem side effects)
   const validateStepInternal = useCallback(
-    (stepIndex: number, data: Record<string, string>): boolean => {
+    (
+      stepIndex: number,
+      data: Record<string, string>,
+      contractData: Record<string, string> = {}
+    ): boolean => {
       const step = steps[stepIndex];
       if (!step) return true;
 
@@ -98,6 +104,43 @@ export const useFormWizard = ({
       }
 
       return step.fields.every((field) => {
+        // Verificar se o campo deve ser exibido (lógica condicional)
+        let shouldShowField = true;
+
+        if (field.conditional) {
+          const { field: conditionalField, value: conditionalValue } =
+            field.conditional;
+          shouldShowField = data[conditionalField] === conditionalValue;
+        }
+
+        // Lógica especial para campo documentoQuemRetira (terceira pessoa)
+        if (field.name === 'documentoQuemRetira') {
+          const nomeQuemRetira = data.nomeQuemRetira || '';
+          const nomeProprietario = contractData?.nomeProprietario || '';
+          const nomeLocatario = contractData?.nomeLocatario || '';
+
+          if (!nomeQuemRetira) {
+            shouldShowField = false;
+          } else {
+            const naoEhProprietario =
+              !nomeProprietario ||
+              !nomeProprietario
+                .toLowerCase()
+                .includes(nomeQuemRetira.toLowerCase());
+            const naoEhLocatario =
+              !nomeLocatario ||
+              !nomeLocatario
+                .toLowerCase()
+                .includes(nomeQuemRetira.toLowerCase());
+            shouldShowField = naoEhProprietario && naoEhLocatario;
+          }
+        }
+
+        // Se o campo não deve ser exibido, não validar
+        if (!shouldShowField) {
+          return true;
+        }
+
         const value = data[field.name] || '';
         const error = validateField(field, value);
         return !error;
@@ -108,7 +151,7 @@ export const useFormWizard = ({
 
   // Validar uma etapa específica (com side effects)
   const validateStep = useCallback(
-    (stepIndex: number): boolean => {
+    (stepIndex: number, contractData: Record<string, string> = {}): boolean => {
       const step = steps[stepIndex];
       if (!step) return true;
 
@@ -121,6 +164,43 @@ export const useFormWizard = ({
       const newErrors: Record<string, string> = { ...errors };
 
       step.fields.forEach((field) => {
+        // Verificar se o campo deve ser exibido (lógica condicional)
+        let shouldShowField = true;
+
+        if (field.conditional) {
+          const { field: conditionalField, value: conditionalValue } =
+            field.conditional;
+          shouldShowField = formData[conditionalField] === conditionalValue;
+        }
+
+        // Lógica especial para campo documentoQuemRetira (terceira pessoa)
+        if (field.name === 'documentoQuemRetira') {
+          const nomeQuemRetira = formData.nomeQuemRetira || '';
+          const nomeProprietario = contractData?.nomeProprietario || '';
+          const nomeLocatario = contractData?.nomeLocatario || '';
+
+          if (!nomeQuemRetira) {
+            shouldShowField = false;
+          } else {
+            const naoEhProprietario =
+              !nomeProprietario ||
+              !nomeProprietario
+                .toLowerCase()
+                .includes(nomeQuemRetira.toLowerCase());
+            const naoEhLocatario =
+              !nomeLocatario ||
+              !nomeLocatario
+                .toLowerCase()
+                .includes(nomeQuemRetira.toLowerCase());
+            shouldShowField = naoEhProprietario && naoEhLocatario;
+          }
+        }
+
+        // Se o campo não deve ser exibido, não validar
+        if (!shouldShowField) {
+          return;
+        }
+
         const value = formData[field.name] || '';
         const error = validateField(field, value);
 
@@ -189,12 +269,15 @@ export const useFormWizard = ({
 
   // Ir para próxima etapa
   const nextStep = useCallback(() => {
-    if (validateStep(currentStep) && currentStep < steps.length - 1) {
+    if (
+      validateStep(currentStep, contractData) &&
+      currentStep < steps.length - 1
+    ) {
       setCurrentStep((prev) => prev + 1);
       return true;
     }
     return false;
-  }, [currentStep, steps.length, validateStep]);
+  }, [currentStep, steps.length, contractData, validateStep]);
 
   // Ir para etapa anterior
   const previousStep = useCallback(() => {
@@ -221,12 +304,12 @@ export const useFormWizard = ({
   const completedSteps = useMemo(() => {
     const completed: number[] = [];
     for (let i = 0; i < currentStep; i++) {
-      if (validateStepInternal(i, formData)) {
+      if (validateStepInternal(i, formData, contractData)) {
         completed.push(i);
       }
     }
     return completed;
-  }, [currentStep, formData, validateStepInternal]);
+  }, [currentStep, formData, contractData, validateStepInternal]);
 
   // Verificar se o formulário está válido
   const isFormValid = useMemo(() => {
@@ -235,14 +318,14 @@ export const useFormWizard = ({
       if (step.id === 'documentos' && formData.tipoTermo === 'locador') {
         return true;
       }
-      return validateStepInternal(index, formData);
+      return validateStepInternal(index, formData, contractData);
     });
-  }, [steps, formData, validateStepInternal]);
+  }, [steps, formData, contractData, validateStepInternal]);
 
   // Verificar se a etapa atual está válida
   const isCurrentStepValid = useMemo(() => {
-    return validateStepInternal(currentStep, formData);
-  }, [currentStep, formData, validateStepInternal]);
+    return validateStepInternal(currentStep, formData, contractData);
+  }, [currentStep, formData, contractData, validateStepInternal]);
 
   // Reset do formulário
   const resetForm = useCallback(() => {

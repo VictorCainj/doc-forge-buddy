@@ -1,25 +1,36 @@
-import { ReactNode } from 'react';
-import Header from './Header';
+import { ReactNode, createContext, useContext, useState } from 'react';
 import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
+// Context para comunicação entre Sidebar e páginas
+const SearchContext = createContext<{
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+}>({
+  searchTerm: '',
+  setSearchTerm: () => {},
+});
+
+export const useSearchContext = () => useContext(SearchContext);
+
 const Layout = ({ children }: LayoutProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
+    <SearchContext.Provider value={{ searchTerm, setSearchTerm }}>
+      <div className="min-h-screen bg-background">
+        <div className="flex">
+          {/* Professional Sidebar */}
+          <Sidebar onSearchChange={setSearchTerm} />
 
-      <div className="flex">
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* Main Content */}
-        <main className="flex-1 ml-0">{children}</main>
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-hidden">{children}</main>
+        </div>
       </div>
-    </div>
+    </SearchContext.Provider>
   );
 };
 

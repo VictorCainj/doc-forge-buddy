@@ -10,12 +10,12 @@ import {
   NotebookPen,
   FileText,
   Briefcase,
-  Edit,
-  Trash2,
-  Receipt,
   AlertTriangle,
   Star,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
@@ -29,6 +29,8 @@ import {
   DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
   TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
   TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
+  NPS_WHATSAPP_TEMPLATE,
+  NPS_EMAIL_TEMPLATE,
 } from '@/templates/documentos';
 
 interface QuickAction {
@@ -48,283 +50,300 @@ interface QuickActionsDropdownProps {
     template: string,
     title: string
   ) => void;
-  onNavigateToTerm: (contractId: string, termType: string) => void;
-  onEditContract?: (contractId: string) => void;
-  onDeleteContract?: (contractId: string) => void;
-  onGenerateNPS?: (contractId: string) => void;
-  generatingDocument?: string;
-  className?: string;
 }
 
 const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
   contractId,
   contractNumber,
   onGenerateDocument,
-  onNavigateToTerm: _onNavigateToTerm,
-  onEditContract,
-  onDeleteContract,
-  onGenerateNPS,
-  generatingDocument,
-  className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [loadingActions, setLoadingActions] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  // Definir todas as ações rápidas
-  const quickActions: QuickAction[] = [
-    // TERMOS / DEVOLUTIVAS
-    {
-      id: 'locador',
-      label: 'Locador',
-      icon: User,
-      onClick: () => onGenerateDocument(contractId, '', 'Termo do Locador'),
-      disabled: generatingDocument === `${contractId}-Termo do Locador`,
-      loading: generatingDocument === `${contractId}-Termo do Locador`,
-    },
-    {
-      id: 'proprietario',
-      label: 'Devolutiva Proprietária',
-      icon: Home,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
-          'Devolutiva Proprietário'
-        ),
-      disabled: generatingDocument === `${contractId}-Devolutiva Proprietário`,
-      loading: generatingDocument === `${contractId}-Devolutiva Proprietário`,
-    },
-    {
-      id: 'locatario',
-      label: 'Locatária',
-      icon: User2,
-      onClick: () => onGenerateDocument(contractId, '', 'Termo do Locatário'),
-      disabled: generatingDocument === `${contractId}-Termo do Locatário`,
-      loading: generatingDocument === `${contractId}-Termo do Locatário`,
-    },
-    {
-      id: 'locatario-prop',
-      label: 'Devolutiva Locatária',
-      icon: Building,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_LOCATARIO_TEMPLATE,
-          'Devolutiva Locatário'
-        ),
-      disabled: generatingDocument === `${contractId}-Devolutiva Locatário`,
-      loading: generatingDocument === `${contractId}-Devolutiva Locatário`,
-    },
-    // COMUNICAÇÃO / WHATSAPP
-    {
-      id: 'agenda',
-      label: 'Notificação de Agendamento',
-      icon: Calendar,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          NOTIFICACAO_AGENDAMENTO_TEMPLATE,
-          'Notificação de Agendamento'
-        ),
-      disabled:
-        generatingDocument === `${contractId}-Notificação de Agendamento`,
-      loading:
-        generatingDocument === `${contractId}-Notificação de Agendamento`,
-    },
-    {
-      id: 'prop-whatsapp',
-      label: 'Proprietária',
-      icon: Phone,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
-          'Devolutiva Locador WhatsApp'
-        ),
-      disabled:
-        generatingDocument === `${contractId}-Devolutiva Locador WhatsApp`,
-      loading:
-        generatingDocument === `${contractId}-Devolutiva Locador WhatsApp`,
-    },
-    {
-      id: 'comercial',
-      label: 'Comercial',
-      icon: Briefcase,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_COMERCIAL_TEMPLATE,
-          'Devolutiva Comercial'
-        ),
-      disabled: generatingDocument === `${contractId}-Devolutiva Comercial`,
-      loading: generatingDocument === `${contractId}-Devolutiva Comercial`,
-    },
-    {
-      id: 'loc-whatsapp',
-      label: 'Locatária',
-      icon: Phone,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
-          'Devolutiva Locatário WhatsApp'
-        ),
-      disabled:
-        generatingDocument === `${contractId}-Devolutiva Locatário WhatsApp`,
-      loading:
-        generatingDocument === `${contractId}-Devolutiva Locatário WhatsApp`,
-    },
-    {
-      id: 'cobranca-consumo',
-      label: 'Cobrança de Consumo',
-      icon: Receipt,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
-          'Devolutiva Cobrança de Consumo'
-        ),
-      disabled:
-        generatingDocument === `${contractId}-Devolutiva Cobrança de Consumo`,
-      loading:
-        generatingDocument === `${contractId}-Devolutiva Cobrança de Consumo`,
-    },
-    {
-      id: 'nps',
-      label: 'NPS',
-      icon: Star,
-      onClick: () => onGenerateNPS?.(contractId),
-    },
-    // DOCUMENTOS
-    {
-      id: 'caderninho',
-      label: 'Caderninho',
-      icon: NotebookPen,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_CADERNINHO_TEMPLATE,
-          'Devolutiva Caderninho'
-        ),
-      disabled: generatingDocument === `${contractId}-Devolutiva Caderninho`,
-      loading: generatingDocument === `${contractId}-Devolutiva Caderninho`,
-    },
-    {
-      id: 'distrato',
-      label: 'Distrato',
-      icon: FileText,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
-          'Distrato de Contrato de Locação'
-        ),
-      disabled:
-        generatingDocument === `${contractId}-Distrato de Contrato de Locação`,
-      loading:
-        generatingDocument === `${contractId}-Distrato de Contrato de Locação`,
-    },
-    // TERMO DE RECUSA DE ASSINATURA
-    {
-      id: 'recusa-email',
-      label: 'Termo de Recusa - E-mail',
-      icon: AlertTriangle,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
-          'Termo de Recusa de Assinatura - E-mail'
-        ),
-      disabled:
-        generatingDocument ===
-        `${contractId}-Termo de Recusa de Assinatura - E-mail`,
-      loading:
-        generatingDocument ===
-        `${contractId}-Termo de Recusa de Assinatura - E-mail`,
-    },
-    {
-      id: 'recusa-pdf',
-      label: 'Termo de Recusa - PDF',
-      icon: AlertTriangle,
-      onClick: () =>
-        onGenerateDocument(
-          contractId,
-          TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
-          'Termo de Recusa de Assinatura - PDF'
-        ),
-      disabled:
-        generatingDocument ===
-        `${contractId}-Termo de Recusa de Assinatura - PDF`,
-      loading:
-        generatingDocument ===
-        `${contractId}-Termo de Recusa de Assinatura - PDF`,
-    },
-  ];
-
-  // Ações de gerenciamento do contrato
-  const managementActions: QuickAction[] = [
-    {
-      id: 'edit',
-      label: 'Editar',
-      icon: Edit,
-      onClick: () => onEditContract?.(contractId),
-    },
-    {
-      id: 'delete',
-      label: 'Excluir',
-      icon: Trash2,
-      onClick: () => onDeleteContract?.(contractId),
-    },
-  ];
-
-  // Fechar modal ao pressionar ESC
+  // Fechar dropdown ao clicar fora
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      // Prevenir scroll do body quando modal está aberto
-      document.body.style.overflow = 'hidden';
-
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-        document.body.style.overflow = 'unset';
-      };
+      document.addEventListener('mousedown', handleClickOutside);
     }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [isOpen]);
 
-  const handleActionClick = (action: QuickAction) => {
-    if (!action.disabled) {
-      action.onClick();
-      setIsOpen(false);
+  const handleActionClick = async (action: QuickAction) => {
+    if (action.disabled) return;
+
+    setLoadingActions((prev) => new Set(prev).add(action.id));
+    try {
+      await action.onClick();
+    } finally {
+      setLoadingActions((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(action.id);
+        return newSet;
+      });
     }
   };
 
-  // Agrupar ações por categoria
-  const termActions = quickActions.slice(0, 4);
-  const communicationActions = quickActions.slice(4, 10); // Inclui cobrança de consumo e NPS
-  const documentActions = quickActions.slice(10, 12); // Caderninho e Distrato
-  const recusaActions = quickActions.slice(12, 14); // Recusa E-mail e PDF
+  // Função para buscar dados do contrato
+  const fetchContractData = async (contractId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_terms')
+        .select('*')
+        .eq('id', contractId)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('Contrato não encontrado');
+
+      return {
+        ...((data.form_data as Record<string, string>) || {}),
+        id: data.id,
+        title: data.title,
+      };
+    } catch {
+      toast.error('Erro ao carregar dados do contrato');
+      return null;
+    }
+  };
+
+  const termActions: QuickAction[] = [
+    {
+      id: 'termo-locador',
+      label: 'Recebimento de Chaves (Locador)',
+      icon: Home,
+      onClick: async () => {
+        const contractData = await fetchContractData(contractId);
+        if (contractData) {
+          navigate('/termo-locador', { state: { contractData } });
+        }
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'termo-locatario',
+      label: 'Recebimento de Chaves (Locatário)',
+      icon: User,
+      onClick: async () => {
+        const contractData = await fetchContractData(contractId);
+        if (contractData) {
+          navigate('/termo-locatario', { state: { contractData } });
+        }
+        setIsOpen(false);
+      },
+    },
+  ];
+
+  const communicationActions: QuickAction[] = [
+    {
+      id: 'devolutiva-email-locador',
+      label: 'Devolutiva E-mail (Locador)',
+      icon: User,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
+          'Devolutiva via E-mail - Locador'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'devolutiva-email-locatario',
+      label: 'Devolutiva E-mail (Locatário)',
+      icon: User2,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_LOCATARIO_TEMPLATE,
+          'Devolutiva via E-mail - Locatário'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'notificacao-agendamento',
+      label: 'Notificação de Agendamento',
+      icon: Calendar,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          NOTIFICACAO_AGENDAMENTO_TEMPLATE,
+          'Notificação de Agendamento'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'whatsapp-proprietaria',
+      label: 'Proprietária',
+      icon: User2,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
+          'WhatsApp - Proprietária'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'whatsapp-comercial',
+      label: 'Comercial',
+      icon: Building,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_COMERCIAL_TEMPLATE,
+          'WhatsApp - Comercial'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'whatsapp-locataria',
+      label: 'Locatária',
+      icon: Phone,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
+          'WhatsApp - Locatária'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'cobranca-consumo',
+      label: 'Cobrança de Consumo',
+      icon: Briefcase,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+          'Cobrança de Consumo'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'nps-whatsapp',
+      label: 'NPS WhatsApp',
+      icon: Star,
+      onClick: () => {
+        onGenerateDocument(contractId, NPS_WHATSAPP_TEMPLATE, 'NPS WhatsApp');
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'nps-email',
+      label: 'NPS E-mail',
+      icon: Star,
+      onClick: () => {
+        onGenerateDocument(contractId, NPS_EMAIL_TEMPLATE, 'NPS E-mail');
+        setIsOpen(false);
+      },
+    },
+  ];
+
+  const documentActions: QuickAction[] = [
+    {
+      id: 'caderninho',
+      label: 'Caderninho',
+      icon: NotebookPen,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DEVOLUTIVA_CADERNINHO_TEMPLATE,
+          'Caderninho'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'distrato',
+      label: 'Distrato',
+      icon: FileText,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
+          'Distrato'
+        );
+        setIsOpen(false);
+      },
+    },
+  ];
+
+  const recusaActions: QuickAction[] = [
+    {
+      id: 'termo-recusa-email',
+      label: 'Termo de Recusa - E-mail',
+      icon: AlertTriangle,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
+          'Termo de Recusa de Assinatura - E-mail'
+        );
+        setIsOpen(false);
+      },
+    },
+    {
+      id: 'termo-recusa-pdf',
+      label: 'Termo de Recusa - PDF',
+      icon: AlertTriangle,
+      onClick: () => {
+        onGenerateDocument(
+          contractId,
+          TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
+          'Termo de Recusa de Assinatura - PDF'
+        );
+        setIsOpen(false);
+      },
+    },
+  ];
+
+  // Atualizar ações com estado de loading
+  const updateActionsWithLoading = (actions: QuickAction[]) =>
+    actions.map((action) => ({
+      ...action,
+      loading: loadingActions.has(action.id),
+    }));
+
+  const termActionsWithLoading = updateActionsWithLoading(termActions);
+  const communicationActionsWithLoading =
+    updateActionsWithLoading(communicationActions);
+  const documentActionsWithLoading = updateActionsWithLoading(documentActions);
+  const recusaActionsWithLoading = updateActionsWithLoading(recusaActions);
 
   return (
-    <div
-      ref={dropdownRef}
-      className={cn('relative overflow-visible', className)}
-    >
-      {/* Botão da seta */}
+    <div ref={dropdownRef} className="relative">
+      {/* Botão trigger */}
       <button
-        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800 transition-colors cursor-pointer border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 relative z-50"
+        className={cn(
+          'flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground border border-border rounded-lg transition-colors hover:text-foreground/80 hover:bg-accent',
+          isOpen && 'bg-accent'
+        )}
       >
         <span>AÇÕES RÁPIDAS</span>
         <ChevronRight
           className={cn(
-            'h-3 w-3 text-gray-400 transition-transform duration-200',
+            'h-4 w-4 text-muted-foreground transition-transform',
             isOpen && 'rotate-90'
           )}
         />
@@ -339,18 +358,18 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Menu centralizado */}
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[320px] max-w-[400px] max-h-[80vh] overflow-hidden">
+          {/* Modal em tela cheia */}
+          <div className="fixed inset-4 z-[9999] glass-card border-border rounded-xl shadow-2xl overflow-hidden flex flex-col">
             {/* Header do modal */}
-            <div className="relative p-4 border-b border-gray-200 bg-gray-50">
+            <div className="relative p-4 border-b border-border bg-background">
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-foreground">
                   Ações Rápidas
                 </h3>
                 {contractNumber && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Contrato:{' '}
-                    <span className="font-medium text-blue-600">
+                    <span className="font-medium text-primary">
                       {contractNumber}
                     </span>
                   </p>
@@ -358,7 +377,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-accent"
               >
                 <svg
                   className="w-5 h-5"
@@ -376,151 +395,160 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
               </button>
             </div>
 
-            {/* Conteúdo do menu */}
-            <div className="py-4 max-h-[calc(80vh-80px)] overflow-auto">
-              {/* TERMOS / DEVOLUTIVAS */}
-              <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
-                  TERMOS / DEVOLUTIVAS
-                </p>
-                <div className="grid grid-cols-2 gap-3 px-4">
-                  {termActions.map((action) => (
-                    <button
-                      key={action.id}
-                      onClick={() => handleActionClick(action)}
-                      disabled={action.disabled}
-                      className="flex flex-col items-center justify-center gap-2 hover:bg-gray-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 hover:border-gray-200"
-                    >
-                      {action.loading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
-                      ) : (
-                        <action.icon className="h-5 w-5 text-gray-500" />
-                      )}
-                      <span className="text-xs text-gray-700 text-center leading-tight">
-                        {action.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* COMUNICAÇÃO / WHATSAPP */}
-              <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
-                  COMUNICAÇÃO / WHATSAPP
-                </p>
-                <div className="grid grid-cols-2 gap-3 px-4">
-                  {communicationActions.map((action) => (
-                    <button
-                      key={action.id}
-                      onClick={() => handleActionClick(action)}
-                      disabled={action.disabled}
-                      className="flex flex-col items-center justify-center gap-2 hover:bg-gray-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 hover:border-gray-200"
-                    >
-                      {action.loading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
-                      ) : (
-                        <action.icon className="h-5 w-5 text-gray-500" />
-                      )}
-                      <span className="text-xs text-gray-700 text-center leading-tight">
-                        {action.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* DOCUMENTOS */}
-              <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
-                  DOCUMENTOS
-                </p>
-                <div className="grid grid-cols-2 gap-3 px-4">
-                  {documentActions.map((action) => (
-                    <button
-                      key={action.id}
-                      onClick={() => handleActionClick(action)}
-                      disabled={action.disabled}
-                      className="flex flex-col items-center justify-center gap-2 hover:bg-gray-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 hover:border-gray-200"
-                    >
-                      {action.loading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
-                      ) : (
-                        <action.icon className="h-5 w-5 text-gray-500" />
-                      )}
-                      <span className="text-xs text-gray-700 text-center leading-tight">
-                        {action.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* TERMO DE RECUSA DE ASSINATURA */}
-              <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
-                  TERMO DE RECUSA
-                </p>
-                <div className="grid grid-cols-2 gap-3 px-4">
-                  {recusaActions.map((action) => (
-                    <button
-                      key={action.id}
-                      onClick={() => handleActionClick(action)}
-                      disabled={action.disabled}
-                      className="flex flex-col items-center justify-center gap-2 hover:bg-gray-50 p-3 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 hover:border-gray-200"
-                    >
-                      {action.loading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
-                      ) : (
-                        <action.icon className="h-5 w-5 text-gray-500" />
-                      )}
-                      <span className="text-xs text-gray-700 text-center leading-tight">
-                        {action.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* GERENCIAMENTO */}
-              {onEditContract && onDeleteContract && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 uppercase mb-4 text-center px-4">
-                    GERENCIAMENTO
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 px-4">
-                    {managementActions.map((action) => (
-                      <button
-                        key={action.id}
-                        onClick={() => handleActionClick(action)}
-                        disabled={action.disabled}
-                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg transition-colors disabled:opacity-50 border ${
-                          action.id === 'delete'
-                            ? 'border-red-100 hover:border-red-200 hover:bg-red-50'
-                            : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <action.icon
-                          className={`h-5 w-5 ${
-                            action.id === 'delete'
-                              ? 'text-red-500'
-                              : 'text-gray-500'
-                          }`}
-                        />
-                        <span
-                          className={`text-xs text-center leading-tight ${
-                            action.id === 'delete'
-                              ? 'text-red-700'
-                              : 'text-gray-700'
-                          }`}
+            {/* Conteúdo do menu organizado */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              <div className="max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Coluna 1: TERMOS */}
+                  <div className="space-y-3">
+                    <div className="text-center mb-4">
+                      <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
+                        TERMOS
+                      </h3>
+                      <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
+                    </div>
+                    <div className="space-y-2">
+                      {termActionsWithLoading.map((action) => (
+                        <button
+                          key={action.id}
+                          onClick={() => handleActionClick(action)}
+                          disabled={action.disabled}
+                          className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
                         >
-                          {action.label}
-                        </span>
-                      </button>
-                    ))}
+                          {action.loading ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                          ) : (
+                            <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <span className="text-xs text-foreground font-medium">
+                            {action.id === 'termo-locador'
+                              ? 'Chaves (Locador)'
+                              : action.id === 'termo-locatario'
+                                ? 'Chaves (Locatário)'
+                                : action.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Coluna 2: WHATSAPP */}
+                  <div className="space-y-3">
+                    <div className="text-center mb-4">
+                      <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
+                        DEVOLUTIVAS
+                      </h3>
+                      <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
+                    </div>
+                    <div className="space-y-2">
+                      {communicationActionsWithLoading.map((action) => (
+                        <button
+                          key={action.id}
+                          onClick={() => handleActionClick(action)}
+                          disabled={action.disabled}
+                          className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                        >
+                          {action.loading ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                          ) : (
+                            <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <span className="text-xs text-foreground font-medium">
+                            {action.id === 'devolutiva-email-locador'
+                              ? 'E-mail (Locador)'
+                              : action.id === 'devolutiva-email-locatario'
+                                ? 'E-mail (Locatário)'
+                                : action.id === 'notificacao-agendamento'
+                                  ? 'Agendamento'
+                                  : action.id === 'whatsapp-proprietaria'
+                                    ? 'Proprietária'
+                                    : action.id === 'whatsapp-comercial'
+                                      ? 'Comercial'
+                                      : action.id === 'whatsapp-locataria'
+                                        ? 'Locatária'
+                                        : action.id === 'cobranca-consumo'
+                                          ? 'Cobrança'
+                                          : action.id === 'nps-whatsapp'
+                                            ? 'NPS WhatsApp'
+                                            : action.id === 'nps-email'
+                                              ? 'NPS E-mail'
+                                              : action.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Coluna 3: DOCUMENTOS E OUTROS */}
+                  <div className="space-y-4">
+                    {/* DOCUMENTOS */}
+                    <div className="space-y-3">
+                      <div className="text-center mb-3">
+                        <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
+                          DOCUMENTOS
+                        </h3>
+                        <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
+                      </div>
+                      <div className="space-y-2">
+                        {documentActionsWithLoading.map((action) => (
+                          <button
+                            key={action.id}
+                            onClick={() => handleActionClick(action)}
+                            disabled={action.disabled}
+                            className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                          >
+                            {action.loading ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                            ) : (
+                              <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <span className="text-xs text-foreground font-medium">
+                              {action.id === 'caderninho'
+                                ? 'Caderninho'
+                                : action.id === 'distrato'
+                                  ? 'Distrato'
+                                  : action.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* TERMO DE RECUSA */}
+                    <div className="space-y-3">
+                      <div className="text-center mb-3">
+                        <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
+                          RECUSA
+                        </h3>
+                        <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
+                      </div>
+                      <div className="space-y-2">
+                        {recusaActionsWithLoading.map((action) => (
+                          <button
+                            key={action.id}
+                            onClick={() => handleActionClick(action)}
+                            disabled={action.disabled}
+                            className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                          >
+                            {action.loading ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                            ) : (
+                              <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <span className="text-xs text-foreground font-medium">
+                              {action.id === 'termo-recusa-email'
+                                ? 'Recusa E-mail'
+                                : action.id === 'termo-recusa-pdf'
+                                  ? 'Recusa PDF'
+                                  : action.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </>

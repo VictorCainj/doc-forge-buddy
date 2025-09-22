@@ -119,7 +119,8 @@ const ProcessoRescisao = () => {
               Processo de Rescisão
             </h1>
             <p className="text-muted-foreground mt-2">
-              Contrato #{contratoId} - Gerencie todos os documentos necessários
+              Contrato #{contratoId} - Gerencie todos os documentos da processo
+              de rescisão
             </p>
           </div>
         </header>
@@ -162,7 +163,7 @@ const ProcessoRescisao = () => {
           <CardHeader>
             <CardTitle>Informações do Contrato</CardTitle>
             <CardDescription>
-              Dados básicos do contrato em processamento
+              Dados básicos do contrato em processo de rescisão
             </CardDescription>
           </CardHeader>
           <CardContent>
