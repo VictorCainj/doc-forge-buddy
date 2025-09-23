@@ -13,6 +13,7 @@ import {
   Minimize2,
   Maximize2,
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -997,6 +998,13 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                 <Maximize2 className="h-4 w-4" />
                 Aumentar
               </Button>
+              <CopyButton
+                content={replaceTemplateVariables(
+                  getTemplate ? getTemplate(dynamicFontSize) : template,
+                  processedFormData
+                )}
+                className="gap-2"
+              />
               <Button
                 onClick={handlePrint}
                 className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 print:hidden"

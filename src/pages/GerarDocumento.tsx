@@ -9,6 +9,7 @@ import {
   FileText,
   Download,
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -248,6 +249,7 @@ const GerarDocumento = () => {
                     <Maximize2 className="h-4 w-4" />
                     Aumentar
                   </Button>
+                  <CopyButton content={template} size="sm" className="gap-2" />
                   <Button
                     onClick={handlePrint}
                     variant="default"

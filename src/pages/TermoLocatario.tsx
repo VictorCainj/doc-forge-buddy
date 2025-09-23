@@ -434,9 +434,6 @@ TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
 {{textoEntregaChaves}}
 </div>
 
-<div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>{{citacaoLocatarios}}:</strong> {{nomeLocatario}}
-</div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}

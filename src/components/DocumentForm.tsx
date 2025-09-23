@@ -12,6 +12,7 @@ import {
   Minimize2,
   Maximize2,
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useNavigate } from 'react-router-dom';
 import { getCompanyLogo } from '@/utils/logoManager';
 import { supabase } from '@/integrations/supabase/client';
@@ -394,6 +395,10 @@ const DocumentForm = ({
                   <Maximize2 className="h-4 w-4" />
                   Aumentar
                 </Button>
+                <CopyButton
+                  content={replaceTemplateVariables(template, formData)}
+                  className="gap-2"
+                />
                 <Button
                   onClick={handlePrint}
                   className="gap-2 bg-gradient-primary"
