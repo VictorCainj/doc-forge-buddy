@@ -36,7 +36,6 @@ import {
   User2,
   CalendarDays,
   Phone,
-  Search,
   Edit,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -83,8 +82,6 @@ const Contratos = () => {
   const [displayedContracts, setDisplayedContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearchContext(); // Usar busca da sidebar
-  const [localSearchTerm, setLocalSearchTerm] = useState(''); // Busca local adicional
-  const [showSearchModal, setShowSearchModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [contractsPerPage] = useState(8); // Mostrar 8 contratos por vez
   const [loadingMore, setLoadingMore] = useState(false);
@@ -145,8 +142,8 @@ const Contratos = () => {
   }, []);
 
   useEffect(() => {
-    // Combinar busca da sidebar e busca local
-    const combinedSearchTerm = `${searchTerm} ${localSearchTerm}`.trim();
+    // Usar apenas busca da sidebar
+    const combinedSearchTerm = searchTerm;
 
     let filtered = contracts;
 
@@ -175,7 +172,7 @@ const Contratos = () => {
     setFilteredContracts(filtered);
     // Resetar página quando buscar
     setCurrentPage(1);
-  }, [contracts, searchTerm, localSearchTerm]);
+  }, [contracts, searchTerm]);
 
   // Atualizar contratos exibidos baseado na página atual
   useEffect(() => {
@@ -684,7 +681,8 @@ const Contratos = () => {
           enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
           enhancedData.tratamentoLocatarioNotificacao = 'da locatária';
         } else {
-          enhancedData.notificadoLocatarioTitulo = 'Notificado(a) Locatário(a)';
+          // Se não especificado, usar masculino como padrão
+          enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
           enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
         }
       }
@@ -742,6 +740,8 @@ const Contratos = () => {
       'Devolutiva via E-mail - Locatário',
       'Devolutiva Cobrança de Consumo',
       'Devolutiva Caderninho',
+      'Caderninho',
+      'WhatsApp - Comercial',
       'Distrato de Contrato de Locação',
       'Notificação de Agendamento',
     ];
@@ -770,8 +770,7 @@ const Contratos = () => {
       documentType === 'Devolutiva Locador WhatsApp' ||
       documentType === 'Devolutiva Locatário WhatsApp' ||
       documentType === 'WhatsApp - Proprietária' ||
-      documentType === 'WhatsApp - Locatária' ||
-      documentType === 'WhatsApp - Comercial'
+      documentType === 'WhatsApp - Locatária'
     ) {
       // Abrir modal para selecionar pessoa específica
       setSelectedContract(contract);
@@ -781,8 +780,6 @@ const Contratos = () => {
         documentType === 'WhatsApp - Locatária'
       ) {
         whatsAppType = 'locatario';
-      } else if (documentType === 'WhatsApp - Comercial') {
-        whatsAppType = null; // Comercial não tem tipo específico
       }
       setWhatsAppType(whatsAppType);
       setSelectedPerson('');
@@ -1034,8 +1031,8 @@ const Contratos = () => {
       } else if (generoLocatario === 'feminino') {
         enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
       } else {
-        // Fallback para neutro ou não preenchido
-        enhancedData.notificadoLocatarioTitulo = 'Notificado(a) Locatário(a)';
+        // Se não especificado, usar masculino como padrão
+        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
       }
     }
 
@@ -1067,7 +1064,8 @@ const Contratos = () => {
         enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
         enhancedData.tratamentoLocatarioNotificacao = 'da locatária';
       } else {
-        enhancedData.notificadoLocatarioTitulo = 'Notificado(a) Locatário(a)';
+        // Se não especificado, usar masculino como padrão
+        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
         enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
       }
     }
@@ -1600,16 +1598,6 @@ const Contratos = () => {
                   </Button>
                 </Link>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSearchModal(true)}
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Buscar
-                </Button>
-              </div>
             </div>
 
             {loading ? (
@@ -1690,23 +1678,6 @@ const Contratos = () => {
                         </h4>
                         <div className="space-y-3">
                           <div className="flex items-start gap-3">
-                            <div className="p-1.5 rounded-md bg-blue-500/10">
-                              <User2 className="h-3 w-3 text-blue-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                {isMultipleLocatarios(
-                                  contract.form_data.nomeLocatario
-                                )
-                                  ? 'Locatários'
-                                  : 'Locatário'}
-                              </p>
-                              <p className="text-xs font-bold text-foreground truncate">
-                                {contract.form_data.nomeLocatario}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
                             <div className="p-1.5 rounded-md bg-green-500/10">
                               <User className="h-3 w-3 text-green-600" />
                             </div>
@@ -1720,6 +1691,23 @@ const Contratos = () => {
                               </p>
                               <p className="text-xs font-bold text-foreground truncate">
                                 {contract.form_data.nomeProprietario}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 rounded-md bg-blue-500/10">
+                              <User2 className="h-3 w-3 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                {isMultipleLocatarios(
+                                  contract.form_data.nomeLocatario
+                                )
+                                  ? 'Locatários'
+                                  : 'Locatário'}
+                              </p>
+                              <p className="text-xs font-bold text-foreground truncate">
+                                {contract.form_data.nomeLocatario}
                               </p>
                             </div>
                           </div>
@@ -3088,42 +3076,6 @@ const Contratos = () => {
             >
               Salvar e Gerar E-mail
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de Busca */}
-      <Dialog open={showSearchModal} onOpenChange={setShowSearchModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Buscar Contratos</DialogTitle>
-            <DialogDescription>
-              Digite o termo para buscar nos contratos
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="localSearch">Termo de Busca</Label>
-              <Input
-                id="localSearch"
-                placeholder="Nome do locatário, proprietário, endereço..."
-                value={localSearchTerm}
-                onChange={(e) => setLocalSearchTerm(e.target.value)}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Busca em: título, nome do locatário, proprietário, número do
-                contrato e endereço
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLocalSearchTerm('')}>
-              Limpar Busca
-            </Button>
-            <Button onClick={() => setShowSearchModal(false)}>Buscar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

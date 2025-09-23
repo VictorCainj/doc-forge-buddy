@@ -95,60 +95,19 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Professional Header */}
-      <div className="professional-header">
-        <div className="relative px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  Termo de Recusa de Assinatura
-                </h1>
-                <p className="text-white/80 text-lg">
-                  Documento para registrar recusa de assinatura por e-mail
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="p-3 rounded-xl bg-white/10">
-                  <AlertTriangle className="h-6 w-6 text-white" />
-                </div>
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  E-mail
-                </Badge>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-white/90">
-                <p className="text-sm">
-                  Contrato #{contractData.numeroContrato || '[Número]'}
-                </p>
-                <p className="text-xs text-white/70">
-                  Documento oficial de recusa
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                  onClick={() => navigate('/contratos')}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="p-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/contratos')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
         <div className="max-w-6xl mx-auto">
           <Card className="glass-card">
             <CardContent className="p-0">

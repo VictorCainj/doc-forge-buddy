@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Printer,
   Minimize2,
+  Maximize2,
   FileText,
   Download,
 } from 'lucide-react';
@@ -33,9 +34,9 @@ const GerarDocumento = () => {
 
     switch (documentType) {
       case 'Devolutiva Locatário':
-        return `Título: Confirmação de Notificação de Rescisão e Procedimentos Finais - Contrato ${contractNumber}`;
+        return `Título: Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato ${contractNumber}`;
       case 'Devolutiva Proprietário':
-        return `Título: Notificação de Rescisão e Agendamento de Vistoria - Contrato ${contractNumber}`;
+        return `Título: [CONTRATO] - Notificação de Desocupação e Agendamento de Vistoria.`;
       case 'Notificação de Agendamento': {
         // Verificar se é revistoria ou vistoria final baseado no título
         const isRevistoria = title?.includes('Revistoria');
@@ -55,15 +56,21 @@ const GerarDocumento = () => {
     }
   };
 
-  const handleCompact = () => {
-    if (fontSize > 11) {
-      setFontSize(11);
-      toast.success('Documento compactado - Fonte reduzida para 11px');
-    } else if (fontSize > 10) {
-      setFontSize(10);
-      toast.success('Documento super compactado - Fonte reduzida para 10px');
+  const handleDecreaseFont = () => {
+    if (fontSize > 10) {
+      setFontSize(fontSize - 1);
+      toast.success(`Fonte reduzida para ${fontSize - 1}px`);
     } else {
       toast.info('Já no tamanho mínimo de fonte (10px)');
+    }
+  };
+
+  const handleIncreaseFont = () => {
+    if (fontSize < 20) {
+      setFontSize(fontSize + 1);
+      toast.success(`Fonte aumentada para ${fontSize + 1}px`);
+    } else {
+      toast.info('Já no tamanho máximo de fonte (20px)');
     }
   };
 
@@ -191,81 +198,55 @@ const GerarDocumento = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Professional Header */}
-      <div className="professional-header">
-        <div className="relative px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  Gerador de Documentos
-                </h1>
-                <p className="text-white/80 text-lg">
-                  Visualização e impressão de documentos gerados
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  {documentType}
-                </Badge>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-white/90">
-                <p className="text-sm">
-                  Contrato {formData?.numeroContrato || '[Número]'}
-                </p>
-                <p className="text-xs text-white/70">
-                  Documento gerado automaticamente
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                  onClick={() => navigate('/contratos')}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="p-6">
         <div className="max-w-6xl mx-auto">
-          {/* Document Controls */}
-          <Card className="glass-card mb-6">
+          {/* Back Button */}
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/contratos')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+          </div>
+
+          {/* Document Preview */}
+          <Card className="glass-card">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-primary" />
-                    {title}
+                  <CardTitle className="text-lg font-semibold text-foreground">
+                    {getDocumentTitle()}
                   </CardTitle>
-                  <p className="text-muted-foreground mt-1">
-                    Gerando {documentType} baseado nos dados do contrato
+                  <p className="text-muted-foreground">
+                    {isWhatsAppMessage
+                      ? 'Mensagem para WhatsApp'
+                      : 'Visualização do documento gerado'}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
-                    onClick={handleCompact}
+                    onClick={handleDecreaseFont}
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    title="Compactar documento para economizar espaço"
+                    title="Diminuir tamanho da fonte"
                   >
                     <Minimize2 className="h-4 w-4" />
-                    Compactar
+                    Diminuir
+                  </Button>
+                  <Button
+                    onClick={handleIncreaseFont}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    title="Aumentar tamanho da fonte"
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                    Aumentar
                   </Button>
                   <Button
                     onClick={handlePrint}
@@ -287,20 +268,6 @@ const GerarDocumento = () => {
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-          </Card>
-
-          {/* Document Preview */}
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">
-                {getDocumentTitle()}
-              </CardTitle>
-              <p className="text-muted-foreground">
-                {isWhatsAppMessage
-                  ? 'Mensagem para WhatsApp'
-                  : 'Visualização do documento gerado'}
-              </p>
             </CardHeader>
             <CardContent>
               <div

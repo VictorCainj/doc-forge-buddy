@@ -435,6 +435,10 @@ TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
+<strong>{{citacaoLocatarios}}:</strong> {{nomeLocatario}}
+</div>
+
+<div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}
 </div>
 
@@ -594,7 +598,7 @@ __________________________________________<br>
     // Processar observação (só mostra se preenchida)
     const observacao =
       data.observacao && data.observacao.trim() !== ''
-        ? `<strong>OBS:</strong> ${data.observacao}`
+        ? `OBS: ${data.observacao}`
         : '';
 
     // Aplicar formatação de nomes - sem negrito nos nomes
@@ -605,10 +609,37 @@ __________________________________________<br>
 
     // Texto de entrega de chaves para termo do locatário
     const tipoContrato = data.tipoContrato || 'residencial';
+
+    // Gerar citação correta dos locatários baseada no gênero
+    let citacaoLocatarios;
+    const generoLocatario = contractData.generoLocatario;
+
+    if (isMultipleLocatarios) {
+      // Para múltiplos locatários, usar o gênero específico
+      if (generoLocatario === 'femininos') {
+        citacaoLocatarios = 'Notificadas Locatárias';
+      } else if (generoLocatario === 'masculinos') {
+        citacaoLocatarios = 'Notificados Locatários';
+      } else {
+        // Se não especificado, usar masculino como padrão
+        citacaoLocatarios = 'Notificados Locatários';
+      }
+    } else {
+      // Para locatário único, usar o gênero específico
+      if (generoLocatario === 'feminino') {
+        citacaoLocatarios = 'Notificada Locatária';
+      } else if (generoLocatario === 'masculino') {
+        citacaoLocatarios = 'Notificado Locatário';
+      } else {
+        // Se não especificado, usar masculino como padrão
+        citacaoLocatarios = 'Notificado Locatário';
+      }
+    }
+
     // Usar a qualificação completa que já foi preenchida no cadastro do contrato
     const qualificacaoCompleta =
       contractData.qualificacaoCompletaLocatarios || nomeQuemRetira;
-    const textoEntregaChaves = `Pelo presente, recebemos as chaves do imóvel sito à <strong>${contractData.enderecoImovel}</strong>, ora locado <strong>${qualificacaoCompleta}</strong>, devidamente qualificado no contrato de locação <strong>${tipoContrato}</strong> firmado em <strong>${contractData.dataFirmamentoContrato}</strong>.`;
+    const textoEntregaChaves = `Pelo presente, recebemos as chaves do imóvel sito à ${contractData.enderecoImovel}, ora locado ${qualificacaoCompleta}, devidamente qualificado no contrato de locação ${tipoContrato} firmado em ${contractData.dataFirmamentoContrato}.`;
 
     const enhancedData = {
       ...data,
@@ -632,6 +663,9 @@ __________________________________________<br>
       // Texto de entrega de chaves baseado em quem está retirando
       textoEntregaChaves,
 
+      // Citação correta dos locatários baseada no gênero
+      citacaoLocatarios,
+
       // Tipo de vistoria processado
       tipoVistoriaTexto,
 
@@ -644,61 +678,19 @@ __________________________________________<br>
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Professional Header */}
-      <div className="professional-header">
-        <div className="relative px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  Termo de Recebimento de Chaves
-                </h1>
-                <p className="text-white/80 text-lg">
-                  Documento para formalizar o recebimento das chaves pelo
-                  locatário
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="p-3 rounded-xl bg-white/10">
-                  <Key className="h-6 w-6 text-white" />
-                </div>
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  <User className="h-3 w-3 mr-1" />
-                  Locatário
-                </Badge>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-white/90">
-                <p className="text-sm">
-                  Contrato #{contractData.numeroContrato}
-                </p>
-                <p className="text-xs text-white/70">
-                  Documento oficial de entrega
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                  onClick={() => navigate('/contratos')}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="p-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/contratos')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
         <div className="max-w-6xl mx-auto">
           <Card className="glass-card">
             <CardContent className="p-0">

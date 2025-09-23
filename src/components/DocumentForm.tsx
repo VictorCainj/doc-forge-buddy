@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, FileText, Printer, Save, Minimize2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  FileText,
+  Printer,
+  Save,
+  Minimize2,
+  Maximize2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCompanyLogo } from '@/utils/logoManager';
 import { supabase } from '@/integrations/supabase/client';
@@ -115,25 +122,32 @@ const DocumentForm = ({
     }, 100);
   };
 
-  const handleCompact = () => {
-    if (dynamicFontSize > 11) {
-      setDynamicFontSize(11);
+  const handleDecreaseFont = () => {
+    if (dynamicFontSize > 10) {
+      setDynamicFontSize(dynamicFontSize - 1);
       toast({
-        title: 'Documento compactado',
-        description:
-          'O tamanho da fonte foi reduzido para 11px para economizar espaço.',
-      });
-    } else if (dynamicFontSize > 10) {
-      setDynamicFontSize(10);
-      toast({
-        title: 'Documento super compactado',
-        description:
-          'O tamanho da fonte foi reduzido para 10px para máxima economia de espaço.',
+        title: 'Fonte reduzida',
+        description: `O tamanho da fonte foi reduzido para ${dynamicFontSize - 1}px.`,
       });
     } else {
       toast({
         title: 'Já no tamanho mínimo',
         description: 'O documento já está no tamanho mínimo de fonte (10px).',
+      });
+    }
+  };
+
+  const handleIncreaseFont = () => {
+    if (dynamicFontSize < 20) {
+      setDynamicFontSize(dynamicFontSize + 1);
+      toast({
+        title: 'Fonte aumentada',
+        description: `O tamanho da fonte foi aumentado para ${dynamicFontSize + 1}px.`,
+      });
+    } else {
+      toast({
+        title: 'Já no tamanho máximo',
+        description: 'O documento já está no tamanho máximo de fonte (20px).',
       });
     }
   };
@@ -363,13 +377,22 @@ const DocumentForm = ({
                   </Button>
                 )}
                 <Button
-                  onClick={handleCompact}
+                  onClick={handleDecreaseFont}
                   variant="outline"
                   className="gap-2"
-                  title="Compactar documento para economizar espaço"
+                  title="Diminuir tamanho da fonte"
                 >
                   <Minimize2 className="h-4 w-4" />
-                  Compactar
+                  Diminuir
+                </Button>
+                <Button
+                  onClick={handleIncreaseFont}
+                  variant="outline"
+                  className="gap-2"
+                  title="Aumentar tamanho da fonte"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  Aumentar
                 </Button>
                 <Button
                   onClick={handlePrint}

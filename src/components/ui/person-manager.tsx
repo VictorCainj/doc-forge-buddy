@@ -22,8 +22,8 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
   title,
   people,
   onPeopleChange,
-  placeholder = "Nome completo",
-  maxPeople = 4
+  placeholder = 'Nome completo',
+  maxPeople = 4,
 }) => {
   const [newPersonName, setNewPersonName] = useState('');
 
@@ -31,7 +31,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
     if (newPersonName.trim() && people.length < maxPeople) {
       const newPerson: Person = {
         id: Date.now().toString(),
-        name: newPersonName.trim()
+        name: newPersonName.trim(),
       };
       onPeopleChange([...people, newPerson]);
       setNewPersonName('');
@@ -39,13 +39,13 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
   };
 
   const removePerson = (id: string) => {
-    onPeopleChange(people.filter(person => person.id !== id));
+    onPeopleChange(people.filter((person) => person.id !== id));
   };
 
   const updatePerson = (id: string, name: string) => {
-    onPeopleChange(people.map(person => 
-      person.id === id ? { ...person, name } : person
-    ));
+    onPeopleChange(
+      people.map((person) => (person.id === id ? { ...person, name } : person))
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -66,9 +66,15 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
       <CardContent className="space-y-4">
         {/* Lista de pessoas adicionadas */}
         {people.map((person, index) => (
-          <div key={person.id} className="flex items-center gap-2 p-3 border rounded-lg bg-gray-50">
+          <div
+            key={person.id}
+            className="flex items-center gap-2 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
+          >
             <div className="flex-1">
-              <Label htmlFor={`person-${person.id}`} className="text-sm font-medium">
+              <Label
+                htmlFor={`person-${person.id}`}
+                className="text-sm font-medium"
+              >
                 {title} {index + 1}:
               </Label>
               <Input
@@ -93,7 +99,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
 
         {/* Campo para adicionar nova pessoa */}
         {people.length < maxPeople && (
-          <div className="flex items-end gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg">
+          <div className="flex items-end gap-2 p-3 border-2 border-dashed border-border rounded-lg bg-card/50">
             <div className="flex-1">
               <Label htmlFor="new-person" className="text-sm font-medium">
                 Adicionar {title}:
@@ -120,7 +126,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
         )}
 
         {people.length >= maxPeople && (
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Máximo de {maxPeople} {title.toLowerCase()} atingido
           </p>
         )}

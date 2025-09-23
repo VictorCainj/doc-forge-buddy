@@ -32,22 +32,34 @@ interface Message {
 }
 
 const Chat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content:
-        'Olá! Sou seu assistente de correção e melhoria de texto. Ative o "Modo Inteligente" para melhorar a clareza do texto para o destinatário, ou mantenha desativado para correção básica. Cole ou digite o texto e eu ajudarei com gramática, ortografia e estilo.',
-      role: 'assistant',
-      timestamp: new Date(),
-    },
-  ]);
+  // Estados principais
   const [inputText, setInputText] = useState('');
   const [isImprovementMode, setIsImprovementMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Estados para mensagens
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Hooks básicos
   const { toast } = useToast();
   const { correctText, improveText, isLoading } = useOpenAI();
   const { copyToClipboard, copiedMessageId } = useClipboard();
   const navigate = useNavigate();
+
+  // Inicializar mensagem de boas-vindas
+  useEffect(() => {
+    if (messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: 'welcome',
+        content: isImprovementMode
+          ? 'Olá! Sou seu assistente inteligente para melhoria de textos. Posso ajudar a melhorar a clareza, estrutura e impacto dos seus textos. Cole ou digite o texto que deseja melhorar!'
+          : 'Olá! Sou seu assistente para correção de textos. Posso ajudar com gramática, ortografia e estilo. Cole ou digite o texto que deseja corrigir!',
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [isImprovementMode, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -94,7 +106,7 @@ const Chat = () => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch {
+    } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: isImprovementMode
@@ -117,16 +129,12 @@ const Chat = () => {
   };
 
   const handleClearChat = () => {
-    setMessages([
-      {
-        id: '1',
-        content:
-          'Olá! Sou seu assistente de correção e melhoria de texto. Ative o "Modo Inteligente" para melhorar a clareza do texto para o destinatário, ou mantenha desativado para correção básica. Cole ou digite o texto e eu ajudarei com gramática, ortografia e estilo.',
-        role: 'assistant',
-        timestamp: new Date(),
-      },
-    ]);
+    setMessages([]);
     setInputText('');
+    toast({
+      title: 'Conversa limpa',
+      description: 'A conversa foi limpa com sucesso.',
+    });
   };
 
   const formatTime = (date: Date) => {
@@ -137,21 +145,41 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col">
       {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-6xl mx-auto">
+      <div className="flex-1 flex flex-col p-3 sm:p-6 overflow-hidden">
+        <div className="max-w-6xl mx-auto flex-1 flex flex-col">
           {/* Info Card */}
           <Card className="glass-card mb-6">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                   <CardTitle className="flex items-center gap-3">
                     <MessageSquare className="h-5 w-5 text-primary" />
                     Conversa com Assistente
                   </CardTitle>
-                  {/* Modo Inteligente */}
-                  <div className="flex items-center space-x-2">
+                  {/* Modos de Operação */}
+                  <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
+                    {/* Modo Normal */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`px-3 py-1 h-auto transition-all duration-300 ${
+                        !isImprovementMode
+                          ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                      onClick={() => {
+                        setIsImprovementMode(false);
+                      }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Brain className="h-4 w-4" />
+                        <span className="text-sm font-medium">Normal</span>
+                      </div>
+                    </Button>
+
+                    {/* Modo Inteligente */}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -160,7 +188,9 @@ const Chat = () => {
                           ? 'bg-primary/10 text-primary hover:bg-primary/20'
                           : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                       }`}
-                      onClick={() => setIsImprovementMode(!isImprovementMode)}
+                      onClick={() => {
+                        setIsImprovementMode(true);
+                      }}
                     >
                       <div className="flex items-center space-x-2">
                         {isImprovementMode && (
@@ -171,15 +201,16 @@ const Chat = () => {
                             </div>
                           </div>
                         )}
-                        {!isImprovementMode && <Brain className="h-4 w-4" />}
-                        <span className="text-sm font-medium">
-                          {isImprovementMode ? 'Modo Inteligente' : 'Normal'}
-                        </span>
+                        {!isImprovementMode && <Zap className="h-4 w-4" />}
+                        <span className="text-sm font-medium">Inteligente</span>
                       </div>
                     </Button>
                   </div>
                 </div>
+
+                {/* Botões de Ação */}
                 <div className="flex items-center space-x-2">
+                  {/* Botão Voltar */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -187,7 +218,7 @@ const Chat = () => {
                     className="h-8 px-3"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar
+                    <span className="hidden sm:inline">Voltar</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -204,10 +235,10 @@ const Chat = () => {
           </Card>
 
           {/* Chat Interface */}
-          <Card className="glass-card flex-1 flex flex-col h-[600px]">
+          <Card className="glass-card flex-1 flex flex-col min-h-0">
             <CardContent className="flex-1 flex flex-col p-0">
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -232,15 +263,7 @@ const Chat = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <p
-                            className="whitespace-pre-wrap text-sm leading-relaxed select-text cursor-text"
-                            onDoubleClick={(e) => {
-                              const selection = window.getSelection();
-                              if (selection) {
-                                selection.selectAllChildren(e.target as Node);
-                              }
-                            }}
-                          >
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed select-text cursor-text">
                             {message.content}
                           </p>
                           {message.isCorrected && (
@@ -323,7 +346,7 @@ const Chat = () => {
               </div>
 
               {/* Input Area */}
-              <div className="border-t border-border p-4">
+              <div className="border-t border-border p-3 sm:p-4">
                 <form onSubmit={handleSubmit} className="flex gap-3">
                   <Textarea
                     value={inputText}

@@ -250,62 +250,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Professional Header */}
-      <div className="professional-header">
-        <div className="relative px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  Dashboard Executivo
-                </h1>
-                <p className="text-white/80 text-lg">
-                  Visão geral completa dos seus contratos e operações
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="status-indicator text-green-400">
-                  <span className="text-sm font-medium">Sistema Online</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-white/90">
-                <p className="text-sm">
-                  {new Date().toLocaleDateString('pt-BR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </p>
-                <p className="text-xs text-white/70">
-                  Última atualização: {new Date().toLocaleTimeString('pt-BR')}
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <main className="p-6">
         {/* Status Cards Row */}

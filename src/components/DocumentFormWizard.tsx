@@ -11,6 +11,7 @@ import {
   Search,
   Check,
   Minimize2,
+  Maximize2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -441,25 +442,32 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     }
   };
 
-  const handleCompact = () => {
-    if (dynamicFontSize > 11) {
-      setDynamicFontSize(11);
+  const handleDecreaseFont = () => {
+    if (dynamicFontSize > 10) {
+      setDynamicFontSize(dynamicFontSize - 1);
       toast({
-        title: 'Documento compactado',
-        description:
-          'O tamanho da fonte foi reduzido para 11px para economizar espaço.',
-      });
-    } else if (dynamicFontSize > 10) {
-      setDynamicFontSize(10);
-      toast({
-        title: 'Documento super compactado',
-        description:
-          'O tamanho da fonte foi reduzido para 10px para máxima economia de espaço.',
+        title: 'Fonte reduzida',
+        description: `O tamanho da fonte foi reduzido para ${dynamicFontSize - 1}px.`,
       });
     } else {
       toast({
         title: 'Já no tamanho mínimo',
         description: 'O documento já está no tamanho mínimo de fonte (10px).',
+      });
+    }
+  };
+
+  const handleIncreaseFont = () => {
+    if (dynamicFontSize < 20) {
+      setDynamicFontSize(dynamicFontSize + 1);
+      toast({
+        title: 'Fonte aumentada',
+        description: `O tamanho da fonte foi aumentado para ${dynamicFontSize + 1}px.`,
+      });
+    } else {
+      toast({
+        title: 'Já no tamanho máximo',
+        description: 'O documento já está no tamanho máximo de fonte (20px).',
       });
     }
   };
@@ -972,13 +980,22 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                 </Button>
               )}
               <Button
-                onClick={handleCompact}
+                onClick={handleDecreaseFont}
                 variant="outline"
                 className="gap-2 bg-background text-foreground hover:bg-accent border-border"
-                title="Compactar documento para economizar espaço"
+                title="Diminuir tamanho da fonte"
               >
                 <Minimize2 className="h-4 w-4" />
-                Compactar
+                Diminuir
+              </Button>
+              <Button
+                onClick={handleIncreaseFont}
+                variant="outline"
+                className="gap-2 bg-background text-foreground hover:bg-accent border-border"
+                title="Aumentar tamanho da fonte"
+              >
+                <Maximize2 className="h-4 w-4" />
+                Aumentar
               </Button>
               <Button
                 onClick={handlePrint}

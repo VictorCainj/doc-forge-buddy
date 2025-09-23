@@ -361,7 +361,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
           {/* Modal em tela cheia */}
           <div className="fixed inset-4 z-[9999] glass-card border-border rounded-xl shadow-2xl overflow-hidden flex flex-col">
             {/* Header do modal */}
-            <div className="relative p-4 border-b border-border bg-background">
+            <div className="relative p-2 border-b border-border bg-background">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-foreground">
                   Ações Rápidas
@@ -396,24 +396,23 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
             </div>
 
             {/* Conteúdo do menu organizado */}
-            <div className="flex-1 p-4 overflow-y-auto">
+            <div className="flex-1 p-2 overflow-y-auto">
               <div className="max-w-5xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {/* Coluna 1: TERMOS */}
-                  <div className="space-y-3">
-                    <div className="text-center mb-4">
-                      <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
-                        TERMOS
-                      </h3>
-                      <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
-                    </div>
-                    <div className="space-y-2">
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <div className="px-2 py-1">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          Chaves
+                        </h4>
+                      </div>
                       {termActionsWithLoading.map((action) => (
                         <button
                           key={action.id}
                           onClick={() => handleActionClick(action)}
                           disabled={action.disabled}
-                          className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                          className="w-full flex items-center gap-1.5 hover:bg-accent/50 p-1.5 rounded-md transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
                         >
                           {action.loading ? (
                             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
@@ -433,69 +432,143 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                   </div>
 
                   {/* Coluna 2: WHATSAPP */}
-                  <div className="space-y-3">
-                    <div className="text-center mb-4">
-                      <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
-                        DEVOLUTIVAS
-                      </h3>
-                      <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
-                    </div>
+                  <div className="space-y-2">
                     <div className="space-y-2">
-                      {communicationActionsWithLoading.map((action) => (
-                        <button
-                          key={action.id}
-                          onClick={() => handleActionClick(action)}
-                          disabled={action.disabled}
-                          className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
-                        >
-                          {action.loading ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
-                          ) : (
-                            <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          )}
-                          <span className="text-xs text-foreground font-medium">
-                            {action.id === 'devolutiva-email-locador'
-                              ? 'E-mail (Locador)'
-                              : action.id === 'devolutiva-email-locatario'
-                                ? 'E-mail (Locatário)'
-                                : action.id === 'notificacao-agendamento'
-                                  ? 'Agendamento'
-                                  : action.id === 'whatsapp-proprietaria'
+                      {/* E-mail */}
+                      <div>
+                        <div className="px-2 py-1">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            E-mail
+                          </h4>
+                        </div>
+                        <div className="space-y-1">
+                          {communicationActionsWithLoading
+                            .filter(
+                              (action) =>
+                                action.id.includes('email') ||
+                                action.id === 'notificacao-agendamento'
+                            )
+                            .map((action) => (
+                              <button
+                                key={action.id}
+                                onClick={() => handleActionClick(action)}
+                                disabled={action.disabled}
+                                className="w-full flex items-center gap-1.5 hover:bg-accent/50 p-1.5 rounded-md transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                              >
+                                {action.loading ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                                ) : (
+                                  <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                )}
+                                <span className="text-xs text-foreground font-medium">
+                                  {action.id === 'devolutiva-email-locador'
+                                    ? 'E-mail (Locador)'
+                                    : action.id === 'devolutiva-email-locatario'
+                                      ? 'E-mail (Locatário)'
+                                      : action.id === 'notificacao-agendamento'
+                                        ? 'Agendamento'
+                                        : action.label}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* WhatsApp */}
+                      <div>
+                        <div className="px-2 py-1">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            WhatsApp
+                          </h4>
+                        </div>
+                        <div className="space-y-1">
+                          {communicationActionsWithLoading
+                            .filter((action) => action.id.includes('whatsapp'))
+                            .map((action) => (
+                              <button
+                                key={action.id}
+                                onClick={() => handleActionClick(action)}
+                                disabled={action.disabled}
+                                className="w-full flex items-center gap-1.5 hover:bg-accent/50 p-1.5 rounded-md transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                              >
+                                {action.loading ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                                ) : (
+                                  <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                )}
+                                <span className="text-xs text-foreground font-medium">
+                                  {action.id === 'whatsapp-proprietaria'
                                     ? 'Proprietária'
                                     : action.id === 'whatsapp-comercial'
                                       ? 'Comercial'
                                       : action.id === 'whatsapp-locataria'
                                         ? 'Locatária'
-                                        : action.id === 'cobranca-consumo'
-                                          ? 'Cobrança'
-                                          : action.id === 'nps-whatsapp'
-                                            ? 'NPS WhatsApp'
-                                            : action.id === 'nps-email'
-                                              ? 'NPS E-mail'
-                                              : action.label}
-                          </span>
-                        </button>
-                      ))}
+                                        : action.id === 'nps-whatsapp'
+                                          ? 'NPS WhatsApp'
+                                          : action.label}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Outros */}
+                      <div>
+                        <div className="px-2 py-1">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Outros
+                          </h4>
+                        </div>
+                        <div className="space-y-1">
+                          {communicationActionsWithLoading
+                            .filter(
+                              (action) =>
+                                !action.id.includes('email') &&
+                                !action.id.includes('whatsapp') &&
+                                action.id !== 'notificacao-agendamento'
+                            )
+                            .map((action) => (
+                              <button
+                                key={action.id}
+                                onClick={() => handleActionClick(action)}
+                                disabled={action.disabled}
+                                className="w-full flex items-center gap-1.5 hover:bg-accent/50 p-1.5 rounded-md transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                              >
+                                {action.loading ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                                ) : (
+                                  <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                )}
+                                <span className="text-xs text-foreground font-medium">
+                                  {action.id === 'cobranca-consumo'
+                                    ? 'Cobrança'
+                                    : action.id === 'nps-email'
+                                      ? 'NPS E-mail'
+                                      : action.label}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Coluna 3: DOCUMENTOS E OUTROS */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {/* DOCUMENTOS */}
                     <div className="space-y-3">
-                      <div className="text-center mb-3">
-                        <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
-                          DOCUMENTOS
-                        </h3>
-                        <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
-                      </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
+                        <div className="px-2 py-1">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Contratos
+                          </h4>
+                        </div>
                         {documentActionsWithLoading.map((action) => (
                           <button
                             key={action.id}
                             onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
-                            className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                            className="w-full flex items-center gap-1.5 hover:bg-accent/50 p-1.5 rounded-md transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
                           >
                             {action.loading ? (
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
@@ -515,20 +588,19 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                     </div>
 
                     {/* TERMO DE RECUSA */}
-                    <div className="space-y-3">
-                      <div className="text-center mb-3">
-                        <h3 className="text-sm font-semibold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent uppercase tracking-wide">
-                          RECUSA
-                        </h3>
-                        <div className="w-12 h-0.5 bg-primary mx-auto mt-1 rounded-full"></div>
-                      </div>
-                      <div className="space-y-2">
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <div className="px-2 py-1">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Assinatura
+                          </h4>
+                        </div>
                         {recusaActionsWithLoading.map((action) => (
                           <button
                             key={action.id}
                             onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
-                            className="w-full flex items-center gap-2 hover:bg-accent/50 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
+                            className="w-full flex items-center gap-1.5 hover:bg-accent/50 p-1.5 rounded-md transition-all duration-200 disabled:opacity-50 border border-border/30 hover:border-primary/20"
                           >
                             {action.loading ? (
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
