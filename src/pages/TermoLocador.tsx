@@ -110,13 +110,6 @@ const TermoLocador: React.FC = () => {
           },
         },
         {
-          name: 'observacao',
-          label: 'Observação (Opcional)',
-          type: 'textarea',
-          required: false,
-          placeholder: 'Digite observações adicionais se necessário',
-        },
-        {
           name: 'assinanteSelecionado',
           label: 'Assinante do Termo',
           type: 'select',
@@ -129,6 +122,13 @@ const TermoLocador: React.FC = () => {
               label: 'Fabiana Salotti Martins',
             },
           ],
+        },
+        {
+          name: 'observacao',
+          label: 'Observação (Opcional)',
+          type: 'textarea',
+          required: false,
+          placeholder: 'Digite observações adicionais se necessário',
         },
       ],
     },

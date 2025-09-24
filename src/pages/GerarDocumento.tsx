@@ -206,7 +206,14 @@ const GerarDocumento = () => {
           <div className="mb-6">
             <Button
               variant="outline"
-              onClick={() => navigate('/contratos')}
+              onClick={() => {
+                // Se for análise de vistoria, voltar para a página de análise
+                if (documentType === 'Análise de Vistoria') {
+                  navigate('/analise-vistoria');
+                } else {
+                  navigate('/contratos');
+                }
+              }}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -229,6 +236,18 @@ const GerarDocumento = () => {
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
+                  {documentType === 'Análise de Vistoria' && (
+                    <Button
+                      onClick={() => navigate('/analise-vistoria')}
+                      variant="default"
+                      size="sm"
+                      className="gap-2"
+                      title="Continuar editando a análise"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Continuar Editando
+                    </Button>
+                  )}
                   <Button
                     onClick={handleDecreaseFont}
                     variant="outline"

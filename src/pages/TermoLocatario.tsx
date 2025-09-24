@@ -355,13 +355,6 @@ const TermoLocatario: React.FC = () => {
           },
         },
         {
-          name: 'observacao',
-          label: 'Observação (Opcional)',
-          type: 'textarea',
-          required: false,
-          placeholder: 'Digite observações adicionais se necessário',
-        },
-        {
           name: 'tipoContrato',
           label: 'Tipo de Contrato',
           type: 'select',
@@ -385,6 +378,13 @@ const TermoLocatario: React.FC = () => {
               label: 'Fabiana Salotti Martins',
             },
           ],
+        },
+        {
+          name: 'observacao',
+          label: 'Observação (Opcional)',
+          type: 'textarea',
+          required: false,
+          placeholder: 'Digite observações adicionais se necessário',
         },
       ],
     },

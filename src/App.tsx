@@ -19,6 +19,7 @@ import TermoLocador from './pages/TermoLocador';
 import TermoLocatario from './pages/TermoLocatario';
 import TermoRecusaAssinaturaEmail from './pages/TermoRecusaAssinaturaEmail';
 import Chat from './pages/Chat';
+import AnaliseVistoria from './pages/AnaliseVistoria';
 
 const queryClient = new QueryClient();
 
@@ -155,6 +156,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <Chat />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analise-vistoria"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AnaliseVistoria />
                   </Layout>
                 </ProtectedRoute>
               }

@@ -513,18 +513,18 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Critical Alerts */}
               {rescisoesExpiradas.length > 0 && (
-                <Card className="alert-card border-l-4 border-l-red-500 bg-gradient-to-r from-red-500/5 to-red-500/10">
+                <Card className="alert-card border-l-4 border-l-destructive bg-gradient-to-r from-destructive/5 to-destructive/10">
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-lg bg-red-500/20">
-                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        <div className="p-2 rounded-lg bg-destructive/20">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg font-semibold text-red-800">
+                          <CardTitle className="text-lg font-semibold text-foreground">
                             Contratos Expirados
                           </CardTitle>
-                          <p className="text-sm text-red-600">
+                          <p className="text-sm text-muted-foreground">
                             Requerem atenção imediata
                           </p>
                         </div>
@@ -549,10 +549,10 @@ const Index = () => {
                         return (
                           <div
                             key={contract.id}
-                            className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-red-200/50"
+                            className="flex items-center justify-between p-3 bg-card/50 rounded-lg border border-border"
                           >
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-foreground truncate">
+                              <p className="font-medium text-card-foreground truncate">
                                 {contract.form_data.numeroContrato || 'N/A'}
                               </p>
                               <p className="text-sm text-muted-foreground truncate">
@@ -572,7 +572,7 @@ const Index = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-red-600 border-red-300 hover:bg-red-50"
+                            className="text-destructive border-destructive/50 hover:bg-destructive/10"
                           >
                             Ver mais {rescisoesExpiradas.length - 4} contrato
                             {rescisoesExpiradas.length - 4 !== 1 ? 's' : ''}
@@ -586,25 +586,25 @@ const Index = () => {
 
               {/* Warning Alerts */}
               {rescisoesProximasVencimento.length > 0 && (
-                <Card className="alert-card border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-500/5 to-yellow-500/10">
+                <Card className="alert-card border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-primary/10">
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-lg bg-yellow-500/20">
-                          <Calendar className="h-5 w-5 text-yellow-600" />
+                        <div className="p-2 rounded-lg bg-primary/20">
+                          <Calendar className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg font-semibold text-yellow-800">
+                          <CardTitle className="text-lg font-semibold text-foreground">
                             Próximos do Vencimento
                           </CardTitle>
-                          <p className="text-sm text-yellow-600">
+                          <p className="text-sm text-muted-foreground">
                             Vencimento em 7 dias
                           </p>
                         </div>
                       </div>
                       <Badge
                         variant="secondary"
-                        className="text-lg px-3 py-1 bg-yellow-100 text-yellow-800"
+                        className="text-lg px-3 py-1 bg-primary text-primary-foreground"
                       >
                         {rescisoesProximasVencimento.length}
                       </Badge>
@@ -624,10 +624,10 @@ const Index = () => {
                           return (
                             <div
                               key={contract.id}
-                              className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-yellow-200/50"
+                              className="flex items-center justify-between p-3 bg-card/50 rounded-lg border border-border"
                             >
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground truncate">
+                                <p className="font-medium text-card-foreground truncate">
                                   {contract.form_data.numeroContrato || 'N/A'}
                                 </p>
                                 <p className="text-sm text-muted-foreground truncate">
@@ -637,7 +637,7 @@ const Index = () => {
                               <div className="text-right">
                                 <Badge
                                   variant="secondary"
-                                  className="text-xs bg-yellow-100 text-yellow-800"
+                                  className="text-xs bg-primary text-primary-foreground"
                                 >
                                   {daysUntilDue} dias
                                 </Badge>
@@ -650,7 +650,7 @@ const Index = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-yellow-600 border-yellow-300 hover:bg-yellow-50"
+                            className="text-primary border-primary/50 hover:bg-primary/10"
                           >
                             Ver mais {rescisoesProximasVencimento.length - 4}{' '}
                             contrato
