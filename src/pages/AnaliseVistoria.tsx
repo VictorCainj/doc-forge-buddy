@@ -115,8 +115,33 @@ const AnaliseVistoria = () => {
 
   // Salvar estado no localStorage sempre que houver mudanças
   useEffect(() => {
+    // Criar uma versão serializável dos apontamentos (sem objetos File)
+    const apontamentosSerializaveis = apontamentos.map((apontamento) => ({
+      ...apontamento,
+      vistoriaInicial: {
+        ...apontamento.vistoriaInicial,
+        fotos:
+          apontamento.vistoriaInicial?.fotos?.map((foto) => ({
+            name: foto.name,
+            size: foto.size,
+            type: foto.type,
+            lastModified: foto.lastModified,
+          })) || [],
+      },
+      vistoriaFinal: {
+        ...apontamento.vistoriaFinal,
+        fotos:
+          apontamento.vistoriaFinal?.fotos?.map((foto) => ({
+            name: foto.name,
+            size: foto.size,
+            type: foto.type,
+            lastModified: foto.lastModified,
+          })) || [],
+      },
+    }));
+
     const stateToSave = {
-      apontamentos,
+      apontamentos: apontamentosSerializaveis,
       selectedContractId: selectedContract?.id,
       dadosVistoria,
     };
@@ -222,6 +247,36 @@ const AnaliseVistoria = () => {
     }));
   };
 
+  // Função para remover uma foto específica da vistoria inicial
+  const handleRemoveFotoInicial = (index: number) => {
+    setCurrentApontamento((prev) => ({
+      ...prev,
+      vistoriaInicial: {
+        ...prev.vistoriaInicial,
+        fotos: prev.vistoriaInicial?.fotos?.filter((_, i) => i !== index) || [],
+      },
+    }));
+    toast({
+      title: 'Foto removida',
+      description: 'A foto foi removida da vistoria inicial.',
+    });
+  };
+
+  // Função para remover uma foto específica da vistoria final
+  const handleRemoveFotoFinal = (index: number) => {
+    setCurrentApontamento((prev) => ({
+      ...prev,
+      vistoriaFinal: {
+        ...prev.vistoriaFinal,
+        fotos: prev.vistoriaFinal?.fotos?.filter((_, i) => i !== index) || [],
+      },
+    }));
+    toast({
+      title: 'Foto removida',
+      description: 'A foto foi removida da vistoria final.',
+    });
+  };
+
   // Função para lidar com Ctrl+V (colar imagens)
   const handlePaste = (event: ClipboardEvent, tipo: 'inicial' | 'final') => {
     const items = event.clipboardData?.items;
@@ -278,12 +333,55 @@ const AnaliseVistoria = () => {
     }
 
     try {
+      // Validar se todos os apontamentos têm dados válidos
+      const apontamentosValidos = apontamentos.filter((apontamento) => {
+        return apontamento.ambiente && apontamento.descricao;
+      });
+
+      if (apontamentosValidos.length === 0) {
+        toast({
+          title: 'Apontamentos inválidos',
+          description:
+            'Todos os apontamentos devem ter ambiente e descrição preenchidos.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar se há fotos válidas nos apontamentos
+      const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
+        // Verificar se as fotos são objetos File válidos
+        const fotosInicialValidas =
+          apontamento.vistoriaInicial?.fotos?.filter(
+            (foto) => foto instanceof File && foto.size > 0
+          ) || [];
+
+        const fotosFinalValidas =
+          apontamento.vistoriaFinal?.fotos?.filter(
+            (foto) => foto instanceof File && foto.size > 0
+          ) || [];
+
+        return {
+          ...apontamento,
+          vistoriaInicial: {
+            ...apontamento.vistoriaInicial,
+            fotos: fotosInicialValidas,
+          },
+          vistoriaFinal: {
+            ...apontamento.vistoriaFinal,
+            fotos: fotosFinalValidas,
+          },
+        };
+      });
+
+      console.log('Gerando documento com apontamentos:', apontamentosComFotos);
+
       // Gerar template do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
         locatario: dadosVistoria.locatario,
         endereco: dadosVistoria.endereco,
         dataVistoria: dadosVistoria.dataVistoria,
-        apontamentos: apontamentos,
+        apontamentos: apontamentosComFotos,
       });
 
       // Navegar para a página de geração de documento
@@ -296,9 +394,10 @@ const AnaliseVistoria = () => {
         },
       });
     } catch (error) {
+      console.error('Erro detalhado ao gerar documento:', error);
       toast({
         title: 'Erro ao gerar documento',
-        description: 'Ocorreu um erro ao gerar o documento.',
+        description: `Ocorreu um erro ao gerar o documento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: 'destructive',
       });
     }
@@ -592,14 +691,24 @@ const AnaliseVistoria = () => {
                       <div className="mt-3 flex flex-wrap gap-1">
                         {currentApontamento.vistoriaInicial.fotos.map(
                           (foto, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="text-xs bg-primary text-primary-foreground border-primary"
-                            >
-                              <FileImage className="h-3 w-3 mr-1" />
-                              {foto.name}
-                            </Badge>
+                            <div key={index} className="relative group">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs bg-primary text-primary-foreground border-primary pr-6"
+                              >
+                                <FileImage className="h-3 w-3 mr-1" />
+                                {foto.name}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFotoInicial(index)}
+                                className="absolute -top-1 -right-1 h-4 w-4 p-0 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remover foto"
+                              >
+                                <Trash2 className="h-2 w-2" />
+                              </Button>
+                            </div>
                           )
                         )}
                       </div>
@@ -661,14 +770,24 @@ const AnaliseVistoria = () => {
                       <div className="mt-3 flex flex-wrap gap-1">
                         {currentApontamento.vistoriaFinal.fotos.map(
                           (foto, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="text-xs bg-primary text-primary-foreground border-primary"
-                            >
-                              <FileImage className="h-3 w-3 mr-1" />
-                              {foto.name}
-                            </Badge>
+                            <div key={index} className="relative group">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs bg-primary text-primary-foreground border-primary pr-6"
+                              >
+                                <FileImage className="h-3 w-3 mr-1" />
+                                {foto.name}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFotoFinal(index)}
+                                className="absolute -top-1 -right-1 h-4 w-4 p-0 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remover foto"
+                              >
+                                <Trash2 className="h-2 w-2" />
+                              </Button>
+                            </div>
                           )
                         )}
                       </div>

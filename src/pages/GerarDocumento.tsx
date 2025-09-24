@@ -46,6 +46,8 @@ const GerarDocumento = () => {
       }
       case 'Devolutiva Comercial':
         return `Título: Devolutiva Comercial - Contrato ${contractNumber}`;
+      case 'WhatsApp - Comercial':
+        return `Título: Notificação de Desocupação - Comercial - Contrato ${contractNumber}`;
       case 'Distrato de Contrato de Locação':
         return `Título: Instrumento Particular de Rescisão de Contrato de Locação - Contrato ${contractNumber}`;
       case 'Termo de Recusa de Assinatura - E-mail':

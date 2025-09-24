@@ -23,13 +23,29 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
   // Função para processar fotos e converter para base64
   const processarFotos = async (fotos: File[]) => {
+    if (!fotos || fotos.length === 0) {
+      return [];
+    }
+
     const fotosBase64 = await Promise.all(
       fotos.map(async (foto) => {
-        const base64 = await fileToBase64(foto);
-        return { nome: foto.name, base64 };
+        try {
+          // Verificar se o arquivo é válido
+          if (!foto || !(foto instanceof File) || foto.size === 0) {
+            return null;
+          }
+
+          const base64 = await fileToBase64(foto);
+          return { nome: foto.name, base64 };
+        } catch {
+          // Erro ao processar foto - retornar null para ignorar
+          return null;
+        }
       })
     );
-    return fotosBase64;
+
+    // Filtrar fotos que falharam no processamento
+    return fotosBase64.filter((foto) => foto !== null);
   };
 
   let template = `
@@ -60,15 +76,18 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   for (let index = 0; index < dados.apontamentos.length; index++) {
     const apontamento = dados.apontamentos[index];
 
-    // Processar fotos da vistoria inicial
-    const fotosInicial = await processarFotos(
-      apontamento.vistoriaInicial.fotos
-    );
+    try {
+      // Processar fotos da vistoria inicial
+      const fotosInicial = await processarFotos(
+        apontamento.vistoriaInicial?.fotos || []
+      );
 
-    // Processar fotos da vistoria final
-    const fotosFinal = await processarFotos(apontamento.vistoriaFinal.fotos);
+      // Processar fotos da vistoria final
+      const fotosFinal = await processarFotos(
+        apontamento.vistoriaFinal?.fotos || []
+      );
 
-    template += `
+      template += `
       <div style="margin-bottom: 15px; page-break-inside: avoid; border: 1px solid #bdc3c7; border-radius: 6px; overflow: hidden;">
         <!-- Header do Apontamento -->
         <div style="background: #333; color: white; padding: 8px 12px;">
@@ -155,15 +174,30 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         ${
           apontamento.observacao
             ? `
-        <div style="background: #333; color: white; padding: 8px 12px;">
-          <h4 style="color: white; margin: 0 0 4px 0; font-size: 12px; font-weight: bold;">OBSERVAÇÃO</h4>
-          <p style="margin: 0; color: white; font-size: 11px; line-height: 1.3;">${apontamento.observacao}</p>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px; margin-top: 8px;">
+          <h4 style="color: #dc2626; margin: 0 0 6px 0; font-size: 12px; font-weight: 600;">OBSERVAÇÃO</h4>
+          <p style="margin: 0; color: #991b1b; font-size: 11px; line-height: 1.4;">${apontamento.observacao}</p>
         </div>
         `
             : ''
         }
       </div>
     `;
+    } catch {
+      // Adicionar um apontamento de erro no template
+      template += `
+        <div style="margin-bottom: 15px; page-break-inside: avoid; border: 1px solid #dc3545; border-radius: 6px; overflow: hidden; background: #f8d7da;">
+          <div style="background: #dc3545; color: white; padding: 8px 12px;">
+            <h3 style="margin: 0; font-size: 14px; font-weight: bold;">
+              ${index + 1}. ERRO NO APONTAMENTO
+            </h3>
+          </div>
+          <div style="padding: 8px 12px; background: #f8d7da; color: #721c24;">
+            <p style="margin: 0; font-size: 12px;">Erro ao processar este apontamento. Verifique os dados e tente novamente.</p>
+          </div>
+        </div>
+      `;
+    }
   }
 
   template += `
