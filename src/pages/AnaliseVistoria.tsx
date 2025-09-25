@@ -20,13 +20,26 @@ import {
   FileImage,
   CheckCircle,
   AlertTriangle,
-  Download,
   Eye,
   Search,
   FileText,
   Edit,
+  User,
+  MapPin,
+  Calendar,
+  ClipboardList,
+  Camera,
+  Settings,
+  Save,
+  X,
+  Home,
+  Archive,
+  AlertCircle,
+  CheckCircle2,
+  Wand2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useOpenAI } from '@/hooks/useOpenAI';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
@@ -56,6 +69,7 @@ interface Contract {
 const AnaliseVistoria = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { correctText, isLoading: isAILoading } = useOpenAI();
   const [apontamentos, setApontamentos] = useState<Apontamento[]>([]);
   const [currentApontamento, setCurrentApontamento] = useState<
     Partial<Apontamento>
@@ -76,15 +90,39 @@ const AnaliseVistoria = () => {
     endereco: '',
     dataVistoria: '',
   });
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [editingApontamento, setEditingApontamento] = useState<string | null>(
     null
   );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [documentPreview, setDocumentPreview] = useState<string>('');
+  const [showDadosVistoria, setShowDadosVistoria] = useState(true);
 
   // Carregar contratos do Supabase
   useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('saved_terms')
+          .select('*')
+          .eq('document_type', 'contrato')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setContracts((data as Contract[]) || []);
+      } catch {
+        toast({
+          title: 'Erro ao carregar contratos',
+          description: 'Não foi possível carregar a lista de contratos.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchContracts();
-  }, []);
+  }, [toast]);
 
   // Carregar estado salvo do localStorage
   useEffect(() => {
@@ -107,8 +145,11 @@ const AnaliseVistoria = () => {
         if (parsedState.dadosVistoria) {
           setDadosVistoria(parsedState.dadosVistoria);
         }
-      } catch (error) {
-        console.error('Erro ao carregar estado salvo:', error);
+        if (parsedState.showDadosVistoria !== undefined) {
+          setShowDadosVistoria(parsedState.showDadosVistoria);
+        }
+      } catch {
+        // Erro ao carregar estado salvo - continuar normalmente
       }
     }
   }, [contracts]);
@@ -144,30 +185,90 @@ const AnaliseVistoria = () => {
       apontamentos: apontamentosSerializaveis,
       selectedContractId: selectedContract?.id,
       dadosVistoria,
+      showDadosVistoria,
     };
     localStorage.setItem('analise-vistoria-state', JSON.stringify(stateToSave));
-  }, [apontamentos, selectedContract, dadosVistoria]);
+  }, [apontamentos, selectedContract, dadosVistoria, showDadosVistoria]);
 
-  const fetchContracts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('saved_terms')
-        .select('*')
-        .eq('document_type', 'contrato')
-        .order('created_at', { ascending: false });
+  // Atualizar pré-visualização do documento em tempo real
+  useEffect(() => {
+    const updateDocumentPreview = async () => {
+      if (apontamentos.length === 0) {
+        setDocumentPreview('');
+        return;
+      }
 
-      if (error) throw error;
-      setContracts(data || []);
-    } catch (error) {
-      toast({
-        title: 'Erro ao carregar contratos',
-        description: 'Não foi possível carregar a lista de contratos.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        // Validar se todos os apontamentos têm dados válidos
+        const apontamentosValidos = apontamentos.filter((apontamento) => {
+          return apontamento.ambiente && apontamento.descricao;
+        });
+
+        if (apontamentosValidos.length === 0) {
+          setDocumentPreview('');
+          return;
+        }
+
+        // Verificar se há fotos válidas nos apontamentos
+        const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
+          // Verificar se as fotos são objetos File válidos
+          const fotosInicialValidas =
+            apontamento.vistoriaInicial?.fotos?.filter(
+              (foto) => foto instanceof File && foto.size > 0
+            ) || [];
+
+          const fotosFinalValidas =
+            apontamento.vistoriaFinal?.fotos?.filter(
+              (foto) => foto instanceof File && foto.size > 0
+            ) || [];
+
+          return {
+            ...apontamento,
+            vistoriaInicial: {
+              ...apontamento.vistoriaInicial,
+              fotos: fotosInicialValidas,
+            },
+            vistoriaFinal: {
+              ...apontamento.vistoriaFinal,
+              fotos: fotosFinalValidas,
+            },
+          };
+        });
+
+        // Gerar template do documento
+        const template = await ANALISE_VISTORIA_TEMPLATE({
+          locatario: dadosVistoria.locatario,
+          endereco: dadosVistoria.endereco,
+          dataVistoria: dadosVistoria.dataVistoria,
+          apontamentos: apontamentosComFotos,
+        });
+
+        setDocumentPreview(template);
+      } catch {
+        setDocumentPreview('');
+      }
+    };
+
+    updateDocumentPreview();
+  }, [apontamentos, dadosVistoria]);
+
+  // Filtrar contratos baseado no termo de busca
+  const filteredContracts = contracts.filter((contract) => {
+    if (!searchTerm) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    const numeroContrato =
+      contract.form_data.numeroContrato?.toLowerCase() || '';
+    const nomeLocatario = contract.form_data.nomeLocatario?.toLowerCase() || '';
+    const enderecoImovel =
+      contract.form_data.enderecoImovel?.toLowerCase() || '';
+
+    return (
+      numeroContrato.includes(searchLower) ||
+      nomeLocatario.includes(searchLower) ||
+      enderecoImovel.includes(searchLower)
+    );
+  });
 
   // Atualizar dados da vistoria quando contrato for selecionado
   useEffect(() => {
@@ -181,6 +282,22 @@ const AnaliseVistoria = () => {
       });
     }
   }, [selectedContract]);
+
+  // Ocultar automaticamente os dados da vistoria quando preenchidos
+  useEffect(() => {
+    if (
+      dadosVistoria.locatario &&
+      dadosVistoria.endereco &&
+      dadosVistoria.dataVistoria
+    ) {
+      // Aguardar um pequeno delay para dar tempo do usuário ver os dados sendo preenchidos
+      const timer = setTimeout(() => {
+        setShowDadosVistoria(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [dadosVistoria]);
 
   const handleAddApontamento = () => {
     if (!currentApontamento.ambiente || !currentApontamento.descricao) {
@@ -228,7 +345,7 @@ const AnaliseVistoria = () => {
     });
   };
 
-  const handleFileUpload = (
+  const _handleFileUpload = (
     files: FileList | null,
     tipo: 'inicial' | 'final'
   ) => {
@@ -374,7 +491,7 @@ const AnaliseVistoria = () => {
         };
       });
 
-      console.log('Gerando documento com apontamentos:', apontamentosComFotos);
+      // Gerando documento com apontamentos
 
       // Gerar template do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
@@ -394,7 +511,6 @@ const AnaliseVistoria = () => {
         },
       });
     } catch (error) {
-      console.error('Erro detalhado ao gerar documento:', error);
       toast({
         title: 'Erro ao gerar documento',
         description: `Ocorreu um erro ao gerar o documento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
@@ -420,6 +536,7 @@ const AnaliseVistoria = () => {
       observacao: '',
     });
     setEditingApontamento(null);
+    setShowDadosVistoria(true);
     localStorage.removeItem('analise-vistoria-state');
     toast({
       title: 'Dados limpos',
@@ -498,30 +615,69 @@ const AnaliseVistoria = () => {
     });
   };
 
+  const handleCorrectText = async () => {
+    const currentText = currentApontamento.observacao || '';
+    if (!currentText.trim()) {
+      toast({
+        title: 'Texto vazio',
+        description: 'Não há texto para corrigir na análise técnica.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const correctedText = await correctText(currentText);
+      setCurrentApontamento((prev) => ({
+        ...prev,
+        observacao: correctedText,
+      }));
+      toast({
+        title: 'Texto corrigido',
+        description: 'A análise técnica foi corrigida ortograficamente.',
+      });
+    } catch {
+      toast({
+        title: 'Erro na correção',
+        description: 'Não foi possível corrigir o texto. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Análise de Vistoria
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Sistema de análise comparativa de vistoria de saída
-            </p>
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <ClipboardList className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Análise de Vistoria
+              </h1>
+              <p className="text-muted-foreground mt-2 flex items-center space-x-2">
+                <Camera className="h-4 w-4" />
+                <span>Sistema de análise comparativa de vistoria de saída</span>
+              </p>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="text-sm">
-              {apontamentos.length} apontamento
-              {apontamentos.length !== 1 ? 's' : ''}
-            </Badge>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 bg-muted/50 px-3 py-2 rounded-lg">
+              <Archive className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="outline" className="text-sm">
+                {apontamentos.length} apontamento
+                {apontamentos.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
             {apontamentos.length > 0 && (
               <Button
                 onClick={clearAllData}
                 variant="outline"
                 size="sm"
-                className="text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Limpar Tudo
@@ -530,6 +686,7 @@ const AnaliseVistoria = () => {
             <Button
               onClick={generateDocument}
               disabled={apontamentos.length === 0 || !selectedContract}
+              className="bg-primary hover:bg-primary/90"
             >
               <FileText className="h-4 w-4 mr-2" />
               Gerar Documento
@@ -537,79 +694,192 @@ const AnaliseVistoria = () => {
           </div>
         </div>
 
-        {/* Dados da Vistoria */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Dados da Vistoria</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="contrato">Selecionar Contrato *</Label>
-                <Select
-                  value={selectedContract?.id || ''}
-                  onValueChange={(value) => {
-                    const contract = contracts.find((c) => c.id === value);
-                    setSelectedContract(contract || null);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um contrato" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contracts.map((contract) => (
-                      <SelectItem key={contract.id} value={contract.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">
-                            {contract.form_data.numeroContrato || 'Sem número'}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {contract.form_data.nomeLocatario || 'Sem nome'}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* Botão para exibir dados da vistoria quando oculto */}
+        {!showDadosVistoria && (
+          <div className="flex justify-center mb-4">
+            <Button
+              onClick={() => setShowDadosVistoria(true)}
+              variant="outline"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-foreground border-dashed"
+            >
+              <Settings className="h-3 w-3 mr-1" />
+              Exibir Dados da Vistoria
+            </Button>
+          </div>
+        )}
 
-              {selectedContract && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Locatário</Label>
-                    <p className="text-sm">{dadosVistoria.locatario}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Endereço</Label>
-                    <p className="text-sm">{dadosVistoria.endereco}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">
-                      Data da Vistoria
-                    </Label>
-                    <p className="text-sm">{dadosVistoria.dataVistoria}</p>
+        {/* Dados da Vistoria */}
+        {showDadosVistoria && (
+          <Card className="mb-6">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2 text-xl">
+                  <Settings className="h-5 w-5 text-primary" />
+                  <span>Dados da Vistoria</span>
+                </CardTitle>
+                <Button
+                  onClick={() => setShowDadosVistoria(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                  title="Ocultar dados da vistoria"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Busca de Contrato */}
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="buscar-contrato"
+                    className="text-sm font-medium flex items-center space-x-2"
+                  >
+                    <Search className="h-4 w-4" />
+                    <span>Buscar Contrato</span>
+                  </Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="buscar-contrato"
+                      placeholder="Digite número do contrato, nome do locatário ou endereço..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+
+                {/* Seleção de Contrato */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      htmlFor="contrato"
+                      className="text-sm font-medium flex items-center space-x-2"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Selecionar Contrato *</span>
+                    </Label>
+                    {searchTerm && (
+                      <Badge variant="secondary" className="text-xs">
+                        {filteredContracts.length} de {contracts.length}{' '}
+                        contratos
+                      </Badge>
+                    )}
+                  </div>
+                  <Select
+                    value={selectedContract?.id || ''}
+                    onValueChange={(value) => {
+                      const contract = contracts.find((c) => c.id === value);
+                      setSelectedContract(contract || null);
+                      // Limpar busca após seleção
+                      setSearchTerm('');
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um contrato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredContracts.length === 0 ? (
+                        <div className="p-4 text-sm text-muted-foreground text-center">
+                          <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>
+                            {searchTerm
+                              ? 'Nenhum contrato encontrado'
+                              : 'Nenhum contrato disponível'}
+                          </p>
+                        </div>
+                      ) : (
+                        filteredContracts.map((contract) => (
+                          <SelectItem key={contract.id} value={contract.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {contract.form_data.numeroContrato ||
+                                  'Sem número'}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                {contract.form_data.nomeLocatario || 'Sem nome'}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Informações do Contrato Selecionado */}
+                {selectedContract && (
+                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-primary">
+                        Contrato Selecionado
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <Label className="text-sm font-medium">
+                            Locatário
+                          </Label>
+                        </div>
+                        <p className="text-sm bg-background/50 p-2 rounded border">
+                          {dadosVistoria.locatario}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <Label className="text-sm font-medium">
+                            Endereço
+                          </Label>
+                        </div>
+                        <p className="text-sm bg-background/50 p-2 rounded border">
+                          {dadosVistoria.endereco}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <Label className="text-sm font-medium">
+                            Data da Vistoria
+                          </Label>
+                        </div>
+                        <p className="text-sm bg-background/50 p-2 rounded border">
+                          {dadosVistoria.dataVistoria}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Formulário de Novo Apontamento */}
           <Card className="xl:col-span-1">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2 text-lg">
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5 text-primary" />
                 <span>Novo Apontamento</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               {/* Ambiente e Subtítulo */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="ambiente" className="text-sm">
-                    Ambiente *
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="ambiente"
+                    className="text-sm font-medium flex items-center space-x-2"
+                  >
+                    <Home className="h-4 w-4 text-muted-foreground" />
+                    <span>Ambiente *</span>
                   </Label>
                   <Input
                     id="ambiente"
@@ -624,9 +894,13 @@ const AnaliseVistoria = () => {
                     className="h-9"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="subtitulo" className="text-sm">
-                    Subtítulo
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="subtitulo"
+                    className="text-sm font-medium flex items-center space-x-2"
+                  >
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <span>Subtítulo</span>
                   </Label>
                   <Input
                     id="subtitulo"
@@ -644,9 +918,13 @@ const AnaliseVistoria = () => {
               </div>
 
               {/* Descrição do Apontamento */}
-              <div className="space-y-1">
-                <Label htmlFor="descricao" className="text-sm">
-                  Descrição *
+              <div className="space-y-2">
+                <Label
+                  htmlFor="descricao"
+                  className="text-sm font-medium flex items-center space-x-2"
+                >
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span>Descrição *</span>
                 </Label>
                 <Textarea
                   id="descricao"
@@ -666,35 +944,38 @@ const AnaliseVistoria = () => {
               <Separator />
 
               {/* Vistoria Inicial */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium flex items-center space-x-2 text-foreground">
-                  <CheckCircle className="h-4 w-4" />
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-foreground bg-card p-2 rounded-lg border border-green-200 dark:border-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   <span>Vistoria Inicial</span>
                 </h3>
                 <div
-                  className="border-2 border-dashed border-border rounded-lg p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="border-2 border-dashed border-green-300 dark:border-green-700 rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
                   onPaste={(e) => handlePaste(e.nativeEvent, 'inicial')}
                   tabIndex={0}
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <Upload className="h-4 w-4 text-primary-foreground" />
+                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-foreground">
                         Cole imagens com Ctrl+V
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Estado inicial do ambiente
+                      </p>
                     </div>
                   </div>
                   {currentApontamento.vistoriaInicial?.fotos &&
                     currentApontamento.vistoriaInicial.fotos.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {currentApontamento.vistoriaInicial.fotos.map(
                           (foto, index) => (
                             <div key={index} className="relative group">
                               <Badge
                                 variant="secondary"
-                                className="text-xs bg-primary text-primary-foreground border-primary pr-6"
+                                className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700 pr-6"
                               >
                                 <FileImage className="h-3 w-3 mr-1" />
                                 {foto.name}
@@ -716,9 +997,13 @@ const AnaliseVistoria = () => {
                 </div>
 
                 {/* Descritivo do Laudo de Entrada */}
-                <div className="space-y-1">
-                  <Label htmlFor="descritivoLaudo" className="text-sm">
-                    Descritivo do Laudo de Entrada (Opcional)
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="descritivoLaudo"
+                    className="text-sm font-medium flex items-center space-x-2"
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span>Descritivo do Laudo de Entrada (Opcional)</span>
                   </Label>
                   <Textarea
                     id="descritivoLaudo"
@@ -745,35 +1030,38 @@ const AnaliseVistoria = () => {
               <Separator />
 
               {/* Vistoria Final */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium flex items-center space-x-2 text-foreground">
-                  <AlertTriangle className="h-4 w-4" />
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-foreground bg-card p-2 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <AlertTriangle className="h-4 w-4 text-orange-600" />
                   <span>Vistoria Final</span>
                 </h3>
                 <div
-                  className="border-2 border-dashed border-border rounded-lg p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="border-2 border-dashed border-orange-300 dark:border-orange-700 rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
                   onPaste={(e) => handlePaste(e.nativeEvent, 'final')}
                   tabIndex={0}
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <Upload className="h-4 w-4 text-primary-foreground" />
+                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-foreground">
                         Cole imagens com Ctrl+V
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Estado atual do ambiente
+                      </p>
                     </div>
                   </div>
                   {currentApontamento.vistoriaFinal?.fotos &&
                     currentApontamento.vistoriaFinal.fotos.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {currentApontamento.vistoriaFinal.fotos.map(
                           (foto, index) => (
                             <div key={index} className="relative group">
                               <Badge
                                 variant="secondary"
-                                className="text-xs bg-primary text-primary-foreground border-primary pr-6"
+                                className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700 pr-6"
                               >
                                 <FileImage className="h-3 w-3 mr-1" />
                                 {foto.name}
@@ -798,13 +1086,29 @@ const AnaliseVistoria = () => {
               <Separator />
 
               {/* Observação */}
-              <div className="space-y-1">
-                <Label
-                  htmlFor="observacao"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Análise Técnica
-                </Label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="observacao"
+                    className="text-sm font-medium flex items-center space-x-2"
+                  >
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>Análise Técnica</span>
+                  </Label>
+                  <Button
+                    onClick={handleCorrectText}
+                    disabled={
+                      isAILoading || !currentApontamento.observacao?.trim()
+                    }
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-foreground h-6 px-2 text-xs"
+                    title="Corrigir ortografia com IA"
+                  >
+                    <Wand2 className="h-3 w-3 mr-1" />
+                    {isAILoading ? 'Corrigindo...' : 'IA'}
+                  </Button>
+                </div>
                 <Textarea
                   id="observacao"
                   placeholder="Sua análise sobre a contestação do locatário..."
@@ -816,11 +1120,8 @@ const AnaliseVistoria = () => {
                     }))
                   }
                   rows={3}
-                  className="text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="text-sm"
                 />
-                <p className="text-xs text-gray-500">
-                  Esta análise será destacada no documento final
-                </p>
               </div>
 
               <div className="flex space-x-2">
@@ -836,13 +1137,13 @@ const AnaliseVistoria = () => {
                 >
                   {editingApontamento ? (
                     <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <Save className="h-4 w-4 mr-2" />
                       Salvar Alterações
                     </>
                   ) : (
                     <>
                       <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
+                      Adicionar Apontamento
                     </>
                   )}
                 </Button>
@@ -852,6 +1153,7 @@ const AnaliseVistoria = () => {
                     variant="outline"
                     className="h-9 text-sm"
                   >
+                    <X className="h-4 w-4 mr-2" />
                     Cancelar
                   </Button>
                 )}
@@ -859,72 +1161,136 @@ const AnaliseVistoria = () => {
             </CardContent>
           </Card>
 
-          {/* Lista de Apontamentos */}
+          {/* Visualização do Documento em Tempo Real */}
           <Card className="xl:col-span-2">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2 text-lg">
-                <Eye className="h-4 w-4" />
-                <span>Apontamentos ({apontamentos.length})</span>
+                <FileText className="h-5 w-5 text-primary" />
+                <span>Pré-visualização do Documento</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {apontamentos.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum apontamento adicionado ainda</p>
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="h-8 w-8 opacity-50" />
+                  </div>
+                  <h3 className="font-medium text-foreground mb-2">
+                    Nenhum apontamento
+                  </h3>
                   <p className="text-sm">
-                    Adicione o primeiro apontamento usando o formulário ao lado
+                    Adicione apontamentos para ver a pré-visualização do
+                    documento
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {apontamentos.map((apontamento, index) => (
-                    <div
-                      key={apontamento.id}
-                      className="bg-card border border-border rounded-lg p-4 hover:shadow-sm transition-shadow"
-                    >
-                      {/* Header do Apontamento */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary-foreground">
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm text-foreground">
-                              {apontamento.ambiente}
-                            </h4>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {apontamento.descricao}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditApontamento(apontamento)}
-                            className="text-muted-foreground hover:text-blue-600 h-6 w-6 p-0"
-                            title="Editar apontamento"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleRemoveApontamento(apontamento.id)
-                            }
-                            className="text-muted-foreground hover:text-destructive h-6 w-6 p-0"
-                            title="Remover apontamento"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
+              ) : documentPreview ? (
+                <div className="space-y-4">
+                  {/* Controles da Pré-visualização */}
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium">
+                        Documento Atualizado
+                      </span>
                     </div>
-                  ))}
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-xs">
+                        {apontamentos.length} apontamento
+                        {apontamentos.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Pré-visualização do Documento Real */}
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 p-3 border-b border-border">
+                      <h4 className="text-sm font-medium text-foreground">
+                        Pré-visualização do Documento Final
+                      </h4>
+                    </div>
+                    <div
+                      className="max-h-96 overflow-y-auto bg-white"
+                      dangerouslySetInnerHTML={{ __html: documentPreview }}
+                    />
+                  </div>
+
+                  {/* Lista de Apontamentos */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
+                      <Eye className="h-4 w-4 text-primary" />
+                      <h4 className="text-sm font-medium text-foreground">
+                        Gerenciar Apontamentos ({apontamentos.length})
+                      </h4>
+                    </div>
+
+                    <div className="space-y-3">
+                      {apontamentos.map((apontamento, index) => (
+                        <div
+                          key={apontamento.id}
+                          className="bg-card border border-border rounded-lg p-4 hover:shadow-sm transition-shadow"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-primary-foreground">
+                                  {index + 1}
+                                </span>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-foreground">
+                                  {apontamento.ambiente}
+                                  {apontamento.subtitulo && (
+                                    <span className="text-muted-foreground ml-2">
+                                      - {apontamento.subtitulo}
+                                    </span>
+                                  )}
+                                </h4>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {apontamento.descricao}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleEditApontamento(apontamento)
+                                }
+                                className="text-muted-foreground hover:text-primary h-6 w-6 p-0"
+                                title="Editar apontamento"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveApontamento(apontamento.id)
+                                }
+                                className="text-muted-foreground hover:text-destructive h-6 w-6 p-0"
+                                title="Remover apontamento"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="h-6 w-6 opacity-50" />
+                  </div>
+                  <h3 className="font-medium text-foreground mb-2">
+                    Processando documento...
+                  </h3>
+                  <p className="text-sm">
+                    Aguarde enquanto o documento é gerado
+                  </p>
                 </div>
               )}
             </CardContent>

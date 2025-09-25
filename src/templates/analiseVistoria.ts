@@ -51,23 +51,23 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   let template = `
     <div style="font-family: Arial, sans-serif; line-height: 1.3; max-width: 900px; margin: 0 auto; padding: 15px; color: #2c3e50; background: #fff;">
       <!-- Cabeçalho Compacto -->
-      <div style="text-align: center; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #333;">
-        <h1 style="color: #333; font-size: 18px; margin: 0; font-weight: bold; text-transform: uppercase;">
+      <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #D9D9D9;">
+        <h1 style="color: #000000; font-size: 22px; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px;">
           ANÁLISE COMPARATIVA DE VISTORIA
         </h1>
-        <p style="color: #666; font-size: 11px; margin: 3px 0 0 0;">
+        <p style="color: #000000; font-size: 13px; margin: 8px 0 0 0; font-weight: 400;">
           Relatório de Contestação de Vistoria de Saída
         </p>
       </div>
 
       <!-- Informações do Contrato Compactas -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #333;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 16px 20px; background: #F9FAFB; border-radius: 6px; border: 1px solid #D9D9D9; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
         <div>
-          <span style="color: #333; font-size: 13px; font-weight: bold;">Contrato:</span>
-          <span style="color: #333; font-size: 13px; margin-left: 6px;">${dados.locatario}</span>
+          <span style="color: #000000; font-size: 15px; font-weight: bold;">Contrato:</span>
+          <span style="color: #000000; font-size: 15px; margin-left: 10px; font-weight: 600;">${dados.locatario}</span>
         </div>
         <div style="text-align: right;">
-          <span style="color: #666; font-size: 11px;">${dados.endereco}</span>
+          <span style="color: #000000; font-size: 13px; font-weight: 400;">${dados.endereco}</span>
         </div>
       </div>
   `;
@@ -88,23 +88,23 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       );
 
       template += `
-      <div style="margin-bottom: 15px; page-break-inside: avoid; border: 1px solid #bdc3c7; border-radius: 6px; overflow: hidden;">
+      <div style="margin-bottom: 24px; page-break-inside: avoid; border: 1px solid #D9D9D9; border-radius: 6px; overflow: hidden; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);">
         <!-- Header do Apontamento -->
-        <div style="background: #333; color: white; padding: 8px 12px;">
-          <h3 style="margin: 0; font-size: 14px; font-weight: bold;">
+        <div style="background: #F9FAFB; color: #000000; padding: 14px 18px; border-bottom: 1px solid #D9D9D9;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #000000;">
             ${index + 1}. ${apontamento.ambiente}${apontamento.subtitulo ? ` - ${apontamento.subtitulo}` : ''}
           </h3>
         </div>
         
         <!-- Descrição Compacta -->
-        <div style="padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #ddd;">
-          <p style="margin: 0; color: #333; font-size: 12px; line-height: 1.3;"><strong>Laudo de Entrada:</strong> ${apontamento.descricao}</p>
+        <div style="padding: 14px 18px; background: #FFFFFF; border-bottom: 1px solid #D9D9D9;">
+          <p style="margin: 0; color: #000000; font-size: 14px; line-height: 1.5; font-weight: 500;"><strong>Laudo de Entrada:</strong> ${apontamento.descricao}</p>
         </div>
         
         <!-- Vistorias Lado a Lado -->
         <div style="display: grid; grid-template-columns: 1fr 1fr;">
-          <div style="border-right: 1px solid #e9ecef; padding: 12px; background: #f8f9fa;">
-            <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #333; font-weight: bold; text-align: center; background: #e9e9e9; padding: 4px; border-radius: 3px;">VISTORIA INICIAL</h4>
+          <div style="border-right: 1px solid #D9D9D9; padding: 18px; background: #FFFFFF;">
+            <h4 style="margin: 0 0 16px 0; font-size: 14px; color: #000000; font-weight: bold; text-align: center; background: #F9FAFB; padding: 10px; border-radius: 6px; border: 1px solid #D9D9D9;">VISTORIA INICIAL</h4>
             <div style="display: grid; grid-template-columns: ${fotosInicial.length > 2 ? '1fr 1fr' : '1fr'}; gap: 8px;">
               ${
                 fotosInicial.length > 0
@@ -121,7 +121,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                         return `
                       <div style="text-align: center;">
                         <img src="${foto.base64}" 
-                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border: 1px solid #bdc3c7; border-radius: 4px; object-fit: contain;" 
+                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border: 1px solid #d1d5db; border-radius: 8px; object-fit: contain;" 
                              alt="Foto ${fotoIndex + 1}" />
                       </div>
                     `;
@@ -132,17 +132,17 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
               ${
                 apontamento.vistoriaInicial.descritivoLaudo
                   ? `
-              <div style="margin-top: 8px; padding: 8px; background: #f0f0f0; border-radius: 4px; border-left: 3px solid #333;">
-                <p style="margin: 0; font-size: 11px; color: #333; font-weight: bold;">Descritivo do Laudo de Entrada:</p>
-                <p style="margin: 4px 0 0 0; font-size: 11px; color: #555; line-height: 1.3;">${apontamento.vistoriaInicial.descritivoLaudo}</p>
+              <div style="margin-top: 16px; padding: 12px; background: #F9FAFB; border-radius: 6px; border: 1px solid #D9D9D9;">
+                <p style="margin: 0; font-size: 13px; color: #000000; font-weight: bold;">Descritivo do Laudo de Entrada:</p>
+                <p style="margin: 6px 0 0 0; font-size: 13px; color: #000000; line-height: 1.5; font-weight: 400;">${apontamento.vistoriaInicial.descritivoLaudo}</p>
               </div>
               `
                   : ''
               }
             </div>
           </div>
-          <div style="padding: 12px; background: #f8f9fa;">
-            <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #333; font-weight: bold; text-align: center; background: #e9e9e9; padding: 4px; border-radius: 3px;">VISTORIA FINAL</h4>
+          <div style="padding: 18px; background: #FFFFFF;">
+            <h4 style="margin: 0 0 16px 0; font-size: 14px; color: #000000; font-weight: bold; text-align: center; background: #F9FAFB; padding: 10px; border-radius: 6px; border: 1px solid #D9D9D9;">VISTORIA FINAL</h4>
             <div style="display: grid; grid-template-columns: ${fotosFinal.length > 2 ? '1fr 1fr' : '1fr'}; gap: 8px;">
               ${
                 fotosFinal.length > 0
@@ -159,7 +159,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                         return `
                       <div style="text-align: center;">
                         <img src="${foto.base64}" 
-                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border: 1px solid #bdc3c7; border-radius: 4px; object-fit: contain;" 
+                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border: 1px solid #d1d5db; border-radius: 8px; object-fit: contain;" 
                              alt="Foto ${fotoIndex + 1}" />
                       </div>
                     `;
@@ -174,9 +174,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         ${
           apontamento.observacao
             ? `
-        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px; margin-top: 8px;">
-          <h4 style="color: #dc2626; margin: 0 0 6px 0; font-size: 12px; font-weight: 600;">OBSERVAÇÃO</h4>
-          <p style="margin: 0; color: #991b1b; font-size: 11px; line-height: 1.4;">${apontamento.observacao}</p>
+        <div style="background: #F9FAFB; border: 1px solid #D9D9D9; border-radius: 6px; padding: 16px 20px; margin-top: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+          <h4 style="color: #000000; margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">OBSERVAÇÃO</h4>
+          <p style="margin: 0; color: #000000; font-size: 13px; line-height: 1.5; font-weight: 500; font-style: italic;">${apontamento.observacao}</p>
         </div>
         `
             : ''

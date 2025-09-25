@@ -2,21 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Users,
-  CheckSquare,
-  AlertTriangle,
+  BarChart3,
   Calendar,
   TrendingUp,
-  Activity,
-  Zap,
-  Shield,
-  Bell,
-  Settings,
-  Download,
-  Eye,
-  Filter,
+  TrendingDown,
+  Clock,
+  AlertTriangle,
+  Users,
+  RefreshCw,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,7 +18,6 @@ import { validateContractsList, type Contract } from '@/utils/dataValidator';
 import { dbLogger } from '@/utils/logger';
 
 const Index = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +31,7 @@ const Index = () => {
 
   const fetchContracts = async () => {
     try {
+      setLoading(true);
       // Buscar contratos do usuário atual
       const { data, error } = await supabase
         .from('saved_terms')
@@ -69,120 +63,13 @@ const Index = () => {
     return new Date(year, month, day);
   };
 
-  // Função para calcular dias entre duas datas
-  const calculateDaysDifference = (startDate: Date, endDate: Date): number => {
-    const diffTime = endDate.getTime() - startDate.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // Calcular métricas baseadas nos dados reais
-  const calculateMetrics = () => {
-    const totalContracts = contracts.length;
-    const now = new Date();
-
-    // Contratos do mês atual
-    const currentMonthContracts = contracts.filter((contract) => {
-      const contractDate = new Date(contract.created_at);
-      return (
-        contractDate.getMonth() === now.getMonth() &&
-        contractDate.getFullYear() === now.getFullYear()
-      );
-    });
-
-    // Contratos ativos (todos os contratos cadastrados)
-    const activeContracts = contracts; // Todos os contratos são considerados ativos
-
-    // Contratos expirados (baseado nas datas de rescisão ou contrato)
-    const expiredContracts = contracts.filter((contract) => {
-      // Tentar usar dataTerminoRescisao primeiro, depois dataTermino como fallback
-      const terminoDate =
-        parseBrazilianDate(contract.form_data.dataTerminoRescisao) ||
-        parseBrazilianDate(contract.form_data.dataTermino);
-      return terminoDate && terminoDate < now;
-    });
-
-    // Contratos próximos do vencimento (próximos 7 dias)
-    const upcomingContracts = contracts.filter((contract) => {
-      const terminoDate =
-        parseBrazilianDate(contract.form_data.dataTerminoRescisao) ||
-        parseBrazilianDate(contract.form_data.dataTermino);
-      if (!terminoDate) return false;
-      const daysUntilExpiry = Math.ceil(
-        (terminoDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      return daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
-    });
-
-    return {
-      totalContracts,
-      currentMonthContracts: currentMonthContracts.length,
-      activeContracts: activeContracts.length,
-      expiredContracts: expiredContracts.length,
-      upcomingContracts: upcomingContracts.length,
-    };
-  };
-
-  const metrics = calculateMetrics();
-
-  // Dados dos cards de métricas profissionais
-  const metricsCards = [
-    {
-      title: 'Total de Contratos',
-      value: metrics.totalContracts.toString(),
-      change: `${metrics.currentMonthContracts} este mês`,
-      changeType: 'positive',
-      icon: Users,
-      gradient: 'from-blue-500 to-blue-600',
-      bgGradient: 'from-blue-500/10 to-blue-600/10',
-      borderColor: 'border-blue-500/20',
-      trend: '+12%',
-      trendIcon: TrendingUp,
-    },
-    {
-      title: 'Contratos Ativos',
-      value: metrics.activeContracts.toString(),
-      change: 'cadastrados no sistema',
-      changeType: 'neutral',
-      icon: CheckSquare,
-      gradient: 'from-green-500 to-green-600',
-      bgGradient: 'from-green-500/10 to-green-600/10',
-      borderColor: 'border-green-500/20',
-      trend: '+8%',
-      trendIcon: TrendingUp,
-    },
-    {
-      title: 'Próximos do Vencimento',
-      value: metrics.upcomingContracts.toString(),
-      change: 'vencendo em 7 dias',
-      changeType: metrics.upcomingContracts > 0 ? 'negative' : 'positive',
-      icon: Calendar,
-      gradient: 'from-yellow-500 to-yellow-600',
-      bgGradient: 'from-yellow-500/10 to-yellow-600/10',
-      borderColor: 'border-yellow-500/20',
-      trend: metrics.upcomingContracts > 0 ? 'Atenção' : 'OK',
-      trendIcon: metrics.upcomingContracts > 0 ? AlertTriangle : CheckSquare,
-    },
-    {
-      title: 'Expirados',
-      value: metrics.expiredContracts.toString(),
-      change: 'precisam de atenção',
-      changeType: metrics.expiredContracts > 0 ? 'negative' : 'positive',
-      icon: AlertTriangle,
-      gradient: 'from-red-500 to-red-600',
-      bgGradient: 'from-red-500/10 to-red-600/10',
-      borderColor: 'border-red-500/20',
-      trend: metrics.expiredContracts > 0 ? 'Urgente' : 'OK',
-      trendIcon: metrics.expiredContracts > 0 ? AlertTriangle : CheckSquare,
-    },
-  ];
-
-  // Gerar dados do gráfico baseados nos contratos reais (últimos 6 meses)
-  const generateChartData = () => {
+  // Gerar dados do gráfico comparativo mensal (últimos 12 meses)
+  const generateMonthlyChartData = () => {
     const months: Array<{ name: string; index: number; year: number }> = [];
     const now = new Date();
 
-    // Gerar últimos 6 meses
-    for (let i = 5; i >= 0; i--) {
+    // Gerar últimos 12 meses
+    for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         name: date.toLocaleDateString('pt-BR', { month: 'short' }),
@@ -193,12 +80,7 @@ const Index = () => {
 
     return months.map((month) => {
       const contractsInMonth = contracts.filter((contract) => {
-        // Usar data de início da rescisão se disponível, senão usar data de criação
-        const rescisaoDate = parseBrazilianDate(
-          contract.form_data.dataInicioRescisao
-        );
-        const contractDate = rescisaoDate || new Date(contract.created_at);
-
+        const contractDate = new Date(contract.created_at);
         return (
           contractDate.getMonth() === month.index &&
           contractDate.getFullYear() === month.year
@@ -208,600 +90,289 @@ const Index = () => {
       return {
         month: month.name,
         value: contractsInMonth.length,
+        fullMonth: new Date(month.year, month.index, 1).toLocaleDateString(
+          'pt-BR',
+          { month: 'long', year: 'numeric' }
+        ),
       };
     });
   };
 
-  const chartData = generateChartData();
+  // Obter contratos ordenados por data de desocupação (mais recente para mais antiga)
+  const getContractsOrderedByVacationDate = () => {
+    return contracts
+      .filter((contract) => contract.form_data.dataTerminoRescisao)
+      .map((contract) => ({
+        ...contract,
+        vacationDate: parseBrazilianDate(
+          contract.form_data.dataTerminoRescisao
+        ),
+      }))
+      .filter((contract) => contract.vacationDate)
+      .sort((a, b) => {
+        if (!a.vacationDate || !b.vacationDate) return 0;
+        return b.vacationDate.getTime() - a.vacationDate.getTime();
+      });
+  };
+
+  const chartData = generateMonthlyChartData();
+  const orderedContracts = getContractsOrderedByVacationDate();
   const maxValue = Math.max(...chartData.map((d) => d.value), 1);
 
-  // Debug: verificar dados do gráfico
-  dbLogger.debug('Chart data:', chartData);
-  dbLogger.debug('Max value:', maxValue);
+  // Calcular métricas
+  const totalContracts = contracts.length;
+  const currentMonthContracts = chartData[chartData.length - 1]?.value || 0;
+  const previousMonthContracts = chartData[chartData.length - 2]?.value || 0;
+  const growthPercentage =
+    previousMonthContracts > 0
+      ? ((currentMonthContracts - previousMonthContracts) /
+          previousMonthContracts) *
+        100
+      : 0;
 
-  // Calcular desocupações que ultrapassaram 30 dias
-  const getRescisoesExpiradas = () => {
-    const now = new Date();
-    return contracts.filter((contract) => {
-      const terminoDate = parseBrazilianDate(
-        contract.form_data.dataTerminoRescisao
-      );
-      if (!terminoDate) return false;
-      return terminoDate < now;
-    });
-  };
+  const contractsWithVacationDate = contracts.filter(
+    (c) => c.form_data.dataTerminoRescisao
+  );
+  const expiredContracts = contractsWithVacationDate.filter((contract) => {
+    const vacationDate = parseBrazilianDate(
+      contract.form_data.dataTerminoRescisao
+    );
+    return vacationDate && vacationDate < new Date();
+  });
 
-  // Calcular desocupações próximas do vencimento (próximos 7 dias)
-  const getRescisoesProximasVencimento = () => {
-    const now = new Date();
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    return contracts.filter((contract) => {
-      const terminoDate = parseBrazilianDate(
-        contract.form_data.dataTerminoRescisao
-      );
-      if (!terminoDate) return false;
-      return terminoDate >= now && terminoDate <= sevenDaysFromNow;
-    });
-  };
-
-  const rescisoesExpiradas = getRescisoesExpiradas();
-  const rescisoesProximasVencimento = getRescisoesProximasVencimento();
+  const upcomingContracts = contractsWithVacationDate.filter((contract) => {
+    const vacationDate = parseBrazilianDate(
+      contract.form_data.dataTerminoRescisao
+    );
+    if (!vacationDate) return false;
+    const daysUntilVacation = Math.ceil(
+      (vacationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return daysUntilVacation >= 0 && daysUntilVacation <= 7;
+  });
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Main Content */}
-      <main className="p-6">
-        {/* Status Cards Row */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">
-              Status do Sistema
-            </h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+      {/* Header */}
+      <div className="bg-slate-800 shadow-lg border-b border-slate-700">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+                <p className="text-sm text-gray-300">
+                  Visão geral dos contratos
+                </p>
+              </div>
+            </div>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtros
-              </Button>
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4 mr-2" />
-                Visualizar
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchContracts}
+                disabled={loading}
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
+                />
+                Atualizar
               </Button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {!loading && contracts.length === 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Users className="h-5 w-5 text-blue-400" />
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">
+                    Total de Contratos
+                  </p>
+                  <p className="text-3xl font-bold">{totalContracts}</p>
+                  <p className="text-blue-100 text-sm">
+                    {currentMonthContracts} este mês
+                  </p>
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">
-                    Bem-vindo ao seu Dashboard!
-                  </h3>
-                  <div className="mt-2 text-sm text-blue-700">
-                    <p>Você ainda não possui contratos cadastrados.</p>
-                    <p className="mt-1">
-                      <button
-                        onClick={() => navigate('/cadastrar-contrato')}
-                        className="font-medium underline hover:text-blue-600"
-                      >
-                        Cadastre seu primeiro contrato
-                      </button>{' '}
-                      para começar.
-                    </p>
-                  </div>
+                <div className="p-3 bg-white/20 rounded-full">
+                  <Users className="h-6 w-6" />
                 </div>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-100 text-sm font-medium">
+                    Próximos do Vencimento
+                  </p>
+                  <p className="text-3xl font-bold">
+                    {upcomingContracts.length}
+                  </p>
+                  <p className="text-yellow-100 text-sm">vencendo em 7 dias</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-full">
+                  <Clock className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm font-medium">Expirados</p>
+                  <p className="text-3xl font-bold">
+                    {expiredContracts.length}
+                  </p>
+                  <p className="text-red-100 text-sm">precisam de atenção</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-full">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">
+                    Contratos por Data
+                  </p>
+                  <p className="text-3xl font-bold">
+                    {orderedContracts.length}
+                  </p>
+                  <p className="text-orange-100 text-sm">desocupação</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-full">
+                  <Calendar className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Professional Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {metricsCards.map((card, index) => {
-            const IconComponent = card.icon;
-            const TrendIcon = card.trendIcon;
-            return (
-              <Card
-                key={index}
-                className={`metric-card border ${card.borderColor} bg-gradient-to-br ${card.bgGradient} backdrop-blur-sm`}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div
-                      className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg`}
+        <div className="grid grid-cols-1 gap-8">
+          {/* Gráfico Principal - Comparativo Mensal */}
+          <div>
+            <Card className="shadow-lg border-0 bg-slate-800 border-slate-700">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-500 rounded-lg">
+                      <BarChart3 className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-semibold text-white">
+                        Comparativo Mensal de Contratos
+                      </CardTitle>
+                      <p className="text-sm text-gray-300 mt-1">
+                        Últimos 12 meses - Tendência de crescimento
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge
+                      variant="secondary"
+                      className={`${growthPercentage >= 0 ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'}`}
                     >
-                      <IconComponent className="h-6 w-6 text-white" />
+                      {growthPercentage >= 0 ? (
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 mr-1" />
+                      )}
+                      {growthPercentage > 0 ? '+' : ''}
+                      {growthPercentage.toFixed(1)}%
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Gráfico de Barras */}
+                  <div className="flex items-end justify-between h-64 px-4 bg-slate-700 rounded-lg py-4">
+                    {chartData.map((data, index) => {
+                      const height = Math.max(
+                        (data.value / maxValue) * 200,
+                        16
+                      );
+                      return (
+                        <div
+                          key={index}
+                          className="flex flex-col items-center flex-1 group"
+                        >
+                          <div className="relative w-full flex justify-center">
+                            <div
+                              className={`w-8 rounded-t-lg transition-all duration-300 hover:scale-105 cursor-pointer ${
+                                data.value > 0
+                                  ? 'bg-gradient-to-t from-blue-500 to-blue-600 shadow-md hover:shadow-lg'
+                                  : 'bg-slate-500'
+                              }`}
+                              style={{ height: `${height}px` }}
+                              title={`${data.fullMonth}: ${data.value} contrato${data.value !== 1 ? 's' : ''}`}
+                            >
+                              {data.value > 0 && (
+                                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                                  {data.value} contrato
+                                  {data.value !== 1 ? 's' : ''}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-xs text-gray-300 mt-3 font-medium text-center">
+                            {data.month}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Legenda e Estatísticas */}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-600">
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600"></div>
+                        <span className="text-sm text-gray-300">Contratos</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-slate-500"></div>
+                        <span className="text-sm text-gray-300">Sem dados</span>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <Badge
-                        variant={
-                          card.changeType === 'positive'
-                            ? 'default'
-                            : card.changeType === 'negative'
-                              ? 'destructive'
-                              : 'secondary'
-                        }
-                        className="text-xs"
-                      >
-                        <TrendIcon className="h-3 w-3 mr-1" />
-                        {card.trend}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      {card.title}
-                    </h3>
-                    <p className="text-3xl font-bold text-foreground">
-                      {card.value}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {card.change}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Advanced Analytics Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Main Chart */}
-          <Card className="lg:col-span-2 glass-card">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-semibold text-foreground">
-                    Análise de Rescisões
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Últimos 6 meses - Tendência de crescimento
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    variant="secondary"
-                    className="text-green-600 bg-green-100"
-                  >
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    +15.2%
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Advanced Bar Chart */}
-                <div className="flex items-end justify-between h-48 px-4">
-                  {chartData.map((data, index) => {
-                    const height = Math.max((data.value / maxValue) * 160, 16);
-                    return (
-                      <div
-                        key={index}
-                        className="flex flex-col items-center flex-1 group"
-                      >
-                        <div
-                          className={`w-8 rounded-t-lg relative transition-all duration-300 hover:scale-105 ${
-                            data.value > 0
-                              ? 'bg-gradient-to-t from-primary to-primary/80 shadow-lg'
-                              : 'bg-muted'
-                          }`}
-                          style={{ height: `${height}px` }}
-                        >
-                          {data.value > 0 && (
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-foreground text-background text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                              {data.value} contrato{data.value !== 1 ? 's' : ''}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground mt-3 font-medium">
-                          {data.month}
+                      <p className="text-sm text-gray-300">
+                        Total:{' '}
+                        <span className="font-semibold text-white">
+                          {totalContracts}
+                        </span>{' '}
+                        contratos
+                      </p>
+                      <p className="text-sm text-gray-300">
+                        Média mensal:{' '}
+                        <span className="font-semibold text-white">
+                          {(totalContracts / 12).toFixed(1)}
                         </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Chart Legend */}
-                <div className="flex items-center justify-center space-x-6 pt-4 border-t border-border">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-primary to-primary/80"></div>
-                    <span className="text-sm text-muted-foreground">
-                      Rescisões
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-muted"></div>
-                    <span className="text-sm text-muted-foreground">
-                      Sem dados
-                    </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Performance Indicators */}
-          <Card className="glass-card">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-foreground">
-                Indicadores de Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-green-500/10">
-                      <Activity className="h-4 w-4 text-green-600" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">
-                      Eficiência
-                    </span>
-                  </div>
-                  <span className="text-lg font-bold text-green-600">94%</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-blue-500/10">
-                      <Zap className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">
-                      Velocidade
-                    </span>
-                  </div>
-                  <span className="text-lg font-bold text-blue-600">2.1s</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10">
-                      <Shield className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">
-                      Segurança
-                    </span>
-                  </div>
-                  <span className="text-lg font-bold text-purple-600">
-                    99.9%
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">
-                    Uptime
-                  </span>
-                  <span className="text-sm text-muted-foreground">30 dias</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full"
-                    style={{ width: '99.9%' }}
-                  ></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Professional Alerts Section */}
-        {(rescisoesExpiradas.length > 0 ||
-          rescisoesProximasVencimento.length > 0) && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">
-                Alertas e Notificações
-              </h2>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Configurar
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Critical Alerts */}
-              {rescisoesExpiradas.length > 0 && (
-                <Card className="alert-card border-l-4 border-l-destructive bg-gradient-to-r from-destructive/5 to-destructive/10">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-lg bg-destructive/20">
-                          <AlertTriangle className="h-5 w-5 text-destructive" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg font-semibold text-foreground">
-                            Contratos Expirados
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            Requerem atenção imediata
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant="destructive"
-                        className="text-lg px-3 py-1"
-                      >
-                        {rescisoesExpiradas.length}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3 max-h-48 overflow-y-auto">
-                      {rescisoesExpiradas.slice(0, 4).map((contract) => {
-                        const terminoDate = parseBrazilianDate(
-                          contract.form_data.dataTerminoRescisao
-                        );
-                        const daysOverdue = terminoDate
-                          ? calculateDaysDifference(terminoDate, new Date())
-                          : 0;
-                        return (
-                          <div
-                            key={contract.id}
-                            className="flex items-center justify-between p-3 bg-card/50 rounded-lg border border-border"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-card-foreground truncate">
-                                {contract.form_data.numeroContrato || 'N/A'}
-                              </p>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {contract.form_data.nomeLocatario || 'N/A'}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <Badge variant="destructive" className="text-xs">
-                                {daysOverdue} dias
-                              </Badge>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {rescisoesExpiradas.length > 4 && (
-                        <div className="text-center py-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive border-destructive/50 hover:bg-destructive/10"
-                          >
-                            Ver mais {rescisoesExpiradas.length - 4} contrato
-                            {rescisoesExpiradas.length - 4 !== 1 ? 's' : ''}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Warning Alerts */}
-              {rescisoesProximasVencimento.length > 0 && (
-                <Card className="alert-card border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-primary/10">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-lg bg-primary/20">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg font-semibold text-foreground">
-                            Próximos do Vencimento
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            Vencimento em 7 dias
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className="text-lg px-3 py-1 bg-primary text-primary-foreground"
-                      >
-                        {rescisoesProximasVencimento.length}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3 max-h-48 overflow-y-auto">
-                      {rescisoesProximasVencimento
-                        .slice(0, 4)
-                        .map((contract) => {
-                          const terminoDate = parseBrazilianDate(
-                            contract.form_data.dataTerminoRescisao
-                          );
-                          const daysUntilDue = terminoDate
-                            ? calculateDaysDifference(new Date(), terminoDate)
-                            : 0;
-                          return (
-                            <div
-                              key={contract.id}
-                              className="flex items-center justify-between p-3 bg-card/50 rounded-lg border border-border"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-card-foreground truncate">
-                                  {contract.form_data.numeroContrato || 'N/A'}
-                                </p>
-                                <p className="text-sm text-muted-foreground truncate">
-                                  {contract.form_data.nomeLocatario || 'N/A'}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs bg-primary text-primary-foreground"
-                                >
-                                  {daysUntilDue} dias
-                                </Badge>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      {rescisoesProximasVencimento.length > 4 && (
-                        <div className="text-center py-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-primary border-primary/50 hover:bg-primary/10"
-                          >
-                            Ver mais {rescisoesProximasVencimento.length - 4}{' '}
-                            contrato
-                            {rescisoesProximasVencimento.length - 4 !== 1
-                              ? 's'
-                              : ''}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
-
-        {/* Professional Contracts Table */}
-        {contracts.length > 0 && (
-          <Card className="glass-card">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-semibold text-foreground">
-                    Contratos Recentes
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Últimas atividades e status dos contratos
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtrar
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => navigate('/contratos')}
-                  >
-                    Ver Todos
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="data-grid">
-                <div className="data-grid-header px-6 py-3">
-                  <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-3">Contrato</div>
-                    <div className="col-span-3">Locatário</div>
-                    <div className="col-span-3">Endereço</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Ações</div>
-                  </div>
-                </div>
-                <div className="divide-y divide-border">
-                  {contracts.slice(0, 5).map((contract) => {
-                    const terminoDate = parseBrazilianDate(
-                      contract.form_data.dataTerminoRescisao
-                    );
-                    const isExpired = terminoDate && terminoDate < new Date();
-                    const isNearExpiry =
-                      terminoDate &&
-                      terminoDate > new Date() &&
-                      calculateDaysDifference(new Date(), terminoDate) <= 7;
-
-                    return (
-                      <div
-                        key={contract.id}
-                        className="data-grid-row px-6 py-4"
-                      >
-                        <div className="grid grid-cols-12 gap-4 items-center">
-                          <div className="col-span-3">
-                            <p className="font-medium text-foreground">
-                              {contract.form_data.numeroContrato || 'N/A'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Criado em{' '}
-                              {new Date(contract.created_at).toLocaleDateString(
-                                'pt-BR'
-                              )}
-                            </p>
-                          </div>
-                          <div className="col-span-3">
-                            <p className="text-sm text-foreground truncate">
-                              {contract.form_data.nomeLocatario || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="col-span-3">
-                            <p className="text-sm text-muted-foreground truncate">
-                              {contract.form_data.enderecoImovel || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="col-span-2">
-                            {isExpired && (
-                              <Badge
-                                variant="destructive"
-                                className="inline-flex items-center"
-                              >
-                                <AlertTriangle className="h-3 w-3 mr-1" />
-                                Expirado
-                              </Badge>
-                            )}
-                            {isNearExpiry && !isExpired && (
-                              <Badge
-                                variant="secondary"
-                                className="inline-flex items-center bg-yellow-100 text-yellow-800"
-                              >
-                                <Calendar className="h-3 w-3 mr-1" />
-                                Próximo
-                              </Badge>
-                            )}
-                            {!isExpired && !isNearExpiry && (
-                              <Badge
-                                variant="default"
-                                className="inline-flex items-center bg-green-100 text-green-800"
-                              >
-                                <CheckSquare className="h-3 w-3 mr-1" />
-                                Ativo
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="col-span-1">
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {contracts.length > 5 && (
-                <div className="text-center py-4 border-t border-border">
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate('/contratos')}
-                    className="text-primary border-primary hover:bg-primary hover:text-primary-foreground"
-                  >
-                    Ver mais {contracts.length - 5} contrato
-                    {contracts.length - 5 !== 1 ? 's' : ''}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </main>
+        </div>
+      </div>
     </div>
   );
 };
