@@ -476,6 +476,15 @@ Foi entregue {{tipoQuantidadeChaves}}
       {{/if}}
     </div>
 
+    {{#if temFiadores}}
+    {{#each fiadores}}
+    <div style="margin-bottom: 40px;">
+      __________________________________________<br>
+      <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{this}}</span>
+    </div>
+    {{/each}}
+    {{/if}}
+
 <div>
 __________________________________________<br>
 <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{assinanteSelecionado}}</span>
@@ -597,6 +606,20 @@ __________________________________________<br>
         ? `OBS: ${data.observacao}`
         : '';
 
+    // Processar fiadores - puxar automaticamente do contrato
+    const temFiadores = contractData.temFiador === 'sim';
+    const fiadores: string[] = [];
+
+    if (temFiadores && contractData.nomeFiador) {
+      // Dividir os nomes dos fiadores (separados por " e " ou ",")
+      const nomesFiadores = contractData.nomeFiador
+        .split(/ e | E |,/)
+        .map((nome) => nome.trim())
+        .filter((nome) => nome.length > 0);
+
+      fiadores.push(...nomesFiadores);
+    }
+
     // Aplicar formatação de nomes - sem negrito nos nomes
     const nomeProprietarioFormatado =
       contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
@@ -667,6 +690,10 @@ __________________________________________<br>
 
       // Data da vistoria processada (baseada no tipo selecionado)
       dataVistoria,
+
+      // Dados dos fiadores
+      temFiadores,
+      fiadores,
     };
 
     return enhancedData;

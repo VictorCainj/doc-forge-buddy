@@ -144,6 +144,24 @@ const CadastrarContrato = () => {
       ],
     },
     {
+      id: 'fiador',
+      title: 'Fiadores',
+      description: 'Adicione os fiadores do contrato (opcional)',
+      icon: Users,
+      fields: [
+        {
+          name: 'temFiador',
+          label: 'Contrato possui fiador?',
+          type: 'select',
+          required: true,
+          options: [
+            { value: 'nao', label: 'Não - Sem fiador' },
+            { value: 'sim', label: 'Sim - Com fiador' },
+          ],
+        },
+      ],
+    },
+    {
       id: 'rescisao',
       title: 'Dados de Rescisão',
       description: 'Informações para processo de rescisão',

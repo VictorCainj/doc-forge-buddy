@@ -126,68 +126,163 @@ const AnaliseVistoria = () => {
 
   // Carregar estado salvo do localStorage
   useEffect(() => {
-    const savedState = localStorage.getItem('analise-vistoria-state');
-    if (savedState) {
-      try {
-        const parsedState = JSON.parse(savedState);
-        if (parsedState.apontamentos) {
-          setApontamentos(parsedState.apontamentos);
-        }
-        if (parsedState.selectedContractId) {
-          // Encontrar o contrato selecionado
-          const contract = contracts.find(
-            (c) => c.id === parsedState.selectedContractId
-          );
-          if (contract) {
-            setSelectedContract(contract);
+    const loadState = async () => {
+      const savedState = localStorage.getItem('analise-vistoria-state');
+      if (savedState) {
+        try {
+          const parsedState = JSON.parse(savedState);
+
+          // Recriar apontamentos com objetos File a partir do base64
+          if (parsedState.apontamentos) {
+            const apontamentosComFotos = await Promise.all(
+              parsedState.apontamentos.map(async (apontamento: any) => ({
+                ...apontamento,
+                vistoriaInicial: {
+                  ...apontamento.vistoriaInicial,
+                  fotos: await Promise.all(
+                    (apontamento.vistoriaInicial?.fotos || []).map(
+                      async (foto: any) => {
+                        if (foto.base64) {
+                          return base64ToFile(
+                            foto.base64,
+                            foto.name,
+                            foto.type
+                          );
+                        }
+                        // Fallback para fotos antigas sem base64
+                        return new File([], foto.name, { type: foto.type });
+                      }
+                    )
+                  ),
+                },
+                vistoriaFinal: {
+                  ...apontamento.vistoriaFinal,
+                  fotos: await Promise.all(
+                    (apontamento.vistoriaFinal?.fotos || []).map(
+                      async (foto: any) => {
+                        if (foto.base64) {
+                          return base64ToFile(
+                            foto.base64,
+                            foto.name,
+                            foto.type
+                          );
+                        }
+                        // Fallback para fotos antigas sem base64
+                        return new File([], foto.name, { type: foto.type });
+                      }
+                    )
+                  ),
+                },
+              }))
+            );
+            setApontamentos(apontamentosComFotos);
           }
+
+          if (parsedState.selectedContractId) {
+            // Encontrar o contrato selecionado
+            const contract = contracts.find(
+              (c) => c.id === parsedState.selectedContractId
+            );
+            if (contract) {
+              setSelectedContract(contract);
+            }
+          }
+          if (parsedState.dadosVistoria) {
+            setDadosVistoria(parsedState.dadosVistoria);
+          }
+          if (parsedState.showDadosVistoria !== undefined) {
+            setShowDadosVistoria(parsedState.showDadosVistoria);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar estado salvo:', error);
+          // Erro ao carregar estado salvo - continuar normalmente
         }
-        if (parsedState.dadosVistoria) {
-          setDadosVistoria(parsedState.dadosVistoria);
-        }
-        if (parsedState.showDadosVistoria !== undefined) {
-          setShowDadosVistoria(parsedState.showDadosVistoria);
-        }
-      } catch {
-        // Erro ao carregar estado salvo - continuar normalmente
       }
-    }
+    };
+
+    loadState();
   }, [contracts]);
+
+  // Função para converter File para base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Função para converter base64 para File
+  const base64ToFile = (
+    base64: string,
+    filename: string,
+    mimeType: string
+  ): File => {
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || mimeType;
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
 
   // Salvar estado no localStorage sempre que houver mudanças
   useEffect(() => {
-    // Criar uma versão serializável dos apontamentos (sem objetos File)
-    const apontamentosSerializaveis = apontamentos.map((apontamento) => ({
-      ...apontamento,
-      vistoriaInicial: {
-        ...apontamento.vistoriaInicial,
-        fotos:
-          apontamento.vistoriaInicial?.fotos?.map((foto) => ({
-            name: foto.name,
-            size: foto.size,
-            type: foto.type,
-            lastModified: foto.lastModified,
-          })) || [],
-      },
-      vistoriaFinal: {
-        ...apontamento.vistoriaFinal,
-        fotos:
-          apontamento.vistoriaFinal?.fotos?.map((foto) => ({
-            name: foto.name,
-            size: foto.size,
-            type: foto.type,
-            lastModified: foto.lastModified,
-          })) || [],
-      },
-    }));
+    const saveState = async () => {
+      try {
+        // Criar uma versão serializável dos apontamentos com base64
+        const apontamentosSerializaveis = await Promise.all(
+          apontamentos.map(async (apontamento) => ({
+            ...apontamento,
+            vistoriaInicial: {
+              ...apontamento.vistoriaInicial,
+              fotos: await Promise.all(
+                (apontamento.vistoriaInicial?.fotos || []).map(
+                  async (foto) => ({
+                    name: foto.name,
+                    size: foto.size,
+                    type: foto.type,
+                    lastModified: foto.lastModified,
+                    base64: await fileToBase64(foto),
+                  })
+                )
+              ),
+            },
+            vistoriaFinal: {
+              ...apontamento.vistoriaFinal,
+              fotos: await Promise.all(
+                (apontamento.vistoriaFinal?.fotos || []).map(async (foto) => ({
+                  name: foto.name,
+                  size: foto.size,
+                  type: foto.type,
+                  lastModified: foto.lastModified,
+                  base64: await fileToBase64(foto),
+                }))
+              ),
+            },
+          }))
+        );
 
-    const stateToSave = {
-      apontamentos: apontamentosSerializaveis,
-      selectedContractId: selectedContract?.id,
-      dadosVistoria,
-      showDadosVistoria,
+        const stateToSave = {
+          apontamentos: apontamentosSerializaveis,
+          selectedContractId: selectedContract?.id,
+          dadosVistoria,
+          showDadosVistoria,
+        };
+        localStorage.setItem(
+          'analise-vistoria-state',
+          JSON.stringify(stateToSave)
+        );
+      } catch (error) {
+        console.error('Erro ao salvar estado:', error);
+      }
     };
-    localStorage.setItem('analise-vistoria-state', JSON.stringify(stateToSave));
+
+    saveState();
   }, [apontamentos, selectedContract, dadosVistoria, showDadosVistoria]);
 
   // Atualizar pré-visualização do documento em tempo real

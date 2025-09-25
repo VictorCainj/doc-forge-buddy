@@ -80,6 +80,9 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const [locatarios, setLocatarios] = useState<
     Array<{ id: string; name: string }>
   >([]);
+  const [fiadores, setFiadores] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
   const { toast } = useToast();
 
   // Função para detectar múltiplos locatários baseado na quantidade adicionada
@@ -212,12 +215,32 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           updateField('terceiroLocatario', '');
         if (formData.quartoLocatario !== '') updateField('quartoLocatario', '');
       }
+
+      // Atualizar dados dos fiadores
+      if (fiadores.length > 0) {
+        const nomesFiadoresArray = fiadores.map((f) => f.name);
+        const nomesFiadores =
+          nomesFiadoresArray.length > 1
+            ? nomesFiadoresArray.slice(0, -1).join(', ') +
+              ' e ' +
+              nomesFiadoresArray[nomesFiadoresArray.length - 1]
+            : nomesFiadoresArray[0];
+
+        // Só atualizar se o valor for diferente para evitar loops
+        if (formData.nomeFiador !== nomesFiadores) {
+          updateField('nomeFiador', nomesFiadores);
+        }
+      } else {
+        if (formData.nomeFiador !== '') updateField('nomeFiador', '');
+      }
     }
   }, [
     locadores,
     locatarios,
+    fiadores,
     formData.nomeProprietario,
     formData.nomeLocatario,
+    formData.nomeFiador,
     formData.primeiroLocatario,
     formData.segundoLocatario,
     formData.terceiroLocatario,
@@ -230,7 +253,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   React.useEffect(() => {
     // Verificar se há etapas que usam PersonManager
     const hasPersonManagerSteps = steps.some(
-      (step) => step.id === 'locador' || step.id === 'locatario'
+      (step) =>
+        step.id === 'locador' || step.id === 'locatario' || step.id === 'fiador'
     );
 
     if (hasPersonManagerSteps && initialData) {
@@ -265,8 +289,30 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
           setLocatarios(locatariosIniciais);
         }
       }
+
+      // Inicializar fiadores se houver dados
+      if (initialData.nomeFiador && fiadores.length === 0) {
+        const nomesFiadores = initialData.nomeFiador
+          .split(/ e | E /)
+          .map((nome) => nome.trim());
+        const fiadoresIniciais = nomesFiadores
+          .map((nome, index) => ({
+            id: `fiador-${index}`,
+            name: nome,
+          }))
+          .filter((f) => f.name);
+        if (fiadoresIniciais.length > 0) {
+          setFiadores(fiadoresIniciais);
+        }
+      }
     }
-  }, [initialData, steps, locadores.length, locatarios.length]);
+  }, [
+    initialData,
+    steps,
+    locadores.length,
+    locatarios.length,
+    fiadores.length,
+  ]);
 
   // Auto-preencher nome quando selecionar "incluir nome completo" no termo do locador
   React.useEffect(() => {
@@ -760,6 +806,16 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             people={locatarios}
             onPeopleChange={setLocatarios}
             placeholder="Nome completo do locatário"
+            maxPeople={4}
+          />
+        )}
+
+        {step.id === 'fiador' && formData.temFiador === 'sim' && (
+          <PersonManager
+            title="Fiador(es)"
+            people={fiadores}
+            onPeopleChange={setFiadores}
+            placeholder="Nome completo do fiador"
             maxPeople={4}
           />
         )}

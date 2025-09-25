@@ -135,6 +135,7 @@ const Contratos = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFormData, setEditFormData] = useState<Record<string, string>>({});
   const [isUpdating, setIsUpdating] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -708,6 +709,47 @@ const Contratos = () => {
       }
     }
 
+    // Processar fiadores para o distrato
+    if (documentType === 'Distrato de Contrato de Locação') {
+      const temFiadores = formData.temFiador === 'sim';
+      const fiadores: string[] = [];
+
+      if (temFiadores && formData.nomeFiador) {
+        // Dividir os nomes dos fiadores (separados por " e " ou ",")
+        const nomesFiadores = formData.nomeFiador
+          .split(/ e | E |,/)
+          .map((nome) => nome.trim())
+          .filter((nome) => nome.length > 0);
+
+        fiadores.push(...nomesFiadores);
+      }
+
+      // Adicionar dados dos fiadores ao enhancedData
+      enhancedData.temFiadores = temFiadores ? 'sim' : 'nao';
+      enhancedData.fiadores = fiadores;
+
+      // Adicionar fiadores como variáveis individuais para o template
+      enhancedData.fiador1 = fiadores[0] || '';
+      enhancedData.fiador2 = fiadores[1] || '';
+      enhancedData.fiador3 = fiadores[2] || '';
+      enhancedData.fiador4 = fiadores[3] || '';
+
+      // Adicionar variáveis booleanas para controlar a exibição
+      enhancedData.temFiador2 = fiadores.length > 1 ? 'sim' : 'nao';
+      enhancedData.temFiador3 = fiadores.length > 2 ? 'sim' : 'nao';
+      enhancedData.temFiador4 = fiadores.length > 3 ? 'sim' : 'nao';
+
+      console.log('=== DEBUG FIADORES DISTRATO ===');
+      console.log('temFiador:', formData.temFiador);
+      console.log('nomeFiador:', formData.nomeFiador);
+      console.log('Array fiadores:', fiadores);
+      console.log('fiador1:', enhancedData.fiador1);
+      console.log('fiador2:', enhancedData.fiador2);
+      console.log('fiador3:', enhancedData.fiador3);
+      console.log('fiador4:', enhancedData.fiador4);
+      console.log('===============================');
+    }
+
     const processedTemplate = replaceTemplateVariables(template, enhancedData);
 
     // Usar o título que já foi definido (já vem com formatação correta)
@@ -852,8 +894,13 @@ const Contratos = () => {
     result = result.replace(
       /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g,
       (match, variable, ifContent, elseContent) => {
-        if (data[variable] && data[variable].trim()) {
-          return ifContent;
+        const value = data[variable];
+        if (value) {
+          if (typeof value === 'string' && value.trim()) {
+            return ifContent;
+          } else if (Array.isArray(value) && value.length > 0) {
+            return ifContent;
+          }
         }
         return elseContent;
       }
@@ -863,8 +910,53 @@ const Contratos = () => {
     result = result.replace(
       /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
       (match, variable, content) => {
-        if (data[variable] && data[variable].trim()) {
-          return content;
+        const value = data[variable];
+        console.log(
+          `Verificando condicional {{#if ${variable}}}:`,
+          value,
+          typeof value
+        );
+
+        // Verificar se a variável existe e não está vazia
+        if (value !== undefined && value !== null && value !== '') {
+          if (typeof value === 'string' && value.trim() !== '') {
+            console.log(
+              `Condicional ${variable} é verdadeira (string não vazia)`
+            );
+            return content;
+          } else if (Array.isArray(value) && value.length > 0) {
+            console.log(
+              `Condicional ${variable} é verdadeira (array não vazio)`
+            );
+            return content;
+          }
+        }
+        console.log(`Condicional ${variable} é falsa`);
+        return '';
+      }
+    );
+
+    // Debug específico para fiador2
+    console.log('=== DEBUG FIADOR2 ===');
+    console.log(
+      'Template contém {{#if fiador2}}?',
+      template.includes('{{#if fiador2}}')
+    );
+    console.log('Template contém {{/if}}?', template.includes('{{/if}}'));
+    console.log('Resultado final contém fiador2?', result.includes('fiador2'));
+    console.log('========================');
+
+    // Processar loops Handlebars {{#each}}
+    result = result.replace(
+      /\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
+      (match, arrayName, content) => {
+        const array = data[arrayName];
+        if (Array.isArray(array) && array.length > 0) {
+          return array
+            .map((item) => {
+              return content.replace(/\{\{this\}\}/g, item);
+            })
+            .join('');
         }
         return '';
       }
@@ -1225,6 +1317,20 @@ const Contratos = () => {
   const handleGenerateWithAssinante = () => {
     if (!pendingDocumentData || !assinanteSelecionado) {
       toast.error('Por favor, selecione um assinante');
+      return;
+    }
+
+    // Se for distrato, gerar diretamente (fiadores são puxados automaticamente do contrato)
+    if (pendingDocumentData.documentType === 'Distrato') {
+      generateDocumentWithAssinante(
+        pendingDocumentData.contract,
+        pendingDocumentData.template,
+        pendingDocumentData.documentType,
+        assinanteSelecionado
+      );
+      setShowAssinanteModal(false);
+      setPendingDocumentData(null);
+      setAssinanteSelecionado('');
       return;
     }
 

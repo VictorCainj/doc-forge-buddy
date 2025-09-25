@@ -49,25 +49,25 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   };
 
   let template = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.3; max-width: 900px; margin: 0 auto; padding: 15px; color: #2c3e50; background: #fff;">
-      <!-- Cabeçalho Compacto -->
-      <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #D9D9D9;">
-        <h1 style="color: #000000; font-size: 22px; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px;">
+    <div style="font-family: Arial, sans-serif; line-height: 1.4; max-width: 900px; margin: 0 auto; padding: 20px; color: #2c3e50; background: #fff;">
+      <!-- Cabeçalho Minimalista -->
+      <div style="text-align: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;">
+        <h1 style="color: #000000; font-size: 24px; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
           ANÁLISE COMPARATIVA DE VISTORIA
         </h1>
-        <p style="color: #000000; font-size: 13px; margin: 8px 0 0 0; font-weight: 400;">
+        <p style="color: #6B7280; font-size: 14px; margin: 12px 0 0 0; font-weight: 400;">
           Relatório de Contestação de Vistoria de Saída
         </p>
       </div>
 
-      <!-- Informações do Contrato Compactas -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 16px 20px; background: #F9FAFB; border-radius: 6px; border: 1px solid #D9D9D9; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+      <!-- Informações do Contrato - Design Limpo -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding: 20px 24px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
         <div>
-          <span style="color: #000000; font-size: 15px; font-weight: bold;">Contrato:</span>
-          <span style="color: #000000; font-size: 15px; margin-left: 10px; font-weight: 600;">${dados.locatario}</span>
+          <span style="color: #374151; font-size: 16px; font-weight: 600;">Contrato:</span>
+          <span style="color: #000000; font-size: 16px; margin-left: 12px; font-weight: 700;">${dados.locatario}</span>
         </div>
         <div style="text-align: right;">
-          <span style="color: #000000; font-size: 13px; font-weight: 400;">${dados.endereco}</span>
+          <span style="color: #6B7280; font-size: 14px; font-weight: 400;">${dados.endereco}</span>
         </div>
       </div>
   `;
@@ -88,24 +88,27 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       );
 
       template += `
-      <div style="margin-bottom: 24px; page-break-inside: avoid; border: 1px solid #D9D9D9; border-radius: 6px; overflow: hidden; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);">
-        <!-- Header do Apontamento -->
-        <div style="background: #F9FAFB; color: #000000; padding: 14px 18px; border-bottom: 1px solid #D9D9D9;">
-          <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #000000;">
+      <div style="margin-bottom: 32px; page-break-inside: avoid; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+        <!-- Header do Apontamento - Design Minimalista -->
+        <div style="background: #374151; color: #FFFFFF; padding: 16px 20px;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #FFFFFF; text-transform: uppercase;">
             ${index + 1}. ${apontamento.ambiente}${apontamento.subtitulo ? ` - ${apontamento.subtitulo}` : ''}
           </h3>
         </div>
         
-        <!-- Descrição Compacta -->
-        <div style="padding: 14px 18px; background: #FFFFFF; border-bottom: 1px solid #D9D9D9;">
-          <p style="margin: 0; color: #000000; font-size: 14px; line-height: 1.5; font-weight: 500;"><strong>Laudo de Entrada:</strong> ${apontamento.descricao}</p>
+        <!-- Descrição do Laudo de Entrada -->
+        <div style="padding: 16px 20px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB;">
+          <p style="margin: 0; color: #000000; font-size: 14px; line-height: 1.6; font-weight: 500;">
+            <strong>Descritivo do Laudo de Entrada:</strong> ${apontamento.descricao}
+          </p>
         </div>
         
         <!-- Vistorias Lado a Lado -->
         <div style="display: grid; grid-template-columns: 1fr 1fr;">
-          <div style="border-right: 1px solid #D9D9D9; padding: 18px; background: #FFFFFF;">
-            <h4 style="margin: 0 0 16px 0; font-size: 14px; color: #000000; font-weight: bold; text-align: center; background: #F9FAFB; padding: 10px; border-radius: 6px; border: 1px solid #D9D9D9;">VISTORIA INICIAL</h4>
-            <div style="display: grid; grid-template-columns: ${fotosInicial.length > 2 ? '1fr 1fr' : '1fr'}; gap: 8px;">
+          <!-- Vistoria Inicial -->
+          <div style="border-right: 1px solid #E5E7EB; padding: 20px; background: #FFFFFF;">
+            <h4 style="margin: 0 0 20px 0; font-size: 14px; color: #000000; font-weight: bold; text-align: center; background: #F3F4F6; padding: 12px; border-radius: 6px; border: 1px solid #E5E7EB; text-transform: uppercase;">VISTORIA INICIAL</h4>
+            <div style="display: grid; grid-template-columns: ${fotosInicial.length > 2 ? '1fr 1fr' : '1fr'}; gap: 12px;">
               ${
                 fotosInicial.length > 0
                   ? fotosInicial
@@ -119,31 +122,33 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                                 ? '150px'
                                 : '120px';
                         return `
-                      <div style="text-align: center;">
+                      <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
                         <img src="${foto.base64}" 
-                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border: 1px solid #d1d5db; border-radius: 8px; object-fit: contain;" 
+                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border-radius: 4px; object-fit: contain;" 
                              alt="Foto ${fotoIndex + 1}" />
                       </div>
                     `;
                       })
                       .join('')
-                  : '<p style="color: #95a5a6; font-style: italic; font-size: 12px; text-align: center; padding: 15px;">Sem fotos</p>'
+                  : '<p style="color: #9CA3AF; font-style: italic; font-size: 13px; text-align: center; padding: 20px; background: #F9FAFB; border-radius: 6px; border: 1px solid #E5E7EB;">Sem fotos</p>'
               }
               ${
                 apontamento.vistoriaInicial.descritivoLaudo
                   ? `
-              <div style="margin-top: 16px; padding: 12px; background: #F9FAFB; border-radius: 6px; border: 1px solid #D9D9D9;">
-                <p style="margin: 0; font-size: 13px; color: #000000; font-weight: bold;">Descritivo do Laudo de Entrada:</p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; color: #000000; line-height: 1.5; font-weight: 400;">${apontamento.vistoriaInicial.descritivoLaudo}</p>
+              <div style="margin-top: 16px; padding: 12px; background: #F9FAFB; border-radius: 6px; border: 1px solid #E5E7EB;">
+                <p style="margin: 0; font-size: 13px; color: #374151; font-weight: 600;">Descritivo do Laudo de Entrada:</p>
+                <p style="margin: 6px 0 0 0; font-size: 13px; color: #6B7280; line-height: 1.5; font-weight: 400;">${apontamento.vistoriaInicial.descritivoLaudo}</p>
               </div>
               `
                   : ''
               }
             </div>
           </div>
-          <div style="padding: 18px; background: #FFFFFF;">
-            <h4 style="margin: 0 0 16px 0; font-size: 14px; color: #000000; font-weight: bold; text-align: center; background: #F9FAFB; padding: 10px; border-radius: 6px; border: 1px solid #D9D9D9;">VISTORIA FINAL</h4>
-            <div style="display: grid; grid-template-columns: ${fotosFinal.length > 2 ? '1fr 1fr' : '1fr'}; gap: 8px;">
+          
+          <!-- Vistoria Final -->
+          <div style="padding: 20px; background: #FFFFFF;">
+            <h4 style="margin: 0 0 20px 0; font-size: 14px; color: #000000; font-weight: bold; text-align: center; background: #F3F4F6; padding: 12px; border-radius: 6px; border: 1px solid #E5E7EB; text-transform: uppercase;">VISTORIA FINAL</h4>
+            <div style="display: grid; grid-template-columns: ${fotosFinal.length > 2 ? '1fr 1fr' : '1fr'}; gap: 12px;">
               ${
                 fotosFinal.length > 0
                   ? fotosFinal
@@ -157,15 +162,15 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                                 ? '150px'
                                 : '120px';
                         return `
-                      <div style="text-align: center;">
+                      <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
                         <img src="${foto.base64}" 
-                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border: 1px solid #d1d5db; border-radius: 8px; object-fit: contain;" 
+                             style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border-radius: 4px; object-fit: contain;" 
                              alt="Foto ${fotoIndex + 1}" />
                       </div>
                     `;
                       })
                       .join('')
-                  : '<p style="color: #95a5a6; font-style: italic; font-size: 12px; text-align: center; padding: 15px;">Sem fotos</p>'
+                  : '<p style="color: #9CA3AF; font-style: italic; font-size: 13px; text-align: center; padding: 20px; background: #F9FAFB; border-radius: 6px; border: 1px solid #E5E7EB;">Sem fotos</p>'
               }
             </div>
           </div>
@@ -174,9 +179,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         ${
           apontamento.observacao
             ? `
-        <div style="background: #F9FAFB; border: 1px solid #D9D9D9; border-radius: 6px; padding: 16px 20px; margin-top: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
-          <h4 style="color: #000000; margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">OBSERVAÇÃO</h4>
-          <p style="margin: 0; color: #000000; font-size: 13px; line-height: 1.5; font-weight: 500; font-style: italic;">${apontamento.observacao}</p>
+        <div style="background: #374151; color: #FFFFFF; padding: 16px 20px; border-top: 1px solid #E5E7EB;">
+          <h4 style="color: #FFFFFF; margin: 0 0 12px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">OBSERVAÇÃO</h4>
+          <p style="margin: 0; color: #FFFFFF; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">${apontamento.observacao}</p>
         </div>
         `
             : ''

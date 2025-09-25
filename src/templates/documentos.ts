@@ -465,6 +465,39 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
       </div>
     </div>
 
+    {{#if fiador1}}
+    <div style="margin-top: 50px;">
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
+          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador1}}</p>
+        </div>
+        {{#if fiador2}}
+        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
+          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador2}}</p>
+        </div>
+        {{/if}}
+        {{#if fiador3}}
+        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
+          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador3}}</p>
+        </div>
+        {{/if}}
+        {{#if fiador4}}
+        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
+          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador4}}</p>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    {{/if}}
+
     <div style="margin-top: 50px;">
       <p style="font-size: 15px; font-weight: bold; margin-bottom: 25px; text-align: center;">Testemunhas:</p>
       
