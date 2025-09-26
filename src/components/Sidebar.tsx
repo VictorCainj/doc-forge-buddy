@@ -7,6 +7,7 @@ import {
   LogOut,
   Shield,
   SearchCheck,
+  Archive,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -74,6 +75,13 @@ const Sidebar = ({ onSearchChange }: SidebarProps) => {
       icon: SearchCheck,
       path: '/analise-vistoria',
       active: location.pathname === '/analise-vistoria',
+      badge: null,
+    },
+    {
+      name: 'Análises Salvas',
+      icon: Archive,
+      path: '/vistoria-analises',
+      active: location.pathname === '/vistoria-analises',
       badge: null,
     },
     {

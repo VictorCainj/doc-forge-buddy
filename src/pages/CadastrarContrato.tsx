@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import DocumentFormWizard from '@/components/DocumentFormWizard';
 import { FormStep } from '@/hooks/use-form-wizard';
-import { Users, FileText } from 'lucide-react';
+import {
+  Users,
+  FileText,
+  Building2,
+  UserCheck,
+  Shield,
+  Calendar,
+  FileCheck,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +26,7 @@ const CadastrarContrato = () => {
       id: 'contrato',
       title: 'Dados do Contrato',
       description: 'Informações essenciais do contrato',
-      icon: FileText,
+      icon: Building2,
       fields: [
         {
           name: 'numeroContrato',
@@ -64,7 +72,7 @@ const CadastrarContrato = () => {
       id: 'locador',
       title: 'Qualificação dos Locadores',
       description: 'Adicione os locadores do contrato',
-      icon: Users,
+      icon: UserCheck,
       fields: [
         {
           name: 'generoProprietario',
@@ -147,7 +155,7 @@ const CadastrarContrato = () => {
       id: 'fiador',
       title: 'Fiadores',
       description: 'Adicione os fiadores do contrato (opcional)',
-      icon: Users,
+      icon: Shield,
       fields: [
         {
           name: 'temFiador',
@@ -165,7 +173,7 @@ const CadastrarContrato = () => {
       id: 'rescisao',
       title: 'Dados de Rescisão',
       description: 'Informações para processo de rescisão',
-      icon: FileText,
+      icon: Calendar,
       fields: [
         {
           name: 'dataInicioRescisao',
@@ -190,7 +198,7 @@ const CadastrarContrato = () => {
       title: 'Documentos Solicitados',
       description:
         'Configure quais documentos devem ser solicitados na devolutiva locatário (energia elétrica sempre é solicitada)',
-      icon: FileText,
+      icon: FileCheck,
       fields: [
         {
           name: 'solicitarCondominio',

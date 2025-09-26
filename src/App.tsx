@@ -20,6 +20,7 @@ import TermoLocatario from './pages/TermoLocatario';
 import TermoRecusaAssinaturaEmail from './pages/TermoRecusaAssinaturaEmail';
 import Chat from './pages/Chat';
 import AnaliseVistoria from './pages/AnaliseVistoria';
+import VistoriaAnalises from './pages/VistoriaAnalises';
 
 const queryClient = new QueryClient();
 
@@ -166,6 +167,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <AnaliseVistoria />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vistoria-analises"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <VistoriaAnalises />
                   </Layout>
                 </ProtectedRoute>
               }

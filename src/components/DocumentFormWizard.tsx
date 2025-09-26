@@ -12,6 +12,18 @@ import {
   Check,
   Minimize2,
   Maximize2,
+  FileDown,
+  Copy,
+  Eye,
+  Building2,
+  Calendar,
+  Phone,
+  Mail,
+  Key,
+  Shield,
+  FileText,
+  UserCheck,
+  Hash,
 } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copy-button';
 import { useNavigate } from 'react-router-dom';
@@ -84,6 +96,40 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     []
   );
   const { toast } = useToast();
+
+  // Função para mapear ícones baseados no nome do campo
+  const getFieldIcon = (fieldName: string) => {
+    const iconMap: Record<string, any> = {
+      // Campos de contrato
+      numeroContrato: Hash,
+      enderecoImovel: Building2,
+      dataFirmamentoContrato: Calendar,
+      quantidadeChaves: Key,
+
+      // Campos de pessoa
+      nomeProprietario: UserCheck,
+      nomeLocatario: Users,
+      nomeFiador: Shield,
+      qualificacaoCompletaLocadores: FileText,
+      qualificacaoCompletaLocatarios: FileText,
+
+      // Campos de contato
+      celularLocatario: Phone,
+      emailLocatario: Mail,
+
+      // Campos de rescisão
+      dataInicioRescisao: Calendar,
+      dataTerminoRescisao: Calendar,
+
+      // Campos de documentos
+      solicitarCondominio: FileCheck,
+      solicitarAgua: FileCheck,
+      solicitarGas: FileCheck,
+      solicitarCND: FileCheck,
+    };
+
+    return iconMap[fieldName];
+  };
 
   // Função para detectar múltiplos locatários baseado na quantidade adicionada
   const isMultipleLocatarios = (nomeLocatario: string) => {
@@ -955,6 +1001,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                     mask={field.mask}
                     options={dynamicOptions}
                     disabled={false}
+                    icon={getFieldIcon(field.name)}
                     description={
                       field.name === 'generoLocatario' &&
                       isMultipleLocatarios(formData.nomeLocatario || '')

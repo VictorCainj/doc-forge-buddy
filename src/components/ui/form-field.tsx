@@ -15,6 +15,7 @@ import {
   HelpCircle,
   ChevronRight,
 } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -48,6 +49,7 @@ export interface FormFieldProps {
   description?: string;
   options?: Array<{ value: string; label: string }>;
   tooltip?: string;
+  icon?: LucideIcon;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -67,6 +69,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   description,
   options = [],
   tooltip,
+  icon: Icon,
 }) => {
   const hasError = touched && error;
   const isValid = touched && !error && value.length > 0;
@@ -401,6 +404,16 @@ export const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center gap-2">
+        {Icon && (
+          <Icon
+            className={cn(
+              'h-4 w-4 transition-colors',
+              hasError && 'text-red-600',
+              isValid && 'text-green-600',
+              !hasError && !isValid && 'text-muted-foreground'
+            )}
+          />
+        )}
         <Label
           htmlFor={name}
           className={cn(

@@ -37,28 +37,23 @@ import {
   AlertCircle,
   CheckCircle2,
   Wand2,
+  Download,
+  FolderOpen,
+  RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOpenAI } from '@/hooks/useOpenAI';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
-import { useNavigate } from 'react-router-dom';
-
-interface Apontamento {
-  id: string;
-  ambiente: string;
-  subtitulo: string;
-  descricao: string;
-  vistoriaInicial: {
-    fotos: File[];
-    descritivoLaudo?: string;
-  };
-  vistoriaFinal: {
-    fotos: File[];
-  };
-  observacao: string;
-}
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
+import { useVistoriaImages } from '@/hooks/useVistoriaImages';
+import {
+  ApontamentoVistoria,
+  DadosVistoria,
+  VistoriaAnaliseWithImages,
+} from '@/types/vistoria';
 
 interface Contract {
   id: string;
@@ -69,10 +64,14 @@ interface Contract {
 const AnaliseVistoria = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { correctText, isLoading: isAILoading } = useOpenAI();
-  const [apontamentos, setApontamentos] = useState<Apontamento[]>([]);
+  const { saveAnalise, saving, updateAnalise } = useVistoriaAnalises();
+  const { fileToBase64, base64ToFile } = useVistoriaImages();
+
+  const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
   const [currentApontamento, setCurrentApontamento] = useState<
-    Partial<Apontamento>
+    Partial<ApontamentoVistoria>
   >({
     ambiente: '',
     subtitulo: '',
@@ -85,18 +84,205 @@ const AnaliseVistoria = () => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null
   );
-  const [dadosVistoria, setDadosVistoria] = useState({
+  const [dadosVistoria, setDadosVistoria] = useState<DadosVistoria>({
     locatario: '',
     endereco: '',
     dataVistoria: '',
   });
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [editingApontamento, setEditingApontamento] = useState<string | null>(
     null
   );
   const [searchTerm, setSearchTerm] = useState('');
   const [documentPreview, setDocumentPreview] = useState<string>('');
   const [showDadosVistoria, setShowDadosVistoria] = useState(true);
+  const [savedAnaliseId, setSavedAnaliseId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingAnaliseId, setEditingAnaliseId] = useState<string | null>(null);
+  const [existingAnaliseId, setExistingAnaliseId] = useState<string | null>(
+    null
+  );
+  const [hasExistingAnalise, setHasExistingAnalise] = useState(false);
+  const [loadingExistingAnalise, setLoadingExistingAnalise] = useState(false);
+
+  // Função para carregar dados da análise em modo de edição
+  const loadAnalysisData = async (analiseData: VistoriaAnaliseWithImages) => {
+    try {
+      console.log('=== CARREGANDO DADOS DA ANÁLISE ===');
+      console.log('Análise ID:', analiseData.id);
+      console.log('Imagens disponíveis:', analiseData.images?.length || 0);
+      console.log('Dados das imagens:', analiseData.images);
+
+      // Carregar dados da vistoria
+      if (analiseData.dados_vistoria) {
+        const dados = analiseData.dados_vistoria as any;
+        setDadosVistoria({
+          locatario: dados.locatario || '',
+          endereco: dados.endereco || '',
+          dataVistoria: dados.dataVistoria || '',
+        });
+      }
+
+      // Carregar apontamentos com imagens
+      if (analiseData.apontamentos) {
+        const apontamentosData = analiseData.apontamentos as any[];
+
+        // Se há imagens do banco de dados, usar elas
+        const hasDatabaseImages =
+          analiseData.images && analiseData.images.length > 0;
+
+        console.log('=== PROCESSANDO APONTAMENTOS ===');
+        console.log('Total de apontamentos:', apontamentosData.length);
+        console.log('Tem imagens do banco:', hasDatabaseImages);
+
+        const apontamentosWithImages = await Promise.all(
+          apontamentosData.map(async (apontamento) => {
+            console.log(
+              `\n--- Processando apontamento: ${apontamento.ambiente} ---`
+            );
+            console.log('Apontamento ID:', apontamento.id);
+
+            const apontamentoWithImages = { ...apontamento };
+
+            if (hasDatabaseImages) {
+              // Carregar imagens do banco de dados
+              const apontamentoImages = analiseData.images.filter(
+                (img: any) => img.apontamento_id === apontamento.id
+              );
+
+              console.log(
+                'Imagens encontradas para este apontamento:',
+                apontamentoImages.length
+              );
+              console.log('Dados das imagens:', apontamentoImages);
+
+              const fotosInicial = apontamentoImages
+                .filter((img: any) => img.tipo_vistoria === 'inicial')
+                .map((img: any) => {
+                  console.log(
+                    'Processando foto inicial:',
+                    img.file_name,
+                    img.image_url
+                  );
+                  // Criar um objeto File simulado para imagens do banco
+                  return {
+                    name: img.file_name,
+                    size: img.file_size,
+                    type: img.file_type,
+                    url: img.image_url,
+                    isFromDatabase: true,
+                  };
+                });
+
+              const fotosFinal = apontamentoImages
+                .filter((img: any) => img.tipo_vistoria === 'final')
+                .map((img: any) => {
+                  console.log(
+                    'Processando foto final:',
+                    img.file_name,
+                    img.image_url
+                  );
+                  return {
+                    name: img.file_name,
+                    size: img.file_size,
+                    type: img.file_type,
+                    url: img.image_url,
+                    isFromDatabase: true,
+                  };
+                });
+
+              console.log(`Fotos Inicial criadas: ${fotosInicial.length}`);
+              console.log(`Fotos Final criadas: ${fotosFinal.length}`);
+
+              apontamentoWithImages.vistoriaInicial = {
+                ...apontamento.vistoriaInicial,
+                fotos: fotosInicial,
+              };
+
+              apontamentoWithImages.vistoriaFinal = {
+                ...apontamento.vistoriaFinal,
+                fotos: fotosFinal,
+              };
+            } else {
+              // Carregar imagens da análise original (base64)
+              if (apontamento.vistoriaInicial?.fotos) {
+                const fotosInicial = await Promise.all(
+                  apontamento.vistoriaInicial.fotos.map(async (foto: any) => {
+                    if (foto.base64) {
+                      // Converter base64 para File
+                      return base64ToFile(foto.base64, foto.name, foto.type);
+                    }
+                    return foto;
+                  })
+                );
+                apontamentoWithImages.vistoriaInicial = {
+                  ...apontamento.vistoriaInicial,
+                  fotos: fotosInicial,
+                };
+              }
+
+              if (apontamento.vistoriaFinal?.fotos) {
+                const fotosFinal = await Promise.all(
+                  apontamento.vistoriaFinal.fotos.map(async (foto: any) => {
+                    if (foto.base64) {
+                      // Converter base64 para File
+                      return base64ToFile(foto.base64, foto.name, foto.type);
+                    }
+                    return foto;
+                  })
+                );
+                apontamentoWithImages.vistoriaFinal = {
+                  ...apontamento.vistoriaFinal,
+                  fotos: fotosFinal,
+                };
+              }
+            }
+
+            return apontamentoWithImages;
+          })
+        );
+
+        console.log('=== APONTAMENTOS CARREGADOS ===');
+        console.log(
+          'Total de apontamentos carregados:',
+          apontamentosWithImages.length
+        );
+        apontamentosWithImages.forEach((apontamento, index) => {
+          console.log(`Apontamento ${index + 1}: ${apontamento.ambiente}`);
+          console.log(
+            `- Fotos Inicial: ${apontamento.vistoriaInicial?.fotos?.length || 0}`
+          );
+          console.log(
+            `- Fotos Final: ${apontamento.vistoriaFinal?.fotos?.length || 0}`
+          );
+        });
+
+        setApontamentos(apontamentosWithImages);
+      }
+
+      // Encontrar e selecionar o contrato correspondente
+      if (analiseData.contract_id && contracts.length > 0) {
+        const contract = contracts.find(
+          (c) => c.id === analiseData.contract_id
+        );
+        if (contract) {
+          setSelectedContract(contract);
+        }
+      }
+
+      toast({
+        title: 'Análise carregada',
+        description: 'Os dados da análise foram carregados para edição.',
+      });
+    } catch (error) {
+      console.error('Erro ao carregar dados da análise:', error);
+      toast({
+        title: 'Erro ao carregar análise',
+        description: 'Não foi possível carregar os dados da análise.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // Carregar contratos do Supabase
   useEffect(() => {
@@ -124,9 +310,54 @@ const AnaliseVistoria = () => {
     fetchContracts();
   }, [toast]);
 
-  // Carregar estado salvo do localStorage
+  // Detectar modo de edição e carregar dados da análise
   useEffect(() => {
-    const loadState = async () => {
+    const state = location.state as {
+      editMode?: boolean;
+      analiseData?: VistoriaAnaliseWithImages;
+      preserveAnalysisState?: {
+        apontamentos: any[];
+        dadosVistoria: DadosVistoria;
+        selectedContract: Contract | null;
+        savedAnaliseId: string | null;
+        isEditMode: boolean;
+        editingAnaliseId: string | null;
+        existingAnaliseId: string | null;
+        hasExistingAnalise: boolean;
+      };
+    };
+
+    if (state?.editMode && state?.analiseData && contracts.length > 0) {
+      setIsEditMode(true);
+      setEditingAnaliseId(state.analiseData.id);
+      setSavedAnaliseId(state.analiseData.id);
+
+      // Carregar dados da análise
+      loadAnalysisData(state.analiseData);
+    } else if (state?.preserveAnalysisState && contracts.length > 0) {
+      // Restaurar estado preservado ao retornar da geração de documento
+      const preservedState = state.preserveAnalysisState;
+
+      setApontamentos(preservedState.apontamentos);
+      setDadosVistoria(preservedState.dadosVistoria);
+      setSelectedContract(preservedState.selectedContract);
+      setSavedAnaliseId(preservedState.savedAnaliseId);
+      setIsEditMode(preservedState.isEditMode);
+      setEditingAnaliseId(preservedState.editingAnaliseId);
+      setExistingAnaliseId(preservedState.existingAnaliseId);
+      setHasExistingAnalise(preservedState.hasExistingAnalise);
+
+      toast({
+        title: 'Estado restaurado',
+        description:
+          'O estado da análise foi restaurado após a geração do documento.',
+      });
+    }
+  }, [location.state, contracts]);
+
+  // Carregar estado salvo do localStorage (para compatibilidade com dados antigos)
+  useEffect(() => {
+    const loadLegacyState = async () => {
       const savedState = localStorage.getItem('analise-vistoria-state');
       if (savedState) {
         try {
@@ -200,39 +431,12 @@ const AnaliseVistoria = () => {
       }
     };
 
-    loadState();
-  }, [contracts]);
+    loadLegacyState();
+  }, [contracts]); // Removido base64ToFile das dependências
 
-  // Função para converter File para base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  // Função para converter base64 para File
-  const base64ToFile = (
-    base64: string,
-    filename: string,
-    mimeType: string
-  ): File => {
-    const arr = base64.split(',');
-    const mime = arr[0].match(/:(.*?);/)?.[1] || mimeType;
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  };
-
-  // Salvar estado no localStorage sempre que houver mudanças
+  // Salvar estado no localStorage como backup (para compatibilidade)
   useEffect(() => {
-    const saveState = async () => {
+    const saveLegacyState = async () => {
       try {
         // Criar uma versão serializável dos apontamentos com base64
         const apontamentosSerializaveis = await Promise.all(
@@ -241,27 +445,57 @@ const AnaliseVistoria = () => {
             vistoriaInicial: {
               ...apontamento.vistoriaInicial,
               fotos: await Promise.all(
-                (apontamento.vistoriaInicial?.fotos || []).map(
-                  async (foto) => ({
+                (apontamento.vistoriaInicial?.fotos || []).map(async (foto) => {
+                  // Se é uma foto do banco de dados, não converter para base64
+                  if (foto.isFromDatabase) {
+                    return {
+                      name: foto.name,
+                      size: foto.size,
+                      type: foto.type,
+                      lastModified: foto.lastModified,
+                      base64: foto.url, // Usar a URL diretamente
+                      isFromDatabase: true,
+                      url: foto.url,
+                    };
+                  }
+
+                  // Se é um File, converter para base64
+                  return {
                     name: foto.name,
                     size: foto.size,
                     type: foto.type,
                     lastModified: foto.lastModified,
                     base64: await fileToBase64(foto),
-                  })
-                )
+                  };
+                })
               ),
             },
             vistoriaFinal: {
               ...apontamento.vistoriaFinal,
               fotos: await Promise.all(
-                (apontamento.vistoriaFinal?.fotos || []).map(async (foto) => ({
-                  name: foto.name,
-                  size: foto.size,
-                  type: foto.type,
-                  lastModified: foto.lastModified,
-                  base64: await fileToBase64(foto),
-                }))
+                (apontamento.vistoriaFinal?.fotos || []).map(async (foto) => {
+                  // Se é uma foto do banco de dados, não converter para base64
+                  if (foto.isFromDatabase) {
+                    return {
+                      name: foto.name,
+                      size: foto.size,
+                      type: foto.type,
+                      lastModified: foto.lastModified,
+                      base64: foto.url, // Usar a URL diretamente
+                      isFromDatabase: true,
+                      url: foto.url,
+                    };
+                  }
+
+                  // Se é um File, converter para base64
+                  return {
+                    name: foto.name,
+                    size: foto.size,
+                    type: foto.type,
+                    lastModified: foto.lastModified,
+                    base64: await fileToBase64(foto),
+                  };
+                })
               ),
             },
           }))
@@ -272,18 +506,26 @@ const AnaliseVistoria = () => {
           selectedContractId: selectedContract?.id,
           dadosVistoria,
           showDadosVistoria,
+          savedAnaliseId,
         };
         localStorage.setItem(
           'analise-vistoria-state',
           JSON.stringify(stateToSave)
         );
       } catch (error) {
-        console.error('Erro ao salvar estado:', error);
+        console.error('Erro ao salvar estado de backup:', error);
       }
     };
 
-    saveState();
-  }, [apontamentos, selectedContract, dadosVistoria, showDadosVistoria]);
+    saveLegacyState();
+  }, [
+    apontamentos,
+    selectedContract,
+    dadosVistoria,
+    showDadosVistoria,
+    savedAnaliseId,
+    // Removido fileToBase64 das dependências para evitar loop infinito
+  ]);
 
   // Atualizar pré-visualização do documento em tempo real
   useEffect(() => {
@@ -304,18 +546,87 @@ const AnaliseVistoria = () => {
           return;
         }
 
+        // Debug: Verificar apontamentos antes da validação
+        console.log('=== DEBUG: APONTAMENTOS ANTES DA VALIDAÇÃO ===');
+        console.log(
+          'Total de apontamentos válidos:',
+          apontamentosValidos.length
+        );
+        apontamentosValidos.forEach((apontamento, index) => {
+          console.log(
+            `\n--- Apontamento ${index + 1}: ${apontamento.ambiente} ---`
+          );
+          console.log('Fotos Inicial:', apontamento.vistoriaInicial?.fotos);
+          console.log('Fotos Final:', apontamento.vistoriaFinal?.fotos);
+          console.log(
+            'Tipo das fotos Inicial:',
+            typeof apontamento.vistoriaInicial?.fotos
+          );
+          console.log(
+            'Tipo das fotos Final:',
+            typeof apontamento.vistoriaFinal?.fotos
+          );
+        });
+
         // Verificar se há fotos válidas nos apontamentos
+        console.log('\n=== INICIANDO VALIDAÇÃO DE FOTOS ===');
+        console.log('Apontamentos válidos:', apontamentosValidos.length);
+
         const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
-          // Verificar se as fotos são objetos File válidos
+          console.log(
+            `\n=== VALIDANDO APONTAMENTO: ${apontamento.ambiente} ===`
+          );
+          console.log(
+            'Fotos Inicial originais:',
+            apontamento.vistoriaInicial?.fotos
+          );
+          console.log(
+            'Fotos Final originais:',
+            apontamento.vistoriaFinal?.fotos
+          );
+
+          // Verificar se as fotos são objetos File válidos ou imagens do banco
           const fotosInicialValidas =
-            apontamento.vistoriaInicial?.fotos?.filter(
-              (foto) => foto instanceof File && foto.size > 0
-            ) || [];
+            apontamento.vistoriaInicial?.fotos?.filter((foto) => {
+              console.log('Validando foto inicial:', foto);
+              console.log('- isFromDatabase:', foto?.isFromDatabase);
+              console.log('- URL:', foto?.url);
+              console.log('- É File?:', foto instanceof File);
+
+              // Se é do banco de dados, verificar se tem URL
+              if (foto?.isFromDatabase) {
+                const hasValidUrl = foto.url && foto.url.length > 0;
+                console.log('- Foto do banco - URL válida:', hasValidUrl);
+                return hasValidUrl;
+              }
+              // Se é File, verificar se é válido
+              const isValidFile = foto instanceof File && foto.size > 0;
+              console.log('- Foto File - é válida:', isValidFile);
+              return isValidFile;
+            }) || [];
 
           const fotosFinalValidas =
-            apontamento.vistoriaFinal?.fotos?.filter(
-              (foto) => foto instanceof File && foto.size > 0
-            ) || [];
+            apontamento.vistoriaFinal?.fotos?.filter((foto) => {
+              console.log('Validando foto final:', foto);
+              console.log('- isFromDatabase:', foto?.isFromDatabase);
+              console.log('- URL:', foto?.url);
+              console.log('- É File?:', foto instanceof File);
+
+              // Se é do banco de dados, verificar se tem URL
+              if (foto?.isFromDatabase) {
+                const hasValidUrl = foto.url && foto.url.length > 0;
+                console.log('- Foto do banco - URL válida:', hasValidUrl);
+                return hasValidUrl;
+              }
+              // Se é File, verificar se é válido
+              const isValidFile = foto instanceof File && foto.size > 0;
+              console.log('- Foto File - é válida:', isValidFile);
+              return isValidFile;
+            }) || [];
+
+          console.log(`RESULTADO ${apontamento.ambiente}:`);
+          console.log('- Fotos Inicial válidas:', fotosInicialValidas.length);
+          console.log('- Fotos Final válidas:', fotosFinalValidas.length);
 
           return {
             ...apontamento,
@@ -365,6 +676,151 @@ const AnaliseVistoria = () => {
     );
   });
 
+  // Função para verificar e carregar análise existente para o contrato selecionado
+  // Função para forçar recarregamento das imagens
+  const forceReloadImages = async () => {
+    if (!selectedContract || !existingAnaliseId) {
+      toast({
+        title: 'Erro',
+        description: 'Nenhuma análise selecionada para recarregar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setLoadingExistingAnalise(true);
+
+      toast({
+        title: 'Recarregando imagens...',
+        description: 'Carregando imagens da análise existente.',
+      });
+
+      // Buscar análise com dados completos
+      const { data: analiseData, error: analiseError } = await supabase
+        .from('vistoria_analises')
+        .select('*')
+        .eq('contract_id', selectedContract.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (analiseData && !analiseError) {
+        // Carregar imagens da análise
+        const { data: imagesData, error: imagesError } = await supabase
+          .from('vistoria_images')
+          .select('*')
+          .eq('vistoria_id', analiseData.id)
+          .order('created_at', { ascending: true });
+
+        if (imagesError) {
+          console.error('Erro ao carregar imagens:', imagesError);
+          toast({
+            title: 'Erro ao carregar imagens',
+            description: 'Não foi possível carregar as imagens da análise.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Criar objeto completo da análise
+        const completeAnalise: VistoriaAnaliseWithImages = {
+          ...analiseData,
+          images: imagesData || [],
+        };
+
+        console.log('=== FORÇANDO RECARREGAMENTO DE IMAGENS ===');
+        console.log('Análise encontrada:', analiseData.id);
+        console.log('Imagens encontradas:', imagesData?.length || 0);
+        console.log('Dados das imagens:', imagesData);
+
+        // Carregar automaticamente a análise completa
+        await loadAnalysisData(completeAnalise);
+
+        toast({
+          title: 'Imagens recarregadas',
+          description: `${imagesData?.length || 0} imagens foram carregadas com sucesso.`,
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível encontrar a análise.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao recarregar imagens:', error);
+      toast({
+        title: 'Erro ao recarregar',
+        description: 'Não foi possível recarregar as imagens.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingExistingAnalise(false);
+    }
+  };
+
+  const checkExistingAnalise = async (contractId: string) => {
+    if (!contractId) {
+      setHasExistingAnalise(false);
+      setExistingAnaliseId(null);
+      return;
+    }
+
+    try {
+      setLoadingExistingAnalise(true);
+
+      // Buscar análise com dados completos
+      const { data: analiseData, error: analiseError } = await supabase
+        .from('vistoria_analises')
+        .select('*')
+        .eq('contract_id', contractId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (analiseData && !analiseError) {
+        setHasExistingAnalise(true);
+        setExistingAnaliseId(analiseData.id);
+
+        // Carregar imagens da análise
+        const { data: imagesData, error: imagesError } = await supabase
+          .from('vistoria_images')
+          .select('*')
+          .eq('vistoria_id', analiseData.id)
+          .order('created_at', { ascending: true });
+
+        if (imagesError) {
+          console.error('Erro ao carregar imagens:', imagesError);
+        }
+
+        // Criar objeto completo da análise
+        const completeAnalise: VistoriaAnaliseWithImages = {
+          ...analiseData,
+          images: imagesData || [],
+        };
+
+        // Carregar automaticamente a análise completa
+        await loadAnalysisData(completeAnalise);
+
+        toast({
+          title: 'Análise carregada',
+          description:
+            'A análise existente para este contrato foi carregada automaticamente.',
+        });
+      } else {
+        setHasExistingAnalise(false);
+        setExistingAnaliseId(null);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar análise existente:', error);
+      setHasExistingAnalise(false);
+      setExistingAnaliseId(null);
+    } finally {
+      setLoadingExistingAnalise(false);
+    }
+  };
+
   // Atualizar dados da vistoria quando contrato for selecionado
   useEffect(() => {
     if (selectedContract) {
@@ -375,6 +831,12 @@ const AnaliseVistoria = () => {
           new Date().toISOString().split('T')[0]
         ),
       });
+
+      // Verificar se já existe análise para este contrato
+      checkExistingAnalise(selectedContract.id);
+    } else {
+      setHasExistingAnalise(false);
+      setExistingAnaliseId(null);
     }
   }, [selectedContract]);
 
@@ -524,6 +986,77 @@ const AnaliseVistoria = () => {
     }
   };
 
+  // Salvar análise no Supabase
+  const saveAnalysis = async () => {
+    if (apontamentos.length === 0) {
+      toast({
+        title: 'Nenhum apontamento',
+        description: 'Adicione pelo menos um apontamento antes de salvar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedContract) {
+      toast({
+        title: 'Contrato não selecionado',
+        description: 'Selecione um contrato antes de salvar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const title = `Análise de Vistoria - ${dadosVistoria.locatario} - ${new Date().toLocaleDateString('pt-BR')}`;
+
+      let analiseId: string | null = null;
+
+      if (isEditMode && editingAnaliseId) {
+        // Modo de edição - atualizar análise existente
+        const success = await updateAnalise(editingAnaliseId, {
+          title,
+          contract_id: selectedContract.id,
+          dados_vistoria: dadosVistoria,
+          apontamentos: apontamentos,
+        });
+
+        if (success) {
+          analiseId = editingAnaliseId;
+          toast({
+            title: 'Análise atualizada',
+            description: 'A análise foi atualizada com sucesso.',
+          });
+        }
+      } else {
+        // Modo de criação - salvar nova análise
+        analiseId = await saveAnalise({
+          title,
+          contract_id: selectedContract.id,
+          dados_vistoria: dadosVistoria,
+          apontamentos: apontamentos,
+        });
+
+        if (analiseId) {
+          toast({
+            title: 'Análise salva',
+            description: 'A análise foi salva no banco de dados com sucesso.',
+          });
+        }
+      }
+
+      if (analiseId) {
+        setSavedAnaliseId(analiseId);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar análise:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar a análise.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const generateDocument = async () => {
     if (apontamentos.length === 0) {
       toast({
@@ -562,16 +1095,26 @@ const AnaliseVistoria = () => {
 
       // Verificar se há fotos válidas nos apontamentos
       const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
-        // Verificar se as fotos são objetos File válidos
+        // Verificar se as fotos são válidas (File ou do banco de dados)
         const fotosInicialValidas =
-          apontamento.vistoriaInicial?.fotos?.filter(
-            (foto) => foto instanceof File && foto.size > 0
-          ) || [];
+          apontamento.vistoriaInicial?.fotos?.filter((foto) => {
+            // Se é do banco de dados, verificar se tem URL
+            if (foto?.isFromDatabase) {
+              return foto.url && foto.url.length > 0;
+            }
+            // Se é File, verificar se é válido
+            return foto instanceof File && foto.size > 0;
+          }) || [];
 
         const fotosFinalValidas =
-          apontamento.vistoriaFinal?.fotos?.filter(
-            (foto) => foto instanceof File && foto.size > 0
-          ) || [];
+          apontamento.vistoriaFinal?.fotos?.filter((foto) => {
+            // Se é do banco de dados, verificar se tem URL
+            if (foto?.isFromDatabase) {
+              return foto.url && foto.url.length > 0;
+            }
+            // Se é File, verificar se é válido
+            return foto instanceof File && foto.size > 0;
+          }) || [];
 
         return {
           ...apontamento,
@@ -603,6 +1146,17 @@ const AnaliseVistoria = () => {
           template: template,
           formData: selectedContract.form_data,
           documentType: 'Análise de Vistoria',
+          // Preservar estado da análise para retorno
+          preserveAnalysisState: {
+            apontamentos,
+            dadosVistoria,
+            selectedContract,
+            savedAnaliseId,
+            isEditMode,
+            editingAnaliseId,
+            existingAnaliseId,
+            hasExistingAnalise,
+          },
         },
       });
     } catch (error) {
@@ -632,6 +1186,7 @@ const AnaliseVistoria = () => {
     });
     setEditingApontamento(null);
     setShowDadosVistoria(true);
+    setSavedAnaliseId(null);
     localStorage.removeItem('analise-vistoria-state');
     toast({
       title: 'Dados limpos',
@@ -751,7 +1306,9 @@ const AnaliseVistoria = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                Análise de Vistoria
+                {isEditMode
+                  ? 'Editar Análise de Vistoria'
+                  : 'Análise de Vistoria'}
               </h1>
               <p className="text-muted-foreground mt-2 flex items-center space-x-2">
                 <Camera className="h-4 w-4" />
@@ -766,6 +1323,15 @@ const AnaliseVistoria = () => {
                 {apontamentos.length} apontamento
                 {apontamentos.length !== 1 ? 's' : ''}
               </Badge>
+              {savedAnaliseId && (
+                <Badge
+                  variant="default"
+                  className="text-sm bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Salva
+                </Badge>
+              )}
             </div>
             {apontamentos.length > 0 && (
               <Button
@@ -778,6 +1344,23 @@ const AnaliseVistoria = () => {
                 Limpar Tudo
               </Button>
             )}
+            <Button
+              onClick={saveAnalysis}
+              disabled={
+                apontamentos.length === 0 || !selectedContract || saving
+              }
+              variant="outline"
+              className="mr-2"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving
+                ? 'Salvando...'
+                : isEditMode
+                  ? 'Atualizar Análise'
+                  : hasExistingAnalise
+                    ? 'Atualizar Análise Existente'
+                    : 'Salvar Análise'}
+            </Button>
             <Button
               onClick={generateDocument}
               disabled={apontamentos.length === 0 || !selectedContract}
@@ -908,11 +1491,52 @@ const AnaliseVistoria = () => {
                 {/* Informações do Contrato Selecionado */}
                 {selectedContract && (
                   <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-6">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold text-primary">
-                        Contrato Selecionado
-                      </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-primary">
+                          Contrato Selecionado
+                        </h3>
+                      </div>
+                      {loadingExistingAnalise && (
+                        <Badge
+                          variant="default"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <div className="h-3 w-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Carregando...
+                        </Badge>
+                      )}
+                      {hasExistingAnalise && !loadingExistingAnalise && (
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="default"
+                            className="bg-orange-600 hover:bg-orange-700 text-white"
+                          >
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Análise Existente
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={forceReloadImages}
+                            disabled={loadingExistingAnalise}
+                            className="text-xs"
+                          >
+                            {loadingExistingAnalise ? (
+                              <>
+                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent mr-1" />
+                                Carregando...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                                Recarregar Imagens
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
@@ -949,6 +1573,20 @@ const AnaliseVistoria = () => {
                         </p>
                       </div>
                     </div>
+
+                    {/* Aviso sobre análise existente */}
+                    {hasExistingAnalise && (
+                      <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <p className="text-sm text-orange-800 dark:text-orange-200">
+                            <strong>Atenção:</strong> Já existe uma análise de
+                            vistoria para este contrato. Ao salvar, a análise
+                            existente será atualizada em vez de criar uma nova.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1074,6 +1712,11 @@ const AnaliseVistoria = () => {
                               >
                                 <FileImage className="h-3 w-3 mr-1" />
                                 {foto.name}
+                                {foto.isFromDatabase && (
+                                  <span className="ml-1 text-xs opacity-70">
+                                    (DB)
+                                  </span>
+                                )}
                               </Badge>
                               <Button
                                 variant="ghost"
@@ -1160,6 +1803,11 @@ const AnaliseVistoria = () => {
                               >
                                 <FileImage className="h-3 w-3 mr-1" />
                                 {foto.name}
+                                {foto.isFromDatabase && (
+                                  <span className="ml-1 text-xs opacity-70">
+                                    (DB)
+                                  </span>
+                                )}
                               </Badge>
                               <Button
                                 variant="ghost"

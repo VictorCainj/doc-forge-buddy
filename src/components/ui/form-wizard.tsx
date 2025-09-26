@@ -1,11 +1,19 @@
 import React, { useState, ComponentProps } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 // import { Button } from '@/components/ui/button';
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // import { Progress } from '@/components/ui/progress';
-// import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
-function Step({ step, currentStep }: { step: number; currentStep: number }) {
+function Step({
+  step,
+  currentStep,
+  stepData,
+}: {
+  step: number;
+  currentStep: number;
+  stepData?: WizardStep;
+}) {
   const status =
     currentStep === step
       ? 'active'
@@ -64,6 +72,8 @@ function Step({ step, currentStep }: { step: number; currentStep: number }) {
         <div className="flex items-center justify-center">
           {status === 'complete' ? (
             <CheckIcon className="h-6 w-6 text-white" />
+          ) : stepData?.icon ? (
+            <stepData.icon className="h-5 w-5" />
           ) : (
             <span>{step}</span>
           )}
@@ -173,17 +183,29 @@ export const FormWizard: React.FC<FormWizardProps> = ({
     <div className="w-full">
       {/* Step Progress */}
       <div className="flex justify-between rounded p-8 mb-6">
-        {steps.map((_, index) => (
-          <Step key={index} step={index + 1} currentStep={currentStep + 1} />
+        {steps.map((stepData, index) => (
+          <Step
+            key={index}
+            step={index + 1}
+            currentStep={currentStep + 1}
+            stepData={stepData}
+          />
         ))}
       </div>
 
       {/* Step Content */}
       <div className="space-y-6 mb-8">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-2 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            {currentStepData.title}
-          </h2>
+          <div className="flex items-center justify-center mb-3">
+            {currentStepData.icon && (
+              <div className="bg-primary/10 p-3 rounded-full mr-3">
+                <currentStepData.icon className="h-6 w-6 text-primary" />
+              </div>
+            )}
+            <h2 className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              {currentStepData.title}
+            </h2>
+          </div>
           {currentStepData.description && (
             <p className="text-foreground/80 font-medium">
               {currentStepData.description}
@@ -200,8 +222,9 @@ export const FormWizard: React.FC<FormWizardProps> = ({
           disabled={currentStep === 0}
           className={`${
             currentStep === 0 ? 'pointer-events-none opacity-50' : ''
-          } duration-350 rounded px-2 py-1 text-muted-foreground transition hover:text-foreground`}
+          } duration-350 rounded px-2 py-1 text-muted-foreground transition hover:text-foreground flex items-center gap-2`}
         >
+          <ArrowLeft className="h-4 w-4" />
           Anterior
         </button>
 
@@ -218,16 +241,19 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             currentStepData.isValid === false || isSubmitting
               ? 'pointer-events-none opacity-50'
               : ''
-          } bg duration-350 flex items-center justify-center rounded-full bg-primary py-1.5 px-3.5 font-medium tracking-tight text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80`}
+          } bg duration-350 flex items-center justify-center rounded-full bg-primary py-1.5 px-3.5 font-medium tracking-tight text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80 gap-2`}
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent mr-2" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
               {submitButtonText}
             </>
           ) : (
             <>
               {currentStep === steps.length - 1 ? submitButtonText : 'Próximo'}
+              {currentStep < steps.length - 1 && (
+                <ArrowRight className="h-4 w-4" />
+              )}
             </>
           )}
         </button>
