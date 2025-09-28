@@ -30,7 +30,7 @@ export interface ContractInsight {
   priority: 'low' | 'medium' | 'high';
   actionable: boolean;
   action?: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface TrendAnalysis {
@@ -67,7 +67,7 @@ export const useAdvancedAnalytics = (
   const calculateMetrics = useCallback((): AnalyticsMetrics => {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const _ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
     // Contratos ativos (não expirados)
     const activeContracts = contracts.filter((contract) => {

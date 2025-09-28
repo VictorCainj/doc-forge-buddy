@@ -6,6 +6,8 @@ import {
 } from '@/utils/openai';
 import { Contract } from './useContractAnalysis';
 import { CompleteContractData } from './useCompleteContractData';
+import { getCachedResponse, setCachedResponse } from '@/utils/aiCache';
+import { log } from '@/utils/logger';
 
 interface UseOpenAIReturn {
   correctText: (text: string) => Promise<string>;
@@ -28,7 +30,22 @@ export const useOpenAI = (): UseOpenAIReturn => {
     setError(null);
 
     try {
+      // Verificar cache primeiro
+      const cachedResponse = getCachedResponse(text, 'normal');
+      if (cachedResponse) {
+        log.debug('Usando resposta em cache para correção de texto');
+        return cachedResponse;
+      }
+
+      // Se não estiver no cache, fazer chamada para API
       const correctedText = await correctTextWithAI(text);
+      
+      // Salvar no cache
+      setCachedResponse(text, correctedText, 'normal', 0.9, {
+        timestamp: new Date().toISOString(),
+        model: 'gpt-4o-mini'
+      });
+
       return correctedText;
     } catch (err) {
       const errorMessage =
@@ -45,7 +62,22 @@ export const useOpenAI = (): UseOpenAIReturn => {
     setError(null);
 
     try {
+      // Verificar cache primeiro
+      const cachedResponse = getCachedResponse(text, 'intelligent');
+      if (cachedResponse) {
+        log.debug('Usando resposta em cache para melhoria de texto');
+        return cachedResponse;
+      }
+
+      // Se não estiver no cache, fazer chamada para API
       const improvedText = await improveTextWithAI(text);
+      
+      // Salvar no cache
+      setCachedResponse(text, improvedText, 'intelligent', 0.9, {
+        timestamp: new Date().toISOString(),
+        model: 'gpt-4o-mini'
+      });
+
       return improvedText;
     } catch (err) {
       const errorMessage =
@@ -66,19 +98,34 @@ export const useOpenAI = (): UseOpenAIReturn => {
     setError(null);
 
     try {
-      console.log('useOpenAI: Chamando analyzeContractsWithAI...');
+      // Para análise de contratos, criar uma chave baseada na query e dados dos contratos
+      const contractsHash = contracts.map(c => c.id).join(',');
+      const cacheKey = `${query}:${contractsHash}`;
+      
+      // Verificar cache primeiro
+      const cachedResponse = getCachedResponse(cacheKey, 'analysis');
+      if (cachedResponse) {
+        log.debug('Usando resposta em cache para análise de contratos');
+        return cachedResponse;
+      }
+
+      // Se não estiver no cache, fazer chamada para API
       const analysis = await analyzeContractsWithAI(
         query,
         contracts,
         completeContracts
       );
-      console.log(
-        'useOpenAI: Resposta recebida:',
-        analysis.substring(0, 100) + '...'
-      );
+      
+      // Salvar no cache com menor confiança devido à natureza dinâmica dos dados
+      setCachedResponse(cacheKey, analysis, 'analysis', 0.7, {
+        timestamp: new Date().toISOString(),
+        model: 'gpt-4o',
+        contractCount: contracts.length,
+        queryHash: cacheKey
+      });
+
       return analysis;
     } catch (err) {
-      console.error('useOpenAI: Erro capturado:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);

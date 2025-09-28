@@ -80,7 +80,7 @@ export const useVistoriaAnalises = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]); // Removido toast das dependências para evitar recriação desnecessária
+  }, [user, toast]);
 
   // Salvar nova análise ou atualizar existente (baseado no contract_id)
   const saveAnalise = async (
@@ -102,7 +102,7 @@ export const useVistoriaAnalises = () => {
       const { data: existingAnalise, error: checkError } = await supabase
         .from('vistoria_analises')
         .select('id')
-        .eq('contract_id', data.contract_id!)
+        .eq('contract_id', data.contract_id as string)
         .eq('user_id', user.id)
         .single();
 

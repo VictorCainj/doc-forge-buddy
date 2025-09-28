@@ -10,146 +10,36 @@ import {
   AlertTriangle,
   Users,
   RefreshCw,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { validateContractsList, type Contract } from '@/utils/dataValidator';
-import { dbLogger } from '@/utils/logger';
+import { useDashboardData } from '@/hooks/useOptimizedData';
+import { DashboardPrintButton } from '@/components/PrintButton';
+import EnhancedDashboard from '@/components/EnhancedDashboard';
+import { useState } from 'react';
 
 const Index = () => {
-  const { user } = useAuth();
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(true);
+  useAuth();
+  const { contracts, metrics, loading, refetch } = useDashboardData();
+  const [useEnhancedDashboard, setUseEnhancedDashboard] = useState(true);
 
-  // Buscar contratos do Supabase
-  useEffect(() => {
-    if (user) {
-      fetchContracts();
-    }
-  }, [user]);
+  // Usar dados otimizados do hook
+  const {
+    totalContracts,
+    currentMonthContracts,
+    growthPercentage,
+    expiredContracts,
+    upcomingContracts,
+    chartData,
+  } = metrics;
 
-  const fetchContracts = async () => {
-    try {
-      setLoading(true);
-      // Buscar contratos do usuário atual
-      const { data, error } = await supabase
-        .from('saved_terms')
-        .select('*')
-        .eq('document_type', 'contrato')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Usar validação robusta para processar os dados
-      const contractsData = validateContractsList(data || []);
-      setContracts(contractsData);
-    } catch (error) {
-      dbLogger.error('Erro ao carregar contratos:', error);
-      setContracts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Função para converter data DD/MM/AAAA para objeto Date
-  const parseBrazilianDate = (dateStr: string): Date | null => {
-    if (!dateStr) return null;
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Mês é 0-indexado
-    const year = parseInt(parts[2], 10);
-    return new Date(year, month, day);
-  };
-
-  // Gerar dados do gráfico comparativo mensal (últimos 12 meses)
-  const generateMonthlyChartData = () => {
-    const months: Array<{ name: string; index: number; year: number }> = [];
-    const now = new Date();
-
-    // Gerar últimos 12 meses
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({
-        name: date.toLocaleDateString('pt-BR', { month: 'short' }),
-        index: date.getMonth(),
-        year: date.getFullYear(),
-      });
-    }
-
-    return months.map((month) => {
-      const contractsInMonth = contracts.filter((contract) => {
-        const contractDate = new Date(contract.created_at);
-        return (
-          contractDate.getMonth() === month.index &&
-          contractDate.getFullYear() === month.year
-        );
-      });
-
-      return {
-        month: month.name,
-        value: contractsInMonth.length,
-        fullMonth: new Date(month.year, month.index, 1).toLocaleDateString(
-          'pt-BR',
-          { month: 'long', year: 'numeric' }
-        ),
-      };
-    });
-  };
-
-  // Obter contratos ordenados por data de desocupação (mais recente para mais antiga)
-  const getContractsOrderedByVacationDate = () => {
-    return contracts
-      .filter((contract) => contract.form_data.dataTerminoRescisao)
-      .map((contract) => ({
-        ...contract,
-        vacationDate: parseBrazilianDate(
-          contract.form_data.dataTerminoRescisao
-        ),
-      }))
-      .filter((contract) => contract.vacationDate)
-      .sort((a, b) => {
-        if (!a.vacationDate || !b.vacationDate) return 0;
-        return b.vacationDate.getTime() - a.vacationDate.getTime();
-      });
-  };
-
-  const chartData = generateMonthlyChartData();
-  const orderedContracts = getContractsOrderedByVacationDate();
   const maxValue = Math.max(...chartData.map((d) => d.value), 1);
 
-  // Calcular métricas
-  const totalContracts = contracts.length;
-  const currentMonthContracts = chartData[chartData.length - 1]?.value || 0;
-  const previousMonthContracts = chartData[chartData.length - 2]?.value || 0;
-  const growthPercentage =
-    previousMonthContracts > 0
-      ? ((currentMonthContracts - previousMonthContracts) /
-          previousMonthContracts) *
-        100
-      : 0;
-
-  const contractsWithVacationDate = contracts.filter(
-    (c) => c.form_data.dataTerminoRescisao
-  );
-  const expiredContracts = contractsWithVacationDate.filter((contract) => {
-    const vacationDate = parseBrazilianDate(
-      contract.form_data.dataTerminoRescisao
-    );
-    return vacationDate && vacationDate < new Date();
-  });
-
-  const upcomingContracts = contractsWithVacationDate.filter((contract) => {
-    const vacationDate = parseBrazilianDate(
-      contract.form_data.dataTerminoRescisao
-    );
-    if (!vacationDate) return false;
-    const daysUntilVacation = Math.ceil(
-      (vacationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return daysUntilVacation >= 0 && daysUntilVacation <= 7;
-  });
+  // Se o dashboard otimizado estiver ativo, renderizar o novo componente
+  if (useEnhancedDashboard) {
+    return <EnhancedDashboard />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
@@ -172,7 +62,29 @@ const Index = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchContracts}
+                onClick={() => setUseEnhancedDashboard(!useEnhancedDashboard)}
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+              >
+                {useEnhancedDashboard ? (
+                  <>
+                    <ToggleLeft className="h-4 w-4 mr-2" />
+                    Dashboard Clássico
+                  </>
+                ) : (
+                  <>
+                    <ToggleRight className="h-4 w-4 mr-2" />
+                    Dashboard Otimizado
+                  </>
+                )}
+              </Button>
+              <DashboardPrintButton
+                data={metrics}
+                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refetch}
                 disabled={loading}
                 className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
               >
@@ -252,7 +164,10 @@ const Index = () => {
                     Contratos por Data
                   </p>
                   <p className="text-3xl font-bold">
-                    {orderedContracts.length}
+                    {
+                      contracts.filter((c) => c.form_data.dataTerminoRescisao)
+                        .length
+                    }
                   </p>
                   <p className="text-orange-100 text-sm">desocupação</p>
                 </div>

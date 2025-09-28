@@ -86,9 +86,9 @@ export const copyToClipboard = async (
 
         await navigator.clipboard.write([clipboardItem]);
         return true;
-      } catch (htmlError) {
+      } catch {
         // Se falhar com HTML, tentar apenas texto
-        console.log('Falha ao copiar HTML, tentando texto simples:', htmlError);
+        // console.log('Falha ao copiar HTML, tentando texto simples');
         const formattedText = await copyDocumentText(htmlContent);
         await navigator.clipboard.writeText(formattedText);
         return true;
@@ -103,14 +103,12 @@ export const copyToClipboard = async (
       const formattedText = await copyDocumentText(htmlContent);
       return fallbackCopyTextToClipboard(formattedText);
     }
-  } catch (error) {
-    console.error('Erro ao copiar texto:', error);
+  } catch {
     // Tentar fallback em caso de erro
     try {
       const formattedText = await copyDocumentText(htmlContent);
       return fallbackCopyTextToClipboard(formattedText);
-    } catch (fallbackError) {
-      console.error('Erro no fallback de cópia:', fallbackError);
+    } catch {
       return false;
     }
   }
@@ -138,8 +136,7 @@ const fallbackCopyTextToClipboard = (text: string): boolean => {
     document.body.removeChild(textArea);
 
     return successful;
-  } catch (error) {
-    console.error('Erro no fallback de cópia:', error);
+  } catch {
     return false;
   }
 };

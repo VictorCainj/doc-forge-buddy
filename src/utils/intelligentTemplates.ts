@@ -21,16 +21,16 @@ export interface TemplateVariable {
   name: string;
   type: 'text' | 'date' | 'number' | 'select' | 'boolean';
   required: boolean;
-  defaultValue?: any;
+  defaultValue?: string | number | boolean;
   options?: string[];
-  validation?: (value: any) => boolean;
+  validation?: (value: string | number | boolean) => boolean;
   description: string;
 }
 
 export interface TemplateCondition {
   field: string;
   operator: 'equals' | 'contains' | 'greater' | 'less' | 'exists';
-  value: any;
+  value: string | number | boolean;
   action: 'show' | 'hide' | 'require' | 'optional';
 }
 
@@ -43,6 +43,20 @@ export interface DocumentGenerationResult {
     suggestions: string[];
     completeness: number;
   };
+}
+
+interface ContextAnalysis {
+  intent: string;
+  entities: string[];
+  sentiment: 'positive' | 'neutral' | 'negative';
+  urgency: 'low' | 'medium' | 'high';
+}
+
+interface _TemplateAnalysis {
+  keywords: string[];
+  intent: string;
+  entities: string[];
+  context: string;
 }
 
 // Templates inteligentes pré-definidos
@@ -425,8 +439,8 @@ export class IntelligentTemplateEngine {
       if (stored) {
         this.usageStats = new Map(JSON.parse(stored));
       }
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas de templates:', error);
+    } catch {
+      // console.error('Erro ao carregar estatísticas de templates');
     }
   }
 
@@ -437,8 +451,8 @@ export class IntelligentTemplateEngine {
         'template-usage-stats',
         JSON.stringify([...this.usageStats])
       );
-    } catch (error) {
-      console.error('Erro ao salvar estatísticas de templates:', error);
+    } catch {
+      // console.error('Erro ao salvar estatísticas de templates');
     }
   }
 
@@ -457,7 +471,7 @@ export class IntelligentTemplateEngine {
   }
 
   // Analisar contexto do usuário
-  private analyzeContext(context: string, userInput: string): any {
+  private analyzeContext(context: string, userInput: string): ContextAnalysis {
     const contextLower = context.toLowerCase();
     const inputLower = userInput.toLowerCase();
 
@@ -478,7 +492,10 @@ export class IntelligentTemplateEngine {
   }
 
   // Verificar se template é relevante
-  private isTemplateRelevant(template: SmartTemplate, analysis: any): boolean {
+  private isTemplateRelevant(
+    template: SmartTemplate,
+    analysis: ContextAnalysis
+  ): boolean {
     if (analysis.isContractRelated && template.category === 'contract')
       return true;
     if (analysis.isReportNeeded && template.category === 'report') return true;
@@ -496,7 +513,10 @@ export class IntelligentTemplateEngine {
   }
 
   // Calcular relevância do template
-  private calculateRelevance(template: SmartTemplate, analysis: any): number {
+  private calculateRelevance(
+    template: SmartTemplate,
+    _analysis: ContextAnalysis
+  ): number {
     let relevance = template.rating * 10;
 
     // Bonificação por uso recente
@@ -541,7 +561,7 @@ export class IntelligentTemplateEngine {
   // Gerar documento a partir de template
   public async generateDocument(
     templateId: string,
-    variables: Record<string, any>
+    variables: Record<string, string | number | boolean>
   ): Promise<DocumentGenerationResult> {
     const template = this.templates.find((t) => t.id === templateId);
     if (!template) {
@@ -601,8 +621,8 @@ export class IntelligentTemplateEngine {
   // Aplicar condições do template
   private applyConditions(
     template: SmartTemplate,
-    variables: Record<string, any>
-  ): Record<string, any> {
+    variables: Record<string, string | number | boolean>
+  ): Record<string, string | number | boolean> {
     const processedVariables = { ...variables };
 
     for (const condition of template.conditions) {
@@ -649,7 +669,7 @@ export class IntelligentTemplateEngine {
   // Processar condicionais no template
   private processConditionals(
     content: string,
-    variables: Record<string, any>
+    variables: Record<string, string | number | boolean>
   ): string {
     // Processar condicionais simples {{#if condition}}...{{/if}}
     const ifPattern = /{{#if\s+([^}]+)}}([\s\S]*?){{\/if}}/g;
@@ -665,7 +685,7 @@ export class IntelligentTemplateEngine {
   // Avaliar condição
   private evaluateCondition(
     condition: string,
-    variables: Record<string, any>
+    variables: Record<string, string | number | boolean>
   ): boolean {
     // Suporte para condições simples como "daysRemaining <= 7"
     const operators = ['<=', '>=', '==', '!=', '<', '>'];

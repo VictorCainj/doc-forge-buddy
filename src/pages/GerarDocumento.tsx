@@ -12,7 +12,6 @@ import {
 import { CopyButton } from '@/components/ui/copy-button';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 const GerarDocumento = () => {
   const location = useLocation();

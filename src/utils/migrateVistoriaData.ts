@@ -3,8 +3,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { VistoriaAnalise, ApontamentoVistoria } from '@/types/vistoria';
 
+interface ApontamentoData {
+  id: string;
+  ambiente: string;
+  tipoVistoria: string;
+  observacoes: string;
+  fotos: string[];
+}
+
 export interface LegacyVistoriaData {
-  apontamentos: any[];
+  apontamentos: ApontamentoData[];
   selectedContractId?: string;
   dadosVistoria: {
     locatario: string;
@@ -14,11 +22,27 @@ export interface LegacyVistoriaData {
   showDadosVistoria?: boolean;
 }
 
-export class VistoriaDataMigrator {
-  private user: any;
-  private toast: any;
+interface User {
+  id: string;
+  email: string;
+}
 
-  constructor(user: any, toast: any) {
+interface Toast {
+  success: (message: string) => void;
+  error: (message: string) => void;
+}
+
+interface FotoData {
+  url: string;
+  file_name?: string;
+  base64?: string;
+}
+
+export class VistoriaDataMigrator {
+  private user: User;
+  private toast: Toast;
+
+  constructor(user: User, toast: Toast) {
     this.user = user;
     this.toast = toast;
   }
@@ -50,8 +74,8 @@ export class VistoriaDataMigrator {
       }
 
       return parsedState as LegacyVistoriaData;
-    } catch (error) {
-      console.error('Erro ao carregar dados legados:', error);
+    } catch {
+      // console.error('Erro ao carregar dados legados');
       return null;
     }
   }
@@ -67,7 +91,7 @@ export class VistoriaDataMigrator {
 
       // Converter apontamentos para o novo formato
       const apontamentos: ApontamentoVistoria[] = legacyData.apontamentos.map(
-        (apontamento: any) => ({
+        (apontamento: ApontamentoData) => ({
           id: apontamento.id || Date.now().toString() + Math.random(),
           ambiente: apontamento.ambiente || '',
           subtitulo: apontamento.subtitulo || '',
@@ -92,8 +116,8 @@ export class VistoriaDataMigrator {
         dados_vistoria: legacyData.dadosVistoria,
         apontamentos,
       };
-    } catch (error) {
-      console.error('Erro ao converter dados legados:', error);
+    } catch {
+      // console.error('Erro ao converter dados legados');
       return null;
     }
   }
@@ -106,27 +130,22 @@ export class VistoriaDataMigrator {
       throw new Error('Usuário não autenticado');
     }
 
-    try {
-      // Salvar análise principal
-      const { data: analiseData, error: analiseError } = await supabase
-        .from('vistoria_analises')
-        .insert({
-          title: analysisData.title,
-          contract_id: analysisData.contract_id,
-          dados_vistoria: analysisData.dados_vistoria,
-          apontamentos: analysisData.apontamentos,
-          user_id: this.user.id,
-        })
-        .select()
-        .single();
+    // Salvar análise principal
+    const { data: analiseData, error: analiseError } = await supabase
+      .from('vistoria_analises')
+      .insert({
+        title: analysisData.title,
+        contract_id: analysisData.contract_id,
+        dados_vistoria: analysisData.dados_vistoria,
+        apontamentos: analysisData.apontamentos,
+        user_id: this.user.id,
+      })
+      .select()
+      .single();
 
-      if (analiseError) throw analiseError;
+    if (analiseError) throw analiseError;
 
-      return analiseData.id;
-    } catch (error) {
-      console.error('Erro ao migrar análise:', error);
-      throw error;
-    }
+    return analiseData.id;
   }
 
   /**
@@ -134,35 +153,30 @@ export class VistoriaDataMigrator {
    */
   async migrateImages(
     analiseId: string,
-    legacyApontamentos: any[]
+    legacyApontamentos: ApontamentoData[]
   ): Promise<void> {
     if (!this.user) return;
 
-    try {
-      for (const apontamento of legacyApontamentos) {
-        // Processar fotos da vistoria inicial
-        if (apontamento.vistoriaInicial?.fotos) {
-          await this.processAndUploadImages(
-            apontamento.vistoriaInicial.fotos,
-            analiseId,
-            apontamento.id,
-            'inicial'
-          );
-        }
-
-        // Processar fotos da vistoria final
-        if (apontamento.vistoriaFinal?.fotos) {
-          await this.processAndUploadImages(
-            apontamento.vistoriaFinal.fotos,
-            analiseId,
-            apontamento.id,
-            'final'
-          );
-        }
+    for (const apontamento of legacyApontamentos) {
+      // Processar fotos da vistoria inicial
+      if (apontamento.vistoriaInicial?.fotos) {
+        await this.processAndUploadImages(
+          apontamento.vistoriaInicial.fotos,
+          analiseId,
+          apontamento.id,
+          'inicial'
+        );
       }
-    } catch (error) {
-      console.error('Erro ao migrar imagens:', error);
-      throw error;
+
+      // Processar fotos da vistoria final
+      if (apontamento.vistoriaFinal?.fotos) {
+        await this.processAndUploadImages(
+          apontamento.vistoriaFinal.fotos,
+          analiseId,
+          apontamento.id,
+          'final'
+        );
+      }
     }
   }
 
@@ -170,7 +184,7 @@ export class VistoriaDataMigrator {
    * Processa e faz upload de imagens base64 para o Supabase Storage
    */
   private async processAndUploadImages(
-    fotos: any[],
+    fotos: FotoData[],
     analiseId: string,
     apontamentoId: string,
     tipoVistoria: 'inicial' | 'final'
@@ -180,49 +194,47 @@ export class VistoriaDataMigrator {
     for (let i = 0; i < fotos.length; i++) {
       const foto = fotos[i];
 
-      try {
-        // Verificar se tem base64
-        if (!foto.base64) continue;
+      // try {
+      // Verificar se tem base64
+      if (!foto.base64) continue;
 
-        // Converter base64 para blob
-        const response = await fetch(foto.base64);
-        const blob = await response.blob();
+      // Converter base64 para blob
+      const response = await fetch(foto.base64);
+      const blob = await response.blob();
 
-        // Gerar nome único para o arquivo
-        const fileExt = foto.name.split('.').pop() || 'jpg';
-        const fileName = `${analiseId}/${apontamentoId}/${tipoVistoria}/migrated_${Date.now()}_${i}.${fileExt}`;
+      // Gerar nome único para o arquivo
+      const fileExt = foto.name.split('.').pop() || 'jpg';
+      const fileName = `${analiseId}/${apontamentoId}/${tipoVistoria}/migrated_${Date.now()}_${i}.${fileExt}`;
 
-        // Upload para o Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('vistoria-images')
-          .upload(fileName, blob);
+      // Upload para o Supabase Storage
+      const { data: _uploadData, error: uploadError } = await supabase.storage
+        .from('vistoria-images')
+        .upload(fileName, blob);
 
-        if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-        // Obter URL pública
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
+      // Obter URL pública
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
 
-        // Salvar referência no banco
-        const { error: dbError } = await supabase
-          .from('vistoria_images')
-          .insert({
-            vistoria_id: analiseId,
-            apontamento_id: apontamentoId,
-            tipo_vistoria: tipoVistoria,
-            image_url: publicUrl,
-            file_name: foto.name,
-            file_size: foto.size || blob.size,
-            file_type: foto.type || blob.type,
-            user_id: this.user.id,
-          });
+      // Salvar referência no banco
+      const { error: dbError } = await supabase.from('vistoria_images').insert({
+        vistoria_id: analiseId,
+        apontamento_id: apontamentoId,
+        tipo_vistoria: tipoVistoria,
+        image_url: publicUrl,
+        file_name: foto.name,
+        file_size: foto.size || blob.size,
+        file_type: foto.type || blob.type,
+        user_id: this.user.id,
+      });
 
-        if (dbError) throw dbError;
-      } catch (error) {
-        console.error(`Erro ao processar foto ${i}:`, error);
-        // Continuar com as outras fotos mesmo se uma falhar
-      }
+      if (dbError) throw dbError;
+      // } catch {
+      //   // console.error(`Erro ao processar foto ${i}`);
+      //   // Continuar com as outras fotos mesmo se uma falhar
+      // }
     }
   }
 
@@ -239,71 +251,69 @@ export class VistoriaDataMigrator {
       return false;
     }
 
-    try {
-      // Verificar se existem dados legados
-      if (!this.hasLegacyData()) {
-        this.toast({
-          title: 'Nenhum dado encontrado',
-          description: 'Não foram encontrados dados antigos para migrar.',
-        });
-        return false;
-      }
-
-      // Carregar dados legados
-      const legacyData = this.loadLegacyData();
-      if (!legacyData) {
-        this.toast({
-          title: 'Erro ao carregar dados',
-          description: 'Não foi possível carregar os dados antigos.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-
-      // Converter dados
-      const analysisData = this.convertLegacyData(legacyData);
-      if (!analysisData) {
-        this.toast({
-          title: 'Erro na conversão',
-          description:
-            'Não foi possível converter os dados para o novo formato.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-
-      // Migrar análise
-      const analiseId = await this.migrateAnalysis(analysisData);
-      if (!analiseId) {
-        this.toast({
-          title: 'Erro na migração',
-          description: 'Não foi possível salvar a análise no banco de dados.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-
-      // Migrar imagens
-      await this.migrateImages(analiseId, legacyData.apontamentos);
-
-      // Limpar dados antigos após migração bem-sucedida
-      localStorage.removeItem('analise-vistoria-state');
-
+    // Verificar se existem dados legados
+    if (!this.hasLegacyData()) {
       this.toast({
-        title: 'Migração concluída',
-        description: 'Os dados foram migrados com sucesso para o Supabase.',
+        title: 'Nenhum dado encontrado',
+        description: 'Não foram encontrados dados antigos para migrar.',
       });
+      return false;
+    }
 
-      return true;
-    } catch (error) {
-      console.error('Erro durante a migração:', error);
+    // Carregar dados legados
+    const legacyData = this.loadLegacyData();
+    if (!legacyData) {
       this.toast({
-        title: 'Erro na migração',
-        description: `Ocorreu um erro durante a migração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar os dados antigos.',
         variant: 'destructive',
       });
       return false;
     }
+
+    // Converter dados
+    const analysisData = this.convertLegacyData(legacyData);
+    if (!analysisData) {
+      this.toast({
+        title: 'Erro na conversão',
+        description: 'Não foi possível converter os dados para o novo formato.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Migrar análise
+    const analiseId = await this.migrateAnalysis(analysisData);
+    if (!analiseId) {
+      this.toast({
+        title: 'Erro na migração',
+        description: 'Não foi possível salvar a análise no banco de dados.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Migrar imagens
+    await this.migrateImages(analiseId, legacyData.apontamentos);
+
+    // Limpar dados antigos após migração bem-sucedida
+    localStorage.removeItem('analise-vistoria-state');
+
+    this.toast({
+      title: 'Migração concluída',
+      description: 'Os dados foram migrados com sucesso para o Supabase.',
+    });
+
+    return true;
+    // } catch (error) {
+    //   // console.error('Erro durante a migração:', error);
+    //   this.toast({
+    //     title: 'Erro na migração',
+    //     description: `Ocorreu um erro durante a migração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+    //     variant: 'destructive',
+    //   });
+    //   return false;
+    // }
   }
 
   /**
@@ -329,16 +339,14 @@ export class VistoriaDataMigrator {
         .limit(1);
 
       if (error) {
-        // eslint-disable-next-line no-console
-        console.error('Erro ao verificar análises existentes:', error);
+        // console.error('Erro ao verificar análises existentes:', error);
         return true; // Em caso de erro, assume que precisa migrar
       }
 
       // Se já existem análises no Supabase, não precisa migrar
       return existingAnalyses && existingAnalyses.length === 0;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Erro ao verificar migração necessária:', error);
+    } catch {
+      // console.error('Erro ao verificar migração necessária');
       return true; // Em caso de erro, assume que precisa migrar
     }
   }

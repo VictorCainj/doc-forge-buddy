@@ -12,9 +12,6 @@ import {
   Check,
   Minimize2,
   Maximize2,
-  FileDown,
-  Copy,
-  Eye,
   Building2,
   Calendar,
   Phone,
@@ -99,7 +96,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
   // Função para mapear ícones baseados no nome do campo
   const getFieldIcon = (fieldName: string) => {
-    const iconMap: Record<string, any> = {
+    const iconMap: Record<string, LucideIcon> = {
       // Campos de contrato
       numeroContrato: Hash,
       enderecoImovel: Building2,

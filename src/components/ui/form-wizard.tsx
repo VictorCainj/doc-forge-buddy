@@ -1,6 +1,6 @@
 import React, { useState, ComponentProps } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 // import { Button } from '@/components/ui/button';
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // import { Progress } from '@/components/ui/progress';

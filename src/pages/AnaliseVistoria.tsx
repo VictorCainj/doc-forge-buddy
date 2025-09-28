@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { log } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,8 +38,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Wand2,
-  Download,
-  FolderOpen,
   RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -66,7 +65,7 @@ const AnaliseVistoria = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { correctText, isLoading: isAILoading } = useOpenAI();
-  const { saveAnalise, saving, updateAnalise } = useVistoriaAnalises();
+  const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
 
   const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
@@ -89,7 +88,7 @@ const AnaliseVistoria = () => {
     endereco: '',
     dataVistoria: '',
   });
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [editingApontamento, setEditingApontamento] = useState<string | null>(
     null
   );
@@ -104,14 +103,15 @@ const AnaliseVistoria = () => {
   );
   const [hasExistingAnalise, setHasExistingAnalise] = useState(false);
   const [loadingExistingAnalise, setLoadingExistingAnalise] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = async (analiseData: VistoriaAnaliseWithImages) => {
     try {
-      console.log('=== CARREGANDO DADOS DA ANÁLISE ===');
-      console.log('Análise ID:', analiseData.id);
-      console.log('Imagens disponíveis:', analiseData.images?.length || 0);
-      console.log('Dados das imagens:', analiseData.images);
+      log.debug('=== CARREGANDO DADOS DA ANÁLISE ===');
+      log.debug('Análise ID:', analiseData.id);
+      log.debug('Imagens disponíveis:', analiseData.images?.length || 0);
+      log.debug('Dados das imagens:', analiseData.images);
 
       // Carregar dados da vistoria
       if (analiseData.dados_vistoria) {
@@ -131,17 +131,12 @@ const AnaliseVistoria = () => {
         const hasDatabaseImages =
           analiseData.images && analiseData.images.length > 0;
 
-        console.log('=== PROCESSANDO APONTAMENTOS ===');
-        console.log('Total de apontamentos:', apontamentosData.length);
-        console.log('Tem imagens do banco:', hasDatabaseImages);
+        log.debug('=== PROCESSANDO APONTAMENTOS ===');
+        log.debug('Total de apontamentos:', apontamentosData.length);
+        log.debug('Tem imagens do banco:', hasDatabaseImages);
 
         const apontamentosWithImages = await Promise.all(
           apontamentosData.map(async (apontamento) => {
-            console.log(
-              `\n--- Processando apontamento: ${apontamento.ambiente} ---`
-            );
-            console.log('Apontamento ID:', apontamento.id);
-
             const apontamentoWithImages = { ...apontamento };
 
             if (hasDatabaseImages) {
@@ -150,20 +145,10 @@ const AnaliseVistoria = () => {
                 (img: any) => img.apontamento_id === apontamento.id
               );
 
-              console.log(
-                'Imagens encontradas para este apontamento:',
-                apontamentoImages.length
-              );
-              console.log('Dados das imagens:', apontamentoImages);
-
               const fotosInicial = apontamentoImages
                 .filter((img: any) => img.tipo_vistoria === 'inicial')
                 .map((img: any) => {
-                  console.log(
-                    'Processando foto inicial:',
-                    img.file_name,
-                    img.image_url
-                  );
+                  // console.log('Processando foto inicial:', img.file_name, img.image_url);
                   // Criar um objeto File simulado para imagens do banco
                   return {
                     name: img.file_name,
@@ -177,11 +162,7 @@ const AnaliseVistoria = () => {
               const fotosFinal = apontamentoImages
                 .filter((img: any) => img.tipo_vistoria === 'final')
                 .map((img: any) => {
-                  console.log(
-                    'Processando foto final:',
-                    img.file_name,
-                    img.image_url
-                  );
+                  // console.log('Processando foto final:', img.file_name, img.image_url);
                   return {
                     name: img.file_name,
                     size: img.file_size,
@@ -191,8 +172,8 @@ const AnaliseVistoria = () => {
                   };
                 });
 
-              console.log(`Fotos Inicial criadas: ${fotosInicial.length}`);
-              console.log(`Fotos Final criadas: ${fotosFinal.length}`);
+              // console.log(`Fotos Inicial criadas: ${fotosInicial.length}`);
+              // console.log(`Fotos Final criadas: ${fotosFinal.length}`);
 
               apontamentoWithImages.vistoriaInicial = {
                 ...apontamento.vistoriaInicial,
@@ -242,19 +223,19 @@ const AnaliseVistoria = () => {
           })
         );
 
-        console.log('=== APONTAMENTOS CARREGADOS ===');
-        console.log(
-          'Total de apontamentos carregados:',
-          apontamentosWithImages.length
-        );
-        apontamentosWithImages.forEach((apontamento, index) => {
-          console.log(`Apontamento ${index + 1}: ${apontamento.ambiente}`);
-          console.log(
-            `- Fotos Inicial: ${apontamento.vistoriaInicial?.fotos?.length || 0}`
-          );
-          console.log(
-            `- Fotos Final: ${apontamento.vistoriaFinal?.fotos?.length || 0}`
-          );
+        // console.log('=== APONTAMENTOS CARREGADOS ===');
+        // console.log(
+        //   'Total de apontamentos carregados:',
+        //   apontamentosWithImages.length
+        // );
+        apontamentosWithImages.forEach((_apontamento, _index) => {
+          // console.log(`Apontamento ${index + 1}: ${apontamento.ambiente}`);
+          // console.log(
+          //   `- Fotos Inicial: ${apontamento.vistoriaInicial?.fotos?.length || 0}`
+          // );
+          // console.log(
+          //   `- Fotos Final: ${apontamento.vistoriaFinal?.fotos?.length || 0}`
+          // );
         });
 
         setApontamentos(apontamentosWithImages);
@@ -275,7 +256,7 @@ const AnaliseVistoria = () => {
         description: 'Os dados da análise foram carregados para edição.',
       });
     } catch (error) {
-      console.error('Erro ao carregar dados da análise:', error);
+      log.error('Erro ao carregar dados da análise:', error);
       toast({
         title: 'Erro ao carregar análise',
         description: 'Não foi possível carregar os dados da análise.',
@@ -425,14 +406,14 @@ const AnaliseVistoria = () => {
             setShowDadosVistoria(parsedState.showDadosVistoria);
           }
         } catch (error) {
-          console.error('Erro ao carregar estado salvo:', error);
+          log.error('Erro ao carregar estado salvo:', error);
           // Erro ao carregar estado salvo - continuar normalmente
         }
       }
     };
 
     loadLegacyState();
-  }, [contracts]); // Removido base64ToFile das dependências
+  }, [contracts, base64ToFile]);
 
   // Salvar estado no localStorage como backup (para compatibilidade)
   useEffect(() => {
@@ -513,7 +494,7 @@ const AnaliseVistoria = () => {
           JSON.stringify(stateToSave)
         );
       } catch (error) {
-        console.error('Erro ao salvar estado de backup:', error);
+        log.error('Erro ao salvar estado de backup:', error);
       }
     };
 
@@ -524,7 +505,7 @@ const AnaliseVistoria = () => {
     dadosVistoria,
     showDadosVistoria,
     savedAnaliseId,
-    // Removido fileToBase64 das dependências para evitar loop infinito
+    fileToBase64,
   ]);
 
   // Atualizar pré-visualização do documento em tempo real
@@ -547,86 +528,78 @@ const AnaliseVistoria = () => {
         }
 
         // Debug: Verificar apontamentos antes da validação
-        console.log('=== DEBUG: APONTAMENTOS ANTES DA VALIDAÇÃO ===');
-        console.log(
-          'Total de apontamentos válidos:',
-          apontamentosValidos.length
-        );
-        apontamentosValidos.forEach((apontamento, index) => {
-          console.log(
-            `\n--- Apontamento ${index + 1}: ${apontamento.ambiente} ---`
-          );
-          console.log('Fotos Inicial:', apontamento.vistoriaInicial?.fotos);
-          console.log('Fotos Final:', apontamento.vistoriaFinal?.fotos);
-          console.log(
-            'Tipo das fotos Inicial:',
-            typeof apontamento.vistoriaInicial?.fotos
-          );
-          console.log(
-            'Tipo das fotos Final:',
-            typeof apontamento.vistoriaFinal?.fotos
-          );
+        // console.log('=== DEBUG: APONTAMENTOS ANTES DA VALIDAÇÃO ===');
+        // console.log(
+        //   'Total de apontamentos válidos:',
+        //   apontamentosValidos.length
+        // );
+        apontamentosValidos.forEach((_apontamento, _index) => {
+          // console.log(
+          //   `\n--- Apontamento ${index + 1}: ${apontamento.ambiente} ---`
+          // );
+          // console.log('Fotos Inicial:', apontamento.vistoriaInicial?.fotos);
+          // console.log('Fotos Final:', apontamento.vistoriaFinal?.fotos);
+          // console.log(
+          //   'Tipo das fotos Inicial:',
+          //   typeof apontamento.vistoriaInicial?.fotos
+          // );
+          // console.log(
+          //   'Tipo das fotos Final:',
+          //   typeof apontamento.vistoriaFinal?.fotos
+          // );
         });
 
         // Verificar se há fotos válidas nos apontamentos
-        console.log('\n=== INICIANDO VALIDAÇÃO DE FOTOS ===');
-        console.log('Apontamentos válidos:', apontamentosValidos.length);
+        // console.log('\n=== INICIANDO VALIDAÇÃO DE FOTOS ===');
+        // console.log('Apontamentos válidos:', apontamentosValidos.length);
 
         const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
-          console.log(
-            `\n=== VALIDANDO APONTAMENTO: ${apontamento.ambiente} ===`
-          );
-          console.log(
-            'Fotos Inicial originais:',
-            apontamento.vistoriaInicial?.fotos
-          );
-          console.log(
-            'Fotos Final originais:',
-            apontamento.vistoriaFinal?.fotos
-          );
+          // console.log(`\n=== VALIDANDO APONTAMENTO: ${apontamento.ambiente} ===`);
+          // console.log('Fotos Inicial originais:', apontamento.vistoriaInicial?.fotos);
+          // console.log('Fotos Final originais:', apontamento.vistoriaFinal?.fotos);
 
           // Verificar se as fotos são objetos File válidos ou imagens do banco
           const fotosInicialValidas =
             apontamento.vistoriaInicial?.fotos?.filter((foto) => {
-              console.log('Validando foto inicial:', foto);
-              console.log('- isFromDatabase:', foto?.isFromDatabase);
-              console.log('- URL:', foto?.url);
-              console.log('- É File?:', foto instanceof File);
+              // console.log('Validando foto inicial:', foto);
+              // console.log('- isFromDatabase:', foto?.isFromDatabase);
+              // console.log('- URL:', foto?.url);
+              // console.log('- É File?:', foto instanceof File);
 
               // Se é do banco de dados, verificar se tem URL
               if (foto?.isFromDatabase) {
                 const hasValidUrl = foto.url && foto.url.length > 0;
-                console.log('- Foto do banco - URL válida:', hasValidUrl);
+                // console.log('- Foto do banco - URL válida:', hasValidUrl);
                 return hasValidUrl;
               }
               // Se é File, verificar se é válido
               const isValidFile = foto instanceof File && foto.size > 0;
-              console.log('- Foto File - é válida:', isValidFile);
+              // console.log('- Foto File - é válida:', isValidFile);
               return isValidFile;
             }) || [];
 
           const fotosFinalValidas =
             apontamento.vistoriaFinal?.fotos?.filter((foto) => {
-              console.log('Validando foto final:', foto);
-              console.log('- isFromDatabase:', foto?.isFromDatabase);
-              console.log('- URL:', foto?.url);
-              console.log('- É File?:', foto instanceof File);
+              // console.log('Validando foto final:', foto);
+              // console.log('- isFromDatabase:', foto?.isFromDatabase);
+              // console.log('- URL:', foto?.url);
+              // console.log('- É File?:', foto instanceof File);
 
               // Se é do banco de dados, verificar se tem URL
               if (foto?.isFromDatabase) {
                 const hasValidUrl = foto.url && foto.url.length > 0;
-                console.log('- Foto do banco - URL válida:', hasValidUrl);
+                // console.log('- Foto do banco - URL válida:', hasValidUrl);
                 return hasValidUrl;
               }
               // Se é File, verificar se é válido
               const isValidFile = foto instanceof File && foto.size > 0;
-              console.log('- Foto File - é válida:', isValidFile);
+              // console.log('- Foto File - é válida:', isValidFile);
               return isValidFile;
             }) || [];
 
-          console.log(`RESULTADO ${apontamento.ambiente}:`);
-          console.log('- Fotos Inicial válidas:', fotosInicialValidas.length);
-          console.log('- Fotos Final válidas:', fotosFinalValidas.length);
+          // console.log(`RESULTADO ${apontamento.ambiente}:`);
+          // console.log('- Fotos Inicial válidas:', fotosInicialValidas.length);
+          // console.log('- Fotos Final válidas:', fotosFinalValidas.length);
 
           return {
             ...apontamento,
@@ -714,7 +687,7 @@ const AnaliseVistoria = () => {
           .order('created_at', { ascending: true });
 
         if (imagesError) {
-          console.error('Erro ao carregar imagens:', imagesError);
+          // console.error('Erro ao carregar imagens:', imagesError);
           toast({
             title: 'Erro ao carregar imagens',
             description: 'Não foi possível carregar as imagens da análise.',
@@ -729,10 +702,10 @@ const AnaliseVistoria = () => {
           images: imagesData || [],
         };
 
-        console.log('=== FORÇANDO RECARREGAMENTO DE IMAGENS ===');
-        console.log('Análise encontrada:', analiseData.id);
-        console.log('Imagens encontradas:', imagesData?.length || 0);
-        console.log('Dados das imagens:', imagesData);
+        // console.log('=== FORÇANDO RECARREGAMENTO DE IMAGENS ===');
+        // console.log('Análise encontrada:', analiseData.id);
+        // console.log('Imagens encontradas:', imagesData?.length || 0);
+        // console.log('Dados das imagens:', imagesData);
 
         // Carregar automaticamente a análise completa
         await loadAnalysisData(completeAnalise);
@@ -748,8 +721,8 @@ const AnaliseVistoria = () => {
           variant: 'destructive',
         });
       }
-    } catch (error) {
-      console.error('Erro ao recarregar imagens:', error);
+    } catch {
+      // console.error('Erro ao recarregar imagens:', error);
       toast({
         title: 'Erro ao recarregar',
         description: 'Não foi possível recarregar as imagens.',
@@ -791,7 +764,7 @@ const AnaliseVistoria = () => {
           .order('created_at', { ascending: true });
 
         if (imagesError) {
-          console.error('Erro ao carregar imagens:', imagesError);
+          // console.error('Erro ao carregar imagens:', imagesError);
         }
 
         // Criar objeto completo da análise
@@ -812,8 +785,8 @@ const AnaliseVistoria = () => {
         setHasExistingAnalise(false);
         setExistingAnaliseId(null);
       }
-    } catch (error) {
-      console.error('Erro ao verificar análise existente:', error);
+    } catch {
+      // console.error('Erro ao verificar análise existente:', error);
       setHasExistingAnalise(false);
       setExistingAnaliseId(null);
     } finally {
@@ -838,7 +811,7 @@ const AnaliseVistoria = () => {
       setHasExistingAnalise(false);
       setExistingAnaliseId(null);
     }
-  }, [selectedContract]);
+  }, [selectedContract, checkExistingAnalise]);
 
   // Ocultar automaticamente os dados da vistoria quando preenchidos
   useEffect(() => {
@@ -1006,6 +979,7 @@ const AnaliseVistoria = () => {
       return;
     }
 
+    setSaving(true);
     try {
       const title = `Análise de Vistoria - ${dadosVistoria.locatario} - ${new Date().toLocaleDateString('pt-BR')}`;
 
@@ -1047,13 +1021,15 @@ const AnaliseVistoria = () => {
       if (analiseId) {
         setSavedAnaliseId(analiseId);
       }
-    } catch (error) {
-      console.error('Erro ao salvar análise:', error);
+    } catch {
+      // console.error('Erro ao salvar análise:', error);
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar a análise.',
         variant: 'destructive',
       });
+    } finally {
+      setSaving(false);
     }
   };
 

@@ -43,7 +43,7 @@ export const correctTextWithAI = async (text: string): Promise<string> => {
 
     return correctedText.trim();
   } catch {
-    // console.error('Erro na API da OpenAI:', error);
+    // // console.error('Erro na API da OpenAI:', error);
     throw new Error('Erro ao corrigir o texto. Tente novamente.');
   }
 };
@@ -85,7 +85,7 @@ export const improveTextWithAI = async (text: string): Promise<string> => {
 
     return improvedText.trim();
   } catch {
-    // console.error('Erro na API da OpenAI:', error);
+    // // console.error('Erro na API da OpenAI:', error);
     throw new Error('Erro ao melhorar o texto. Tente novamente.');
   }
 };
@@ -96,10 +96,10 @@ export const analyzeContractsWithAI = async (
   completeContracts?: CompleteContractData[]
 ): Promise<string> => {
   try {
-    console.log('Iniciando análise de contratos...');
-    console.log('Query:', query);
-    console.log('Contratos básicos:', contracts.length);
-    console.log('Contratos completos:', completeContracts?.length || 0);
+    // console.log('Iniciando análise de contratos...');
+    // console.log('Query:', query);
+    // console.log('Contratos básicos:', contracts.length);
+    // console.log('Contratos completos:', completeContracts?.length || 0);
 
     // Preparar informações dos contratos para o contexto
     let contractsContext = '';
@@ -167,7 +167,7 @@ Contrato ${index + 1} (Dados Básicos):
         .join('\n');
     }
 
-    console.log('Chamando API da OpenAI...');
+    // console.log('Chamando API da OpenAI...');
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -202,25 +202,19 @@ Por favor, responda de forma conversacional e natural, como se estivesse convers
       temperature: 0.7,
     });
 
-    console.log(
-      'Resposta da API recebida:',
-      completion.choices[0]?.message?.content?.substring(0, 100) + '...'
-    );
+    // console.log('Resposta da API recebida:', completion.choices[0]?.message?.content?.substring(0, 100) + '...');
 
     const analysis = completion.choices[0]?.message?.content;
 
     if (!analysis) {
-      console.error('Resposta vazia da API');
+      // console.error('Resposta vazia da API');
       throw new Error('Resposta vazia da API');
     }
 
-    console.log(
-      'Retornando análise:',
-      analysis.trim().substring(0, 100) + '...'
-    );
+    // console.log('Retornando análise:', analysis.trim().substring(0, 100) + '...');
     return analysis.trim();
-  } catch (error) {
-    console.error('Erro na API da OpenAI para análise:', error);
+  } catch {
+    // console.error('Erro na API da OpenAI para análise:', error);
     throw new Error('Erro ao analisar os contratos. Tente novamente.');
   }
 };

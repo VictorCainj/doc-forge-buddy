@@ -116,11 +116,11 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Após o recebimento e a devida confirmação dos documentos, procederemos com o agendamento da vistoria dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. </p>
 
-  <p style="margin-bottom: 20px;"><strong>Informar a data desejada para a vistoria de saída com 5 dias de antecedência a data pretendida.</strong></p>
+  <p style="margin-bottom: 20px;"><strong>Pedimos a gentileza de informar a data desejada para a vistoria de saída com, no mínimo, 5 dias de antecedência à data pretendida.</strong></p>
   
   <p style="margin-bottom: 20px;">Também solicitamos o envio da <strong>Notificação de Rescisão preenchida e assinada</strong>. Todas essas orientações constam no Informativo de Rescisão anexo.</p>
   
-  <p style="margin-bottom: 20px;">Ressaltamos que <strong>o imóvel deverá ser devolvido nas mesmas condições em que foi entregue</strong>, conforme o <strong>Art. 23 da Lei do Inquilinato "III - restituir o imóvel, finda a locação, no estado em que o recebeu, salvo as deteriorações decorrentes do seu uso normal"</strong>;</p>
+  <p style="margin-bottom: 20px;">Ressaltamos que <strong>o imóvel deverá ser devolvido nas mesmas condições em que foi entregue</strong>, conforme o <strong>Art. 23 da Lei do Inquilinato <i>"III - restituir o imóvel, finda a locação, no estado em que o recebeu, salvo as deteriorações decorrentes do seu uso normal"</i></strong>;</p>
   
   {{#if incluirQuantidadeChaves}}
   {{#eq incluirQuantidadeChaves "sim"}}
@@ -222,7 +222,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 15px;"><strong>Notificante:</strong> Madia Imóveis Ltda{{#if nomeProprietarioFormatado}}, no interesse e representante de <strong>{{nomeProprietarioFormatado}}</strong> devidamente qualificada  através do contrato de prestação de serviço{{/if}}.</p>
+    <p style="margin: 5px 0; font-size: 15px;"><strong>Notificante:</strong> Madia Imóveis Ltda{{#if nomeProprietarioFormatado}}, no interesse e representante de <span style="font-weight: normal; font-size: 15px; text-transform: none;">{{nomeProprietarioFormatado}}</span> devidamente qualificada  através do contrato de prestação de serviço{{/if}}.</p>
     {{#if nomeLocatarioFormatado}}
     <p style="margin: 5px 0; font-size: 15px;"><strong>{{notificadoLocatarioTitulo}}:</strong> <strong>{{nomeLocatarioFormatado}}</strong></p>
     {{/if}}

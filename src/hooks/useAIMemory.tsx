@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  analyzeTextAdvanced,
-  TextAnalysisResult,
-} from '@/utils/advancedTextAnalysis';
-import { templateEngine } from '@/utils/intelligentTemplates';
+import { analyzeTextAdvanced } from '@/utils/advancedTextAnalysis';
+import { log } from '@/utils/logger';
 
 export interface AIMemory {
   userId: string;
@@ -87,7 +84,10 @@ interface UseAIMemoryReturn {
     answer: string,
     feedback?: number
   ) => Promise<void>;
-  getPersonalizedResponse: (question: string, context: any) => Promise<string>;
+  getPersonalizedResponse: (
+    question: string,
+    context: Record<string, unknown>
+  ) => Promise<string>;
   getContextualSuggestions: (currentInput: string) => Promise<string[]>;
   rememberInsight: (
     insight: string,
@@ -116,10 +116,20 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar memória do localStorage
-  useEffect(() => {
-    loadMemory();
-  }, [userId]);
+  // Salvar memória no localStorage
+  const saveMemory = useCallback(
+    (memoryData: AIMemory) => {
+      try {
+        localStorage.setItem(
+          `${MEMORY_STORAGE_KEY}-${userId}`,
+          JSON.stringify(memoryData)
+        );
+      } catch (error) {
+        log.error('Erro ao salvar memória:', error);
+      }
+    },
+    [userId]
+  );
 
   const loadMemory = useCallback(() => {
     try {
@@ -175,26 +185,16 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
       }
     } catch (error) {
       setError('Erro ao carregar memória da IA');
-      console.error('Erro ao carregar memória:', error);
+      log.error('Erro ao carregar memória:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, saveMemory]);
 
-  // Salvar memória no localStorage
-  const saveMemory = useCallback(
-    (memoryData: AIMemory) => {
-      try {
-        localStorage.setItem(
-          `${MEMORY_STORAGE_KEY}-${userId}`,
-          JSON.stringify(memoryData)
-        );
-      } catch (error) {
-        console.error('Erro ao salvar memória:', error);
-      }
-    },
-    [userId]
-  );
+  // Carregar memória do localStorage
+  useEffect(() => {
+    loadMemory();
+  }, [loadMemory]);
 
   // Atualizar preferências do usuário
   const updatePreferences = useCallback(
@@ -283,15 +283,44 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         setMemory(updatedMemory);
         saveMemory(updatedMemory);
       } catch (error) {
-        console.error('Erro ao aprender com interação:', error);
+        log.error('Erro ao aprender com interação:', error);
       }
     },
     [memory, saveMemory]
   );
 
+  // Obter insights relevantes
+  const getRelevantInsights = useCallback(
+    (query: string): string[] => {
+      if (!memory || !memory.knowledge || !memory.knowledge.contractInsights)
+        return [];
+
+      try {
+        const queryLower = query.toLowerCase();
+
+        return memory.knowledge.contractInsights
+          .filter(
+            (insight) =>
+              insight.insight.toLowerCase().includes(queryLower) ||
+              queryLower.includes(insight.insight.toLowerCase())
+          )
+          .sort((a, b) => b.confidence - a.confidence)
+          .slice(0, 3)
+          .map((insight) => insight.insight);
+      } catch (error) {
+        log.error('Erro ao obter insights relevantes:', error);
+        return [];
+      }
+    },
+    [memory]
+  );
+
   // Obter resposta personalizada
   const getPersonalizedResponse = useCallback(
-    async (question: string, context: any): Promise<string> => {
+    async (
+      question: string,
+      _context: Record<string, unknown>
+    ): Promise<string> => {
       if (!memory) return question;
 
       try {
@@ -349,11 +378,11 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
 
         return personalizedResponse;
       } catch (error) {
-        console.error('Erro ao gerar resposta personalizada:', error);
+        log.error('Erro ao gerar resposta personalizada:', error);
         return question;
       }
     },
-    [memory]
+    [memory, getRelevantInsights]
   );
 
   // Obter sugestões contextuais
@@ -416,7 +445,7 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
           );
         }
       } catch (error) {
-        console.error('Erro ao gerar sugestões contextuais:', error);
+        log.error('Erro ao gerar sugestões contextuais:', error);
       }
 
       return suggestions;
@@ -464,36 +493,10 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         setMemory(updatedMemory);
         saveMemory(updatedMemory);
       } catch (error) {
-        console.error('Erro ao lembrar insight:', error);
+        log.error('Erro ao lembrar insight:', error);
       }
     },
     [memory, saveMemory]
-  );
-
-  // Obter insights relevantes
-  const getRelevantInsights = useCallback(
-    (query: string): string[] => {
-      if (!memory || !memory.knowledge || !memory.knowledge.contractInsights)
-        return [];
-
-      try {
-        const queryLower = query.toLowerCase();
-
-        return memory.knowledge.contractInsights
-          .filter(
-            (insight) =>
-              insight.insight.toLowerCase().includes(queryLower) ||
-              queryLower.includes(insight.insight.toLowerCase())
-          )
-          .sort((a, b) => b.confidence - a.confidence)
-          .slice(0, 3)
-          .map((insight) => insight.insight);
-      } catch (error) {
-        console.error('Erro ao obter insights relevantes:', error);
-        return [];
-      }
-    },
-    [memory]
   );
 
   // Atualizar estado emocional
@@ -525,7 +528,7 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         setMemory(updatedMemory);
         saveMemory(updatedMemory);
       } catch (error) {
-        console.error('Erro ao atualizar estado emocional:', error);
+        log.error('Erro ao atualizar estado emocional:', error);
       }
     },
     [memory, saveMemory]
@@ -566,7 +569,7 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         setMemory(updatedMemory);
         saveMemory(updatedMemory);
       } catch (error) {
-        console.error('Erro ao adicionar ação pendente:', error);
+        log.error('Erro ao adicionar ação pendente:', error);
       }
     },
     [memory, saveMemory]
@@ -595,7 +598,7 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         setMemory(updatedMemory);
         saveMemory(updatedMemory);
       } catch (error) {
-        console.error('Erro ao completar ação pendente:', error);
+        log.error('Erro ao completar ação pendente:', error);
       }
     },
     [memory, saveMemory]
@@ -654,7 +657,7 @@ Perfil do Usuário:
         recommendations,
       };
     } catch (error) {
-      console.error('Erro ao obter insights da memória:', error);
+      log.error('Erro ao obter insights da memória:', error);
       return {
         personalityProfile: 'Erro ao carregar perfil',
         usagePatterns: ['Erro ao carregar padrões de uso'],

@@ -31,51 +31,59 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   };
 
   // Função para processar fotos e converter para base64
-  const processarFotos = async (fotos: any[]) => {
-    console.log('=== PROCESSAR FOTOS ===');
-    console.log('Fotos recebidas:', fotos);
-    console.log('Quantidade:', fotos?.length || 0);
+  const processarFotos = async (
+    fotos: Array<{
+      name?: string;
+      size?: number;
+      type?: string;
+      url?: string;
+      isFromDatabase?: boolean;
+    }>
+  ) => {
+    // console.log('=== PROCESSAR FOTOS ===');
+    // console.log('Fotos recebidas:', fotos);
+    // console.log('Quantidade:', fotos?.length || 0);
 
     if (!fotos || fotos.length === 0) {
-      console.log('❌ Nenhuma foto para processar');
+      // Nenhuma foto para processar
       return [];
     }
 
     const fotosBase64 = await Promise.all(
-      fotos.map(async (foto, index) => {
-        console.log(`\n--- Processando foto ${index + 1} ---`);
-        console.log('Foto:', foto);
-        console.log('- isFromDatabase:', foto?.isFromDatabase);
-        console.log('- URL:', foto?.url);
-        console.log('- É File?:', foto instanceof File);
+      fotos.map(async (foto, _index) => {
+        // console.log(`\n--- Processando foto ${index + 1} ---`);
+        // console.log('Foto:', foto);
+        // console.log('- isFromDatabase:', foto?.isFromDatabase);
+        // console.log('- URL:', foto?.url);
+        // console.log('- É File?:', foto instanceof File);
 
         try {
           // Se é uma imagem do banco de dados, usar a URL diretamente
           if (foto.isFromDatabase && foto.url) {
-            console.log('✅ Usando URL do banco:', foto.url);
+            // console.log('✅ Usando URL do banco:', foto.url);
             return { nome: foto.name, base64: foto.url };
           }
 
           // Verificar se o arquivo é válido
           if (!foto || !(foto instanceof File) || foto.size === 0) {
-            console.log('❌ Foto inválida');
+            // console.log('❌ Foto inválida');
             return null;
           }
 
           const base64 = await fileToBase64(foto);
-          console.log('✅ Foto File convertida para base64');
+          // console.log('✅ Foto File convertida para base64');
           return { nome: foto.name, base64 };
-        } catch (error) {
-          console.error('❌ Erro ao processar foto:', error);
+        } catch {
+          // console.error('❌ Erro ao processar foto:', error);
           return null;
         }
       })
     );
 
-    console.log('Fotos processadas:', fotosBase64);
+    // console.log('Fotos processadas:', fotosBase64);
     // Filtrar fotos que falharam no processamento
     const fotosValidas = fotosBase64.filter((foto) => foto !== null);
-    console.log('✅ Fotos válidas finais:', fotosValidas.length);
+    // console.log('✅ Fotos válidas finais:', fotosValidas.length);
     return fotosValidas;
   };
 
@@ -108,17 +116,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
     const apontamento = dados.apontamentos[index];
 
     try {
-      console.log(
-        `\n=== PROCESSANDO APONTAMENTO ${index + 1}: ${apontamento.ambiente} ===`
-      );
-      console.log(
-        'Fotos Inicial antes do processamento:',
-        apontamento.vistoriaInicial?.fotos
-      );
-      console.log(
-        'Fotos Final antes do processamento:',
-        apontamento.vistoriaFinal?.fotos
-      );
+      // console.log(`\n=== PROCESSANDO APONTAMENTO ${index + 1}: ${apontamento.ambiente} ===`);
+      // console.log('Fotos Inicial antes do processamento:', apontamento.vistoriaInicial?.fotos);
+      // console.log('Fotos Final antes do processamento:', apontamento.vistoriaFinal?.fotos);
 
       // Processar fotos da vistoria inicial
       const fotosInicial = await processarFotos(
@@ -130,9 +130,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         apontamento.vistoriaFinal?.fotos || []
       );
 
-      console.log(`\n--- RESULTADO APONTAMENTO ${index + 1} ---`);
-      console.log('✅ Fotos Inicial processadas:', fotosInicial.length);
-      console.log('✅ Fotos Final processadas:', fotosFinal.length);
+      // console.log(`\n--- RESULTADO APONTAMENTO ${index + 1} ---`);
+      // console.log('✅ Fotos Inicial processadas:', fotosInicial.length);
+      // console.log('✅ Fotos Final processadas:', fotosFinal.length);
 
       template += `
       <div style="margin-bottom: 32px; page-break-inside: avoid; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">

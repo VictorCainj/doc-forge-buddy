@@ -3,13 +3,11 @@ import {
   LayoutDashboard,
   FileText,
   MessageSquare,
-  Search,
   LogOut,
   Shield,
   SearchCheck,
   Archive,
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -22,28 +20,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
+// import { useSearchContext } from '@/hooks/useSearchContext';
 
-interface SidebarProps {
-  onSearchChange?: (searchTerm: string) => void;
-}
-
-const Sidebar = ({ onSearchChange }: SidebarProps) => {
+const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (!error) {
       navigate('/login');
     }
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    onSearchChange?.(value);
   };
 
   const getUserInitials = (email: string) => {
@@ -109,19 +96,6 @@ const Sidebar = ({ onSearchChange }: SidebarProps) => {
             </h1>
             <p className="text-sm text-muted-foreground">Enterprise Suite</p>
           </div>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="p-6 border-b border-sidebar-border">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Buscar contratos, documentos..."
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 w-full h-11 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary rounded-xl"
-          />
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { log } from '@/utils/logger';
 
 export interface ChatSession {
   id: string;
@@ -40,7 +41,10 @@ interface UseChatHistoryReturn {
   saveSession: (session: ChatSession) => void;
   loadSession: (sessionId: string) => ChatSession | null;
   deleteSession: (sessionId: string) => void;
-  updateCurrentSession: (messages: ChatMessage[], metadata?: any) => void;
+  updateCurrentSession: (
+    messages: ChatMessage[],
+    metadata?: Record<string, unknown>
+  ) => void;
   searchSessions: (query: string) => ChatSession[];
   getSessionInsights: (sessionId: string) => string[];
   exportSession: (sessionId: string) => string;
@@ -62,19 +66,23 @@ export const useChatHistory = (): UseChatHistoryReturn => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsedSessions = JSON.parse(stored).map((session: any) => ({
-          ...session,
-          createdAt: new Date(session.createdAt),
-          updatedAt: new Date(session.updatedAt),
-          messages: session.messages.map((msg: any) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp),
-          })),
-        }));
+        const parsedSessions = JSON.parse(stored).map(
+          (session: Record<string, unknown>) => ({
+            ...session,
+            createdAt: new Date(session.createdAt as string),
+            updatedAt: new Date(session.updatedAt as string),
+            messages: (session.messages as Record<string, unknown>[]).map(
+              (msg: Record<string, unknown>) => ({
+                ...msg,
+                timestamp: new Date(msg.timestamp),
+              })
+            ),
+          })
+        );
         setSessions(parsedSessions);
       }
     } catch (error) {
-      console.error('Erro ao carregar histórico do chat:', error);
+      log.error('Erro ao carregar histórico do chat:', error);
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +99,7 @@ export const useChatHistory = (): UseChatHistoryReturn => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionsToSave));
       setSessions(sessionsToSave);
     } catch (error) {
-      console.error('Erro ao salvar histórico do chat:', error);
+      log.error('Erro ao salvar histórico do chat:', error);
     }
   }, []);
 
@@ -189,7 +197,7 @@ export const useChatHistory = (): UseChatHistoryReturn => {
 
   // Atualizar sessão atual
   const updateCurrentSession = useCallback(
-    (messages: ChatMessage[], metadata?: any) => {
+    (messages: ChatMessage[], metadata?: Record<string, unknown>) => {
       if (!currentSession) return;
 
       const updatedSession: ChatSession = {
@@ -259,7 +267,7 @@ export const useChatHistory = (): UseChatHistoryReturn => {
           id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           createdAt: new Date(session.createdAt || Date.now()),
           updatedAt: new Date(),
-          messages: session.messages.map((msg: any) => ({
+          messages: session.messages.map((msg: ChatMessage) => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
           })),
@@ -269,7 +277,7 @@ export const useChatHistory = (): UseChatHistoryReturn => {
         saveToStorage(updatedSessions);
         return newSession;
       } catch (error) {
-        console.error('Erro ao importar sessão:', error);
+        log.error('Erro ao importar sessão:', error);
         return null;
       }
     },

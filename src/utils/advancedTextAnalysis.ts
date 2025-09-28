@@ -1,5 +1,3 @@
-import { analyzeContractsWithAI } from './openai';
-
 export interface TextAnalysisResult {
   sentiment: 'positive' | 'negative' | 'neutral';
   confidence: number;
@@ -429,9 +427,15 @@ export const generateContextualSuggestions = (
 };
 
 // Análise de documentos contratuais específica
+interface ContractData {
+  id: string;
+  form_data: Record<string, unknown>;
+  created_at: string;
+}
+
 export const analyzeContractDocument = async (
   text: string,
-  contracts: any[]
+  _contracts: ContractData[]
 ): Promise<{
   completeness: number;
   missingFields: string[];

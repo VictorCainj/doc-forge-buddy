@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CompleteContractData } from './useCompleteContractData';
 import { useAIMemory } from './useAIMemory';
-import { useAdvancedAnalytics, ContractInsight } from './useAdvancedAnalytics';
+import { useAdvancedAnalytics } from './useAdvancedAnalytics';
 
 export interface ProactiveAlert {
   id: string;
@@ -11,7 +11,7 @@ export interface ProactiveAlert {
   description: string;
   actionable: boolean;
   action?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   createdAt: Date;
   expiresAt?: Date;
   dismissed: boolean;
@@ -26,7 +26,7 @@ export interface InsightRecommendation {
   impact: 'low' | 'medium' | 'high';
   effort: 'low' | 'medium' | 'high';
   timeframe: 'immediate' | 'short' | 'medium' | 'long';
-  data: any;
+  data: Record<string, unknown>;
   confidence: number;
 }
 
@@ -66,15 +66,15 @@ export const useProactiveInsights = (
   const [error, setError] = useState<string | null>(null);
 
   const { memory, rememberInsight } = useAIMemory();
-  const { metrics, insights: analyticsInsights } =
+  const { metrics, insights: _analyticsInsights } =
     useAdvancedAnalytics(contracts);
 
-  // Gerar alertas proativos
+  // Gerar alertas proativos (apenas dados reais)
   const generateProactiveAlerts = useCallback((): ProactiveAlert[] => {
     const alerts: ProactiveAlert[] = [];
     const now = new Date();
 
-    // Alertas de contratos expirando
+    // Alertas de contratos expirando (dados reais)
     const expiringContracts = contracts.filter((contract) => {
       const endDate = new Date(contract.form_data.dataTerminoRescisao || '');
       const daysUntilExpiry =
@@ -96,7 +96,7 @@ export const useProactiveInsights = (
           type: 'error',
           priority: 'critical',
           title: `${criticalExpiring.length} Contrato(s) Expirando em 7 Dias`,
-          description: `${criticalExpiring.length} contrato(s) expiram nos próximos 7 dias. Ação imediata necessária para evitar perda de receita.`,
+          description: `${criticalExpiring.length} contrato(s) expiram nos próximos 7 dias. Ação imediata necessária.`,
           actionable: true,
           action: 'Processar renovações ou desocupações imediatamente',
           data: criticalExpiring,
@@ -119,7 +119,7 @@ export const useProactiveInsights = (
       }
     }
 
-    // Alertas de performance
+    // Alertas de performance (apenas dados reais)
     if (metrics) {
       const occupationRate =
         (metrics.activeContracts / metrics.totalContracts) * 100;
@@ -130,9 +130,9 @@ export const useProactiveInsights = (
           type: 'warning',
           priority: 'medium',
           title: 'Taxa de Ocupação Baixa',
-          description: `Taxa de ocupação atual: ${occupationRate.toFixed(1)}%. Considere estratégias de marketing para atrair novos locatários.`,
+          description: `Taxa de ocupação atual: ${occupationRate.toFixed(1)}%.`,
           actionable: true,
-          action: 'Implementar estratégias de marketing',
+          action: 'Verificar contratos ativos',
           data: { occupationRate, targetRate: 90 },
           createdAt: now,
           category: 'performance',
@@ -145,7 +145,7 @@ export const useProactiveInsights = (
           type: 'info',
           priority: 'medium',
           title: 'Alta Concentração de Contratos Expirando',
-          description: `${((metrics.expiringContracts / metrics.totalContracts) * 100).toFixed(1)}% dos contratos expiram em 30 dias. Planeje estratégias de retenção.`,
+          description: `${((metrics.expiringContracts / metrics.totalContracts) * 100).toFixed(1)}% dos contratos expiram em 30 dias.`,
           actionable: true,
           action: 'Desenvolver estratégias de retenção',
           data: {
@@ -157,35 +157,19 @@ export const useProactiveInsights = (
       }
     }
 
-    // Alertas de oportunidades
-    const highValueContracts = contracts.filter((contract) => {
-      // Simular identificação de contratos de alto valor
-      const address = contract.form_data.enderecoImovel || '';
-      return (
-        address.toLowerCase().includes('centro') ||
-        address.toLowerCase().includes('comercial') ||
-        address.toLowerCase().includes('shopping')
-      );
-    });
-
-    if (highValueContracts.length > 0) {
-      alerts.push({
-        id: 'high_value_opportunities',
-        type: 'opportunity',
-        priority: 'medium',
-        title: 'Oportunidades de Alto Valor Identificadas',
-        description: `${highValueContracts.length} contrato(s) em localizações premium. Considere estratégias de precificação diferenciada.`,
-        actionable: true,
-        action: 'Analisar estratégias de precificação premium',
-        data: highValueContracts,
-        createdAt: now,
-        category: 'opportunity',
-      });
-    }
+    // Alertas de oportunidades (removidos - dados fictícios)
+    // const highValueContracts = contracts.filter((contract) => {
+    //   const address = contract.form_data.enderecoImovel || '';
+    //   return (
+    //     address.toLowerCase().includes('centro') ||
+    //     address.toLowerCase().includes('comercial') ||
+    //     address.toLowerCase().includes('shopping')
+    //   );
+    // });
 
     // Alertas baseados em padrões de uso
     if (memory) {
-      const recentTopics = memory.context.recentTopics;
+      const _recentTopics = memory.context.recentTopics;
       const commonQuestions = memory.patterns.commonQuestions;
 
       if (commonQuestions.length > 0) {
@@ -216,29 +200,13 @@ export const useProactiveInsights = (
     return alerts;
   }, [contracts, metrics, memory]);
 
-  // Gerar recomendações inteligentes
+  // Gerar recomendações inteligentes (apenas dados reais)
   const generateRecommendations = useCallback((): InsightRecommendation[] => {
     const recommendations: InsightRecommendation[] = [];
 
     if (!metrics) return recommendations;
 
-    // Recomendação de otimização de processos
-    if (metrics.performance.responseTime > 5) {
-      recommendations.push({
-        id: 'optimize_response_time',
-        type: 'optimization',
-        title: 'Otimizar Tempo de Resposta',
-        description:
-          'Tempo de resposta atual está acima do ideal. Considere automatizar processos repetitivos.',
-        impact: 'high',
-        effort: 'medium',
-        timeframe: 'short',
-        data: { currentTime: metrics.performance.responseTime, targetTime: 3 },
-        confidence: 0.9,
-      });
-    }
-
-    // Recomendação de estratégia de retenção
+    // Recomendação de estratégia de retenção (dados reais)
     if (metrics.expiringContracts > 0) {
       recommendations.push({
         id: 'retention_strategy',
@@ -254,7 +222,7 @@ export const useProactiveInsights = (
       });
     }
 
-    // Recomendação de análise de mercado
+    // Recomendação de análise de mercado (dados reais)
     if (metrics.totalContracts > 10) {
       recommendations.push({
         id: 'market_analysis',
@@ -289,85 +257,18 @@ export const useProactiveInsights = (
     return recommendations;
   }, [metrics]);
 
-  // Gerar previsões
+  // Gerar previsões (removidas - dados fictícios)
   const generatePredictiveInsights = useCallback((): PredictiveInsight[] => {
     const predictions: PredictiveInsight[] = [];
 
-    if (!metrics) return predictions;
+    // Previsões removidas - não temos dados reais suficientes
+    // if (!metrics) return predictions;
 
-    // Previsão de crescimento
-    const growthTrend =
-      metrics.monthlyTrends.length > 1
-        ? metrics.monthlyTrends[metrics.monthlyTrends.length - 1].count -
-          metrics.monthlyTrends[metrics.monthlyTrends.length - 2].count
-        : 0;
-
-    if (growthTrend > 0) {
-      predictions.push({
-        id: 'growth_prediction',
-        prediction: `Crescimento de ${growthTrend} contratos no próximo mês`,
-        confidence: 0.75,
-        timeframe: '1 mês',
-        factors: [
-          'Tendência de crescimento',
-          'Sazonalidade',
-          'Performance histórica',
-        ],
-        recommendations: [
-          'Preparar infraestrutura para aumento de demanda',
-          'Contratar recursos adicionais se necessário',
-          'Otimizar processos para maior volume',
-        ],
-        impact: 'positive',
-      });
-    }
-
-    // Previsão de risco de expiração
-    const expiryRisk =
-      (metrics.expiringContracts / metrics.totalContracts) * 100;
-
-    if (expiryRisk > 25) {
-      predictions.push({
-        id: 'expiry_risk_prediction',
-        prediction: `Alto risco de perda de ${Math.round(expiryRisk)}% dos contratos`,
-        confidence: 0.8,
-        timeframe: '30 dias',
-        factors: [
-          'Concentração de expirações',
-          'Histórico de renovação',
-          'Satisfação do cliente',
-        ],
-        recommendations: [
-          'Implementar programa de retenção urgente',
-          'Oferecer incentivos para renovação',
-          'Melhorar comunicação com clientes',
-        ],
-        impact: 'negative',
-      });
-    }
-
-    // Previsão de demanda sazonal
-    const currentMonth = new Date().getMonth();
-    const seasonalMonths = [11, 0, 1]; // Dezembro, Janeiro, Fevereiro
-
-    if (seasonalMonths.includes(currentMonth)) {
-      predictions.push({
-        id: 'seasonal_demand',
-        prediction: 'Aumento sazonal da demanda esperado',
-        confidence: 0.85,
-        timeframe: '2-3 meses',
-        factors: ['Padrão sazonal', 'Histórico de demanda', 'Fatores externos'],
-        recommendations: [
-          'Preparar estoque de imóveis',
-          'Aumentar esforços de marketing',
-          'Otimizar processos de contratação',
-        ],
-        impact: 'positive',
-      });
-    }
+    // const growthTrend = 0;
+    // const expiryRisk = 0;
 
     return predictions;
-  }, [metrics]);
+  }, []);
 
   // Atualizar insights
   const refreshInsights = useCallback(async () => {

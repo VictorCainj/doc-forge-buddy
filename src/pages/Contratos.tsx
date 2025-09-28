@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -42,7 +42,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
-import { useSearchContext } from '@/components/Layout';
+import { useSearchContext } from '@/hooks/useSearchContext';
+import { useOptimizedData } from '@/hooks/useOptimizedData';
 import {
   // DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
   // DEVOLUTIVA_LOCATARIO_TEMPLATE,
@@ -77,13 +78,20 @@ interface Contract {
 }
 
 const Contratos = () => {
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
-  const [displayedContracts, setDisplayedContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearchContext(); // Usar busca da sidebar
+  const {
+    data: contracts,
+    loading,
+    hasMore,
+    loadMore,
+    totalCount,
+  } = useOptimizedData({
+    documentType: 'contrato',
+    limit: 6,
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [contractsPerPage] = useState(8); // Mostrar 8 contratos por vez
+  const [contractsPerPage] = useState(6); // Mostrar 6 contratos por vez
   const [loadingMore, setLoadingMore] = useState(false);
   const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
   const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] =
@@ -138,87 +146,52 @@ const Contratos = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchContracts();
-  }, []);
-
-  useEffect(() => {
-    // Usar apenas busca da sidebar
-    const combinedSearchTerm = searchTerm;
-
-    let filtered = contracts;
-
-    // Aplicar busca por texto
-    if (combinedSearchTerm) {
-      filtered = filtered.filter(
-        (contract) =>
-          contract.title
-            .toLowerCase()
-            .includes(combinedSearchTerm.toLowerCase()) ||
-          contract.form_data.nomeLocatario
-            ?.toLowerCase()
-            .includes(combinedSearchTerm.toLowerCase()) ||
-          contract.form_data.nomeProprietario
-            ?.toLowerCase()
-            .includes(combinedSearchTerm.toLowerCase()) ||
-          contract.form_data.numeroContrato
-            ?.toLowerCase()
-            .includes(combinedSearchTerm.toLowerCase()) ||
-          contract.form_data.enderecoImovel
-            ?.toLowerCase()
-            .includes(combinedSearchTerm.toLowerCase())
-      );
+  // Filtrar contratos baseado no termo de busca com useMemo para performance
+  const filteredContracts = useMemo(() => {
+    if (!searchTerm) {
+      return contracts;
     }
 
-    setFilteredContracts(filtered);
-    // Resetar página quando buscar
-    setCurrentPage(1);
+    const searchLower = searchTerm.toLowerCase();
+    return contracts.filter((contract) => {
+      const numeroContrato =
+        contract.form_data.numeroContrato?.toLowerCase() || '';
+      const nomeLocatario =
+        contract.form_data.nomeLocatario?.toLowerCase() || '';
+      const enderecoImovel =
+        contract.form_data.enderecoImovel?.toLowerCase() || '';
+
+      return (
+        numeroContrato.includes(searchLower) ||
+        nomeLocatario.includes(searchLower) ||
+        enderecoImovel.includes(searchLower)
+      );
+    });
   }, [contracts, searchTerm]);
 
-  // Atualizar contratos exibidos baseado na página atual
-  useEffect(() => {
-    const startIndex = 0;
-    const endIndex = currentPage * contractsPerPage;
-    setDisplayedContracts(filteredContracts.slice(startIndex, endIndex));
+  // Paginação dos contratos filtrados com useMemo
+  const displayedContracts = useMemo(() => {
+    const startIndex = (currentPage - 1) * contractsPerPage;
+    const endIndex = startIndex + contractsPerPage;
+    return filteredContracts.slice(0, endIndex); // Mostrar todos os contratos carregados até o limite da página atual
   }, [filteredContracts, currentPage, contractsPerPage]);
 
-  const fetchContracts = async () => {
+  // Resetar página quando buscar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const loadMoreContracts = async () => {
+    setLoadingMore(true);
     try {
-      const { data, error } = await supabase
-        .from('saved_terms')
-        .select('*')
-        .eq('document_type', 'contrato')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Converter os dados do Supabase para o formato esperado
-      const contracts: Contract[] = (data || []).map((row) => ({
-        ...row,
-        form_data:
-          typeof row.form_data === 'string'
-            ? JSON.parse(row.form_data)
-            : (row.form_data as Record<string, string>) || {},
-      }));
-
-      setContracts(contracts);
-    } catch {
-      toast.error('Erro ao carregar contratos');
+      await loadMore(); // Carrega todos os contratos restantes do sistema
+      setCurrentPage((prev) => prev + 1); // Avança para a próxima página para mostrar mais contratos
     } finally {
-      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const loadMoreContracts = () => {
-    setLoadingMore(true);
-    // Simular delay para melhor UX
-    setTimeout(() => {
-      setCurrentPage((prev) => prev + 1);
-      setLoadingMore(false);
-    }, 300);
-  };
-
-  const hasMoreContracts = displayedContracts.length < filteredContracts.length;
+  const hasMoreContracts = hasMore;
 
   // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
   const generateMesesComprovantes = () => {
@@ -739,15 +712,15 @@ const Contratos = () => {
       enhancedData.temFiador3 = fiadores.length > 2 ? 'sim' : 'nao';
       enhancedData.temFiador4 = fiadores.length > 3 ? 'sim' : 'nao';
 
-      console.log('=== DEBUG FIADORES DISTRATO ===');
-      console.log('temFiador:', formData.temFiador);
-      console.log('nomeFiador:', formData.nomeFiador);
-      console.log('Array fiadores:', fiadores);
-      console.log('fiador1:', enhancedData.fiador1);
-      console.log('fiador2:', enhancedData.fiador2);
-      console.log('fiador3:', enhancedData.fiador3);
-      console.log('fiador4:', enhancedData.fiador4);
-      console.log('===============================');
+      // console.log('=== DEBUG FIADORES DISTRATO ===');
+      // console.log('temFiador:', formData.temFiador);
+      // console.log('nomeFiador:', formData.nomeFiador);
+      // console.log('Array fiadores:', fiadores);
+      // console.log('fiador1:', enhancedData.fiador1);
+      // console.log('fiador2:', enhancedData.fiador2);
+      // console.log('fiador3:', enhancedData.fiador3);
+      // console.log('fiador4:', enhancedData.fiador4);
+      // console.log('===============================');
     }
 
     const processedTemplate = replaceTemplateVariables(template, enhancedData);
@@ -911,40 +884,29 @@ const Contratos = () => {
       /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
       (match, variable, content) => {
         const value = data[variable];
-        console.log(
-          `Verificando condicional {{#if ${variable}}}:`,
-          value,
-          typeof value
-        );
+        // console.log(`Verificando condicional {{#if ${variable}}}:`, value, typeof value);
 
         // Verificar se a variável existe e não está vazia
         if (value !== undefined && value !== null && value !== '') {
           if (typeof value === 'string' && value.trim() !== '') {
-            console.log(
-              `Condicional ${variable} é verdadeira (string não vazia)`
-            );
+            // console.log(`Condicional ${variable} é verdadeira (string não vazia)`);
             return content;
           } else if (Array.isArray(value) && value.length > 0) {
-            console.log(
-              `Condicional ${variable} é verdadeira (array não vazio)`
-            );
+            // console.log(`Condicional ${variable} é verdadeira (array não vazio)`);
             return content;
           }
         }
-        console.log(`Condicional ${variable} é falsa`);
+        // console.log(`Condicional ${variable} é falsa`);
         return '';
       }
     );
 
     // Debug específico para fiador2
-    console.log('=== DEBUG FIADOR2 ===');
-    console.log(
-      'Template contém {{#if fiador2}}?',
-      template.includes('{{#if fiador2}}')
-    );
-    console.log('Template contém {{/if}}?', template.includes('{{/if}}'));
-    console.log('Resultado final contém fiador2?', result.includes('fiador2'));
-    console.log('========================');
+    // console.log('=== DEBUG FIADOR2 ===');
+    // console.log('Template contém {{#if fiador2}}?', template.includes('{{#if fiador2}}'));
+    // console.log('Template contém {{/if}}?', template.includes('{{/if}}'));
+    // console.log('Resultado final contém fiador2?', result.includes('fiador2'));
+    // console.log('========================');
 
     // Processar loops Handlebars {{#each}}
     result = result.replace(
@@ -1704,6 +1666,20 @@ const Contratos = () => {
                   </Button>
                 </Link>
               </div>
+
+              {/* Barra de Busca */}
+              <div className="flex items-center space-x-4">
+                <Input
+                  placeholder="Buscar contratos..."
+                  value={searchTerm}
+                  onChange={(_e) => {
+                    // A busca é gerenciada pelo contexto da sidebar
+                    // Aqui apenas sincronizamos o valor local se necessário
+                  }}
+                  className="w-64"
+                  readOnly
+                />
+              </div>
             </div>
 
             {loading ? (
@@ -1953,7 +1929,7 @@ const Contratos = () => {
                     Carregando...
                   </>
                 ) : (
-                  `Ver mais (${filteredContracts.length - displayedContracts.length} restantes)`
+                  `Ver mais (${Math.max(0, (searchTerm ? filteredContracts.length : totalCount) - displayedContracts.length)} restantes)`
                 )}
               </Button>
             </div>

@@ -5,7 +5,7 @@ export interface CompleteContractData {
   id: string;
   title: string;
   content: string;
-  form_data: Record<string, any>;
+  form_data: Record<string, unknown>;
   document_type: string;
   created_at: string;
   updated_at: string;

@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search, ArrowLeft, Key, User, FileText } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ContractData {
   numeroContrato: string;

@@ -19,14 +19,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Plus,
   Search,
   FileText,
@@ -41,7 +33,6 @@ import {
   CheckCircle,
   Archive,
   Filter,
-  MoreHorizontal,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -86,13 +77,13 @@ const VistoriaAnalises = () => {
   // Carregar análises quando o componente montar
   useEffect(() => {
     fetchAnalises();
-  }, []); // Removido fetchAnalises das dependências para evitar loop infinito
+  }, [fetchAnalises]);
 
   // Função para deletar análise
   const handleDeleteAnalise = async () => {
     if (!deleteDialog.analise) return;
 
-    const success = await deleteAnalise(deleteDialog.analise.id!);
+    const success = await deleteAnalise(deleteDialog.analise.id || '');
 
     if (success) {
       setDeleteDialog({ open: false, analise: null });
@@ -111,18 +102,18 @@ const VistoriaAnalises = () => {
   };
 
   // Função para visualizar análise
-  const handleViewAnalise = (analise: VistoriaAnaliseWithImages) => {
+  const handleViewAnalise = (_analise: VistoriaAnaliseWithImages) => {
     // Navegar para a página de análise em modo visualização
     navigate('/analise-vistoria', {
       state: {
         viewMode: true,
-        analiseData: analise,
+        analiseData: _analise,
       },
     });
   };
 
   // Função para gerar documento da análise
-  const handleGenerateDocument = (analise: VistoriaAnaliseWithImages) => {
+  const handleGenerateDocument = (_analise: VistoriaAnaliseWithImages) => {
     // Implementar geração de documento
     toast({
       title: 'Funcionalidade em desenvolvimento',

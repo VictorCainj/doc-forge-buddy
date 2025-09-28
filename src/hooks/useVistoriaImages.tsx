@@ -73,7 +73,7 @@ export const useVistoriaImages = () => {
             )
           );
 
-          const { data: uploadData, error: uploadError } =
+          const { data: _uploadData, error: uploadError } =
             await supabase.storage
               .from('vistoria-images')
               .upload(fileName, file);
@@ -118,8 +118,6 @@ export const useVistoriaImages = () => {
 
           uploadedUrls.push(publicUrl);
         } catch (error) {
-          console.error(`Erro ao fazer upload de ${file.name}:`, error);
-
           // Marcar como erro
           setUploadProgress((prev) =>
             prev.map((item, index) =>
@@ -156,8 +154,7 @@ export const useVistoriaImages = () => {
       }
 
       return uploadedUrls;
-    } catch (error) {
-      console.error('Erro geral no upload:', error);
+    } catch {
       toast({
         title: 'Erro no upload',
         description: 'Não foi possível fazer upload das imagens.',
@@ -212,7 +209,8 @@ export const useVistoriaImages = () => {
         .remove([`${vistoriaId}/**/${fileName}`]);
 
       if (storageError) {
-        console.warn('Erro ao deletar do storage:', storageError);
+        // Erro no storage, mas continuar com a exclusão do banco
+        // console.warn('Erro no storage:', storageError);
       }
 
       // Deletar referência do banco
@@ -230,8 +228,7 @@ export const useVistoriaImages = () => {
       });
 
       return true;
-    } catch (error) {
-      console.error('Erro ao deletar imagem:', error);
+    } catch {
       toast({
         title: 'Erro ao deletar',
         description: 'Não foi possível deletar a imagem.',

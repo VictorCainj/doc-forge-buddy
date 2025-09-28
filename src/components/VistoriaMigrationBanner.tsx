@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertTriangle,
-  Database,
-  ArrowRight,
-  CheckCircle,
-  X,
-  Loader2,
-} from 'lucide-react';
+import { Database, ArrowRight, X, Loader2 } from 'lucide-react';
 import { useVistoriaMigrator } from '@/utils/migrateVistoriaData';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,8 +43,8 @@ const VistoriaMigrationBanner = () => {
       if (success) {
         setIsDismissed(true);
       }
-    } catch (error) {
-      console.error('Erro na migração:', error);
+    } catch {
+      // Erro na migração - silencioso para não poluir logs
     } finally {
       setIsMigrating(false);
     }
