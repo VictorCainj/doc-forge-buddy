@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { log } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
@@ -106,164 +106,136 @@ const AnaliseVistoria = () => {
   const [saving, setSaving] = useState(false);
 
   // Função para carregar dados da análise em modo de edição
-  const loadAnalysisData = async (analiseData: VistoriaAnaliseWithImages) => {
-    try {
-      log.debug('=== CARREGANDO DADOS DA ANÁLISE ===');
-      log.debug('Análise ID:', analiseData.id);
-      log.debug('Imagens disponíveis:', analiseData.images?.length || 0);
-      log.debug('Dados das imagens:', analiseData.images);
+  const loadAnalysisData = useCallback(
+    async (
+      analiseData: VistoriaAnaliseWithImages,
+      showToast: boolean = true
+    ) => {
+      try {
+        log.debug('=== CARREGANDO DADOS DA ANÁLISE ===');
+        log.debug('Análise ID:', analiseData.id);
+        log.debug('Imagens disponíveis:', analiseData.images?.length || 0);
+        log.debug('Dados das imagens:', analiseData.images);
 
-      // Carregar dados da vistoria
-      if (analiseData.dados_vistoria) {
-        const dados = analiseData.dados_vistoria as any;
-        setDadosVistoria({
-          locatario: dados.locatario || '',
-          endereco: dados.endereco || '',
-          dataVistoria: dados.dataVistoria || '',
-        });
-      }
+        // Carregar dados da vistoria
+        if (analiseData.dados_vistoria) {
+          const dados = analiseData.dados_vistoria as any;
+          setDadosVistoria({
+            locatario: dados.locatario || '',
+            endereco: dados.endereco || '',
+            dataVistoria: dados.dataVistoria || '',
+          });
+        }
 
-      // Carregar apontamentos com imagens
-      if (analiseData.apontamentos) {
-        const apontamentosData = analiseData.apontamentos as any[];
-
-        // Se há imagens do banco de dados, usar elas
-        const hasDatabaseImages =
-          analiseData.images && analiseData.images.length > 0;
-
-        log.debug('=== PROCESSANDO APONTAMENTOS ===');
-        log.debug('Total de apontamentos:', apontamentosData.length);
-        log.debug('Tem imagens do banco:', hasDatabaseImages);
-
-        const apontamentosWithImages = await Promise.all(
-          apontamentosData.map(async (apontamento) => {
-            const apontamentoWithImages = { ...apontamento };
-
-            if (hasDatabaseImages) {
-              // Carregar imagens do banco de dados
-              const apontamentoImages = analiseData.images.filter(
-                (img: any) => img.apontamento_id === apontamento.id
-              );
-
-              const fotosInicial = apontamentoImages
-                .filter((img: any) => img.tipo_vistoria === 'inicial')
-                .map((img: any) => {
-                  // console.log('Processando foto inicial:', img.file_name, img.image_url);
-                  // Criar um objeto File simulado para imagens do banco
-                  return {
-                    name: img.file_name,
-                    size: img.file_size,
-                    type: img.file_type,
-                    url: img.image_url,
-                    isFromDatabase: true,
-                  };
-                });
-
-              const fotosFinal = apontamentoImages
-                .filter((img: any) => img.tipo_vistoria === 'final')
-                .map((img: any) => {
-                  // console.log('Processando foto final:', img.file_name, img.image_url);
-                  return {
-                    name: img.file_name,
-                    size: img.file_size,
-                    type: img.file_type,
-                    url: img.image_url,
-                    isFromDatabase: true,
-                  };
-                });
-
-              // console.log(`Fotos Inicial criadas: ${fotosInicial.length}`);
-              // console.log(`Fotos Final criadas: ${fotosFinal.length}`);
-
-              apontamentoWithImages.vistoriaInicial = {
-                ...apontamento.vistoriaInicial,
-                fotos: fotosInicial,
-              };
-
-              apontamentoWithImages.vistoriaFinal = {
-                ...apontamento.vistoriaFinal,
-                fotos: fotosFinal,
-              };
-            } else {
-              // Carregar imagens da análise original (base64)
-              if (apontamento.vistoriaInicial?.fotos) {
-                const fotosInicial = await Promise.all(
-                  apontamento.vistoriaInicial.fotos.map(async (foto: any) => {
-                    if (foto.base64) {
-                      // Converter base64 para File
-                      return base64ToFile(foto.base64, foto.name, foto.type);
-                    }
-                    return foto;
-                  })
+        // Carregar apontamentos com imagens
+        if (analiseData.apontamentos) {
+          const apontamentosData = analiseData.apontamentos as any[];
+          // Se há imagens do banco de dados, usar elas
+          const hasDatabaseImages =
+            analiseData.images && analiseData.images.length > 0;
+          log.debug('=== PROCESSANDO APONTAMENTOS ===');
+          log.debug('Total de apontamentos:', apontamentosData.length);
+          log.debug('Tem imagens do banco:', hasDatabaseImages);
+          const apontamentosWithImages = await Promise.all(
+            apontamentosData.map(async (apontamento) => {
+              const apontamentoWithImages = { ...apontamento };
+              if (hasDatabaseImages) {
+                // Carregar imagens do banco de dados
+                const apontamentoImages = analiseData.images.filter(
+                  (img: any) => img.apontamento_id === apontamento.id
                 );
+                const fotosInicial = apontamentoImages
+                  .filter((img: any) => img.tipo_vistoria === 'inicial')
+                  .map((img: any) => {
+                    return {
+                      name: img.file_name,
+                      size: img.file_size,
+                      type: img.file_type,
+                      url: img.image_url,
+                      isFromDatabase: true,
+                    };
+                  });
+                const fotosFinal = apontamentoImages
+                  .filter((img: any) => img.tipo_vistoria === 'final')
+                  .map((img: any) => {
+                    return {
+                      name: img.file_name,
+                      size: img.file_size,
+                      type: img.file_type,
+                      url: img.image_url,
+                      isFromDatabase: true,
+                    };
+                  });
                 apontamentoWithImages.vistoriaInicial = {
                   ...apontamento.vistoriaInicial,
                   fotos: fotosInicial,
                 };
-              }
-
-              if (apontamento.vistoriaFinal?.fotos) {
-                const fotosFinal = await Promise.all(
-                  apontamento.vistoriaFinal.fotos.map(async (foto: any) => {
-                    if (foto.base64) {
-                      // Converter base64 para File
-                      return base64ToFile(foto.base64, foto.name, foto.type);
-                    }
-                    return foto;
-                  })
-                );
                 apontamentoWithImages.vistoriaFinal = {
                   ...apontamento.vistoriaFinal,
                   fotos: fotosFinal,
                 };
+              } else {
+                // Carregar imagens da análise original (base64)
+                if (apontamento.vistoriaInicial?.fotos) {
+                  const fotosInicial = await Promise.all(
+                    apontamento.vistoriaInicial.fotos.map(async (foto: any) => {
+                      if (foto.base64) {
+                        return base64ToFile(foto.base64, foto.name, foto.type);
+                      }
+                      return foto;
+                    })
+                  );
+                  apontamentoWithImages.vistoriaInicial = {
+                    ...apontamento.vistoriaInicial,
+                    fotos: fotosInicial,
+                  };
+                }
+                if (apontamento.vistoriaFinal?.fotos) {
+                  const fotosFinal = await Promise.all(
+                    apontamento.vistoriaFinal.fotos.map(async (foto: any) => {
+                      if (foto.base64) {
+                        return base64ToFile(foto.base64, foto.name, foto.type);
+                      }
+                      return foto;
+                    })
+                  );
+                  apontamentoWithImages.vistoriaFinal = {
+                    ...apontamento.vistoriaFinal,
+                    fotos: fotosFinal,
+                  };
+                }
               }
-            }
-
-            return apontamentoWithImages;
-          })
-        );
-
-        // console.log('=== APONTAMENTOS CARREGADOS ===');
-        // console.log(
-        //   'Total de apontamentos carregados:',
-        //   apontamentosWithImages.length
-        // );
-        apontamentosWithImages.forEach((_apontamento, _index) => {
-          // console.log(`Apontamento ${index + 1}: ${apontamento.ambiente}`);
-          // console.log(
-          //   `- Fotos Inicial: ${apontamento.vistoriaInicial?.fotos?.length || 0}`
-          // );
-          // console.log(
-          //   `- Fotos Final: ${apontamento.vistoriaFinal?.fotos?.length || 0}`
-          // );
-        });
-
-        setApontamentos(apontamentosWithImages);
-      }
-
-      // Encontrar e selecionar o contrato correspondente
-      if (analiseData.contract_id && contracts.length > 0) {
-        const contract = contracts.find(
-          (c) => c.id === analiseData.contract_id
-        );
-        if (contract) {
-          setSelectedContract(contract);
+              return apontamentoWithImages;
+            })
+          );
+          setApontamentos(apontamentosWithImages);
         }
+        // Encontrar e selecionar o contrato correspondente
+        if (analiseData.contract_id && contracts.length > 0) {
+          const contract = contracts.find(
+            (c) => c.id === analiseData.contract_id
+          );
+          if (contract) {
+            setSelectedContract(contract);
+          }
+        }
+        if (showToast) {
+          toast({
+            title: 'Análise carregada',
+            description: 'Os dados da análise foram carregados para edição.',
+          });
+        }
+      } catch (error) {
+        log.error('Erro ao carregar dados da análise:', error);
+        toast({
+          title: 'Erro ao carregar análise',
+          description: 'Não foi possível carregar os dados da análise.',
+          variant: 'destructive',
+        });
       }
-
-      toast({
-        title: 'Análise carregada',
-        description: 'Os dados da análise foram carregados para edição.',
-      });
-    } catch (error) {
-      log.error('Erro ao carregar dados da análise:', error);
-      toast({
-        title: 'Erro ao carregar análise',
-        description: 'Não foi possível carregar os dados da análise.',
-        variant: 'destructive',
-      });
-    }
-  };
+    },
+    [contracts, toast, base64ToFile]
+  );
 
   // Carregar contratos do Supabase
   useEffect(() => {
@@ -312,9 +284,8 @@ const AnaliseVistoria = () => {
       setIsEditMode(true);
       setEditingAnaliseId(state.analiseData.id);
       setSavedAnaliseId(state.analiseData.id);
-
-      // Carregar dados da análise
-      loadAnalysisData(state.analiseData);
+      // Carregar dados da análise (exibir toast)
+      loadAnalysisData(state.analiseData, true);
     } else if (state?.preserveAnalysisState && contracts.length > 0) {
       // Restaurar estado preservado ao retornar da geração de documento
       const preservedState = state.preserveAnalysisState;
@@ -707,8 +678,8 @@ const AnaliseVistoria = () => {
         // console.log('Imagens encontradas:', imagesData?.length || 0);
         // console.log('Dados das imagens:', imagesData);
 
-        // Carregar automaticamente a análise completa
-        await loadAnalysisData(completeAnalise);
+        // Carregar automaticamente a análise completa (NÃO exibir toast)
+        await loadAnalysisData(completeAnalise, false);
 
         toast({
           title: 'Imagens recarregadas',
@@ -733,66 +704,69 @@ const AnaliseVistoria = () => {
     }
   };
 
-  const checkExistingAnalise = async (contractId: string) => {
-    if (!contractId) {
-      setHasExistingAnalise(false);
-      setExistingAnaliseId(null);
-      return;
-    }
-
-    try {
-      setLoadingExistingAnalise(true);
-
-      // Buscar análise com dados completos
-      const { data: analiseData, error: analiseError } = await supabase
-        .from('vistoria_analises')
-        .select('*')
-        .eq('contract_id', contractId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (analiseData && !analiseError) {
-        setHasExistingAnalise(true);
-        setExistingAnaliseId(analiseData.id);
-
-        // Carregar imagens da análise
-        const { data: imagesData, error: imagesError } = await supabase
-          .from('vistoria_images')
-          .select('*')
-          .eq('vistoria_id', analiseData.id)
-          .order('created_at', { ascending: true });
-
-        if (imagesError) {
-          // console.error('Erro ao carregar imagens:', imagesError);
-        }
-
-        // Criar objeto completo da análise
-        const completeAnalise: VistoriaAnaliseWithImages = {
-          ...analiseData,
-          images: imagesData || [],
-        };
-
-        // Carregar automaticamente a análise completa
-        await loadAnalysisData(completeAnalise);
-
-        toast({
-          title: 'Análise carregada',
-          description:
-            'A análise existente para este contrato foi carregada automaticamente.',
-        });
-      } else {
+  const checkExistingAnalise = useCallback(
+    async (contractId: string) => {
+      if (!contractId) {
         setHasExistingAnalise(false);
         setExistingAnaliseId(null);
+        return;
       }
-    } catch {
-      // console.error('Erro ao verificar análise existente:', error);
-      setHasExistingAnalise(false);
-      setExistingAnaliseId(null);
-    } finally {
-      setLoadingExistingAnalise(false);
-    }
-  };
+
+      try {
+        setLoadingExistingAnalise(true);
+
+        // Buscar análise com dados completos
+        const { data: analiseData, error: analiseError } = await supabase
+          .from('vistoria_analises')
+          .select('*')
+          .eq('contract_id', contractId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (analiseData && !analiseError) {
+          setHasExistingAnalise(true);
+          setExistingAnaliseId(analiseData.id);
+
+          // Carregar imagens da análise
+          const { data: imagesData, error: imagesError } = await supabase
+            .from('vistoria_images')
+            .select('*')
+            .eq('vistoria_id', analiseData.id)
+            .order('created_at', { ascending: true });
+
+          if (imagesError) {
+            // console.error('Erro ao carregar imagens:', imagesError);
+          }
+
+          // Criar objeto completo da análise
+          const completeAnalise: VistoriaAnaliseWithImages = {
+            ...analiseData,
+            images: imagesData || [],
+          };
+
+          // Carregar automaticamente a análise completa (NÃO exibir toast)
+          await loadAnalysisData(completeAnalise, false);
+
+          toast({
+            title: 'Análise carregada',
+            description:
+              'A análise existente para este contrato foi carregada automaticamente.',
+          });
+        } else {
+          setHasExistingAnalise(false);
+          setExistingAnaliseId(null);
+        }
+      } catch {
+        // console.error('Erro ao verificar análise existente:', error);
+        setHasExistingAnalise(false);
+        setExistingAnaliseId(null);
+      } finally {
+        setLoadingExistingAnalise(false);
+      }
+    },
+    [loadAnalysisData, toast]
+  );
 
   // Atualizar dados da vistoria quando contrato for selecionado
   useEffect(() => {
@@ -839,7 +813,7 @@ const AnaliseVistoria = () => {
       return;
     }
 
-    const newApontamento: Apontamento = {
+    const newApontamento: ApontamentoVistoria = {
       id: Date.now().toString(),
       ambiente: currentApontamento.ambiente || '',
       subtitulo: currentApontamento.subtitulo || '',
@@ -1170,7 +1144,7 @@ const AnaliseVistoria = () => {
     });
   };
 
-  const handleEditApontamento = (apontamento: Apontamento) => {
+  const handleEditApontamento = (apontamento: ApontamentoVistoria) => {
     setEditingApontamento(apontamento.id);
     setCurrentApontamento({
       ambiente: apontamento.ambiente,
