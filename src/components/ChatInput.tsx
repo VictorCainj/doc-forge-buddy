@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Zap, Brain, Bot } from 'lucide-react';
+import { Send, Loader2, Zap, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +34,7 @@ const ChatInput = memo(
     isTyping = false,
     connectionStatus = 'connected',
   }: ChatInputProps) => {
-    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [_showSuggestions, setShowSuggestions] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const suggestionTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -93,7 +93,7 @@ const ChatInput = memo(
       [handleSubmit]
     );
 
-    const handleSuggestionClick = useCallback(
+    const _handleSuggestionClick = useCallback(
       (suggestion: string) => {
         onChange(suggestion);
         setShowSuggestions(false);
@@ -115,7 +115,7 @@ const ChatInput = memo(
       }
     };
 
-    const getModeIcon = () => {
+    const _getModeIcon = () => {
       switch (currentMode.type) {
         case 'normal':
           return <Brain className="h-4 w-4" />;
@@ -126,7 +126,7 @@ const ChatInput = memo(
       }
     };
 
-    const getConnectionStatusColor = () => {
+    const _getConnectionStatusColor = () => {
       switch (connectionStatus) {
         case 'connected':
           return 'text-green-500';
@@ -139,7 +139,7 @@ const ChatInput = memo(
       }
     };
 
-    const getConnectionStatusText = () => {
+    const _getConnectionStatusText = () => {
       switch (connectionStatus) {
         case 'connected':
           return 'Conectado';

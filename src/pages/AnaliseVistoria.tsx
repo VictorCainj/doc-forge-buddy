@@ -119,7 +119,7 @@ const AnaliseVistoria = () => {
 
         // Carregar dados da vistoria
         if (analiseData.dados_vistoria) {
-          const dados = analiseData.dados_vistoria as any;
+          const dados = analiseData.dados_vistoria as Record<string, unknown>;
           setDadosVistoria({
             locatario: dados.locatario || '',
             endereco: dados.endereco || '',
@@ -129,7 +129,10 @@ const AnaliseVistoria = () => {
 
         // Carregar apontamentos com imagens
         if (analiseData.apontamentos) {
-          const apontamentosData = analiseData.apontamentos as any[];
+          const apontamentosData = analiseData.apontamentos as Record<
+            string,
+            unknown
+          >[];
           // Se há imagens do banco de dados, usar elas
           const hasDatabaseImages =
             analiseData.images && analiseData.images.length > 0;
@@ -142,11 +145,15 @@ const AnaliseVistoria = () => {
               if (hasDatabaseImages) {
                 // Carregar imagens do banco de dados
                 const apontamentoImages = analiseData.images.filter(
-                  (img: any) => img.apontamento_id === apontamento.id
+                  (img: Record<string, unknown>) =>
+                    img.apontamento_id === apontamento.id
                 );
                 const fotosInicial = apontamentoImages
-                  .filter((img: any) => img.tipo_vistoria === 'inicial')
-                  .map((img: any) => {
+                  .filter(
+                    (img: Record<string, unknown>) =>
+                      img.tipo_vistoria === 'inicial'
+                  )
+                  .map((img: Record<string, unknown>) => {
                     return {
                       name: img.file_name,
                       size: img.file_size,
@@ -156,8 +163,11 @@ const AnaliseVistoria = () => {
                     };
                   });
                 const fotosFinal = apontamentoImages
-                  .filter((img: any) => img.tipo_vistoria === 'final')
-                  .map((img: any) => {
+                  .filter(
+                    (img: Record<string, unknown>) =>
+                      img.tipo_vistoria === 'final'
+                  )
+                  .map((img: Record<string, unknown>) => {
                     return {
                       name: img.file_name,
                       size: img.file_size,
@@ -178,12 +188,18 @@ const AnaliseVistoria = () => {
                 // Carregar imagens da análise original (base64)
                 if (apontamento.vistoriaInicial?.fotos) {
                   const fotosInicial = await Promise.all(
-                    apontamento.vistoriaInicial.fotos.map(async (foto: any) => {
-                      if (foto.base64) {
-                        return base64ToFile(foto.base64, foto.name, foto.type);
+                    apontamento.vistoriaInicial.fotos.map(
+                      async (foto: Record<string, unknown>) => {
+                        if (foto.base64) {
+                          return base64ToFile(
+                            foto.base64,
+                            foto.name,
+                            foto.type
+                          );
+                        }
+                        return foto;
                       }
-                      return foto;
-                    })
+                    )
                   );
                   apontamentoWithImages.vistoriaInicial = {
                     ...apontamento.vistoriaInicial,
@@ -192,12 +208,18 @@ const AnaliseVistoria = () => {
                 }
                 if (apontamento.vistoriaFinal?.fotos) {
                   const fotosFinal = await Promise.all(
-                    apontamento.vistoriaFinal.fotos.map(async (foto: any) => {
-                      if (foto.base64) {
-                        return base64ToFile(foto.base64, foto.name, foto.type);
+                    apontamento.vistoriaFinal.fotos.map(
+                      async (foto: Record<string, unknown>) => {
+                        if (foto.base64) {
+                          return base64ToFile(
+                            foto.base64,
+                            foto.name,
+                            foto.type
+                          );
+                        }
+                        return foto;
                       }
-                      return foto;
-                    })
+                    )
                   );
                   apontamentoWithImages.vistoriaFinal = {
                     ...apontamento.vistoriaFinal,
@@ -269,7 +291,7 @@ const AnaliseVistoria = () => {
       editMode?: boolean;
       analiseData?: VistoriaAnaliseWithImages;
       preserveAnalysisState?: {
-        apontamentos: any[];
+        apontamentos: ApontamentoVistoria[];
         dadosVistoria: DadosVistoria;
         selectedContract: Contract | null;
         savedAnaliseId: string | null;
@@ -305,7 +327,7 @@ const AnaliseVistoria = () => {
           'O estado da análise foi restaurado após a geração do documento.',
       });
     }
-  }, [location.state, contracts]);
+  }, [location.state, contracts, loadAnalysisData, toast]);
 
   // Carregar estado salvo do localStorage (para compatibilidade com dados antigos)
   useEffect(() => {
@@ -318,45 +340,47 @@ const AnaliseVistoria = () => {
           // Recriar apontamentos com objetos File a partir do base64
           if (parsedState.apontamentos) {
             const apontamentosComFotos = await Promise.all(
-              parsedState.apontamentos.map(async (apontamento: any) => ({
-                ...apontamento,
-                vistoriaInicial: {
-                  ...apontamento.vistoriaInicial,
-                  fotos: await Promise.all(
-                    (apontamento.vistoriaInicial?.fotos || []).map(
-                      async (foto: any) => {
-                        if (foto.base64) {
-                          return base64ToFile(
-                            foto.base64,
-                            foto.name,
-                            foto.type
-                          );
+              parsedState.apontamentos.map(
+                async (apontamento: Record<string, unknown>) => ({
+                  ...apontamento,
+                  vistoriaInicial: {
+                    ...apontamento.vistoriaInicial,
+                    fotos: await Promise.all(
+                      (apontamento.vistoriaInicial?.fotos || []).map(
+                        async (foto: Record<string, unknown>) => {
+                          if (foto.base64) {
+                            return base64ToFile(
+                              foto.base64,
+                              foto.name,
+                              foto.type
+                            );
+                          }
+                          // Fallback para fotos antigas sem base64
+                          return new File([], foto.name, { type: foto.type });
                         }
-                        // Fallback para fotos antigas sem base64
-                        return new File([], foto.name, { type: foto.type });
-                      }
-                    )
-                  ),
-                },
-                vistoriaFinal: {
-                  ...apontamento.vistoriaFinal,
-                  fotos: await Promise.all(
-                    (apontamento.vistoriaFinal?.fotos || []).map(
-                      async (foto: any) => {
-                        if (foto.base64) {
-                          return base64ToFile(
-                            foto.base64,
-                            foto.name,
-                            foto.type
-                          );
+                      )
+                    ),
+                  },
+                  vistoriaFinal: {
+                    ...apontamento.vistoriaFinal,
+                    fotos: await Promise.all(
+                      (apontamento.vistoriaFinal?.fotos || []).map(
+                        async (foto: Record<string, unknown>) => {
+                          if (foto.base64) {
+                            return base64ToFile(
+                              foto.base64,
+                              foto.name,
+                              foto.type
+                            );
+                          }
+                          // Fallback para fotos antigas sem base64
+                          return new File([], foto.name, { type: foto.type });
                         }
-                        // Fallback para fotos antigas sem base64
-                        return new File([], foto.name, { type: foto.type });
-                      }
-                    )
-                  ),
-                },
-              }))
+                      )
+                    ),
+                  },
+                })
+              )
             );
             setApontamentos(apontamentosComFotos);
           }

@@ -1,14 +1,14 @@
 import { memo, useState, useEffect } from 'react';
-import { 
-  BarChart3, 
-  Database, 
-  Clock, 
-  TrendingUp, 
+import {
+  BarChart3,
+  Database,
+  Clock,
+  TrendingUp,
   Zap,
   Brain,
   Bot,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,13 +40,13 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
       try {
         const cacheStats = getCacheStats();
         setStats(cacheStats);
-      } catch (error) {
-        console.error('Erro ao obter estatísticas do cache:', error);
+      } catch {
+        // console.error('Erro ao obter estatísticas do cache:', error);
       }
     };
 
     updateStats();
-    
+
     if (isVisible) {
       const interval = setInterval(updateStats, 30000); // Atualizar a cada 30 segundos
       return () => clearInterval(interval);
@@ -61,7 +61,7 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
         title: 'Cache limpo',
         description: 'O cache da IA foi limpo com sucesso.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro',
         description: 'Não foi possível limpar o cache.',
@@ -145,12 +145,14 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span>Taxa de Hit:</span>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs ${
-                        stats.hitRate > 0.7 ? 'bg-green-50 text-green-700 border-green-200' :
-                        stats.hitRate > 0.4 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                        'bg-red-50 text-red-700 border-red-200'
+                        stats.hitRate > 0.7
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : stats.hitRate > 0.4
+                            ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
                       }`}
                     >
                       {Math.round(stats.hitRate * 100)}%
@@ -192,10 +194,12 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
                   <div className="flex justify-between text-xs">
                     <span>Idade:</span>
                     <span className="text-muted-foreground">
-                      {stats.oldestEntry ? 
-                        Math.round((Date.now() - stats.oldestEntry.getTime()) / (1000 * 60 * 60)) + 'h' : 
-                        'N/A'
-                      }
+                      {stats.oldestEntry
+                        ? Math.round(
+                            (Date.now() - stats.oldestEntry.getTime()) /
+                              (1000 * 60 * 60)
+                          ) + 'h'
+                        : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -216,21 +220,15 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
             <div className="grid grid-cols-3 gap-2">
               <div className="text-center p-2 bg-green-50 rounded border">
                 <Zap className="h-3 w-3 mx-auto text-green-600" />
-                <div className="text-xs text-green-700 mt-1">
-                  Cache Ativo
-                </div>
+                <div className="text-xs text-green-700 mt-1">Cache Ativo</div>
               </div>
               <div className="text-center p-2 bg-blue-50 rounded border">
                 <Brain className="h-3 w-3 mx-auto text-blue-600" />
-                <div className="text-xs text-blue-700 mt-1">
-                  IA Otimizada
-                </div>
+                <div className="text-xs text-blue-700 mt-1">IA Otimizada</div>
               </div>
               <div className="text-center p-2 bg-purple-50 rounded border">
                 <Bot className="h-3 w-3 mx-auto text-purple-600" />
-                <div className="text-xs text-purple-700 mt-1">
-                  Retry Auto
-                </div>
+                <div className="text-xs text-purple-700 mt-1">Retry Auto</div>
               </div>
             </div>
           </div>

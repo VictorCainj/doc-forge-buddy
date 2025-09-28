@@ -1,61 +1,28 @@
-import { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
-  Send,
   Bot,
-  User,
   Loader2,
-  Sparkles,
-  Copy,
-  Check,
   Trash2,
   ArrowLeft,
   MessageSquare,
   Brain,
   Zap,
-  RotateCcw,
-  AlertCircle,
-  CheckCircle2,
-  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { useOpenAI } from '@/hooks/useOpenAI';
-import { useClipboard } from '@/hooks/useClipboard';
 import { useNavigate } from 'react-router-dom';
-import { useChatHistory } from '@/hooks/useChatHistory';
-import { useAIMemory } from '@/hooks/useAIMemory';
 import { useOptimizedChat } from '@/hooks/useOptimizedChat';
+import { useToast } from '@/hooks/use-toast';
+import { useClipboard } from '@/hooks/useClipboard';
 import ChatMessage from '@/components/ChatMessage';
 import ChatInput from '@/components/ChatInput';
-import ChatStats from '@/components/ChatStats';
-
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-  isCorrected?: boolean;
-  isImproved?: boolean;
-  isAnalysis?: boolean;
-  retryCount?: number;
-  status?: 'sending' | 'sent' | 'error' | 'retrying';
-  error?: string;
-  metadata?: {
-    sentiment?: 'positive' | 'negative' | 'neutral';
-    confidence?: number;
-    suggestions?: string[];
-  };
-}
 
 const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showStats, setShowStats] = useState(false);
+  const [_showStats, _setShowStats] = useState(false);
 
   // Hooks otimizados
-  const { toast } = useToast();
+  const _toast = useToast();
   const { copyToClipboard, copiedMessageId } = useClipboard();
   const navigate = useNavigate();
 
@@ -64,7 +31,7 @@ const Chat = () => {
     messages,
     currentMode,
     isLoading,
-    error,
+    error: _error,
     inputText,
     setInputText,
     setMode,

@@ -60,7 +60,7 @@ const MALICIOUS_PATTERNS = [
 const SPAM_PATTERNS = [
   /(.)\1{4,}/g, // Caracteres repetidos (ex: aaaaa)
   /[A-Z]{10,}/g, // Muitas maiúsculas
-  /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{5,}/g, // Muitos símbolos
+  /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{5,}/g, // Muitos símbolos
   /\b(?:free|gratis|urgente|importante|clique|aqui|agora)\b.{0,50}\b(?:free|gratis|urgente|importante|clique|aqui|agora)\b/gi, // Palavras de spam
 ];
 
@@ -71,12 +71,116 @@ const INAPPROPRIATE_WORDS = [
 
 // Detectar idioma do texto (simplificado)
 const detectLanguage = (text: string): string => {
-  const portugueseWords = ['o', 'a', 'os', 'as', 'um', 'uma', 'de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos', 'para', 'com', 'por', 'sobre', 'entre', 'através', 'durante', 'após', 'antes', 'que', 'quando', 'onde', 'como', 'porque', 'então', 'mas', 'ou', 'e', 'se', 'não', 'são', 'foi', 'será', 'tem', 'ter', 'fazer', 'dizer', 'ver', 'ir', 'vir', 'dar', 'saber', 'poder', 'querer'];
-  const englishWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'among', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'shall'];
+  const portugueseWords = [
+    'o',
+    'a',
+    'os',
+    'as',
+    'um',
+    'uma',
+    'de',
+    'da',
+    'do',
+    'das',
+    'dos',
+    'em',
+    'na',
+    'no',
+    'nas',
+    'nos',
+    'para',
+    'com',
+    'por',
+    'sobre',
+    'entre',
+    'através',
+    'durante',
+    'após',
+    'antes',
+    'que',
+    'quando',
+    'onde',
+    'como',
+    'porque',
+    'então',
+    'mas',
+    'ou',
+    'e',
+    'se',
+    'não',
+    'são',
+    'foi',
+    'será',
+    'tem',
+    'ter',
+    'fazer',
+    'dizer',
+    'ver',
+    'ir',
+    'vir',
+    'dar',
+    'saber',
+    'poder',
+    'querer',
+  ];
+  const englishWords = [
+    'the',
+    'a',
+    'an',
+    'and',
+    'or',
+    'but',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'of',
+    'with',
+    'by',
+    'from',
+    'up',
+    'about',
+    'into',
+    'through',
+    'during',
+    'before',
+    'after',
+    'above',
+    'below',
+    'between',
+    'among',
+    'is',
+    'are',
+    'was',
+    'were',
+    'be',
+    'been',
+    'being',
+    'have',
+    'has',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'could',
+    'should',
+    'may',
+    'might',
+    'must',
+    'can',
+    'shall',
+  ];
 
   const words = text.toLowerCase().split(/\s+/);
-  const portugueseCount = words.filter(word => portugueseWords.includes(word)).length;
-  const englishCount = words.filter(word => englishWords.includes(word)).length;
+  const portugueseCount = words.filter((word) =>
+    portugueseWords.includes(word)
+  ).length;
+  const englishCount = words.filter((word) =>
+    englishWords.includes(word)
+  ).length;
 
   if (portugueseCount > englishCount) return 'pt-BR';
   if (englishCount > portugueseCount) return 'en';
@@ -155,7 +259,10 @@ export const validateInput = (
   for (const pattern of MALICIOUS_PATTERNS) {
     if (pattern.test(sanitizedInput)) {
       errors.push('Conteúdo potencialmente malicioso detectado');
-      log.warn('Conteúdo malicioso detectado:', sanitizedInput.substring(0, 100));
+      log.warn(
+        'Conteúdo malicioso detectado:',
+        sanitizedInput.substring(0, 100)
+      );
       break;
     }
   }
@@ -190,7 +297,7 @@ export const validateInput = (
   }
 
   // Contar palavras
-  const words = sanitizedInput.split(/\s+/).filter(word => word.length > 0);
+  const words = sanitizedInput.split(/\s+/).filter((word) => word.length > 0);
   const wordCount = words.length;
 
   if (wordCount > opts.maxWords) {
@@ -204,15 +311,22 @@ export const validateInput = (
   // Detectar idioma
   const language = detectLanguage(sanitizedInput);
   if (!opts.allowedLanguages.includes(language) && language !== 'unknown') {
-    warnings.push(`Idioma detectado: ${language} (permitidos: ${opts.allowedLanguages.join(', ')})`);
+    warnings.push(
+      `Idioma detectado: ${language} (permitidos: ${opts.allowedLanguages.join(', ')})`
+    );
   }
 
   // Análise de metadados
-  const containsSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(sanitizedInput);
+  const containsSpecialChars = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(
+    sanitizedInput
+  );
   const containsNumbers = /\d/.test(sanitizedInput);
-  
+
   // Estimar tempo de processamento (baseado no comprimento e complexidade)
-  const estimatedProcessingTime = Math.max(1, Math.ceil(sanitizedInput.length / 100));
+  const estimatedProcessingTime = Math.max(
+    1,
+    Math.ceil(sanitizedInput.length / 100)
+  );
 
   const result: ValidationResult = {
     isValid: errors.length === 0,
@@ -279,7 +393,7 @@ export const prepareInputForProcessing = (
   mode: 'normal' | 'intelligent' | 'analysis'
 ): { input: string; validation: ValidationResult } => {
   const validation = validateChatInput(input, mode);
-  
+
   return {
     input: validation.sanitizedInput,
     validation,
@@ -308,7 +422,10 @@ export const getInputSuggestions = (validation: ValidationResult): string[] => {
     suggestions.push('Considere adicionar mais detalhes');
   }
 
-  if (validation.metadata.containsSpecialChars && validation.metadata.wordCount > 100) {
+  if (
+    validation.metadata.containsSpecialChars &&
+    validation.metadata.wordCount > 100
+  ) {
     suggestions.push('Considere simplificar a formatação');
   }
 

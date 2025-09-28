@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/ui/metric-card';
 import { AdvancedChart } from '@/components/ui/advanced-chart';
 import {
@@ -176,7 +176,7 @@ const EnhancedDashboard = () => {
     return 'error';
   };
 
-  const getPerformanceStatus = (value: number, target: number) => {
+  const _getPerformanceStatus = (value: number, target: number) => {
     if (value >= target) return 'success';
     if (value >= target * 0.8) return 'warning';
     return 'error';

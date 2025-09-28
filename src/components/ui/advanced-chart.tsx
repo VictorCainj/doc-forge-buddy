@@ -6,7 +6,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Download,
   Filter,
   Maximize2,
 } from 'lucide-react';
@@ -48,7 +47,7 @@ export const AdvancedChart = ({
   _trendPeriod = 'vs mês anterior',
   className,
   onDataPointClick,
-  onExport,
+  onExport: _onExport,
   onFilter,
   onMaximize,
 }: AdvancedChartProps) => {
