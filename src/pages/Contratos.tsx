@@ -78,7 +78,7 @@ interface Contract {
 }
 
 const Contratos = () => {
-  const { searchTerm } = useSearchContext(); // Usar busca da sidebar
+  const { searchTerm, setSearchTerm } = useSearchContext(); // Usar busca da sidebar
   const {
     data: contracts,
     loading,
@@ -171,15 +171,28 @@ const Contratos = () => {
 
   // Paginação dos contratos filtrados com useMemo
   const displayedContracts = useMemo(() => {
+    if (searchTerm) {
+      // Em modo de busca, exibir todos os resultados carregados
+      return filteredContracts;
+    }
     const startIndex = (currentPage - 1) * contractsPerPage;
     const endIndex = startIndex + contractsPerPage;
-    return filteredContracts.slice(0, endIndex); // Mostrar todos os contratos carregados até o limite da página atual
-  }, [filteredContracts, currentPage, contractsPerPage]);
+    return filteredContracts.slice(0, endIndex);
+  }, [filteredContracts, currentPage, contractsPerPage, searchTerm]);
 
   // Resetar página quando buscar
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  // Carregar automaticamente páginas adicionais durante a busca, de forma incremental
+  useEffect(() => {
+    if (!searchTerm) return; // só em modo de busca
+    if (hasMore && !loading) {
+      // dispara uma carga por renderização, o efeito reexecuta ao atualizar hasMore/loading
+      loadMore();
+    }
+  }, [searchTerm, hasMore, loading, loadMore]);
 
   const loadMoreContracts = async () => {
     setLoadingMore(true);
@@ -1672,12 +1685,8 @@ const Contratos = () => {
                 <Input
                   placeholder="Buscar contratos..."
                   value={searchTerm}
-                  onChange={(_e) => {
-                    // A busca é gerenciada pelo contexto da sidebar
-                    // Aqui apenas sincronizamos o valor local se necessário
-                  }}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-64"
-                  readOnly
                 />
               </div>
             </div>
@@ -1914,8 +1923,8 @@ const Contratos = () => {
             )}
           </div>
 
-          {/* Botão Ver Mais */}
-          {hasMoreContracts && (
+          {/* Botão Ver Mais (oculto durante a busca) */}
+          {hasMoreContracts && !searchTerm && (
             <div className="flex justify-center mt-8">
               <Button
                 onClick={loadMoreContracts}
@@ -1929,7 +1938,7 @@ const Contratos = () => {
                     Carregando...
                   </>
                 ) : (
-                  `Ver mais (${Math.max(0, (searchTerm ? filteredContracts.length : totalCount) - displayedContracts.length)} restantes)`
+                  `Ver mais (${Math.max(0, totalCount - displayedContracts.length)} restantes)`
                 )}
               </Button>
             </div>
