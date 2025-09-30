@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -38,7 +38,7 @@ import {
   Phone,
   Edit,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
@@ -78,14 +78,7 @@ interface Contract {
 }
 
 const Contratos = () => {
-  const { searchTerm, setSearchTerm } = useSearchContext();
-
-  // Função para abrir Google Maps com o endereço
-  const openGoogleMaps = (endereco: string) => {
-    const enderecoEncoded = encodeURIComponent(endereco);
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${enderecoEncoded}`;
-    window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
-  }; // Usar busca da sidebar
+  const { searchTerm } = useSearchContext(); // Usar busca da sidebar
   const {
     data: contracts,
     loading,
@@ -95,14 +88,110 @@ const Contratos = () => {
   } = useOptimizedData({
     documentType: 'contrato',
     limit: 6,
-    searchTerm: searchTerm,
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [contractsPerPage] = useState(6); // Mostrar 6 contratos por vez
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
+  const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] =
+    useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(
+    null
+  );
+  const [dataVistoria, setDataVistoria] = useState('');
+  const [horaVistoria, setHoraVistoria] = useState('');
+  const [tipoVistoria, setTipoVistoria] = useState('final');
+  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState('vistoria');
+  const [dataRealizacaoVistoria, setDataRealizacaoVistoria] = useState('');
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [whatsAppType, setWhatsAppType] = useState<
+    'locador' | 'locatario' | null
+  >(null);
+  const [selectedPerson, setSelectedPerson] = useState<string>('');
+  const [assinanteSelecionado, setAssinanteSelecionado] = useState<string>('');
+  const [showAssinanteModal, setShowAssinanteModal] = useState(false);
+  const [pendingDocumentData, setPendingDocumentData] = useState<{
+    contract: Contract;
+    template: string;
+    documentType: string;
+  } | null>(null);
+  const [showNPSModal, setShowNPSModal] = useState(false);
+  const [selectedNPSContract, setSelectedNPSContract] =
+    useState<Contract | null>(null);
+  const [npsMethod, setNpsMethod] = useState<'email' | 'whatsapp' | null>(null);
+  const [npsWhatsAppType, setNpsWhatsAppType] = useState<
+    'locador' | 'locatario' | null
+  >(null);
+  const [selectedNPSPerson, setSelectedNPSPerson] = useState<string>('');
+  const [_selectedNPSParties, setSelectedNPSParties] = useState<{
+    locadores: string[];
+    locatarios: string[];
+  }>({ locadores: [], locatarios: [] });
+  const [showNPSNumbersModal, setShowNPSNumbersModal] = useState(false);
+  const [npsNumbers, setNpsNumbers] = useState<Record<string, string>>({});
+  const [npsSelectedParties, setNpsSelectedParties] = useState<
+    Record<string, boolean>
+  >({});
+  const [_deletingContract, setDeletingContract] = useState<string | null>(
+    null
+  );
+  const [generatingDocument, setGeneratingDocument] = useState<string | null>(
+    null
+  );
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState<Record<string, string>>({});
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const navigate = useNavigate();
+
+  // Filtrar contratos baseado no termo de busca com useMemo para performance
+  const filteredContracts = useMemo(() => {
+    if (!searchTerm) {
+      return contracts;
+    }
+
+    const searchLower = searchTerm.toLowerCase();
+    return contracts.filter((contract) => {
+      const numeroContrato =
+        contract.form_data.numeroContrato?.toLowerCase() || '';
+      const nomeLocatario =
+        contract.form_data.nomeLocatario?.toLowerCase() || '';
+      const enderecoImovel =
+        contract.form_data.enderecoImovel?.toLowerCase() || '';
+
+      return (
+        numeroContrato.includes(searchLower) ||
+        nomeLocatario.includes(searchLower) ||
+        enderecoImovel.includes(searchLower)
+      );
+    });
+  }, [contracts, searchTerm]);
+
+  // Paginação dos contratos filtrados com useMemo
+  const displayedContracts = useMemo(() => {
+    const startIndex = (currentPage - 1) * contractsPerPage;
+    const endIndex = startIndex + contractsPerPage;
+    return filteredContracts.slice(0, endIndex); // Mostrar todos os contratos carregados até o limite da página atual
+  }, [filteredContracts, currentPage, contractsPerPage]);
+
+  // Resetar página quando buscar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const loadMoreContracts = async () => {
-    await loadMore();
+    setLoadingMore(true);
+    try {
+      await loadMore(); // Carrega todos os contratos restantes do sistema
+      setCurrentPage((prev) => prev + 1); // Avança para a próxima página para mostrar mais contratos
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
-
+  const hasMoreContracts = hasMore;
 
   // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
   const generateMesesComprovantes = () => {
@@ -535,8 +624,8 @@ const Contratos = () => {
     // Se for notificação de agendamento, adicionar dados específicos
     if (documentType.includes('Notificação de Agendamento')) {
       enhancedData.dataAtual = formatDateBrazilian(new Date());
-      enhancedData.dataVistoria = dataVistoria || formatDateBrazilian(new Date());
-      enhancedData.horaVistoria = horaVistoria || '';
+      enhancedData.dataVistoria = dataVistoria;
+      enhancedData.horaVistoria = horaVistoria;
       enhancedData.tipoVistoria = tipoVistoria;
 
       // Configurar tipo de vistoria
@@ -1555,55 +1644,6 @@ const Contratos = () => {
     );
   };
 
-  // Estados para modais
-  const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
-  const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] = useState(false);
-  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [showAssinanteModal, setShowAssinanteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showNPSModal, setShowNPSModal] = useState(false);
-  const [showNPSNumbersModal, setShowNPSNumbersModal] = useState(false);
-
-  // Estados para agendamento
-  const [tipoVistoria, setTipoVistoria] = useState('final');
-  const [dataVistoria, setDataVistoria] = useState('');
-  const [horaVistoria, setHoraVistoria] = useState('');
-
-  // Estados para recusa de assinatura
-  const [dataRealizacaoVistoria, setDataRealizacaoVistoria] = useState('');
-  const [assinanteSelecionado, setAssinanteSelecionado] = useState('');
-  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState('vistoria');
-
-  // Estados para WhatsApp
-  const [whatsAppType, setWhatsAppType] = useState<'locador' | 'locatario' | null>(null);
-  const [selectedPerson, setSelectedPerson] = useState('');
-
-  // Estados para NPS
-  const [npsMethod, setNpsMethod] = useState<'whatsapp' | 'email' | null>(null);
-  const [npsWhatsAppType, setNpsWhatsAppType] = useState<'locador' | 'locatario' | null>(null);
-  const [selectedNPSPerson, setSelectedNPSPerson] = useState('');
-  const [_selectedNPSParties, setSelectedNPSParties] = useState({ locadores: [], locatarios: [] });
-  const [npsNumbers, setNpsNumbers] = useState<Record<string, string>>({});
-  const [npsSelectedParties, setNpsSelectedParties] = useState<Record<string, boolean>>({});
-
-  // Estados para edição
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [editFormData, setEditFormData] = useState<Record<string, string>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  // Estados para documentos
-  const [generatingDocument, setGeneratingDocument] = useState<string | null>(null);
-  const [_deletingContract, setDeletingContract] = useState<string | null>(null);
-  const [pendingDocumentData, setPendingDocumentData] = useState<{
-    contract: Contract;
-    template: string;
-    documentType: string;
-  } | null>(null);
-
-  // Estados para contratos selecionados
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [selectedNPSContract, setSelectedNPSContract] = useState<Contract | null>(null);
-
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
@@ -1632,13 +1672,17 @@ const Contratos = () => {
                 <Input
                   placeholder="Buscar contratos..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(_e) => {
+                    // A busca é gerenciada pelo contexto da sidebar
+                    // Aqui apenas sincronizamos o valor local se necessário
+                  }}
                   className="w-64"
+                  readOnly
                 />
               </div>
             </div>
 
-            {loading && contracts.length === 0 ? (
+            {loading ? (
               <Card className="glass-card">
                 <CardContent className="p-12">
                   <div className="text-center">
@@ -1654,7 +1698,8 @@ const Contratos = () => {
                   </div>
                 </CardContent>
               </Card>
-            ) : contracts.length === 0 ? (
+            ) : displayedContracts.length === 0 &&
+              filteredContracts.length === 0 ? (
               <Card className="glass-card">
                 <CardContent className="p-12">
                   <div className="text-center">
@@ -1662,16 +1707,15 @@ const Contratos = () => {
                       <FileText className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Nenhum contrato encontrado
+                      Nenhum contrato cadastrado ainda
                     </h3>
                     <p className="text-muted-foreground mb-6">
-                      Tente um termo de busca diferente ou crie um novo
-                      contrato.
+                      Comece criando seu primeiro contrato no sistema
                     </p>
                     <Link to="/cadastrar-contrato">
                       <Button className="gap-2">
                         <Plus className="h-4 w-4" />
-                        Criar Novo Contrato
+                        Criar Primeiro Contrato
                       </Button>
                     </Link>
                   </div>
@@ -1679,7 +1723,7 @@ const Contratos = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {contracts.map((contract) => (
+                {displayedContracts.map((contract) => (
                   <Card
                     key={contract.id}
                     className="metric-card glass-card border-border hover:shadow-soft transition-all duration-300 overflow-visible"
@@ -1817,17 +1861,7 @@ const Contratos = () => {
                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                               Endereço
                             </p>
-                            <p
-                              className="text-xs font-bold text-foreground line-clamp-2 cursor-pointer hover:text-purple-600 transition-colors duration-200"
-                              onClick={() =>
-                                openGoogleMaps(
-                                  contract.form_data.endereco ||
-                                    contract.form_data.enderecoImovel ||
-                                    '460 - Rua Interna: Rua dos Sablas, Casa 421 - Condomínio Green Valley, Bairro Flores, Manaus - AM'
-                                )
-                              }
-                              title="Clique para abrir no Google Maps"
-                            >
+                            <p className="text-xs font-bold text-foreground line-clamp-2">
                               {contract.form_data.endereco ||
                                 contract.form_data.enderecoImovel ||
                                 '460 - Rua Interna: Rua dos Sablas, Casa 421 - Condomínio Green Valley, Bairro Flores, Manaus - AM'}
@@ -1881,21 +1915,21 @@ const Contratos = () => {
           </div>
 
           {/* Botão Ver Mais */}
-          {hasMore && (
+          {hasMoreContracts && (
             <div className="flex justify-center mt-8">
               <Button
                 onClick={loadMoreContracts}
-                disabled={loading}
+                disabled={loadingMore}
                 variant="outline"
                 className="px-8 py-3 text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
               >
-                {loading ? (
+                {loadingMore ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
                     Carregando...
                   </>
                 ) : (
-                  `Ver mais (${Math.max(0, totalCount - contracts.length)} restantes)`
+                  `Ver mais (${Math.max(0, (searchTerm ? filteredContracts.length : totalCount) - displayedContracts.length)} restantes)`
                 )}
               </Button>
             </div>

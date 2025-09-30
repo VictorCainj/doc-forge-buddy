@@ -8,7 +8,6 @@ interface UseOptimizedDataOptions {
   limit?: number;
   orderBy?: string;
   ascending?: boolean;
-  searchTerm?: string;
 }
 
 interface UseOptimizedDataReturn {
@@ -33,7 +32,6 @@ export const useOptimizedData = (
     limit = 50,
     orderBy = 'created_at',
     ascending = false,
-    searchTerm,
   } = options;
 
   const [data, setData] = useState<Contract[]>([]);
@@ -44,8 +42,8 @@ export const useOptimizedData = (
 
   // Cache para evitar requisições desnecessárias
   const cacheKey = useMemo(
-    () => `${documentType}-${limit}-${orderBy}-${ascending}-${searchTerm}`,
-    [documentType, limit, orderBy, ascending, searchTerm]
+    () => `${documentType}-${limit}-${orderBy}-${ascending}`,
+    [documentType, limit, orderBy, ascending]
   );
 
   // Função para buscar dados com paginação
@@ -60,44 +58,25 @@ export const useOptimizedData = (
         const from = page * limit;
         const to = from + limit - 1;
 
-        let dataQuery = supabase
-          .from('saved_terms')
-          .select('*')
-          .eq('document_type', documentType);
-
-        let countQuery = supabase
-          .from('saved_terms')
-          .select('*', { count: 'exact', head: true })
-          .eq('document_type', documentType);
-
-        if (searchTerm && searchTerm.trim().length > 0) {
-          const term = searchTerm.trim();
-          const searchPattern = `%${term}%`;
-          const orFilter = [
-            `title.ilike.${searchPattern}`,
-            `form_data->>nomeLocatario.ilike.${searchPattern}`,
-            `form_data->>primeiroLocatario.ilike.${searchPattern}`,
-            `form_data->>nomeProprietario.ilike.${searchPattern}`,
-            `form_data->>nomesResumidosLocadores.ilike.${searchPattern}`,
-            `form_data->>endereco.ilike.${searchPattern}`,
-            `form_data->>enderecoImovel.ilike.${searchPattern}`,
-            `form_data->>numeroContrato.ilike.${searchPattern}`,
-          ].join(',');
-          dataQuery = dataQuery.or(orFilter);
-          countQuery = countQuery.or(orFilter);
-        }
-
         // Buscar dados com contagem total
-        const [dataResult, countResult] = await Promise.all([
-          dataQuery.order(orderBy, { ascending }).range(from, to),
-          countQuery,
+        const [dataQuery, countQuery] = await Promise.all([
+          supabase
+            .from('saved_terms')
+            .select('*')
+            .eq('document_type', documentType)
+            .order(orderBy, { ascending })
+            .range(from, to),
+          supabase
+            .from('saved_terms')
+            .select('*', { count: 'exact', head: true })
+            .eq('document_type', documentType),
         ]);
 
-        if (dataResult.error) throw dataResult.error;
-        if (countResult.error) throw countResult.error;
+        if (dataQuery.error) throw dataQuery.error;
+        if (countQuery.error) throw countQuery.error;
 
-        const validatedData = validateContractsList(dataResult.data || []);
-        const total = countResult.count || 0;
+        const validatedData = validateContractsList(dataQuery.data || []);
+        const total = countQuery.count || 0;
 
         setData((prevData) =>
           reset ? validatedData : [...prevData, ...validatedData]
@@ -114,7 +93,7 @@ export const useOptimizedData = (
         setLoading(false);
       }
     },
-    [documentType, limit, orderBy, ascending, searchTerm]
+    [documentType, limit, orderBy, ascending]
   );
 
   // Função para recarregar dados
