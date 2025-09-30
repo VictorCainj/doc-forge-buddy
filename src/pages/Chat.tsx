@@ -36,6 +36,7 @@ const Chat = () => {
     setInputText,
     setMode,
     sendMessage,
+    correctTextAction, // Destructure new action
     retryMessage,
     clearChat,
     getSuggestions,
@@ -191,6 +192,7 @@ const Chat = () => {
                   value={inputText}
                   onChange={setInputText}
                   onSubmit={sendMessage}
+                  onCorrectText={correctTextAction} // Pass the new action
                   isLoading={isLoading}
                   currentMode={currentMode}
                   suggestions={suggestions}

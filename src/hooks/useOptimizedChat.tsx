@@ -57,6 +57,7 @@ interface UseOptimizedChatReturn {
   setInputText: (text: string) => void;
   setMode: (mode: ChatMode) => void;
   sendMessage: (text?: string) => Promise<void>;
+  correctTextAction: () => Promise<void>; // New action for text correction
   retryMessage: (messageId: string) => Promise<void>;
   clearChat: () => void;
   getSuggestions: () => string[];
@@ -121,7 +122,7 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
       }, 1000);
     } else {
       setIsTyping(false);
-    }
+    };
 
     return () => {
       if (typingTimeoutRef.current) {
@@ -325,6 +326,104 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
     ]
   );
 
+  const correctTextAction = useCallback(async () => {
+    if (!inputText.trim() || aiLoading) return;
+
+    // Set mode to normal for correction
+    setCurrentMode(CHAT_MODES[0]); // CHAT_MODES[0] is 'normal'
+
+    // Validar entrada do usuário
+    const { input: sanitizedInput, validation } = prepareInputForProcessing(
+      inputText,
+      'normal'
+    );
+
+    if (!validation.isValid) {
+      toast({
+        title: 'Entrada inválida',
+        description: validation.errors.join(', '),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Mostrar avisos se houver
+    if (validation.warnings.length > 0) {
+      toast({
+        title: 'Aviso',
+        description: validation.warnings.join(', '),
+        variant: 'default',
+      });
+    }
+
+    // Criar mensagem do usuário com entrada sanitizada
+    const userMessage = createMessage(sanitizedInput, 'user');
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputText('');
+
+    try {
+      // Criar mensagem temporária do assistente
+      const assistantMessage = createMessage('', 'assistant', {
+        status: 'sending',
+      });
+
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Processar texto com a função correctText
+      const correctedText = await correctText(sanitizedInput);
+
+      // Atualizar mensagem do assistente com resultado
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessage.id
+            ? {
+                ...msg,
+                content: correctedText,
+                status: 'sent',
+                isCorrected: true,
+                metadata: {
+                  confidence: 0.9,
+                  sentiment: 'positive',
+                },
+              }
+            : msg
+        )
+      );
+
+      // Aprender com a interação
+      try {
+        await learnFromInteraction(sanitizedInput, correctedText);
+      } catch (error) {
+        log.warn('Erro ao aprender com interação:', error);
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+
+      // Atualizar mensagem do assistente com erro
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessage.id
+            ? {
+                ...msg,
+                content:
+                  'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
+                status: 'error',
+                error: errorMessage,
+              }
+            : msg
+        )
+      );
+
+      toast({
+        title: 'Erro no processamento',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  }, [inputText, aiLoading, createMessage, correctText, learnFromInteraction, toast]);
+
   // Função para retry de mensagem específica
   const retryMessage = useCallback(
     async (messageId: string) => {
@@ -466,6 +565,7 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
     setInputText,
     setMode,
     sendMessage,
+    correctTextAction, // Added here
     retryMessage,
     clearChat,
     getSuggestions,

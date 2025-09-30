@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Zap, Brain } from 'lucide-react';
+import { Send, Loader2, Zap, Brain, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => Promise<void>;
+  onCorrectText: () => Promise<void>; // New prop for text correction
   isLoading: boolean;
   currentMode: ChatMode;
   placeholder?: string;
@@ -27,6 +28,7 @@ const ChatInput = memo(
     value,
     onChange,
     onSubmit,
+    onCorrectText, // Destructure new prop
     isLoading,
     currentMode,
     placeholder,
@@ -150,7 +152,7 @@ const ChatInput = memo(
         default:
           return '';
       }
-    };
+      };
 
     return (
       <div className="relative">
@@ -187,6 +189,19 @@ const ChatInput = memo(
               {value.length}/2000
             </div>
           </div>
+
+          <Button
+            type="button" // Changed to type="button" to prevent form submission
+            onClick={onCorrectText} // Call onCorrectText when clicked
+            disabled={!value.trim() || isLoading || connectionStatus === 'disconnected'}
+            className="px-4 h-auto min-h-[60px]"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+          </Button>
 
           <Button
             type="submit"
