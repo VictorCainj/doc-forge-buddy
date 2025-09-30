@@ -28,6 +28,15 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
       tooltip: 'Data em que foi realizada a vistoria ou revistoria do imóvel',
     },
     {
+      name: 'dataVistoria',
+      label: 'Data da Vistoria (para o documento)',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ex: 19 de setembro de 2025',
+      tooltip:
+        'Data que aparecerá no documento (pode ser diferente da data de realização)',
+    },
+    {
       name: 'assinanteSelecionado',
       label: 'Nome do Assinante',
       type: 'text' as const,
@@ -44,6 +53,8 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
         ...contractData,
         ...data,
         dataAtual: formatDateBrazilian(new Date()),
+        // Usar a data da vistoria escolhida pelo usuário, ou a data de realização como fallback
+        dataVistoria: data.dataVistoria || data.dataRealizacaoVistoria,
       };
 
       // Processar o template com os dados

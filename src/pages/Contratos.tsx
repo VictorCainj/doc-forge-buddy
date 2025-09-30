@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import OptimizedSearch from '@/components/ui/optimized-search';
+import { VirtualizedList, ContractItem } from '@/components/ui/virtualized-list';
+import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
+import { useComponentOptimization } from '@/hooks/useComponentOptimization';
 import {
   Dialog,
   DialogContent,
@@ -78,13 +82,33 @@ interface Contract {
 }
 
 const Contratos = () => {
-  const { searchTerm, setSearchTerm } = useSearchContext(); // Usar busca da sidebar
+  // Hook de otimização de componentes
+  const { memoizeWithCache, useDebounce } = useComponentOptimization();
+  
+  // Sistema de busca otimizado
+  const {
+    searchTerm,
+    setSearchTerm,
+    results: searchResults,
+    isLoading: isSearching,
+    hasSearched,
+    totalResults,
+    performSearch,
+    clearSearch,
+  } = useOptimizedSearch({
+    documentType: 'contrato',
+    searchFields: ['numeroContrato', 'nomeLocatario', 'enderecoImovel'],
+    maxResults: 100,
+  });
+
+  // Dados principais (sem busca)
   const {
     data: contracts,
     loading,
     hasMore,
     loadMore,
     totalCount,
+    refetch,
   } = useOptimizedData({
     documentType: 'contrato',
     limit: 6,
@@ -144,55 +168,48 @@ const Contratos = () => {
   const [editFormData, setEditFormData] = useState<Record<string, string>>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Sincronizar dados do formulário quando o contrato de edição muda
+  useEffect(() => {
+    if (editingContract && showEditModal) {
+      const formData = editingContract.form_data || {};
+      setEditFormData({ ...formData });
+    }
+  }, [editingContract, showEditModal]);
+
   const navigate = useNavigate();
 
-  // Filtrar contratos baseado no termo de busca com useMemo para performance
+  // Usar resultados da busca otimizada ou dados normais
   const filteredContracts = useMemo(() => {
-    if (!searchTerm) {
-      return contracts;
+    if (hasSearched && searchResults.length > 0) {
+      return searchResults;
     }
-
-    const searchLower = searchTerm.toLowerCase();
-    return contracts.filter((contract) => {
-      const numeroContrato =
-        contract.form_data.numeroContrato?.toLowerCase() || '';
-      const nomeLocatario =
-        contract.form_data.nomeLocatario?.toLowerCase() || '';
-      const enderecoImovel =
-        contract.form_data.enderecoImovel?.toLowerCase() || '';
-
-      return (
-        numeroContrato.includes(searchLower) ||
-        nomeLocatario.includes(searchLower) ||
-        enderecoImovel.includes(searchLower)
-      );
-    });
-  }, [contracts, searchTerm]);
+    return contracts;
+  }, [hasSearched, searchResults, contracts]);
 
   // Paginação dos contratos filtrados com useMemo
   const displayedContracts = useMemo(() => {
-    if (searchTerm) {
-      // Em modo de busca, exibir todos os resultados carregados
+    if (hasSearched) {
+      // Em modo de busca, exibir todos os resultados
       return filteredContracts;
     }
     const startIndex = (currentPage - 1) * contractsPerPage;
     const endIndex = startIndex + contractsPerPage;
     return filteredContracts.slice(0, endIndex);
-  }, [filteredContracts, currentPage, contractsPerPage, searchTerm]);
+  }, [filteredContracts, currentPage, contractsPerPage, hasSearched]);
 
   // Resetar página quando buscar
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [hasSearched]);
 
   // Carregar automaticamente páginas adicionais durante a busca, de forma incremental
   useEffect(() => {
-    if (!searchTerm) return; // só em modo de busca
+    if (!hasSearched) return; // só em modo de busca
     if (hasMore && !loading) {
       // dispara uma carga por renderização, o efeito reexecuta ao atualizar hasMore/loading
       loadMore();
     }
-  }, [searchTerm, hasMore, loading, loadMore]);
+  }, [hasSearched, hasMore, loading, loadMore]);
 
   const loadMoreContracts = async () => {
     setLoadingMore(true);
@@ -983,10 +1000,8 @@ const Contratos = () => {
 
         if (error) throw error;
 
-        // Atualizar a lista local
-        setContracts((prev) =>
-          prev.filter((contract) => contract.id !== contractId)
-        );
+        // Recarregar a lista de contratos para refletir as mudanças
+        await refetch();
         toast.success('Contrato excluído com sucesso!');
       } catch {
         toast.error('Erro ao excluir contrato');
@@ -1349,7 +1364,21 @@ const Contratos = () => {
   };
 
   const handleUpdateContract = async () => {
-    if (!editingContract) return;
+    if (!editingContract) {
+      toast.error('Nenhum contrato selecionado para edição');
+      return;
+    }
+
+    // Validação básica dos campos obrigatórios
+    if (!editFormData.numeroContrato?.trim()) {
+      toast.error('Número do contrato é obrigatório');
+      return;
+    }
+
+    if (!editFormData.nomeLocatario?.trim()) {
+      toast.error('Nome do locatário é obrigatório');
+      return;
+    }
 
     setIsUpdating(true);
     try {
@@ -1359,6 +1388,11 @@ const Contratos = () => {
         prazoDias: '30', // Sempre 30 dias
         dataComunicacao: editFormData.dataInicioRescisao, // Data de comunicação = data de início
       };
+
+      // Validar se os dados são válidos antes de enviar
+      if (typeof enhancedData !== 'object' || enhancedData === null) {
+        throw new Error('Dados do formulário inválidos');
+      }
 
       const { error } = await supabase
         .from('saved_terms')
@@ -1370,29 +1404,23 @@ const Contratos = () => {
         })
         .eq('id', editingContract.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw new Error(`Erro do banco de dados: ${error.message}`);
+      }
 
-      // Atualizar a lista local
-      setContracts((prev) =>
-        prev.map((contract) =>
-          contract.id === editingContract.id
-            ? {
-                ...contract,
-                form_data: enhancedData,
-                title: `Contrato ${editFormData.numeroContrato || '[NÚMERO]'} - ${editFormData.nomeLocatario || '[LOCATÁRIO]'}`,
-                updated_at: new Date().toISOString(),
-              }
-            : contract
-        )
-      );
+      // Recarregar a lista de contratos para refletir as mudanças
+      await refetch();
 
       toast.success('Contrato atualizado com sucesso!');
       setShowEditModal(false);
       setEditingContract(null);
       setEditFormData({});
-    } catch {
-      toast.error('Erro ao atualizar contrato');
-      // console.error('Erro ao atualizar contrato:', error);
+    } catch (error) {
+      console.error('Erro ao atualizar contrato:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao atualizar contrato: ${errorMessage}`);
     } finally {
       setIsUpdating(false);
     }
@@ -1402,6 +1430,7 @@ const Contratos = () => {
     setShowEditModal(false);
     setEditingContract(null);
     setEditFormData({});
+    setIsUpdating(false); // Garantir que o estado de loading seja resetado
   };
 
   const handleGenerateNPSWhatsApp = () => {
@@ -1680,14 +1709,25 @@ const Contratos = () => {
                 </Link>
               </div>
 
-              {/* Barra de Busca */}
+              {/* Sistema de Busca Otimizado */}
               <div className="flex items-center space-x-4">
-                <Input
-                  placeholder="Buscar contratos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
+                <OptimizedSearch
+                  onSearch={performSearch}
+                  placeholder="Digite número do contrato, nome do locatário ou endereço..."
+                  showResultsCount={true}
+                  resultsCount={totalResults}
+                  isLoading={isSearching}
+                  className="w-96"
                 />
+                {hasSearched && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSearch}
+                  >
+                    Limpar Busca
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -1889,7 +1929,9 @@ const Contratos = () => {
                               className="h-8 w-8 p-0"
                               onClick={() => {
                                 setEditingContract(contract);
-                                setEditFormData(contract.form_data);
+                                // Garantir que os dados do formulário sejam carregados corretamente
+                                const formData = contract.form_data || {};
+                                setEditFormData({ ...formData });
                                 setShowEditModal(true);
                               }}
                             >
@@ -1924,7 +1966,7 @@ const Contratos = () => {
           </div>
 
           {/* Botão Ver Mais (oculto durante a busca) */}
-          {hasMoreContracts && !searchTerm && (
+          {hasMoreContracts && !hasSearched && (
             <div className="flex justify-center mt-8">
               <Button
                 onClick={loadMoreContracts}
@@ -2252,7 +2294,16 @@ const Contratos = () => {
       </Dialog>
 
       {/* Modal para Edição de Contrato */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+      <Dialog
+        open={showEditModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCancelEdit();
+          } else {
+            setShowEditModal(open);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Contrato</DialogTitle>
@@ -2720,7 +2771,14 @@ const Contratos = () => {
                 Cancelar
               </Button>
               <Button onClick={handleUpdateContract} disabled={isUpdating}>
-                {isUpdating ? 'Atualizando...' : 'Atualizar Contrato'}
+                {isUpdating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Atualizando...
+                  </>
+                ) : (
+                  'Atualizar Contrato'
+                )}
               </Button>
             </div>
           </DialogFooter>
@@ -3117,14 +3175,8 @@ const Contratos = () => {
                         .update({ form_data: updatedFormData })
                         .eq('id', selectedNPSContract.id);
 
-                      // Atualizar o contrato local
-                      setContracts((prev) =>
-                        prev.map((c) =>
-                          c.id === selectedNPSContract.id
-                            ? { ...c, form_data: updatedFormData }
-                            : c
-                        )
-                      );
+                      // Recarregar a lista de contratos para refletir as mudanças
+                      await refetch();
 
                       // Atualizar o contrato selecionado
                       setSelectedNPSContract((prev) =>
