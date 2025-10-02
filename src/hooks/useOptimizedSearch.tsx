@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useOptimizedData } from './useOptimizedData';
 

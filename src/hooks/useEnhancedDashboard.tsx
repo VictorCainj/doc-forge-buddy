@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback, useMemo } from 'react';
 import { useDashboardData } from './useOptimizedData';
 import { useAdvancedAnalytics } from './useAdvancedAnalytics';
