@@ -87,7 +87,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Se {{tratamentoProprietarioGenero}} tiver dúvidas, fico à disposição durante o processo de desocupação.</p>
   
-  <p style="margin-bottom: 20px;"><strong>Todos os documentos enviados deverão ser assinados pelas partes</strong>, no que se refere a data de agendamento de vistoria, termo de comparecimento de vistoria e conclusão de vistoria, pois a Madia deve documentar que, todos os processos administrativos, como contratante serão efetuados e realizados por todas as partes.</p>
+  <p style="margin-bottom: 20px;"><strong>Todos os documentos enviados, referentes à data de agendamento de vistoria, termo de comparecimento e conclusão de vistoria, deverão ser devidamente assinados pelas partes envolvidas.</strong> Tal procedimento é necessário para que a Madia possa formalizar e comprovar que todos os processos administrativos vinculados à locação foram realizados com a ciência e participação de todos os contratantes.</p>
   
   <p style="margin-bottom: 20px; font-weight: bold; text-transform: uppercase;">POR FAVOR CONFIRMAR O RECEBIMENTO DESTE E-MAIL.</p>
   
