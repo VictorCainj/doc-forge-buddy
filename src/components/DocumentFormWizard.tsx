@@ -96,7 +96,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
   // Função para mapear ícones baseados no nome do campo
   const getFieldIcon = (fieldName: string) => {
-    const iconMap: Record<string, LucideIcon> = {
+    const iconMap: Record<string, React.ComponentType<any>> = {
       // Campos de contrato
       numeroContrato: Hash,
       enderecoImovel: Building2,
@@ -998,7 +998,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
                     mask={field.mask}
                     options={dynamicOptions}
                     disabled={false}
-                    icon={getFieldIcon(field.name)}
                     description={
                       field.name === 'generoLocatario' &&
                       isMultipleLocatarios(formData.nomeLocatario || '')

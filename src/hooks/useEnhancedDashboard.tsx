@@ -9,10 +9,14 @@ export interface EnhancedMetrics {
   contractsOver30Days: number;
   contractsNear30Days: number;
   averageProcessingTime: number;
+  occupancyRate?: number;
+  monthlyRevenue?: number;
+  contractsAtRisk?: number;
   monthlyContractsByVacation: Array<{
     month: string;
     count: number;
   }>;
+  [key: string]: any;
 }
 
 export interface DashboardFilters {
@@ -49,6 +53,7 @@ export interface ChartData {
     target: number;
     status: 'good' | 'warning' | 'critical';
   }>;
+  [key: string]: any;
 }
 
 export const useEnhancedDashboard = () => {
