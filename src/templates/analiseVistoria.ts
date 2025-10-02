@@ -146,7 +146,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         <!-- Descrição do Laudo de Entrada -->
         <div style="padding: 16px 20px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB;">
           <p style="margin: 0; color: #000000; font-size: 14px; line-height: 1.6; font-weight: 500;">
-            <strong>Descritivo do Laudo de Entrada:</strong> ${apontamento.descricao}
+            <strong>Descritivo:</strong> ${apontamento.descricao}
           </p>
         </div>
         
