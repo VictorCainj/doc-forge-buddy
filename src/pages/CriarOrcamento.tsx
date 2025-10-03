@@ -134,69 +134,73 @@ const CriarOrcamento = () => {
     const total = calcularTotal();
 
     return `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
-        <!-- Cabeçalho -->
-        <div style="text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #2563eb;">
-          <h1 style="color: #1e40af; margin: 0; font-size: 32px; font-weight: bold;">ORÇAMENTO</h1>
-          <p style="color: #64748b; margin: 10px 0 0 0; font-size: 14px;">Nº ${numeroOrcamento || '[Número do Orçamento]'}</p>
-          <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Data: ${dataAtual}</p>
-          ${dataValidade ? `<p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Válido até: ${new Date(dataValidade).toLocaleDateString('pt-BR')}</p>` : ''}
+      <div style="font-family: Arial, sans-serif; line-height: 1.4; max-width: 900px; margin: 0 auto; padding: 20px; color: #2c3e50; background: #fff;">
+        <!-- Cabeçalho Minimalista -->
+        <div style="text-align: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;">
+          <h1 style="color: #000000; font-size: 24px; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+            ORÇAMENTO
+          </h1>
+          <p style="color: #6B7280; font-size: 14px; margin: 12px 0 0 0; font-weight: 400;">
+            Nº ${numeroOrcamento || '[Número do Orçamento]'}
+          </p>
+          <p style="color: #6B7280; font-size: 14px; margin: 5px 0 0 0;">Data: ${dataAtual}</p>
+          ${dataValidade ? `<p style="color: #6B7280; font-size: 14px; margin: 5px 0 0 0;">Válido até: ${new Date(dataValidade).toLocaleDateString('pt-BR')}</p>` : ''}
         </div>
 
         <!-- Dados do Prestador -->
-        <div style="margin-bottom: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
-          <h2 style="color: #1e40af; font-size: 18px; margin: 0 0 15px 0; font-weight: bold;">Prestador de Serviço</h2>
-          <div style="line-height: 1.8; color: #334155;">
-            <p style="margin: 5px 0;"><strong>Nome/Razão Social:</strong> ${dadosPrestador.nome || '[Nome do Prestador]'}</p>
-            <p style="margin: 5px 0;"><strong>CNPJ/CPF:</strong> ${dadosPrestador.cnpj || '[CNPJ]'}</p>
-            <p style="margin: 5px 0;"><strong>Endereço:</strong> ${dadosPrestador.endereco || '[Endereço]'}</p>
-            <p style="margin: 5px 0;"><strong>Telefone:</strong> ${dadosPrestador.telefone || '[Telefone]'}</p>
-            <p style="margin: 5px 0;"><strong>E-mail:</strong> ${dadosPrestador.email || '[E-mail]'}</p>
+        <div style="margin-bottom: 24px; padding: 16px 20px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
+          <h2 style="color: #000000; font-size: 14px; margin: 0 0 12px 0; font-weight: bold; text-transform: uppercase;">Prestador de Serviço</h2>
+          <div style="line-height: 1.6; color: #374151; font-size: 13px;">
+            <p style="margin: 4px 0;"><strong>Nome/Razão Social:</strong> ${dadosPrestador.nome || '[Nome do Prestador]'}</p>
+            <p style="margin: 4px 0;"><strong>CNPJ/CPF:</strong> ${dadosPrestador.cnpj || '[CNPJ]'}</p>
+            ${dadosPrestador.endereco ? `<p style="margin: 4px 0;"><strong>Endereço:</strong> ${dadosPrestador.endereco}</p>` : ''}
+            ${dadosPrestador.telefone ? `<p style="margin: 4px 0;"><strong>Telefone:</strong> ${dadosPrestador.telefone}</p>` : ''}
+            ${dadosPrestador.email ? `<p style="margin: 4px 0;"><strong>E-mail:</strong> ${dadosPrestador.email}</p>` : ''}
           </div>
         </div>
 
         <!-- Dados do Cliente -->
-        <div style="margin-bottom: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
-          <h2 style="color: #1e40af; font-size: 18px; margin: 0 0 15px 0; font-weight: bold;">Cliente</h2>
-          <div style="line-height: 1.8; color: #334155;">
-            <p style="margin: 5px 0;"><strong>Nome/Razão Social:</strong> ${dadosCliente.nome || '[Nome do Cliente]'}</p>
-            <p style="margin: 5px 0;"><strong>CPF/CNPJ:</strong> ${dadosCliente.cpfCnpj || '[CPF/CNPJ]'}</p>
-            <p style="margin: 5px 0;"><strong>Endereço:</strong> ${dadosCliente.endereco || '[Endereço]'}</p>
-            <p style="margin: 5px 0;"><strong>Telefone:</strong> ${dadosCliente.telefone || '[Telefone]'}</p>
-            <p style="margin: 5px 0;"><strong>E-mail:</strong> ${dadosCliente.email || '[E-mail]'}</p>
+        <div style="margin-bottom: 24px; padding: 16px 20px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
+          <h2 style="color: #000000; font-size: 14px; margin: 0 0 12px 0; font-weight: bold; text-transform: uppercase;">Cliente</h2>
+          <div style="line-height: 1.6; color: #374151; font-size: 13px;">
+            <p style="margin: 4px 0;"><strong>Nome/Razão Social:</strong> ${dadosCliente.nome || '[Nome do Cliente]'}</p>
+            ${dadosCliente.cpfCnpj ? `<p style="margin: 4px 0;"><strong>CPF/CNPJ:</strong> ${dadosCliente.cpfCnpj}</p>` : ''}
+            ${dadosCliente.endereco ? `<p style="margin: 4px 0;"><strong>Endereço:</strong> ${dadosCliente.endereco}</p>` : ''}
+            ${dadosCliente.telefone ? `<p style="margin: 4px 0;"><strong>Telefone:</strong> ${dadosCliente.telefone}</p>` : ''}
+            ${dadosCliente.email ? `<p style="margin: 4px 0;"><strong>E-mail:</strong> ${dadosCliente.email}</p>` : ''}
           </div>
         </div>
 
         <!-- Itens do Orçamento -->
-        <div style="margin-bottom: 30px;">
-          <h2 style="color: #1e40af; font-size: 18px; margin: 0 0 15px 0; font-weight: bold;">Itens do Orçamento</h2>
+        <div style="margin-bottom: 24px;">
+          <h2 style="color: #000000; font-size: 14px; margin: 0 0 12px 0; font-weight: bold; text-transform: uppercase;">Itens do Orçamento</h2>
           <table style="width: 100%; border-collapse: collapse; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <thead>
-              <tr style="background-color: #1e40af; color: white;">
-                <th style="padding: 12px; text-align: left; font-size: 14px;">Descrição</th>
-                <th style="padding: 12px; text-align: center; font-size: 14px; width: 100px;">Qtd.</th>
-                <th style="padding: 12px; text-align: right; font-size: 14px; width: 120px;">Valor Unit.</th>
-                <th style="padding: 12px; text-align: right; font-size: 14px; width: 120px;">Valor Total</th>
+              <tr style="background-color: #374151; color: white;">
+                <th style="padding: 10px 12px; text-align: left; font-size: 13px;">Descrição</th>
+                <th style="padding: 10px 12px; text-align: center; font-size: 13px; width: 80px;">Qtd.</th>
+                <th style="padding: 10px 12px; text-align: right; font-size: 13px; width: 110px;">Valor Unit.</th>
+                <th style="padding: 10px 12px; text-align: right; font-size: 13px; width: 110px;">Valor Total</th>
               </tr>
             </thead>
             <tbody>
               ${itens
                 .map(
                   (item, index) => `
-                <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
-                  <td style="padding: 12px; color: #334155;">${item.descricao || '[Descrição do item]'}</td>
-                  <td style="padding: 12px; text-align: center; color: #334155;">${item.quantidade}</td>
-                  <td style="padding: 12px; text-align: right; color: #334155;">${formatarMoeda(item.valorUnitario)}</td>
-                  <td style="padding: 12px; text-align: right; color: #334155; font-weight: 600;">${formatarMoeda(item.valorTotal)}</td>
+                <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#F9FAFB'}; border-bottom: 1px solid #E5E7EB;">
+                  <td style="padding: 10px 12px; color: #374151; font-size: 13px;">${item.descricao || '[Descrição do item]'}</td>
+                  <td style="padding: 10px 12px; text-align: center; color: #374151; font-size: 13px;">${item.quantidade}</td>
+                  <td style="padding: 10px 12px; text-align: right; color: #374151; font-size: 13px;">${formatarMoeda(item.valorUnitario)}</td>
+                  <td style="padding: 10px 12px; text-align: right; color: #000000; font-size: 13px; font-weight: 600;">${formatarMoeda(item.valorTotal)}</td>
                 </tr>
               `
                 )
                 .join('')}
             </tbody>
             <tfoot>
-              <tr style="background-color: #1e40af; color: white;">
-                <td colspan="3" style="padding: 15px; text-align: right; font-size: 16px; font-weight: bold;">TOTAL:</td>
-                <td style="padding: 15px; text-align: right; font-size: 18px; font-weight: bold;">${formatarMoeda(total)}</td>
+              <tr style="background-color: #374151; color: white;">
+                <td colspan="3" style="padding: 12px; text-align: right; font-size: 14px; font-weight: bold;">TOTAL:</td>
+                <td style="padding: 12px; text-align: right; font-size: 16px; font-weight: bold;">${formatarMoeda(total)}</td>
               </tr>
             </tfoot>
           </table>
@@ -206,20 +210,20 @@ const CriarOrcamento = () => {
           observacoes
             ? `
         <!-- Observações -->
-        <div style="margin-bottom: 30px; padding: 20px; background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-          <h2 style="color: #92400e; font-size: 16px; margin: 0 0 10px 0; font-weight: bold;">Observações</h2>
-          <p style="color: #78350f; margin: 0; line-height: 1.6; white-space: pre-line;">${observacoes}</p>
+        <div style="margin-bottom: 24px; padding: 16px 20px; background: #374151; color: #FFFFFF; border-radius: 8px;">
+          <h2 style="color: #FFFFFF; margin: 0 0 8px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">Observações</h2>
+          <p style="margin: 0; color: #FFFFFF; font-size: 13px; line-height: 1.6; white-space: pre-line;">${observacoes}</p>
         </div>
         `
             : ''
         }
 
         <!-- Rodapé -->
-        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center;">
-          <p style="color: #64748b; font-size: 12px; margin: 5px 0;">
+        <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #E5E7EB; text-align: center;">
+          <p style="color: #6B7280; font-size: 12px; margin: 4px 0;">
             Este orçamento é válido por ${dataValidade ? `até ${new Date(dataValidade).toLocaleDateString('pt-BR')}` : '30 dias'} e não representa compromisso formal até a assinatura do contrato.
           </p>
-          <p style="color: #64748b; font-size: 12px; margin: 5px 0;">
+          <p style="color: #6B7280; font-size: 12px; margin: 4px 0;">
             Gerado em ${dataAtual} - DocForge Enterprise Suite
           </p>
         </div>
@@ -329,26 +333,28 @@ const CriarOrcamento = () => {
         <div className="grid gap-6">
           {/* Informações Básicas */}
           <Card>
-            <CardHeader>
-              <CardTitle>Informações Básicas</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Informações Básicas</CardTitle>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-3 gap-4">
+            <CardContent className="grid md:grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="numeroOrcamento">Número do Orçamento *</Label>
+                <Label htmlFor="numeroOrcamento" className="text-sm">Número do Orçamento *</Label>
                 <Input
                   id="numeroOrcamento"
                   value={numeroOrcamento}
                   onChange={(e) => setNumeroOrcamento(e.target.value)}
                   placeholder="Ex: 2024-001"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="dataValidade">Válido Até</Label>
+                <Label htmlFor="dataValidade" className="text-sm">Válido Até</Label>
                 <Input
                   id="dataValidade"
                   type="date"
                   value={dataValidade}
                   onChange={(e) => setDataValidade(e.target.value)}
+                  className="h-9"
                 />
               </div>
             </CardContent>
@@ -356,12 +362,12 @@ const CriarOrcamento = () => {
 
           {/* Dados do Prestador */}
           <Card>
-            <CardHeader>
-              <CardTitle>Dados do Prestador</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Dados do Prestador</CardTitle>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
+            <CardContent className="grid md:grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="prestadorNome">Nome/Razão Social *</Label>
+                <Label htmlFor="prestadorNome" className="text-sm">Nome/Razão Social *</Label>
                 <Input
                   id="prestadorNome"
                   value={dadosPrestador.nome}
@@ -369,10 +375,11 @@ const CriarOrcamento = () => {
                     setDadosPrestador({ ...dadosPrestador, nome: e.target.value })
                   }
                   placeholder="Nome completo ou razão social"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="prestadorCNPJ">CNPJ/CPF *</Label>
+                <Label htmlFor="prestadorCNPJ" className="text-sm">CNPJ/CPF *</Label>
                 <Input
                   id="prestadorCNPJ"
                   value={dadosPrestador.cnpj}
@@ -380,10 +387,11 @@ const CriarOrcamento = () => {
                     setDadosPrestador({ ...dadosPrestador, cnpj: e.target.value })
                   }
                   placeholder="00.000.000/0000-00"
+                  className="h-9"
                 />
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="prestadorEndereco">Endereço</Label>
+                <Label htmlFor="prestadorEndereco" className="text-sm">Endereço</Label>
                 <Input
                   id="prestadorEndereco"
                   value={dadosPrestador.endereco}
@@ -394,10 +402,11 @@ const CriarOrcamento = () => {
                     })
                   }
                   placeholder="Endereço completo"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="prestadorTelefone">Telefone</Label>
+                <Label htmlFor="prestadorTelefone" className="text-sm">Telefone</Label>
                 <Input
                   id="prestadorTelefone"
                   value={dadosPrestador.telefone}
@@ -408,10 +417,11 @@ const CriarOrcamento = () => {
                     })
                   }
                   placeholder="(00) 00000-0000"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="prestadorEmail">E-mail</Label>
+                <Label htmlFor="prestadorEmail" className="text-sm">E-mail</Label>
                 <Input
                   id="prestadorEmail"
                   type="email"
@@ -420,6 +430,7 @@ const CriarOrcamento = () => {
                     setDadosPrestador({ ...dadosPrestador, email: e.target.value })
                   }
                   placeholder="email@exemplo.com"
+                  className="h-9"
                 />
               </div>
             </CardContent>
@@ -427,12 +438,12 @@ const CriarOrcamento = () => {
 
           {/* Dados do Cliente */}
           <Card>
-            <CardHeader>
-              <CardTitle>Dados do Cliente</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Dados do Cliente</CardTitle>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
+            <CardContent className="grid md:grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="clienteNome">Nome/Razão Social *</Label>
+                <Label htmlFor="clienteNome" className="text-sm">Nome/Razão Social *</Label>
                 <Input
                   id="clienteNome"
                   value={dadosCliente.nome}
@@ -440,10 +451,11 @@ const CriarOrcamento = () => {
                     setDadosCliente({ ...dadosCliente, nome: e.target.value })
                   }
                   placeholder="Nome do cliente"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="clienteCPF">CPF/CNPJ</Label>
+                <Label htmlFor="clienteCPF" className="text-sm">CPF/CNPJ</Label>
                 <Input
                   id="clienteCPF"
                   value={dadosCliente.cpfCnpj}
@@ -451,10 +463,11 @@ const CriarOrcamento = () => {
                     setDadosCliente({ ...dadosCliente, cpfCnpj: e.target.value })
                   }
                   placeholder="000.000.000-00"
+                  className="h-9"
                 />
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="clienteEndereco">Endereço</Label>
+                <Label htmlFor="clienteEndereco" className="text-sm">Endereço</Label>
                 <Input
                   id="clienteEndereco"
                   value={dadosCliente.endereco}
@@ -462,10 +475,11 @@ const CriarOrcamento = () => {
                     setDadosCliente({ ...dadosCliente, endereco: e.target.value })
                   }
                   placeholder="Endereço completo"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="clienteTelefone">Telefone</Label>
+                <Label htmlFor="clienteTelefone" className="text-sm">Telefone</Label>
                 <Input
                   id="clienteTelefone"
                   value={dadosCliente.telefone}
@@ -473,10 +487,11 @@ const CriarOrcamento = () => {
                     setDadosCliente({ ...dadosCliente, telefone: e.target.value })
                   }
                   placeholder="(00) 00000-0000"
+                  className="h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="clienteEmail">E-mail</Label>
+                <Label htmlFor="clienteEmail" className="text-sm">E-mail</Label>
                 <Input
                   id="clienteEmail"
                   type="email"
@@ -485,6 +500,7 @@ const CriarOrcamento = () => {
                     setDadosCliente({ ...dadosCliente, email: e.target.value })
                   }
                   placeholder="email@exemplo.com"
+                  className="h-9"
                 />
               </div>
             </CardContent>
@@ -492,31 +508,32 @@ const CriarOrcamento = () => {
 
           {/* Itens do Orçamento */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Itens do Orçamento</CardTitle>
-              <Button onClick={adicionarItem} size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base">Itens do Orçamento</CardTitle>
+              <Button onClick={adicionarItem} size="sm" className="gap-2 h-8 text-xs">
+                <Plus className="h-3 w-3" />
                 Adicionar Item
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {itens.map((item) => (
                 <div
                   key={item.id}
-                  className="grid md:grid-cols-12 gap-4 p-4 border rounded-lg bg-card"
+                  className="grid md:grid-cols-12 gap-3 p-3 border rounded-lg bg-card"
                 >
                   <div className="md:col-span-5">
-                    <Label>Descrição</Label>
+                    <Label className="text-sm">Descrição</Label>
                     <Input
                       value={item.descricao}
                       onChange={(e) =>
                         atualizarItem(item.id, 'descricao', e.target.value)
                       }
                       placeholder="Descrição do item/serviço"
+                      className="h-9"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label>Quantidade</Label>
+                    <Label className="text-sm">Quantidade</Label>
                     <Input
                       type="number"
                       min="1"
@@ -528,10 +545,11 @@ const CriarOrcamento = () => {
                           parseInt(e.target.value) || 1
                         )
                       }
+                      className="h-9"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label>Valor Unitário</Label>
+                    <Label className="text-sm">Valor Unit.</Label>
                     <Input
                       type="number"
                       min="0"
@@ -545,14 +563,15 @@ const CriarOrcamento = () => {
                         )
                       }
                       placeholder="0.00"
+                      className="h-9"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label>Valor Total</Label>
+                    <Label className="text-sm">Valor Total</Label>
                     <Input
                       value={formatarMoeda(item.valorTotal)}
                       disabled
-                      className="bg-muted"
+                      className="bg-muted h-9"
                     />
                   </div>
                   <div className="md:col-span-1 flex items-end">
@@ -560,7 +579,7 @@ const CriarOrcamento = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => removerItem(item.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -569,12 +588,12 @@ const CriarOrcamento = () => {
               ))}
 
               {/* Total */}
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex justify-end pt-3 border-t">
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground mb-1">
+                  <p className="text-xs text-muted-foreground mb-1">
                     Valor Total do Orçamento
                   </p>
-                  <p className="text-3xl font-bold text-primary">
+                  <p className="text-2xl font-bold text-primary">
                     {formatarMoeda(calcularTotal())}
                   </p>
                 </div>
@@ -584,15 +603,16 @@ const CriarOrcamento = () => {
 
           {/* Observações */}
           <Card>
-            <CardHeader>
-              <CardTitle>Observações</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Observações</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
                 placeholder="Adicione observações importantes sobre o orçamento, condições de pagamento, prazos de execução, etc."
-                rows={4}
+                rows={3}
+                className="text-sm"
               />
             </CardContent>
           </Card>
