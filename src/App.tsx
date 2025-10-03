@@ -22,6 +22,7 @@ import TermoRecusaAssinaturaEmail from './pages/TermoRecusaAssinaturaEmail';
 import Chat from './pages/Chat';
 import AnaliseVistoria from './pages/AnaliseVistoria';
 import VistoriaAnalises from './pages/VistoriaAnalises';
+import CriarOrcamento from './pages/CriarOrcamento';
 
 const queryClient = new QueryClient();
 
@@ -179,6 +180,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <VistoriaAnalises />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/criar-orcamento"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CriarOrcamento />
                   </Layout>
                 </ProtectedRoute>
               }
