@@ -169,7 +169,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
         onGenerateDocument(
           contractId,
           DEVOLUTIVA_LOCATARIO_TEMPLATE,
-          'Devolutiva via E-mail - Locatário'
+          'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734'
         );
         setIsOpen(false);
       },

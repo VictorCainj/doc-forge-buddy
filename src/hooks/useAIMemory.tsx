@@ -1,7 +1,7 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { analyzeTextAdvanced } from '@/utils/advancedTextAnalysis';
 import { log } from '@/utils/logger';
+import { useLocalStorage } from './useLocalStorage';
 
 export interface AIMemory {
   userId: string;
@@ -113,89 +113,72 @@ interface UseAIMemoryReturn {
 const MEMORY_STORAGE_KEY = 'ai-memory-data';
 
 export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
-  const [memory, setMemory] = useState<AIMemory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Salvar memória no localStorage
-  const saveMemory = useCallback(
-    (memoryData: AIMemory) => {
-      try {
-        localStorage.setItem(
-          `${MEMORY_STORAGE_KEY}-${userId}`,
-          JSON.stringify(memoryData)
-        );
-      } catch (error) {
-        log.error('Erro ao salvar memória:', error);
-      }
+  // Criar memória inicial
+  const createInitialMemory = useCallback((): AIMemory => ({
+    userId,
+    preferences: {
+      language: 'pt-BR',
+      formality: 'neutral',
+      verbosity: 'detailed',
+      responseStyle: 'conversational',
+      favoriteTopics: [],
+      avoidedTopics: [],
     },
-    [userId]
+    patterns: {
+      commonQuestions: [],
+      workingHours: {
+        start: '09:00',
+        end: '18:00',
+        timezone: 'America/Sao_Paulo',
+      },
+      usageFrequency: {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
+      },
+      preferredFeatures: [],
+    },
+    knowledge: {
+      contractInsights: [],
+      documentTemplates: [],
+      contextualFacts: [],
+    },
+    context: {
+      currentTopic: '',
+      recentTopics: [],
+      sessionGoals: [],
+      pendingActions: [],
+      emotionalState: 'neutral',
+    },
+    lastUpdated: new Date(),
+  }), [userId]);
+
+  // Usar o hook de localStorage para gerenciar a memória
+  const [memory, setMemory] = useLocalStorage<AIMemory>(
+    `${MEMORY_STORAGE_KEY}-${userId}`,
+    createInitialMemory(),
+    {
+      deserialize: (value: string) => {
+        const parsed = JSON.parse(value);
+        return {
+          ...parsed,
+          lastUpdated: new Date(parsed.lastUpdated),
+        };
+      },
+      onError: (error) => {
+        setError('Erro ao carregar memória da IA');
+        log.error('Erro na memória da IA:', error);
+      },
+    }
   );
 
-  const loadMemory = useCallback(() => {
-    try {
-      const stored = localStorage.getItem(`${MEMORY_STORAGE_KEY}-${userId}`);
-      if (stored) {
-        const parsedMemory = JSON.parse(stored);
-        setMemory({
-          ...parsedMemory,
-          lastUpdated: new Date(parsedMemory.lastUpdated),
-        });
-      } else {
-        // Criar memória inicial
-        const initialMemory: AIMemory = {
-          userId,
-          preferences: {
-            language: 'pt-BR',
-            formality: 'neutral',
-            verbosity: 'detailed',
-            responseStyle: 'conversational',
-            favoriteTopics: [],
-            avoidedTopics: [],
-          },
-          patterns: {
-            commonQuestions: [],
-            workingHours: {
-              start: '09:00',
-              end: '18:00',
-              timezone: 'America/Sao_Paulo',
-            },
-            usageFrequency: {
-              daily: 0,
-              weekly: 0,
-              monthly: 0,
-            },
-            preferredFeatures: [],
-          },
-          knowledge: {
-            contractInsights: [],
-            documentTemplates: [],
-            contextualFacts: [],
-          },
-          context: {
-            currentTopic: '',
-            recentTopics: [],
-            sessionGoals: [],
-            pendingActions: [],
-            emotionalState: 'neutral',
-          },
-          lastUpdated: new Date(),
-        };
-        setMemory(initialMemory);
-        saveMemory(initialMemory);
-      }
-    } catch (error) {
-      setError('Erro ao carregar memória da IA');
-      log.error('Erro ao carregar memória:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, saveMemory]);
-
-  // Carregar memória do localStorage
+  // Inicializar loading
   useEffect(() => {
-    loadMemory();
-  }, [loadMemory]);
+    setIsLoading(false);
+  }, []);
 
   // Atualizar preferências do usuário
   const updatePreferences = useCallback(
@@ -209,9 +192,8 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
       };
 
       setMemory(updatedMemory);
-      saveMemory(updatedMemory);
     },
-    [memory, saveMemory]
+    [memory, setMemory]
   );
 
   // Aprender com interações
@@ -282,12 +264,12 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         };
 
         setMemory(updatedMemory);
-        saveMemory(updatedMemory);
+        setMemory(updatedMemory);
       } catch (error) {
         log.error('Erro ao aprender com interação:', error);
       }
     },
-    [memory, saveMemory]
+    [memory, setMemory]
   );
 
   // Obter insights relevantes
@@ -492,12 +474,12 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         };
 
         setMemory(updatedMemory);
-        saveMemory(updatedMemory);
+        setMemory(updatedMemory);
       } catch (error) {
         log.error('Erro ao lembrar insight:', error);
       }
     },
-    [memory, saveMemory]
+    [memory, setMemory]
   );
 
   // Atualizar estado emocional
@@ -527,12 +509,12 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         };
 
         setMemory(updatedMemory);
-        saveMemory(updatedMemory);
+        setMemory(updatedMemory);
       } catch (error) {
         log.error('Erro ao atualizar estado emocional:', error);
       }
     },
-    [memory, saveMemory]
+    [memory, setMemory]
   );
 
   // Adicionar ação pendente
@@ -568,12 +550,12 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         };
 
         setMemory(updatedMemory);
-        saveMemory(updatedMemory);
+        setMemory(updatedMemory);
       } catch (error) {
         log.error('Erro ao adicionar ação pendente:', error);
       }
     },
-    [memory, saveMemory]
+    [memory, setMemory]
   );
 
   // Completar ação pendente
@@ -597,12 +579,12 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         };
 
         setMemory(updatedMemory);
-        saveMemory(updatedMemory);
+        setMemory(updatedMemory);
       } catch (error) {
         log.error('Erro ao completar ação pendente:', error);
       }
     },
-    [memory, saveMemory]
+    [memory, setMemory]
   );
 
   // Obter insights da memória

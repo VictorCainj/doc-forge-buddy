@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock, Building2, FileText, Key, Shield } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const loginSchema = z.object({
@@ -55,184 +55,210 @@ const Login = () => {
     }
   };
 
-  const _isFormValid = register('email') && register('password');
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Professional Header */}
-      <div className="professional-header">
-        <div className="relative px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  DocForge Enterprise Suite
-                </h1>
-                <p className="text-white/80 text-lg">
-                  Sistema de gestão de contratos e documentos
-                </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+      </div>
+
+      {/* Main Container */}
+      <div className="relative z-10 min-h-screen flex">
+        {/* Left Side - Branding */}
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-12 xl:px-20">
+          <div className="max-w-lg">
+            {/* Logo and Brand */}
+            <div className="flex items-center mb-8">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                <Building2 className="h-6 w-6 text-white" />
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="p-3 rounded-xl bg-white/10">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">ContractPro</h1>
+                <p className="text-blue-200 text-sm">Gestão Imobiliária</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-white/90">
-                <p className="text-sm">Acesso Seguro</p>
-                <p className="text-xs text-white/70">Autenticação protegida</p>
+            {/* Main Heading */}
+            <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+              Gerencie seus
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 block">
+                contratos imobiliários
+              </span>
+              com segurança
+            </h2>
+
+            <p className="text-blue-100 text-lg mb-8 leading-relaxed">
+              Plataforma completa para administração de contratos de locação, 
+              documentos legais e processos imobiliários.
+            </p>
+
+            {/* Features */}
+            <div className="space-y-4">
+              <div className="flex items-center text-blue-100">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+                  <FileText className="h-4 w-4 text-blue-400" />
+                </div>
+                <span>Contratos digitais e assinaturas eletrônicas</span>
+              </div>
+              <div className="flex items-center text-blue-100">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+                  <Shield className="h-4 w-4 text-blue-400" />
+                </div>
+                <span>Segurança jurídica e conformidade legal</span>
+              </div>
+              <div className="flex items-center text-blue-100">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+                  <Building2 className="h-4 w-4 text-blue-400" />
+                </div>
+                <span>Gestão completa do portfólio imobiliário</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex items-center justify-center p-6 min-h-[60vh]">
-        <div className="w-full max-w-md space-y-8">
-          {/* Login Form */}
-          <Card className="glass-card border-border shadow-soft">
-            <CardHeader className="space-y-1 pb-4">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <Shield className="h-8 w-8 text-primary-foreground" />
-                </div>
-                <h1 className="text-2xl font-semibold text-foreground">
-                  Fazer Login
-                </h1>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Use sua conta do DocForge Enterprise Suite
-                </p>
+        {/* Right Side - Login Form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
+          <div className="w-full max-w-md">
+            {/* Mobile Logo */}
+            <div className="lg:hidden flex items-center justify-center mb-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Building2 className="h-8 w-8 text-white" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
+            </div>
 
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Digite seu email"
-                      className="pl-10 h-12 border-border focus:border-primary transition-colors"
-                      {...register('email')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-sm text-destructive">
-                      {errors.email.message}
-                    </p>
-                  )}
+            {/* Login Card */}
+            <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl">
+              <CardHeader className="text-center pb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Key className="h-6 w-6 text-white" />
                 </div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  Acesso ao Sistema
+                </h3>
+                <p className="text-blue-100 text-sm">
+                  Entre com suas credenciais para continuar
+                </p>
+              </CardHeader>
 
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Digite sua senha"
-                      className="pl-10 pr-10 h-12 border-border focus:border-primary transition-colors"
-                      {...register('password')}
-                      disabled={isLoading}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      disabled={isLoading}
+              <CardContent className="space-y-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                  {error && (
+                    <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-100">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-white font-medium">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-300" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        className="pl-11 h-12 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        {...register('email')}
+                        disabled={isLoading}
+                        required
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-red-300">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-white font-medium">
+                      Senha
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-300" />
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        className="pl-11 pr-11 h-12 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        {...register('password')}
+                        disabled={isLoading}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300 hover:text-white transition-colors"
+                        disabled={isLoading}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-sm text-red-300">
+                        {errors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Forgot Password */}
+                  <div className="text-right">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-blue-300 hover:text-white transition-colors"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
+                      Esqueceu sua senha?
+                    </Link>
                   </div>
-                  {errors.password && (
-                    <p className="text-sm text-destructive">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
 
-                {/* Forgot Password Link */}
-                <div className="text-right">
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-primary hover:underline font-medium transition-colors"
-                  >
-                    Esqueceu a senha?
-                  </Link>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate('/signup')}
-                    className="flex-1 h-11"
-                    disabled={isLoading}
-                  >
-                    Criar conta
-                  </Button>
+                  {/* Submit Button */}
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 h-11"
+                    className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         Entrando...
                       </>
                     ) : (
-                      'Avançar'
+                      'Entrar no Sistema'
                     )}
                   </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                </form>
 
-          {/* Footer */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">
-              <button className="hover:text-foreground transition-colors">
-                Português (Brasil)
-              </button>
-              <span>•</span>
-              <button className="hover:text-foreground transition-colors">
-                Ajuda
-              </button>
-              <span>•</span>
-              <button className="hover:text-foreground transition-colors">
-                Privacidade
-              </button>
-              <span>•</span>
-              <button className="hover:text-foreground transition-colors">
-                Termos
-              </button>
+                {/* Footer */}
+                <div className="text-center pt-4 border-t border-white/10">
+                  <p className="text-blue-200 text-sm">
+                    Não tem uma conta?{' '}
+                    <button 
+                      onClick={() => navigate('/signup')}
+                      className="text-blue-300 hover:text-white font-medium transition-colors"
+                    >
+                      Solicite acesso
+                    </button>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Security Notice */}
+            <div className="mt-6 text-center">
+              <div className="flex items-center justify-center text-blue-200 text-xs">
+                <Shield className="h-4 w-4 mr-2" />
+                <span>Conexão segura e dados protegidos</span>
+              </div>
             </div>
           </div>
         </div>

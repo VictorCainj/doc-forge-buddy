@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -6,7 +5,7 @@ export interface CompleteContractData {
   id: string;
   title: string;
   content: string;
-  form_data: Record<string, unknown>;
+  form_data: Record<string, unknown> | null;
   document_type: string;
   created_at: string;
   updated_at: string;
@@ -42,8 +41,9 @@ export const useCompleteContractData = (): UseCompleteContractDataReturn => {
         throw error;
       }
 
-      setContracts(data || []);
-      return data || [];
+      const typedData = (data || []) as CompleteContractData[];
+      setContracts(typedData);
+      return typedData;
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -74,7 +74,7 @@ export const useCompleteContractData = (): UseCompleteContractDataReturn => {
         throw error;
       }
 
-      return data;
+      return data as CompleteContractData;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erro ao buscar contrato completo';
@@ -103,7 +103,7 @@ export const useCompleteContractData = (): UseCompleteContractDataReturn => {
         throw error;
       }
 
-      return data || [];
+      return (data || []) as CompleteContractData[];
     } catch (err) {
       const errorMessage =
         err instanceof Error

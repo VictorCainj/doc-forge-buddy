@@ -95,7 +95,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   const { toast } = useToast();
 
   // Função para mapear ícones baseados no nome do campo
-  const getFieldIcon = (fieldName: string) => {
+  const _getFieldIcon = (fieldName: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       // Campos de contrato
       numeroContrato: Hash,

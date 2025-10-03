@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo, useCallback, useRef, useEffect } from 'react';
 
 /**
@@ -7,7 +6,7 @@ import { useMemo, useCallback, useRef, useEffect } from 'react';
  */
 export const useComponentOptimization = () => {
   // Cache para valores computados
-  const cacheRef = useRef<Map<string, any>>(new Map());
+  const cacheRef = useRef<Map<string, unknown>>(new Map());
 
   /**
    * Memoização com cache personalizado
@@ -15,12 +14,12 @@ export const useComponentOptimization = () => {
   const memoizeWithCache = useCallback(<T,>(
     key: string,
     computeFn: () => T,
-    dependencies: any[] = []
+    dependencies: unknown[] = []
   ): T => {
     const cacheKey = `${key}-${JSON.stringify(dependencies)}`;
     
     if (cacheRef.current.has(cacheKey)) {
-      return cacheRef.current.get(cacheKey);
+      return cacheRef.current.get(cacheKey) as T;
     }
 
     const result = computeFn();
@@ -29,7 +28,9 @@ export const useComponentOptimization = () => {
     // Limitar tamanho do cache
     if (cacheRef.current.size > 100) {
       const firstKey = cacheRef.current.keys().next().value;
-      cacheRef.current.delete(firstKey);
+      if (firstKey) {
+        cacheRef.current.delete(firstKey);
+      }
     }
 
     return result;
@@ -38,18 +39,18 @@ export const useComponentOptimization = () => {
   /**
    * Debounce para funções
    */
-  const useDebounce = useCallback(<T extends (...args: any[]) => any,>(
+  const createDebounce = useCallback(<T extends (...args: unknown[]) => unknown>(
     callback: T,
     delay: number
   ): T => {
-    const timeoutRef = useRef<NodeJS.Timeout>();
+    let timeoutId: NodeJS.Timeout;
 
     return ((...args: Parameters<T>) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
       
-      timeoutRef.current = setTimeout(() => {
+      timeoutId = setTimeout(() => {
         callback(...args);
       }, delay);
     }) as T;
@@ -58,17 +59,17 @@ export const useComponentOptimization = () => {
   /**
    * Throttle para funções
    */
-  const useThrottle = useCallback(<T extends (...args: any[]) => any,>(
+  const createThrottle = useCallback(<T extends (...args: unknown[]) => unknown>(
     callback: T,
     delay: number
   ): T => {
-    const lastCallRef = useRef<number>(0);
+    let lastCall = 0;
 
     return ((...args: Parameters<T>) => {
       const now = Date.now();
       
-      if (now - lastCallRef.current >= delay) {
-        lastCallRef.current = now;
+      if (now - lastCall >= delay) {
+        lastCall = now;
         callback(...args);
       }
     }) as T;
@@ -96,8 +97,8 @@ export const useComponentOptimization = () => {
 
   return {
     memoizeWithCache,
-    useDebounce,
-    useThrottle,
+    createDebounce,
+    createThrottle,
     clearCache,
   };
 };
@@ -146,7 +147,7 @@ export const useListOptimization = <T,>(
  */
 export const useRenderOptimization = () => {
   const renderCountRef = useRef(0);
-  const lastPropsRef = useRef<any>(null);
+  const lastPropsRef = useRef<unknown>(null);
 
   // Contar renders
   useEffect(() => {
@@ -154,14 +155,14 @@ export const useRenderOptimization = () => {
   });
 
   // Detectar mudanças de props
-  const hasPropsChanged = useCallback((newProps: any) => {
+  const hasPropsChanged = useCallback((newProps: unknown) => {
     const hasChanged = JSON.stringify(newProps) !== JSON.stringify(lastPropsRef.current);
     lastPropsRef.current = newProps;
     return hasChanged;
   }, []);
 
   // Verificar se deve re-renderizar
-  const shouldRender = useCallback((newProps: any, dependencies: any[] = []) => {
+  const shouldRender = useCallback((newProps: unknown, dependencies: unknown[] = []) => {
     return hasPropsChanged(newProps) || dependencies.some(dep => dep !== null);
   }, [hasPropsChanged]);
 

@@ -79,8 +79,8 @@ export const useBundleOptimization = () => {
           try {
             const module = await importFn();
             resolve(module);
-          } catch (error) {
-            console.warn('Erro ao carregar módulo:', error);
+          } catch {
+            // Erro ao carregar módulo
             resolve(null);
           }
         }, delay);
@@ -153,7 +153,7 @@ export const useListPerformance = <T>(
    * Calcular itens visíveis para virtualização
    */
   const getVisibleItems = useCallback(
-    (scrollTop: number, containerHeight: number) => {
+    (scrollTop: number, containerHeightParam: number) => {
       if (!virtualScrolling) {
         return { startIndex: 0, endIndex: items.length - 1 };
       }
@@ -161,7 +161,7 @@ export const useListPerformance = <T>(
       const startIndex = Math.floor(scrollTop / itemHeight);
       const endIndex = Math.min(
         items.length - 1,
-        Math.ceil((scrollTop + containerHeight) / itemHeight)
+        Math.ceil((scrollTop + containerHeightParam) / itemHeight)
       );
 
       return { startIndex, endIndex };
@@ -184,6 +184,9 @@ export const useListPerformance = <T>(
     processItemsInBatches,
     getVisibleItems,
     memoizedItems,
+    virtualScrolling,
+    itemHeight,
+    containerHeight,
   };
 };
 

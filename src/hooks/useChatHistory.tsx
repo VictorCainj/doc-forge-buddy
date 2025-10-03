@@ -1,36 +1,16 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { log } from '@/utils/logger';
+import { useLocalStorage } from './useLocalStorage';
+import { 
+  ChatSession, 
+  ChatMessage, 
+  SerializedChatSession, 
+  SerializedMessage,
+  ChatMode,
+  ChatStats 
+} from '@/types/chat';
 
-export interface ChatSession {
-  id: string;
-  title: string;
-  messages: ChatMessage[];
-  mode: 'normal' | 'intelligent' | 'analysis';
-  createdAt: Date;
-  updatedAt: Date;
-  metadata?: {
-    contractCount?: number;
-    analysisType?: string;
-    insights?: string[];
-  };
-}
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-  isCorrected?: boolean;
-  isImproved?: boolean;
-  isAnalysis?: boolean;
-  metadata?: {
-    sentiment?: 'positive' | 'negative' | 'neutral';
-    confidence?: number;
-    suggestions?: string[];
-    contractReferences?: string[];
-  };
-}
+// Tipos importados de @/types/chat
 
 interface UseChatHistoryReturn {
   sessions: ChatSession[];
@@ -56,53 +36,40 @@ const STORAGE_KEY = 'chat-sessions';
 const MAX_SESSIONS = 50;
 
 export const useChatHistory = (): UseChatHistoryReturn => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [currentSession, setCurrentSession] = useState<ChatSession | null>(
-    null
-  );
+  const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar sessões do localStorage
+  // Usar o hook de localStorage para gerenciar as sessões
+  const [sessions, setSessions] = useLocalStorage<ChatSession[]>(STORAGE_KEY, [], {
+    deserialize: (value: string) => {
+      const parsed: SerializedChatSession[] = JSON.parse(value);
+      return parsed.map((session: SerializedChatSession): ChatSession => ({
+        ...session,
+        createdAt: new Date(session.createdAt),
+        updatedAt: new Date(session.updatedAt),
+        messages: session.messages.map((msg: SerializedMessage): ChatMessage => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        })),
+      }));
+    },
+    onError: (error) => log.error('Erro no localStorage do chat:', error),
+  });
+
+  // Inicializar loading
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsedSessions = JSON.parse(stored).map(
-          (session: Record<string, unknown>) => ({
-            ...session,
-            createdAt: new Date(session.createdAt as string),
-            updatedAt: new Date(session.updatedAt as string),
-            messages: (session.messages as Record<string, unknown>[]).map(
-              (msg: Record<string, unknown>) => ({
-                ...msg,
-                timestamp: new Date(msg.timestamp),
-              })
-            ),
-          })
-        );
-        setSessions(parsedSessions);
-      }
-    } catch (error) {
-      log.error('Erro ao carregar histórico do chat:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   }, []);
 
-  // Salvar sessões no localStorage
+  // Salvar sessões com limite
   const saveToStorage = useCallback((newSessions: ChatSession[]) => {
-    try {
-      // Manter apenas as últimas MAX_SESSIONS
-      const sessionsToSave = newSessions
-        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-        .slice(0, MAX_SESSIONS);
+    // Manter apenas as últimas MAX_SESSIONS
+    const sessionsToSave = newSessions
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .slice(0, MAX_SESSIONS);
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionsToSave));
-      setSessions(sessionsToSave);
-    } catch (error) {
-      log.error('Erro ao salvar histórico do chat:', error);
-    }
-  }, []);
+    setSessions(sessionsToSave);
+  }, [setSessions]);
 
   // Criar nova sessão
   const createNewSession = useCallback(
@@ -268,9 +235,9 @@ export const useChatHistory = (): UseChatHistoryReturn => {
           id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           createdAt: new Date(session.createdAt || Date.now()),
           updatedAt: new Date(),
-          messages: session.messages.map((msg: ChatMessage) => ({
+          messages: session.messages.map((msg: any) => ({
             ...msg,
-            timestamp: new Date(msg.timestamp),
+            timestamp: new Date(msg.timestamp as string),
           })),
         };
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { usePrint } from '@/hooks/usePrint';

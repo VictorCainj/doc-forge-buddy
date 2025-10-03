@@ -77,10 +77,8 @@ const EnhancedDashboard = () => {
         drillData = {
           id: 'revenue',
           title: 'Receita Mensal',
-          // @ts-ignore
-          value: metrics.monthlyRevenue || 0,
-          // @ts-ignore
-          metadata: { total: metrics.monthlyRevenue || 0 },
+          value: (metrics as any).monthlyRevenue || 0,
+          metadata: { total: (metrics as any).monthlyRevenue || 0 },
           items: contracts.map((contract) => ({
             id: contract.id,
             name: contract.form_data.nomeLocatario || 'Sem nome',
@@ -107,7 +105,6 @@ const EnhancedDashboard = () => {
         drillData = {
           id: 'risk',
           title: 'Contratos em Risco',
-          // @ts-ignore
           value: 0,
           metadata: {
             expiring7Days: 0,

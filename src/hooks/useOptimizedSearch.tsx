@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useOptimizedData } from './useOptimizedData';
 
 interface SearchResult {
@@ -112,9 +111,9 @@ export const useOptimizedSearch = (
       });
 
       // Armazenar no cache
-      searchCache.current.set(cacheKey, sortedResults);
+      searchCache.current.set(cacheKey, sortedResults as SearchResult[]);
 
-      setResults(sortedResults.slice(0, maxResults));
+      setResults(sortedResults.slice(0, maxResults) as SearchResult[]);
       setTotalResults(sortedResults.length);
     } catch (error) {
       console.error('Erro na busca:', error);
@@ -189,7 +188,7 @@ export const useOptimizedSearch = (
     isLoading: isLoading || dataLoading,
     hasSearched,
     totalResults,
-    performSearch: performImmediateSearch,
+    performSearch: async (term: string) => { performImmediateSearch(term); },
     clearSearch,
   };
 };

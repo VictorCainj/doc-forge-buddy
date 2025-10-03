@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 interface CacheEntry<T> {
   data: T;
@@ -114,7 +113,9 @@ export const useDataOptimization = <T>(
       // Limitar tamanho do cache
       if (cacheRef.current.size > maxCacheSize) {
         const firstKey = cacheRef.current.keys().next().value;
-        cacheRef.current.delete(firstKey);
+        if (firstKey) {
+          cacheRef.current.delete(firstKey);
+        }
       }
 
       setData(compressedResult);

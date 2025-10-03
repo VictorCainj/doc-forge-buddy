@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { CompleteContractData } from './useCompleteContractData';
 import { useAIMemory } from './useAIMemory';

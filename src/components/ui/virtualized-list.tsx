@@ -1,10 +1,9 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, Clock, MapPin, User, CalendarDays } from 'lucide-react';
+import { FileText, MapPin, User, CalendarDays } from 'lucide-react';
 
 interface VirtualizedListProps<T> {
   items: T[];
@@ -173,18 +172,29 @@ export const VirtualizedList = <T,>({
 /**
  * Componente de item de contrato otimizado
  */
+interface ContractData {
+  form_data: {
+    numeroContrato?: string;
+    nomeLocatario?: string;
+    enderecoImovel?: string;
+    dataTerminoRescisao?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export const ContractItem = React.memo<{
-  contract: any;
-  onEdit?: (contract: any) => void;
-  onDelete?: (contract: any) => void;
-  onGenerate?: (contract: any, documentType: string) => void;
+  contract: ContractData;
+  onEdit?: (contract: ContractData) => void;
+  _onDelete?: (contract: ContractData) => void;
+  onGenerate?: (contract: ContractData, documentType: string) => void;
   isGenerating?: boolean;
-}>(({ contract, onEdit, onDelete, onGenerate, isGenerating = false }) => {
+}>(({ contract, onEdit, _onDelete, onGenerate, isGenerating = false }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const getStatusBadge = (contract: any) => {
+  const getStatusBadge = (contract: ContractData) => {
     const endDate = new Date(contract.form_data.dataTerminoRescisao || '');
     const now = new Date();
     const daysUntilExpiry = Math.ceil(
@@ -194,9 +204,9 @@ export const ContractItem = React.memo<{
     if (daysUntilExpiry < 0) {
       return <Badge variant="destructive">Expirado</Badge>;
     } else if (daysUntilExpiry <= 7) {
-      return <Badge variant="warning">Próximo do vencimento</Badge>;
+      return <Badge variant="secondary">Próximo do vencimento</Badge>;
     } else {
-      return <Badge variant="success">Ativo</Badge>;
+      return <Badge variant="default">Ativo</Badge>;
     }
   };
 

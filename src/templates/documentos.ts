@@ -114,8 +114,8 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Informamos que, como forma de facilitar sua organização e viabilizar o agendamento da vistoria, solicitamos a gentileza de encaminhar os comprovantes de pagamento acompanhados das respectivas faturas referentes aos meses de <strong>{{mesesComprovantes}}</strong> (tais como <strong>{{documentosSolicitados}}</strong>){{#if solicitarCND}}{{#eq solicitarCND "sim"}} bem como a <strong>Certidão Negativa de Débitos (CND)</strong>{{/eq}}{{/if}}, conforme estabelecido em contrato.</p>
   
-  <p style="margin-bottom: 20px;">Após o recebimento e a devida confirmação dos documentos, procederemos com o agendamento da vistoria dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>. </p>
-
+  <p style="margin-bottom: 20px;">Após o recebimento e a devida confirmação dos documentos, procederemos com o agendamento da vistoria dentro do prazo de <strong>{{prazoDias}} (trinta) dias</strong>.</p>
+  
   <p style="margin-bottom: 20px;"><strong>Pedimos a gentileza de informar a data desejada para a vistoria de saída com, no mínimo, 5 dias de antecedência à data pretendida.</strong></p>
   
   <p style="margin-bottom: 20px;">Também solicitamos o envio da <strong>Notificação de Rescisão preenchida e assinada</strong>. Todas essas orientações constam no Informativo de Rescisão anexo.</p>

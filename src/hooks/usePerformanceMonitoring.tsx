@@ -1,6 +1,4 @@
-// @ts-nocheck
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PERFORMANCE_METRICS, MONITORING_CONFIG } from '@/utils/performanceConfig';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface PerformanceMetric {
   name: string;
@@ -47,11 +45,6 @@ export const usePerformanceMonitoring = () => {
   const endRenderMeasurement = useCallback((componentName?: string) => {
     const renderTime = performance.now() - renderStartTime.current;
     addMetric('renderTime', renderTime, componentName);
-    
-    // Verificar se está dentro dos limites
-    if (renderTime > PERFORMANCE_METRICS.limits.maxRenderTime) {
-      console.warn(`Render lento detectado: ${renderTime}ms em ${componentName || 'componente desconhecido'}`);
-    }
   }, []);
 
   /**
@@ -67,11 +60,6 @@ export const usePerformanceMonitoring = () => {
   const endSearchMeasurement = useCallback((componentName?: string) => {
     const searchTime = performance.now() - searchStartTime.current;
     addMetric('searchTime', searchTime, componentName);
-    
-    // Verificar se está dentro dos limites
-    if (searchTime > PERFORMANCE_METRICS.limits.maxSearchTime) {
-      console.warn(`Busca lenta detectada: ${searchTime}ms em ${componentName || 'componente desconhecido'}`);
-    }
   }, []);
 
   /**
@@ -87,11 +75,6 @@ export const usePerformanceMonitoring = () => {
   const endLoadMeasurement = useCallback((componentName?: string) => {
     const loadTime = performance.now() - loadStartTime.current;
     addMetric('loadTime', loadTime, componentName);
-    
-    // Verificar se está dentro dos limites
-    if (loadTime > PERFORMANCE_METRICS.limits.maxLoadTime) {
-      console.warn(`Carregamento lento detectado: ${loadTime}ms em ${componentName || 'componente desconhecido'}`);
-    }
   }, []);
 
   /**
@@ -112,13 +95,13 @@ export const usePerformanceMonitoring = () => {
     setMetrics(prev => {
       const newMetrics = [...prev, metric];
       // Manter apenas as últimas 1000 métricas
-      return newMetrics.slice(-MONITORING_CONFIG.maxMetrics);
+      return newMetrics.slice(-1000);
     });
 
     // Atualizar estatísticas
     setStats(prev => ({
       ...prev,
-      [name]: [...(prev[name as keyof PerformanceStats] || []), value].slice(-100),
+      [name as keyof PerformanceStats]: [...(prev[name as keyof PerformanceStats] || []), value].slice(-100),
     }));
   }, []);
 
@@ -131,7 +114,7 @@ export const usePerformanceMonitoring = () => {
       metric => now - metric.timestamp < 60000 // Últimos 60 segundos
     );
 
-    const stats = {
+    const performanceStats = {
       totalMetrics: metrics.length,
       recentMetrics: recentMetrics.length,
       averageRenderTime: calculateAverage(stats.renderTime),
@@ -143,7 +126,7 @@ export const usePerformanceMonitoring = () => {
       memoryUsage: getMemoryUsage(),
     };
 
-    return stats;
+    return performanceStats;
   }, [metrics, stats]);
 
   /**
@@ -153,19 +136,19 @@ export const usePerformanceMonitoring = () => {
     const currentStats = getPerformanceStats();
     const alerts: string[] = [];
 
-    if (currentStats.averageRenderTime > PERFORMANCE_METRICS.alerts.slowRender) {
+    if (currentStats.averageRenderTime > 100) {
       alerts.push(`Render lento: ${currentStats.averageRenderTime.toFixed(2)}ms`);
     }
 
-    if (currentStats.averageSearchTime > PERFORMANCE_METRICS.alerts.slowSearch) {
+    if (currentStats.averageSearchTime > 500) {
       alerts.push(`Busca lenta: ${currentStats.averageSearchTime.toFixed(2)}ms`);
     }
 
-    if (currentStats.averageLoadTime > PERFORMANCE_METRICS.alerts.slowLoad) {
+    if (currentStats.averageLoadTime > 1000) {
       alerts.push(`Carregamento lento: ${currentStats.averageLoadTime.toFixed(2)}ms`);
     }
 
-    if (currentStats.memoryUsage > PERFORMANCE_METRICS.alerts.highMemoryUsage) {
+    if (currentStats.memoryUsage > 50 * 1024 * 1024) {
       alerts.push(`Uso alto de memória: ${(currentStats.memoryUsage / 1024 / 1024).toFixed(2)}MB`);
     }
 

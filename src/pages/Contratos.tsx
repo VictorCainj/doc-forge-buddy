@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import OptimizedSearch from '@/components/ui/optimized-search';
-import { VirtualizedList, ContractItem } from '@/components/ui/virtualized-list';
+// import { VirtualizedList, ContractItem } from '@/components/ui/virtualized-list';
 import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
 import { useComponentOptimization } from '@/hooks/useComponentOptimization';
 import {
@@ -46,7 +46,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
-import { useSearchContext } from '@/hooks/useSearchContext';
+// import { useSearchContext } from '@/hooks/useSearchContext';
 import { useOptimizedData } from '@/hooks/useOptimizedData';
 import {
   // DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
@@ -66,29 +66,36 @@ import {
   formatDateBrazilian,
   convertDateToBrazilian,
 } from '@/utils/dateFormatter';
+import { DateHelpers } from '@/utils/dateHelpers';
+import { TemplateProcessor } from '@/utils/templateProcessor';
+import { useStandardToast } from '@/utils/toastHelpers';
 import {
   gerarDocumentosSolicitados,
   ConfiguracaoDocumentos,
 } from '@/utils/documentosSolicitados';
-
-interface Contract {
-  id: string;
-  title: string;
-  form_data: Record<string, string>;
-  created_at: string;
-  content: string;
-  document_type: string;
-  updated_at: string;
-}
+import { 
+  Contract, 
+  ContractFormData, 
+  DocumentType,
+  VistoriaType,
+  PersonType,
+  NPSData,
+  AgendamentoData,
+  RecusaAssinaturaData,
+  WhatsAppData 
+} from '@/types/contract';
 
 const Contratos = () => {
   // Hook de otimização de componentes
-  const { memoizeWithCache, useDebounce } = useComponentOptimization();
+  const { memoizeWithCache: _memoizeWithCache, createDebounce: _createDebounce } = useComponentOptimization();
+  
+  // Hook de toast padronizado
+  const { showSuccess, showError, showInfo } = useStandardToast();
   
   // Sistema de busca otimizado
   const {
-    searchTerm,
-    setSearchTerm,
+    // searchTerm,
+    // setSearchTerm,
     results: searchResults,
     isLoading: isSearching,
     hasSearched,
@@ -125,13 +132,11 @@ const Contratos = () => {
   );
   const [dataVistoria, setDataVistoria] = useState('');
   const [horaVistoria, setHoraVistoria] = useState('');
-  const [tipoVistoria, setTipoVistoria] = useState('final');
-  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState('vistoria');
+  const [tipoVistoria, setTipoVistoria] = useState<VistoriaType>('final');
+  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState<VistoriaType>('vistoria');
   const [dataRealizacaoVistoria, setDataRealizacaoVistoria] = useState('');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [whatsAppType, setWhatsAppType] = useState<
-    'locador' | 'locatario' | null
-  >(null);
+  const [whatsAppType, setWhatsAppType] = useState<PersonType | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<string>('');
   const [assinanteSelecionado, setAssinanteSelecionado] = useState<string>('');
   const [showAssinanteModal, setShowAssinanteModal] = useState(false);
@@ -144,9 +149,7 @@ const Contratos = () => {
   const [selectedNPSContract, setSelectedNPSContract] =
     useState<Contract | null>(null);
   const [npsMethod, setNpsMethod] = useState<'email' | 'whatsapp' | null>(null);
-  const [npsWhatsAppType, setNpsWhatsAppType] = useState<
-    'locador' | 'locatario' | null
-  >(null);
+  const [npsWhatsAppType, setNpsWhatsAppType] = useState<PersonType | null>(null);
   const [selectedNPSPerson, setSelectedNPSPerson] = useState<string>('');
   const [_selectedNPSParties, setSelectedNPSParties] = useState<{
     locadores: string[];
@@ -228,18 +231,8 @@ const Contratos = () => {
     const hoje = new Date();
     const meses: string[] = [];
     const nomesMeses = [
-      'janeiro',
-      'fevereiro',
-      'março',
-      'abril',
-      'maio',
-      'junho',
-      'julho',
-      'agosto',
-      'setembro',
-      'outubro',
-      'novembro',
-      'dezembro',
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
     ];
 
     // Pegar os 3 últimos meses
@@ -249,10 +242,7 @@ const Contratos = () => {
       meses.push(nomesMeses[mes.getMonth()]);
     }
 
-    // Adicionar ano atual
-    const ano = hoje.getFullYear();
-
-    return `${meses.join(', ')} de ${ano}`;
+    return `${meses.join(', ')} de ${hoje.getFullYear()}`;
   };
 
   // Função para obter qualificação completa dos locatários (texto livre)
@@ -526,18 +516,18 @@ const Contratos = () => {
     enhancedData.nomeProprietarioFormatado = nomeProprietarioFormatado;
 
     // Adicionar variáveis de data padrão
-    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.dataAtual = DateHelpers.getCurrentDateBrazilian();
     enhancedData.dataComunicacao =
-      formData.dataComunicacao || formatDateBrazilian(new Date());
+      formData.dataComunicacao || DateHelpers.getCurrentDateBrazilian();
     enhancedData.dataInicioRescisao =
-      formData.dataInicioRescisao || formatDateBrazilian(new Date());
+      formData.dataInicioRescisao || DateHelpers.getCurrentDateBrazilian();
     enhancedData.dataTerminoRescisao =
-      formData.dataTerminoRescisao || formatDateBrazilian(new Date());
+      formData.dataTerminoRescisao || DateHelpers.getCurrentDateBrazilian();
     enhancedData.prazoDias = formData.prazoDias || '30';
 
     // Adicionar variáveis específicas para Termo de Recusa de Assinatura - E-mail
     enhancedData.dataRealizacaoVistoria =
-      formData.dataRealizacaoVistoria || formatDateBrazilian(new Date());
+      formData.dataRealizacaoVistoria || DateHelpers.getCurrentDateBrazilian();
     enhancedData.assinanteSelecionado =
       formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
 
@@ -753,7 +743,7 @@ const Contratos = () => {
       // console.log('===============================');
     }
 
-    const processedTemplate = replaceTemplateVariables(template, enhancedData);
+    const processedTemplate = TemplateProcessor.processTemplate(template, enhancedData);
 
     // Usar o título que já foi definido (já vem com formatação correta)
     const documentTitle = documentType;
@@ -782,7 +772,7 @@ const Contratos = () => {
     // Documentos que não precisam de assinatura
     const documentosSemAssinatura = [
       'Devolutiva via E-mail - Locador',
-      'Devolutiva via E-mail - Locatário',
+      'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734',
       'Devolutiva Cobrança de Consumo',
       'Devolutiva Caderninho',
       'Caderninho',
@@ -1002,9 +992,9 @@ const Contratos = () => {
 
         // Recarregar a lista de contratos para refletir as mudanças
         await refetch();
-        toast.success('Contrato excluído com sucesso!');
+        showSuccess('deleted', { description: 'Contrato excluído com sucesso!' });
       } catch {
-        toast.error('Erro ao excluir contrato');
+        showError('delete');
       } finally {
         setDeletingContract(null);
       }
@@ -1013,7 +1003,7 @@ const Contratos = () => {
 
   const handleGenerateAgendamento = () => {
     if (!selectedContract || !dataVistoria || !horaVistoria) {
-      toast.error('Por favor, preencha a data e hora da vistoria');
+      showError('validation', { description: 'Por favor, preencha a data e hora da vistoria' });
       return;
     }
 
@@ -1183,9 +1173,9 @@ const Contratos = () => {
 
   const handleGenerateRecusaAssinatura = () => {
     if (!selectedContract || !dataRealizacaoVistoria || !assinanteSelecionado) {
-      toast.error(
-        'Por favor, preencha a data da vistoria e selecione o assinante'
-      );
+      showError('validation', { 
+        description: 'Por favor, preencha a data da vistoria e selecione o assinante' 
+      });
       return;
     }
 
@@ -1412,15 +1402,13 @@ const Contratos = () => {
       // Recarregar a lista de contratos para refletir as mudanças
       await refetch();
 
-      toast.success('Contrato atualizado com sucesso!');
+      showSuccess('updated', { description: 'Contrato atualizado com sucesso!' });
       setShowEditModal(false);
       setEditingContract(null);
       setEditFormData({});
     } catch (error) {
       console.error('Erro ao atualizar contrato:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Erro ao atualizar contrato: ${errorMessage}`);
+      showError('save', { description: 'Erro ao atualizar contrato' });
     } finally {
       setIsUpdating(false);
     }
@@ -2006,7 +1994,7 @@ const Contratos = () => {
               <Label htmlFor="tipoVistoria" className="text-right">
                 Tipo de Vistoria
               </Label>
-              <Select value={tipoVistoria} onValueChange={setTipoVistoria}>
+              <Select value={tipoVistoria} onValueChange={(value) => setTipoVistoria(value as VistoriaType)}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Selecione o tipo de vistoria" />
                 </SelectTrigger>
@@ -2074,7 +2062,7 @@ const Contratos = () => {
               </Label>
               <Select
                 value={tipoVistoriaRecusa}
-                onValueChange={setTipoVistoriaRecusa}
+                onValueChange={(value) => setTipoVistoriaRecusa(value as VistoriaType)}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Selecione o tipo" />

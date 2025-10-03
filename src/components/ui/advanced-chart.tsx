@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ export const AdvancedChart = ({
   height = 300,
   showTrend = false,
   trendValue,
-  trendPeriod = 'vs mês anterior',
+  trendPeriod: _propTrendPeriod = 'vs mês anterior',
   className,
   onDataPointClick,
   onExport: _onExport,
@@ -65,12 +64,12 @@ export const AdvancedChart = ({
   };
 
   const getTrendColor = () => {
-    if (!trendValue) return 'text-gray-500';
-    if (trendValue > 0) return 'text-green-500';
-    if (trendValue < 0) return 'text-red-500';
+    if (trendValue && trendValue > 0) return 'text-green-500';
+    if (trendValue && trendValue < 0) return 'text-red-500';
     return 'text-gray-500';
   };
 
+  // Removed useTrendAnalysis hook as it's not defined
   const TrendIcon = getTrendIcon();
 
   const renderBarChart = () => (
