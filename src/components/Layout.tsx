@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import Sidebar from './Sidebar';
-import { SearchProvider } from '@/contexts/SearchContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -8,17 +7,15 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <SearchProvider>
-      <div className="min-h-screen bg-background">
-        <div className="flex">
-          {/* Professional Sidebar */}
-          <Sidebar />
+    <div className="min-h-screen bg-background">
+      <div className="flex">
+        {/* Professional Sidebar */}
+        <Sidebar />
 
-          {/* Main Content Area */}
-          <main className="flex-1 overflow-hidden">{children}</main>
-        </div>
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-hidden">{children}</main>
       </div>
-    </SearchProvider>
+    </div>
   );
 };
 
