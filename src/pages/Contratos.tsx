@@ -16,7 +16,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -75,14 +74,12 @@ import {
 } from '@/utils/documentosSolicitados';
 import { 
   Contract, 
-  ContractFormData, 
-  DocumentType,
   VistoriaType,
   PersonType,
-  NPSData,
-  AgendamentoData,
-  RecusaAssinaturaData,
-  WhatsAppData 
+  _NPSData,
+  _AgendamentoData,
+  _RecusaAssinaturaData,
+  _WhatsAppData 
 } from '@/types/contract';
 
 const Contratos = () => {
@@ -90,7 +87,7 @@ const Contratos = () => {
   const { memoizeWithCache: _memoizeWithCache, createDebounce: _createDebounce } = useComponentOptimization();
   
   // Hook de toast padronizado
-  const { showSuccess, showError, showInfo } = useStandardToast();
+  const { showSuccess, showError } = useStandardToast();
   
   // Sistema de busca otimizado
   const {
@@ -166,18 +163,7 @@ const Contratos = () => {
   const [generatingDocument, setGeneratingDocument] = useState<string | null>(
     null
   );
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editFormData, setEditFormData] = useState<Record<string, string>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Sincronizar dados do formulário quando o contrato de edição muda
-  useEffect(() => {
-    if (editingContract && showEditModal) {
-      const formData = editingContract.form_data || {};
-      setEditFormData({ ...formData });
-    }
-  }, [editingContract, showEditModal]);
 
   const navigate = useNavigate();
 
@@ -971,7 +957,7 @@ const Contratos = () => {
     return result;
   };
 
-  const handleDeleteContract = async (
+  const _handleDeleteContract = async (
     contractId: string,
     contractTitle: string
   ) => {
@@ -1353,73 +1339,6 @@ const Contratos = () => {
     );
   };
 
-  const handleUpdateContract = async () => {
-    if (!editingContract) {
-      toast.error('Nenhum contrato selecionado para edição');
-      return;
-    }
-
-    // Validação básica dos campos obrigatórios
-    if (!editFormData.numeroContrato?.trim()) {
-      toast.error('Número do contrato é obrigatório');
-      return;
-    }
-
-    if (!editFormData.nomeLocatario?.trim()) {
-      toast.error('Nome do locatário é obrigatório');
-      return;
-    }
-
-    setIsUpdating(true);
-    try {
-      // Adicionar campos automáticos
-      const enhancedData = {
-        ...editFormData,
-        prazoDias: '30', // Sempre 30 dias
-        dataComunicacao: editFormData.dataInicioRescisao, // Data de comunicação = data de início
-      };
-
-      // Validar se os dados são válidos antes de enviar
-      if (typeof enhancedData !== 'object' || enhancedData === null) {
-        throw new Error('Dados do formulário inválidos');
-      }
-
-      const { error } = await supabase
-        .from('saved_terms')
-        .update({
-          title: `Contrato ${editFormData.numeroContrato || '[NÚMERO]'} - ${editFormData.nomeLocatario || '[LOCATÁRIO]'}`,
-          content: JSON.stringify(enhancedData),
-          form_data: enhancedData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', editingContract.id);
-
-      if (error) {
-        console.error('Erro do Supabase:', error);
-        throw new Error(`Erro do banco de dados: ${error.message}`);
-      }
-
-      // Recarregar a lista de contratos para refletir as mudanças
-      await refetch();
-
-      showSuccess('updated', { description: 'Contrato atualizado com sucesso!' });
-      setShowEditModal(false);
-      setEditingContract(null);
-      setEditFormData({});
-    } catch (error) {
-      console.error('Erro ao atualizar contrato:', error);
-      showError('save', { description: 'Erro ao atualizar contrato' });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setShowEditModal(false);
-    setEditingContract(null);
-    setEditFormData({});
-    setIsUpdating(false); // Garantir que o estado de loading seja resetado
-  };
 
   const handleGenerateNPSWhatsApp = () => {
     if (!selectedNPSContract || !npsWhatsAppType || !selectedNPSPerson) {
@@ -1916,16 +1835,12 @@ const Contratos = () => {
                               size="sm"
                               className="h-8 w-8 p-0"
                               onClick={() => {
-                                setEditingContract(contract);
-                                // Garantir que os dados do formulário sejam carregados corretamente
-                                const formData = contract.form_data || {};
-                                setEditFormData({ ...formData });
-                                setShowEditModal(true);
+                                // Navegar para a página de edição específica
+                                navigate(`/editar-contrato/${contract.id}`);
                               }}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                          </div>
                           <QuickActionsDropdown
                             contractId={contract.id}
                             contractNumber={
@@ -1945,6 +1860,7 @@ const Contratos = () => {
                             }}
                           />
                         </div>
+                      </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -2281,497 +2197,6 @@ const Contratos = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal para Edição de Contrato */}
-      <Dialog
-        open={showEditModal}
-        onOpenChange={(open) => {
-          if (!open) {
-            handleCancelEdit();
-          } else {
-            setShowEditModal(open);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Contrato</DialogTitle>
-            <DialogDescription>
-              Edite as informações do contrato. Todos os campos são editáveis.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            {/* Dados do Contrato */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Dados do Contrato</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-numeroContrato">
-                    Número do Contrato
-                  </Label>
-                  <Input
-                    id="edit-numeroContrato"
-                    value={editFormData.numeroContrato || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        numeroContrato: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: 13734"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-nomeLocatario">Nome do Locatário</Label>
-                  <Input
-                    id="edit-nomeLocatario"
-                    value={editFormData.nomeLocatario || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        nomeLocatario: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: Beatriz ou INSERVICE LIMPEZA E INFRA-ESTRUTURA LTDA"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-generoLocatario">
-                    Gênero do Locatário
-                  </Label>
-                  <Select
-                    value={editFormData.generoLocatario || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        generoLocatario: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o gênero" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="masculino">Masculino</SelectItem>
-                      <SelectItem value="feminino">Feminino</SelectItem>
-                      <SelectItem value="neutro">
-                        Neutro (múltiplos locatários)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-enderecoImovel">
-                    Endereço do Imóvel
-                  </Label>
-                  <Input
-                    id="edit-enderecoImovel"
-                    value={editFormData.enderecoImovel || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        enderecoImovel: e.target.value,
-                      }))
-                    }
-                    placeholder="Endereço completo do imóvel"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-dataFirmamentoContrato">
-                  Data de Firmamento do Contrato
-                </Label>
-                <Input
-                  id="edit-dataFirmamentoContrato"
-                  value={editFormData.dataFirmamentoContrato || ''}
-                  onChange={(e) =>
-                    setEditFormData((prev) => ({
-                      ...prev,
-                      dataFirmamentoContrato: e.target.value,
-                    }))
-                  }
-                  placeholder="Ex: 15/10/2024 ou 15 de outubro de 2024"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-incluirQuantidadeChaves">
-                  Incluir quantidade de chaves no contrato?
-                </Label>
-                <Select
-                  value={editFormData.incluirQuantidadeChaves || ''}
-                  onValueChange={(value) =>
-                    setEditFormData((prev) => ({
-                      ...prev,
-                      incluirQuantidadeChaves: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma opção" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sim">
-                      Sim - Incluir quantidade de chaves
-                    </SelectItem>
-                    <SelectItem value="nao">
-                      Não - Não incluir quantidade de chaves
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {editFormData.incluirQuantidadeChaves === 'sim' && (
-                <div className="space-y-2">
-                  <Label htmlFor="edit-quantidadeChaves">
-                    Quantidade e tipo de chaves
-                  </Label>
-                  <Textarea
-                    id="edit-quantidadeChaves"
-                    value={editFormData.quantidadeChaves || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        quantidadeChaves: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: 04 chaves simples, 02 chaves tetra"
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="edit-qualificacaoCompletaLocatarios">
-                  Qualificação Completa dos Locatários
-                </Label>
-                <Textarea
-                  id="edit-qualificacaoCompletaLocatarios"
-                  value={editFormData.qualificacaoCompletaLocatarios || ''}
-                  onChange={(e) =>
-                    setEditFormData((prev) => ({
-                      ...prev,
-                      qualificacaoCompletaLocatarios: e.target.value,
-                    }))
-                  }
-                  placeholder="Ex: DIOGO VIEIRA ORLANDO, brasileiro, divorciado, engenheiro ambiental..."
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-celularLocatario">
-                    Celular do Locatário
-                  </Label>
-                  <Input
-                    id="edit-celularLocatario"
-                    value={editFormData.celularLocatario || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        celularLocatario: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: (19) 99999-9999"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-emailLocatario">
-                    E-mail do Locatário
-                  </Label>
-                  <Input
-                    id="edit-emailLocatario"
-                    value={editFormData.emailLocatario || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        emailLocatario: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: locatario@email.com"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Dados dos Locadores */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                Qualificação dos Locadores
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-nomesResumidosLocadores">
-                    Nomes dos Locadores
-                  </Label>
-                  <Input
-                    id="edit-nomesResumidosLocadores"
-                    value={editFormData.nomesResumidosLocadores || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        nomesResumidosLocadores: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: JOÃO SILVA SANTOS e MARIA SILVA SANTOS"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-generoProprietario">
-                    Gênero dos Locadores
-                  </Label>
-                  <Select
-                    value={editFormData.generoProprietario || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        generoProprietario: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o gênero" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="masculino">Masculino</SelectItem>
-                      <SelectItem value="feminino">Feminino</SelectItem>
-                      <SelectItem value="neutro">
-                        Neutro (múltiplos locadores)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-qualificacaoCompletaLocadores">
-                  Qualificação Completa dos Locadores
-                </Label>
-                <Textarea
-                  id="edit-qualificacaoCompletaLocadores"
-                  value={editFormData.qualificacaoCompletaLocadores || ''}
-                  onChange={(e) =>
-                    setEditFormData((prev) => ({
-                      ...prev,
-                      qualificacaoCompletaLocadores: e.target.value,
-                    }))
-                  }
-                  placeholder="Ex: JOÃO SILVA SANTOS, brasileiro, casado, empresário..."
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            {/* Dados de Rescisão */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Dados de Rescisão</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-dataInicioRescisao">
-                    Data de Início da Rescisão
-                  </Label>
-                  <Input
-                    id="edit-dataInicioRescisao"
-                    value={editFormData.dataInicioRescisao || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        dataInicioRescisao: e.target.value,
-                      }))
-                    }
-                    placeholder="DD/MM/AAAA - Ex: 23/06/2025"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-dataTerminoRescisao">
-                    Data de Término da Rescisão
-                  </Label>
-                  <Input
-                    id="edit-dataTerminoRescisao"
-                    value={editFormData.dataTerminoRescisao || ''}
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        dataTerminoRescisao: e.target.value,
-                      }))
-                    }
-                    placeholder="DD/MM/AAAA - Ex: 22/07/2025"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Contas de Consumo */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Contas de Consumo</h3>
-              <p className="text-sm text-gray-600">
-                Configure quais contas de consumo devem ser solicitadas na
-                cobrança
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-cpfl">CPFL (Energia Elétrica)</Label>
-                  <Select
-                    value={editFormData.cpfl || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        cpfl: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma opção" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SIM">SIM</SelectItem>
-                      <SelectItem value="NÃO">NÃO</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-tipoAgua">Tipo de Água</Label>
-                  <Select
-                    value={editFormData.tipoAgua || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        tipoAgua: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DAEV">DAEV</SelectItem>
-                      <SelectItem value="SANASA">SANASA</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-statusAgua">Status da Água</Label>
-                  <Select
-                    value={editFormData.statusAgua || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        statusAgua: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma opção" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SIM">SIM</SelectItem>
-                      <SelectItem value="NÃO">NÃO</SelectItem>
-                      <SelectItem value="No condomínio">
-                        No condomínio
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-solicitarGas">Solicitar Gás</Label>
-                  <Select
-                    value={editFormData.solicitarGas || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        solicitarGas: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma opção" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sim">SIM</SelectItem>
-                      <SelectItem value="nao">NÃO</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-solicitarCondominio">
-                    Solicitar Condomínio
-                  </Label>
-                  <Select
-                    value={editFormData.solicitarCondominio || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        solicitarCondominio: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma opção" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sim">SIM</SelectItem>
-                      <SelectItem value="nao">NÃO</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-solicitarCND">Solicitar CND</Label>
-                  <Select
-                    value={editFormData.solicitarCND || ''}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        solicitarCND: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma opção" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sim">SIM</SelectItem>
-                      <SelectItem value="nao">NÃO</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="flex justify-between">
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (editingContract) {
-                  handleDeleteContract(
-                    editingContract.id,
-                    editingContract.title
-                  );
-                  setShowEditModal(false);
-                  setEditingContract(null);
-                }
-              }}
-              disabled={isUpdating}
-            >
-              Excluir Contrato
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancelEdit}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateContract} disabled={isUpdating}>
-                {isUpdating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Atualizando...
-                  </>
-                ) : (
-                  'Atualizar Contrato'
-                )}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Modal para NPS */}
       <Dialog open={showNPSModal} onOpenChange={setShowNPSModal}>

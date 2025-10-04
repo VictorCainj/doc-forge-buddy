@@ -9,43 +9,72 @@ import {
   Calendar,
   FileCheck,
 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { ContractFormData } from '@/types/contract';
 
-const CadastrarContrato = () => {
+const EditarContrato = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const params = useParams();
+  const contractId = params.id as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
-  
-  // Estados para modo de edição
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [contractId, setContractId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Detectar modo de edição e carregar dados uma única vez
+  // console.log('EditarContrato mounted with params:', params);
+  // console.log('ContractId extracted:', contractId);
+
+  // Carregar dados do contrato do banco de dados
   useEffect(() => {
-    const state = location.state as {
-      editMode?: boolean;
-      contractId?: string;
-      contractData?: Record<string, string>;
+    const loadContractData = async () => {
+      // console.log('ContractId from params:', contractId);
+
+      if (!contractId) {
+        toast.error('ID do contrato não encontrado');
+        navigate('/contratos');
+        return;
+      }
+
+      try {
+        const { data: contractData, error } = await supabase
+          .from('saved_terms')
+          .select('*')
+          .eq('id', contractId)
+          .single();
+
+        if (error) {
+          toast.error('Erro ao carregar dados do contrato');
+          navigate('/contratos');
+          return;
+        }
+
+        // console.log('Contract data loaded:', contractData);
+
+        // Mapear campos para garantir compatibilidade
+        const mappedData: Record<string, string> = {
+          ...contractData.form_data as ContractFormData,
+          // Garantir que nomeProprietario seja usado (pode vir como nomesResumidosLocadores)
+          nomeProprietario: (contractData.form_data as ContractFormData)?.nomeProprietario || (contractData.form_data as ContractFormData)?.nomesResumidosLocadores || '',
+        };
+
+        // console.log('Mapped data:', mappedData);
+        // console.log('nomeProprietario:', mappedData.nomeProprietario);
+        // console.log('nomeLocatario:', mappedData.nomeLocatario);
+
+        setFormData(mappedData);
+      } catch {
+        // console.error('Erro ao carregar contrato:', error);
+        toast.error('Erro ao carregar dados do contrato');
+        navigate('/contratos');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (state?.editMode && state?.contractId && state?.contractData) {
-      setIsEditMode(true);
-      setContractId(state.contractId);
-      
-      // Mapear campos para garantir compatibilidade
-      const mappedData = {
-        ...state.contractData,
-        // Garantir que nomeProprietario seja usado (pode vir como nomesResumidosLocadores)
-        nomeProprietario: state.contractData.nomeProprietario || state.contractData.nomesResumidosLocadores || '',
-      };
-      
-      setFormData(mappedData);
-    }
-  }, [location.state]);
+    loadContractData();
+  }, [contractId, navigate]);
 
   const steps: FormStep[] = [
     {
@@ -272,17 +301,52 @@ const CadastrarContrato = () => {
 
   // Função para lidar com mudanças no formulário (memoizada para evitar re-renders)
   const handleFormChange = useCallback((data: Record<string, string>) => {
-    setFormData(data);
-  }, []);
+    // console.log('Form data changed - BEFORE:', formData.nomeProprietario, formData.nomeLocatario);
+    // console.log('Form data changed - NEW:', data.nomeProprietario, data.nomeLocatario);
 
-  const handleGenerate = async (data: Record<string, string>) => {
-    if (isSubmitting) return;
+    // Lógica especial: sempre preservar dados válidos sobre dados vazios
+    const shouldUpdate = () => {
+      // Se os dados atuais estão vazios e os novos têm valores, atualizar
+      if ((!formData.nomeProprietario || formData.nomeProprietario.trim() === '') &&
+          (data.nomeProprietario && data.nomeProprietario.trim() !== '')) {
+        return true;
+      }
+
+      // Se os dados atuais têm valores e os novos estão vazios, NÃO atualizar
+      if ((formData.nomeProprietario && formData.nomeProprietario.trim() !== '') &&
+          (!data.nomeProprietario || data.nomeProprietario.trim() === '')) {
+        // console.log('Blocking update: trying to replace valid names with empty values');
+        return false;
+      }
+
+      // Se os dados atuais têm valores e os novos são diferentes, atualizar
+      if (formData.nomeProprietario && data.nomeProprietario &&
+          formData.nomeProprietario !== data.nomeProprietario) {
+        return true;
+      }
+
+      // Se os dados atuais estão vazios e os novos também estão vazios, não atualizar
+      return false;
+    };
+
+    if (shouldUpdate()) {
+      // console.log('Updating formData with new values');
+      setFormData(data);
+    } else {
+      // console.log('Blocking unnecessary update');
+    }
+  }, [formData]);
+
+  const handleUpdate = async (data: Record<string, string>): Promise<Record<string, string>> => {
+    if (isSubmitting || !contractId) {
+      throw new Error('Submissão em andamento ou ID inválido');
+    }
 
     setIsSubmitting(true);
 
     try {
       // Adicionar campos automáticos e garantir compatibilidade
-      const enhancedData = {
+      const enhancedData: Record<string, string> = {
         ...data,
         prazoDias: '30', // Sempre 30 dias
         dataComunicacao: data.dataInicioRescisao, // Data de comunicação = data de início
@@ -290,50 +354,41 @@ const CadastrarContrato = () => {
         nomesResumidosLocadores: data.nomeProprietario || data.nomesResumidosLocadores || '',
       };
 
-      if (isEditMode && contractId) {
-        // Modo de edição - atualizar contrato existente
-        const { error } = await supabase
-          .from('saved_terms')
-          .update({
-            title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(/ e | E /)[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(/ e | E /)[0]?.trim() || '[LOCATÁRIO]'}`,
-            content: JSON.stringify(enhancedData),
-            form_data: enhancedData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', contractId);
-
-        if (error) throw error;
-
-        toast.success('Contrato atualizado com sucesso!');
-      } else {
-        // Modo de criação - inserir novo contrato
-        const contractData = {
+      // Atualizar contrato existente
+      const { error } = await supabase
+        .from('saved_terms')
+        .update({
           title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(/ e | E /)[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(/ e | E /)[0]?.trim() || '[LOCATÁRIO]'}`,
           content: JSON.stringify(enhancedData),
           form_data: enhancedData,
-          document_type: 'contrato',
-        };
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', contractId);
 
-        const { error } = await supabase.from('saved_terms').insert(contractData);
+      if (error) throw error;
 
-        if (error) throw error;
-
-        toast.success('Contrato cadastrado com sucesso!');
-      }
-
+      toast.success('Contrato atualizado com sucesso!');
       navigate('/contratos');
       return enhancedData;
     } catch (error) {
-      toast.error(isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato');
-      // console.error('Erro ao processar contrato:', error);
+      toast.error('Erro ao atualizar contrato');
+      // console.error('Erro ao atualizar contrato:', error);
       throw error;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Template vazio para o cadastro (não gera documento)
-  const _getTemplate = () => '';
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando dados do contrato...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -348,13 +403,11 @@ const CadastrarContrato = () => {
                 description=""
                 steps={steps}
                 template=""
-                onGenerate={handleGenerate}
+                onGenerate={handleUpdate}
                 onFormDataChange={handleFormChange}
                 isSubmitting={isSubmitting}
                 submitButtonText={
-                  isSubmitting 
-                    ? (isEditMode ? 'Atualizando...' : 'Cadastrando...') 
-                    : (isEditMode ? 'Atualizar Contrato' : 'Cadastrar Contrato')
+                  isSubmitting ? 'Atualizando...' : 'Atualizar Contrato'
                 }
                 externalFormData={formData}
                 hideSaveButton={true}
@@ -367,4 +420,4 @@ const CadastrarContrato = () => {
   );
 };
 
-export default CadastrarContrato;
+export default EditarContrato;

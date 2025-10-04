@@ -7,22 +7,13 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  FileText,
-  User,
-  User2,
-  MapPin,
-  Calendar,
-  Edit,
-  Trash2,
-  MoreVertical,
-} from 'lucide-react';
+import { Calendar, FileText, Edit, MapPin, MoreVertical, Trash2, User, User2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Contract, DocumentType } from '@/types/contract';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
@@ -41,15 +32,21 @@ export interface ContractCardProps {
 
 export const ContractCard: React.FC<ContractCardProps> = ({
   contract,
-  onEdit,
+  onEdit: _onEdit,
   onDelete,
-  onGenerateDocument,
+  onGenerateDocument: _onGenerateDocument,
   onGenerateAgendamento,
   onGenerateNPS,
   onGenerateWhatsApp,
   isGenerating = false,
   generatingDocument,
 }) => {
+  const navigate = useNavigate();
+
+  const handleEditContract = () => {
+    navigate(`/editar-contrato/${contract.id}`);
+  };
+
   const isMultipleProprietarios = (nomeProprietario: string) => {
     if (!nomeProprietario) return false;
     return (
@@ -111,11 +108,6 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(contract)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(contract.id)}
                 className="text-destructive"
@@ -201,6 +193,19 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               </p>
             </div>
           </div>
+        </div>
+
+        {/* BOTÃO EDITAR */}
+        <div className="flex items-center justify-between mb-4 pt-2 border-t border-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-8 text-muted-foreground hover:text-foreground"
+            onClick={handleEditContract}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            Editar
+          </Button>
         </div>
 
         {/* AÇÕES RÁPIDAS */}

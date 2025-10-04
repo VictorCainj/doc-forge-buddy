@@ -269,7 +269,7 @@ export const ToastHelpers = {
    * Obtém mensagem padrão por tipo
    */
   getMessage: (category: keyof typeof toastMessages, type: string): ToastMessage | null => {
-    const messages = toastMessages[category] as any;
+    const messages = toastMessages[category] as Record<string, ToastMessage>;
     return messages[type] || null;
   },
 };

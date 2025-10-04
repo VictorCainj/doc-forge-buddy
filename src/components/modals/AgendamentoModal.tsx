@@ -40,7 +40,7 @@ export interface AgendamentoModalProps {
 export const AgendamentoModal: React.FC<AgendamentoModalProps> = ({
   isOpen,
   onClose,
-  contract,
+  contract: _contract,
   dataVistoria,
   horaVistoria,
   tipoVistoria,

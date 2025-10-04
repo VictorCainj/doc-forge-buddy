@@ -3,7 +3,7 @@
  * Corrige dependências ausentes e organiza efeitos
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Contract } from '@/types/contract';
 import { ApontamentoVistoria, DadosVistoria, VistoriaAnaliseWithImages } from '@/types/vistoria';
@@ -50,7 +50,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
   const location = useLocation();
   const { toast } = useToast();
   const { saveAnalise: saveAnaliseToDb, updateAnalise } = useVistoriaAnalises();
-  const { base64ToFile } = useVistoriaImages();
+  const { } = useVistoriaImages();
 
   // ✅ Estados organizados
   const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
@@ -100,8 +100,8 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
       })) as Contract[];
 
       setContracts(processedContracts);
-    } catch (error) {
-      console.error('Erro ao carregar contratos:', error);
+    } catch {
+      // console.error('Erro ao carregar contratos:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar contratos',
@@ -132,8 +132,8 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
       }
 
       setHasExistingAnalise(!!data);
-    } catch (error) {
-      console.error('Erro ao verificar análise existente:', error);
+    } catch {
+      // console.error('Erro ao verificar análise existente:', error);
       setHasExistingAnalise(false);
     } finally {
       setLoadingExistingAnalise(false);
@@ -156,7 +156,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
           
           if (hasDatabaseImages) {
             // Carregar imagens do banco de dados
-            const apontamentoImages = analiseData.images.filter(
+            const _apontamentoImages = analiseData.images.filter(
               (img: any) => img.apontamento_id === apontamento.id
             );
 
@@ -169,7 +169,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
       );
 
       setApontamentos(apontamentosWithImages);
-      setSavedAnaliseId(analiseData.id);
+      setSavedAnaliseId(analiseData.id || null);
       setIsEditMode(true);
 
       if (showToast) {
@@ -178,15 +178,15 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
           description: 'Dados da análise foram carregados com sucesso',
         });
       }
-    } catch (error) {
-      console.error('Erro ao carregar dados da análise:', error);
+    } catch {
+      // console.error('Erro ao carregar dados da análise:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar dados da análise',
         variant: 'destructive',
       });
     }
-  }, [toast, base64ToFile]);
+  }, [toast]);
 
   // ✅ Efeito para carregar contratos (sem dependências desnecessárias)
   useEffect(() => {
@@ -204,8 +204,8 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
       loadAnalysisData(state.analiseData);
       
       // Encontrar e selecionar o contrato correspondente
-      if (state.analiseData.contract_id) {
-        const contract = contracts.find(c => c.id === state.analiseData.contract_id);
+      if (state.analiseData?.contract_id) {
+        const contract = contracts.find(c => c.id === state.analiseData!.contract_id);
         if (contract) {
           setSelectedContract(contract);
         }
@@ -265,8 +265,8 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
         `;
 
         setDocumentPreview(previewContent);
-      } catch (error) {
-        console.error('Erro ao gerar preview:', error);
+      } catch {
+        // console.error('Erro ao gerar preview:', error);
         setDocumentPreview('Erro ao gerar preview');
       }
     };
@@ -308,7 +308,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
       vistoriaInicial: currentApontamento.vistoriaInicial || { fotos: [] },
       vistoriaFinal: currentApontamento.vistoriaFinal || { fotos: [] },
       observacao: currentApontamento.observacao || '',
-      tipoVistoria: 'inicial',
+      subtitulo: '',
     };
 
     setApontamentos(prev => [...prev, novoApontamento]);
@@ -346,6 +346,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
     setSaving(true);
     try {
       const analiseData = {
+        title: `Análise de Vistoria - ${selectedContract.title}`,
         contract_id: selectedContract.id,
         dados_vistoria: dadosVistoria,
         apontamentos,
@@ -360,15 +361,17 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
         });
       } else {
         const novaAnalise = await saveAnaliseToDb(analiseData);
-        setSavedAnaliseId(novaAnalise.id);
-        setIsEditMode(true);
-        toast({
-          title: 'Análise salva',
-          description: 'Análise foi salva com sucesso',
-        });
+        if (novaAnalise && typeof novaAnalise === 'object') {
+          setSavedAnaliseId((novaAnalise as any).id || null);
+          setIsEditMode(true);
+          toast({
+            title: 'Análise salva',
+            description: 'Análise foi salva com sucesso',
+          });
+        }
       }
-    } catch (error) {
-      console.error('Erro ao salvar análise:', error);
+    } catch {
+      // console.error('Erro ao salvar análise:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao salvar análise',

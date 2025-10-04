@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
 import EditTerm from './pages/EditTerm';
+import EditarContrato from './pages/EditarContrato';
 import Contratos from './pages/Contratos';
 import CadastrarContrato from './pages/CadastrarContrato';
 import ProcessoRescisao from './pages/ProcessoRescisao';
@@ -79,6 +80,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <CadastrarContrato />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/editar-contrato/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <EditarContrato />
                   </Layout>
                 </ProtectedRoute>
               }

@@ -74,6 +74,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   onFormDataChange,
   isSubmitting = false,
   submitButtonText = 'Gerar Documento',
+  externalFormData = {},
   hideSaveButton = false,
 }) => {
   const navigate = useNavigate();
@@ -145,9 +146,10 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     isFieldTouched,
   } = useFormWizard({
     steps,
-    initialData,
-    contractData,
+    initialData: externalFormData || initialData,
+    contractData: contractData || {},
   });
+
 
   // Chamar onFormDataChange quando os dados do formulário mudarem
   useEffect(() => {
@@ -881,6 +883,16 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             } else if (
               step.id === 'locatario' &&
               field.name === 'nomesResumidos'
+            ) {
+              shouldShowField = false;
+            } else if (
+              step.id === 'locador' &&
+              field.name === 'nomeProprietario'
+            ) {
+              shouldShowField = false;
+            } else if (
+              step.id === 'locatario' &&
+              field.name === 'nomeLocatario'
             ) {
               shouldShowField = false;
             } else if (field.name === 'statusAgua') {

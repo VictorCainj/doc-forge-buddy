@@ -6,8 +6,6 @@ import {
   ChatMessage, 
   SerializedChatSession, 
   SerializedMessage,
-  ChatMode,
-  ChatStats 
 } from '@/types/chat';
 
 // Tipos importados de @/types/chat
@@ -235,7 +233,7 @@ export const useChatHistory = (): UseChatHistoryReturn => {
           id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           createdAt: new Date(session.createdAt || Date.now()),
           updatedAt: new Date(),
-          messages: session.messages.map((msg: any) => ({
+          messages: session.messages.map((msg: SerializedMessage) => ({
             ...msg,
             timestamp: new Date(msg.timestamp as string),
           })),

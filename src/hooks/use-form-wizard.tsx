@@ -45,10 +45,17 @@ export const useFormWizard = ({
   contractData = {},
   onStepValidation,
 }: UseFormWizardProps) => {
+  // Memoizar os dados iniciais para evitar re-inicializações
+  const initialFormData = useMemo(() => ({
+    ...initialData,
+    ...contractData,
+  }), [initialData, contractData]);
+
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<Record<string, string>>(initialData);
+  const [formData, setFormData] = useState<Record<string, string>>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
 
   // Validar um campo específico
   const validateField = useCallback(

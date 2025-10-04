@@ -5,7 +5,7 @@
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Contract, ContractFormData, VistoriaType, PersonType } from '@/types/contract';
+import { Contract, ContractFormData } from '@/types/contract';
 import { DateHelpers } from '@/utils/dateHelpers';
 import { TemplateProcessor } from '@/utils/templateProcessor';
 

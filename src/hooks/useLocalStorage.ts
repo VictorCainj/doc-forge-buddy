@@ -6,9 +6,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { log } from '@/utils/logger';
 
-export interface UseLocalStorageOptions {
-  serialize?: (value: any) => string;
-  deserialize?: (value: string) => any;
+export interface UseLocalStorageOptions<T = unknown> {
+  serialize?: (value: T) => string;
+  deserialize?: (value: string) => T;
   onError?: (error: Error) => void;
 }
 
@@ -292,7 +292,7 @@ export const LocalStorageHelpers = {
       if (typeof window === 'undefined') return 0;
       let total = 0;
       for (const key in window.localStorage) {
-        if (window.localStorage.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(window.localStorage, key)) {
           total += window.localStorage[key].length + key.length;
         }
       }
