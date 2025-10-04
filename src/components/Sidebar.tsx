@@ -7,6 +7,7 @@ import {
   Shield,
   SearchCheck,
   Archive,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -55,6 +56,13 @@ const Sidebar = () => {
       icon: FileText,
       path: '/contratos',
       active: location.pathname === '/contratos',
+      badge: null,
+    },
+    {
+      name: 'Criar Orçamento',
+      icon: FileSpreadsheet,
+      path: '/criar-orcamento',
+      active: location.pathname === '/criar-orcamento',
       badge: null,
     },
     {
