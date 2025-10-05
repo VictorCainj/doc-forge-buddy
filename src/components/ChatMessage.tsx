@@ -1,34 +1,33 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import {
   Bot,
   User,
   Copy,
   Check,
-  Sparkles,
-  Zap,
   RotateCcw,
   AlertCircle,
-  CheckCircle2,
   Loader2,
+  Download,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  isCorrected?: boolean;
-  isImproved?: boolean;
-  isAnalysis?: boolean;
   retryCount?: number;
   status?: 'sending' | 'sent' | 'error' | 'retrying';
   error?: string;
+  imageUrl?: string;
+  imageData?: string;
   metadata?: {
-    sentiment?: 'positive' | 'negative' | 'neutral';
-    confidence?: number;
-    suggestions?: string[];
+    model?: string;
+    tokens?: number;
   };
 }
 
@@ -58,6 +57,8 @@ const ChatMessage = memo(
       }
     }, [message.id, onRetry]);
 
+    const [imageLoaded, setImageLoaded] = useState(false);
+
     const getStatusIcon = () => {
       switch (message.status) {
         case 'sending':
@@ -65,7 +66,7 @@ const ChatMessage = memo(
         case 'error':
           return <AlertCircle className="h-3 w-3 text-red-500" />;
         case 'sent':
-          return <CheckCircle2 className="h-3 w-3 text-green-500" />;
+          return <Check className="h-3 w-3 text-green-500" />;
         case 'retrying':
           return <RotateCcw className="h-3 w-3 animate-spin text-orange-500" />;
         default:
@@ -73,133 +74,218 @@ const ChatMessage = memo(
       }
     };
 
-    const getStatusColor = () => {
-      switch (message.status) {
-        case 'error':
-          return 'border-red-200 bg-red-50';
-        case 'retrying':
-          return 'border-orange-200 bg-orange-50';
-        default:
-          return message.role === 'user'
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted/50 text-foreground';
+    const handleDownloadImage = useCallback(() => {
+      if (message.imageUrl || message.imageData) {
+        const link = document.createElement('a');
+        link.href = message.imageUrl || message.imageData || '';
+        link.download = `image-${message.id}.png`;
+        link.click();
       }
-    };
+    }, [message.imageUrl, message.imageData, message.id]);
 
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         className={`flex gap-3 ${
           message.role === 'user' ? 'justify-end' : 'justify-start'
         }`}
       >
         {message.role === 'assistant' && (
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-              <Bot className="h-4 w-4 text-primary" />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <Bot className="h-5 w-5 text-white" />
             </div>
           </div>
         )}
 
         <div
-          className={`max-w-[80%] rounded-lg px-4 py-3 border transition-all duration-200 ${getStatusColor()}`}
+          className={`max-w-[75%] rounded-2xl px-4 py-3 transition-all duration-200 ${
+            message.role === 'user'
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+              : 'bg-white/10 backdrop-blur-sm border border-white/20 text-white'
+          }`}
         >
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed select-text cursor-text">
-                {message.content}
-              </p>
-
-              {message.error && (
-                <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded text-xs text-red-700">
-                  {message.error}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mt-2">
-                {message.isCorrected && (
-                  <Badge variant="outline" className="text-xs">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Texto corrigido
-                  </Badge>
+          <div className="flex flex-col gap-2">
+            {/* Image Display */}
+            {(message.imageUrl || message.imageData) && (
+              <div className="relative rounded-xl overflow-hidden mb-2 max-w-md">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-white/5 flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                  </div>
                 )}
-                {message.isImproved && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                <img
+                  src={message.imageUrl || message.imageData}
+                  alt="Imagem enviada"
+                  className="w-full rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                  onLoad={() => setImageLoaded(true)}
+                  onClick={() => window.open(message.imageUrl || message.imageData, '_blank')}
+                  title="Clique para abrir em tamanho real"
+                />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(message.imageUrl || message.imageData, '_blank')}
+                    className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
+                    title="Visualizar em tamanho real"
                   >
-                    <Zap className="h-3 w-3 mr-1" />
-                    Texto melhorado
-                  </Badge>
-                )}
-                {/* Removido: badge de análise de contratos */}
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDownloadImage}
+                    className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
+                    title="Baixar imagem"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
 
+            {/* Text Content with Markdown */}
+            {message.content && (
+              <div className="prose prose-invert prose-sm max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    // Customizar estilos dos elementos Markdown
+                    h1: ({ node, ...props }) => (
+                      <h1 className="text-xl font-bold text-white mb-3 mt-4" {...props} />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2 className="text-lg font-bold text-white mb-2 mt-3" {...props} />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3 className="text-base font-bold text-white mb-2 mt-3" {...props} />
+                    ),
+                    h4: ({ node, ...props }) => (
+                      <h4 className="text-sm font-bold text-white mb-2 mt-2" {...props} />
+                    ),
+                    p: ({ node, ...props }) => (
+                      <p className="text-sm leading-relaxed mb-3 text-white" {...props} />
+                    ),
+                    strong: ({ node, ...props }) => (
+                      <strong className="font-bold text-blue-200" {...props} />
+                    ),
+                    em: ({ node, ...props }) => (
+                      <em className="italic text-blue-100" {...props} />
+                    ),
+                    ul: ({ node, ...props }) => (
+                      <ul className="list-disc ml-4 mb-3 space-y-1.5" {...props} />
+                    ),
+                    ol: ({ node, ...props }) => (
+                      <ol className="list-decimal ml-4 mb-3 space-y-1.5" {...props} />
+                    ),
+                    li: ({ node, ...props }) => (
+                      <li className="text-sm text-white ml-1" {...props} />
+                    ),
+                    code: ({ node, inline, ...props }: any) =>
+                      inline ? (
+                        <code
+                          className="bg-black/30 px-1.5 py-0.5 rounded text-blue-300 text-xs font-mono"
+                          {...props}
+                        />
+                      ) : (
+                        <code
+                          className="block bg-black/30 p-3 rounded-lg text-blue-300 text-xs font-mono overflow-x-auto mb-2"
+                          {...props}
+                        />
+                      ),
+                    pre: ({ node, ...props }) => (
+                      <pre className="bg-black/30 p-3 rounded-lg overflow-x-auto mb-2" {...props} />
+                    ),
+                    blockquote: ({ node, ...props }) => (
+                      <blockquote
+                        className="border-l-4 border-blue-400 pl-4 italic text-blue-100 my-2"
+                        {...props}
+                      />
+                    ),
+                    a: ({ node, ...props }) => (
+                      <a
+                        className="text-blue-300 hover:text-blue-200 underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        {...props}
+                      />
+                    ),
+                    hr: ({ node, ...props }) => (
+                      <hr className="border-white/20 my-4" {...props} />
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {message.error && (
+              <div className="mt-2 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-200">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{message.error}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Status and Metadata */}
+            <div className="flex items-center justify-between mt-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs opacity-70">
+                  {formatTime(message.timestamp)}
+                </span>
+                {message.metadata?.model && (
+                  <span className="text-xs opacity-50">
+                    • {message.metadata.model}
+                  </span>
+                )}
                 {getStatusIcon()}
               </div>
 
-              {message.metadata?.confidence && (
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Confiança: {Math.round(message.metadata.confidence * 100)}%
-                </div>
-              )}
-            </div>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1">
+                {message.status === 'error' && onRetry && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 hover:bg-white/10"
+                    onClick={handleRetry}
+                    title="Tentar novamente"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                )}
 
-            <div className="flex items-center gap-1">
-              {message.status === 'error' && onRetry && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
-                  onClick={handleRetry}
-                  title="Tentar novamente"
+                  className="h-7 w-7 p-0 hover:bg-white/10"
+                  onClick={handleCopy}
+                  title="Copiar mensagem"
                 >
-                  <RotateCcw className="h-3 w-3" />
+                  {copiedMessageId === message.id ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
                 </Button>
-              )}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-6 w-6 p-0 ${
-                  message.role === 'user'
-                    ? 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary/80'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-                onClick={handleCopy}
-                title="Copiar mensagem"
-              >
-                {copiedMessageId === message.id ? (
-                  <Check className="h-3 w-3" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
-              </Button>
+              </div>
             </div>
-          </div>
-
-          <div
-            className={`text-xs mt-2 flex items-center justify-between ${
-              message.role === 'user'
-                ? 'text-primary-foreground/70'
-                : 'text-muted-foreground'
-            }`}
-          >
-            <span>{formatTime(message.timestamp)}</span>
-            {message.retryCount && message.retryCount > 0 && (
-              <span className="text-orange-600">
-                Tentativa {message.retryCount + 1}
-              </span>
-            )}
           </div>
         </div>
 
         {message.role === 'user' && (
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-muted-foreground" />
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+              <User className="h-5 w-5 text-white" />
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     );
   }
 );

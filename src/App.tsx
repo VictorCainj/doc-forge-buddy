@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,23 +8,28 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/useAuth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import NotFound from './pages/NotFound';
-import EditTerm from './pages/EditTerm';
-import EditarContrato from './pages/EditarContrato';
-import Contratos from './pages/Contratos';
-import CadastrarContrato from './pages/CadastrarContrato';
-import ProcessoRescisao from './pages/ProcessoRescisao';
-import GerarDocumento from './pages/GerarDocumento';
-import TermoLocador from './pages/TermoLocador';
-import TermoLocatario from './pages/TermoLocatario';
-import TermoRecusaAssinaturaEmail from './pages/TermoRecusaAssinaturaEmail';
-import Chat from './pages/Chat';
-import AnaliseVistoria from './pages/AnaliseVistoria';
-import VistoriaAnalises from './pages/VistoriaAnalises';
-import CriarOrcamento from './pages/CriarOrcamento';
+import PageLoader from '@/components/PageLoader';
+
+// Lazy load de páginas para code splitting
+// Páginas críticas (carregadas primeiro)
+const Index = lazy(() => import('./pages/Index'));
+const Login = lazy(() => import('./pages/Login'));
+const Contratos = lazy(() => import('./pages/Contratos'));
+
+// Páginas secundárias
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const EditTerm = lazy(() => import('./pages/EditTerm'));
+const EditarContrato = lazy(() => import('./pages/EditarContrato'));
+const CadastrarContrato = lazy(() => import('./pages/CadastrarContrato'));
+const ProcessoRescisao = lazy(() => import('./pages/ProcessoRescisao'));
+const GerarDocumento = lazy(() => import('./pages/GerarDocumento'));
+const TermoLocador = lazy(() => import('./pages/TermoLocador'));
+const TermoLocatario = lazy(() => import('./pages/TermoLocatario'));
+const TermoRecusaAssinaturaEmail = lazy(() => import('./pages/TermoRecusaAssinaturaEmail'));
+const Chat = lazy(() => import('./pages/Chat'));
+const AnaliseVistoria = lazy(() => import('./pages/AnaliseVistoria'));
+const VistoriaAnalises = lazy(() => import('./pages/VistoriaAnalises'));
 
 const queryClient = new QueryClient();
 
@@ -35,7 +41,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
             {/* Rotas públicas */}
             <Route
               path="/login"
@@ -195,20 +202,11 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/criar-orcamento"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CriarOrcamento />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
 
             {/* Rota 404 */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
       </TooltipProvider>

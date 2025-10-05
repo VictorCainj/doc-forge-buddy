@@ -8,17 +8,15 @@ export type DocumentType =
   | 'Termo do Locatário' 
   | 'Notificação de Agendamento'
   | 'Devolutiva WhatsApp'
-  | 'NPS Email'
-  | 'NPS WhatsApp'
   | 'Termo de Recusa de Assinatura - E-mail'
-  | 'Devolutiva via E-mail - Locador'
+  | 'Notificação de Desocupação e Agendamento de Vistoria'
   | 'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734'
   | 'Devolutiva Cobrança de Consumo'
   | 'Devolutiva Caderninho'
-  | 'WhatsApp - Comercial'
+  | 'Notificação de Desocupação - Comercial'
   | 'Distrato de Contrato de Locação';
 
-export type VistoriaType = 'inicial' | 'final' | 'vistoria' | 'revistoria';
+export type VistoriaType = 'inicial' | 'final' | 'vistoria' | 'revistoria' | 'nao_realizada';
 export type PersonType = 'locador' | 'locatario';
 export type GenderType = 'masculino' | 'feminino';
 export type ContractStatus = 'active' | 'expired' | 'pending' | 'cancelled';
@@ -119,17 +117,6 @@ export interface CreateContractData {
  */
 export interface UpdateContractData extends Partial<CreateContractData> {
   updated_at?: string;
-}
-
-/**
- * Interface para dados de NPS
- */
-export interface NPSData {
-  numbers: Record<string, string>;
-  selectedParties: Record<string, boolean>;
-  method: 'email' | 'whatsapp';
-  whatsappType?: PersonType;
-  selectedPerson?: string;
 }
 
 /**

@@ -255,7 +255,9 @@ export const SelectField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (prop
 
 /**
  * Hook para gerenciar múltiplos campos de formulário
+ * @internal
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useFormFields = <T extends Record<string, string>>(
   initialValues: T
 ) => {

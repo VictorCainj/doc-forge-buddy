@@ -3,7 +3,6 @@
  * Substitui 25+ useState por um reducer organizado
  */
 
-// @ts-nocheck
 import { useReducer, useCallback } from 'react';
 import { Contract, VistoriaType, PersonType } from '@/types/contract';
 

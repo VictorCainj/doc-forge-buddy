@@ -3,19 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
 import { Search, Phone, Mail, ArrowLeft } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useTermoLocatario } from '@/features/documents/hooks';
+import { ContactModal } from '@/features/documents/components';
 
 interface ContractData {
   numeroContrato: string;
@@ -32,144 +23,31 @@ const TermoLocatario: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const contractData = location.state?.contractData as ContractData;
-  const { toast } = useToast();
 
   // Estado para gerenciar auto-preenchimento
   const [autoFillData, setAutoFillData] = React.useState<
     Record<string, string>
   >({});
 
-  // Estados para validação de contato
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [contactData, setContactData] = useState({
-    celularLocatario: contractData?.celularLocatario || '',
-    emailLocatario: contractData?.emailLocatario || '',
-  });
-  const [pendingFormData, setPendingFormData] = useState<Record<
-    string,
-    string
-  > | null>(null);
+  // Hook customizado para lógica do termo
+  const {
+    showContactModal,
+    setShowContactModal,
+    contactData,
+    setContactData,
+    pendingFormData,
+    setPendingFormData,
+    validateContactFields,
+    handleSaveContactData,
+    processFormData,
+  } = useTermoLocatario(contractData);
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
     return null;
   }
 
-  // Função para detectar múltiplos locatários
-  const _isMultipleLocatarios = (nomeLocatario: string) => {
-    if (!nomeLocatario) return false;
-    return (
-      nomeLocatario.includes(',') ||
-      nomeLocatario.includes(' e ') ||
-      nomeLocatario.includes(' E ')
-    );
-  };
-
-  // Função para detectar múltiplos proprietários
-  const _isMultipleProprietarios = (nomeProprietario: string) => {
-    if (!nomeProprietario) return false;
-    return (
-      nomeProprietario.includes(',') ||
-      nomeProprietario.includes(' e ') ||
-      nomeProprietario.includes(' E ')
-    );
-  };
-
-  // Função para validar campos de contato
-  const validateContactFields = (_data: Record<string, string>) => {
-    const celular =
-      contractData.celularLocatario || contactData.celularLocatario;
-    const email = contractData.emailLocatario || contactData.emailLocatario;
-
-    return {
-      isValid: !!(celular && celular.trim() && email && email.trim()),
-      missingFields: {
-        celular: !celular || !celular.trim(),
-        email: !email || !email.trim(),
-      },
-    };
-  };
-
-  // Função para atualizar dados de contato no contrato
-  const updateContractContactData = async (newContactData: {
-    celularLocatario: string;
-    emailLocatario: string;
-  }) => {
-    try {
-      // Buscar o contrato na tabela saved_terms
-      const { data: contractRecord, error: fetchError } = await supabase
-        .from('saved_terms')
-        .select('*')
-        .eq('document_type', 'contrato')
-        .contains('form_data', { numeroContrato: contractData.numeroContrato })
-        .single();
-
-      if (fetchError) throw fetchError;
-      if (!contractRecord) throw new Error('Contrato não encontrado');
-
-      // Atualizar os dados de contato no form_data
-      const formData =
-        (contractRecord.form_data as Record<string, string>) || {};
-      const updatedFormData = {
-        ...formData,
-        celularLocatario: newContactData.celularLocatario,
-        emailLocatario: newContactData.emailLocatario,
-      };
-
-      // Atualizar o registro na tabela saved_terms
-      const { error: updateError } = await supabase
-        .from('saved_terms')
-        .update({
-          form_data: updatedFormData,
-          content: JSON.stringify(updatedFormData),
-        })
-        .eq('id', contractRecord.id);
-
-      if (updateError) throw updateError;
-
-      // Atualizar os dados locais do contrato
-      Object.assign(contractData, newContactData);
-
-      toast({
-        title: 'Dados atualizados',
-        description: 'Os dados de contato foram atualizados no contrato.',
-      });
-
-      return true;
-    } catch {
-      // console.error('Erro ao atualizar dados de contato:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar os dados de contato.',
-        variant: 'destructive',
-      });
-      return false;
-    }
-  };
-
-  // Função para salvar dados de contato e continuar
-  const handleSaveContactData = async () => {
-    if (
-      !contactData.celularLocatario.trim() ||
-      !contactData.emailLocatario.trim()
-    ) {
-      toast({
-        title: 'Campos obrigatórios',
-        description: 'Por favor, preencha todos os campos de contato.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const success = await updateContractContactData(contactData);
-    if (success && pendingFormData) {
-      setShowContactModal(false);
-      // Continuar com a geração do documento
-      const processedData = handleGenerate(pendingFormData);
-      setPendingFormData(null);
-      return processedData;
-    }
-  };
+  // Funções movidas para: @/features/documents/hooks/useTermoLocatario
 
   const steps: FormStep[] = [
     {
@@ -244,6 +122,7 @@ const TermoLocatario: React.FC = () => {
           options: [
             { value: 'vistoria', label: 'Vistoria' },
             { value: 'revistoria', label: 'Revistoria' },
+            { value: 'nao_realizada', label: 'Vistoria não Realizada' },
           ],
         },
         {
@@ -266,6 +145,17 @@ const TermoLocatario: React.FC = () => {
           conditional: {
             field: 'tipoVistoria',
             value: 'revistoria',
+          },
+        },
+        {
+          name: 'motivoNaoRealizacao',
+          label: 'Motivo da Não Realização da Vistoria',
+          type: 'textarea',
+          required: false,
+          placeholder: 'Descreva o motivo pelo qual a vistoria não foi realizada',
+          conditional: {
+            field: 'tipoVistoria',
+            value: 'nao_realizada',
           },
         },
         {
@@ -455,9 +345,11 @@ TERMO DE RECEBIMENTO DE CHAVES {{numeroContrato}}
 Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
+{{#if dataVistoria}}
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>{{tipoVistoriaTexto}} realizada em</strong> {{dataVistoria}}.
 </div>
+{{/if}}
 
 <div style="margin: 20px 0; font-size: ${fontSize}px;">
 {{statusVistoriaCheckboxes}}
@@ -583,22 +475,36 @@ __________________________________________<br>
     // Processar tipo de vistoria
     const tipoVistoria = data.tipoVistoria || 'vistoria';
     const tipoVistoriaTexto =
-      tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria';
+      tipoVistoria === 'revistoria' ? 'Revistoria' : 
+      tipoVistoria === 'nao_realizada' ? 'Vistoria não realizada' : 'Vistoria';
 
     // Processar status da vistoria baseado no tipo selecionado
-    const statusVistoria =
-      tipoVistoria === 'revistoria'
+    let statusVistoria;
+    if (tipoVistoria === 'nao_realizada') {
+      statusVistoria = 'nao_realizada';
+    } else {
+      statusVistoria = tipoVistoria === 'revistoria'
         ? data.statusRevistoria || 'aprovada'
         : data.statusVistoria || 'aprovada';
+    }
 
-    const statusVistoriaCheckboxes =
-      statusVistoria === 'aprovada'
-        ? '( ✓ ) Imóvel entregue de acordo com a vistoria inicial<br>( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.'
-        : '( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>( ✓ ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.';
+    let statusVistoriaCheckboxes;
+    if (tipoVistoria === 'nao_realizada') {
+      statusVistoriaCheckboxes = '( ✓ ) Vistoria não realizada';
+      if (data.motivoNaoRealizacao && data.motivoNaoRealizacao.trim() !== '') {
+        statusVistoriaCheckboxes += `<br><strong>Motivo:</strong> ${data.motivoNaoRealizacao}`;
+      }
+    } else {
+      statusVistoriaCheckboxes =
+        statusVistoria === 'aprovada'
+          ? '( ✓ ) Imóvel entregue de acordo com a vistoria inicial<br>( &nbsp; ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.'
+          : '( &nbsp; ) Imóvel entregue de acordo com a vistoria inicial<br>( ✓ ) Imóvel não foi entregue de acordo com a vistoria inicial, constando itens a serem reparados de responsabilidade dos locatários. Irá ser realizado um orçamento dos reparos e cobrado no valor da rescisão.';
+    }
 
     // Processar data baseada no tipo selecionado
     const dataVistoria =
-      tipoVistoria === 'revistoria' ? data.dataRevistoria : data.dataVistoria;
+      tipoVistoria === 'revistoria' ? data.dataRevistoria : 
+      tipoVistoria === 'nao_realizada' ? '' : data.dataVistoria;
 
     // Processar observação (só mostra se preenchida)
     const observacao =
@@ -700,9 +606,17 @@ __________________________________________<br>
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+      </div>
+
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-6 relative z-10">
         {/* Back Button */}
         <div className="mb-6">
           <Button
@@ -735,80 +649,24 @@ __________________________________________<br>
       </div>
 
       {/* Modal de Validação de Contato */}
-      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-blue-600" />
-              Dados de Contato Obrigatórios
-            </DialogTitle>
-            <DialogDescription>
-              Para gerar o termo do locatário, é necessário preencher os dados
-              de contato. Estes dados serão atualizados no contrato.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="celularLocatario"
-                className="flex items-center gap-2"
-              >
-                <Phone className="h-4 w-4" />
-                Celular do Locatário *
-              </Label>
-              <Input
-                id="celularLocatario"
-                value={contactData.celularLocatario}
-                onChange={(e) =>
-                  setContactData((prev) => ({
-                    ...prev,
-                    celularLocatario: e.target.value,
-                  }))
-                }
-                placeholder="Ex: (19) 99999-9999"
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="emailLocatario"
-                className="flex items-center gap-2"
-              >
-                <Mail className="h-4 w-4" />
-                E-mail do Locatário *
-              </Label>
-              <Input
-                id="emailLocatario"
-                type="email"
-                value={contactData.emailLocatario}
-                onChange={(e) =>
-                  setContactData((prev) => ({
-                    ...prev,
-                    emailLocatario: e.target.value,
-                  }))
-                }
-                placeholder="Ex: locatario@email.com"
-                className="w-full"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowContactModal(false);
-                setPendingFormData(null);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveContactData}>Salvar e Continuar</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ContactModal
+        open={showContactModal}
+        celular={contactData.celularLocatario}
+        email={contactData.emailLocatario}
+        onCelularChange={(value) =>
+          setContactData((prev) => ({ ...prev, celularLocatario: value }))
+        }
+        onEmailChange={(value) =>
+          setContactData((prev) => ({ ...prev, emailLocatario: value }))
+        }
+        onSave={() => {
+          handleSaveContactData((data) => handleGenerate(data));
+        }}
+        onCancel={() => {
+          setShowContactModal(false);
+          setPendingFormData(null);
+        }}
+      />
     </div>
   );
 };

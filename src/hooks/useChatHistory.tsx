@@ -15,7 +15,7 @@ interface UseChatHistoryReturn {
   currentSession: ChatSession | null;
   isLoading: boolean;
   createNewSession: (
-    mode: 'normal' | 'intelligent' | 'analysis'
+    mode: 'normal' | 'intelligent' | 'analysis' | 'conversational'
   ) => ChatSession;
   saveSession: (session: ChatSession) => void;
   loadSession: (sessionId: string) => ChatSession | null;
@@ -59,19 +59,24 @@ export const useChatHistory = (): UseChatHistoryReturn => {
     setIsLoading(false);
   }, []);
 
-  // Salvar sessões com limite
+  // Salvar sessões com limite (memoizado para evitar loops)
   const saveToStorage = useCallback((newSessions: ChatSession[]) => {
     // Manter apenas as últimas MAX_SESSIONS
     const sessionsToSave = newSessions
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
       .slice(0, MAX_SESSIONS);
 
-    setSessions(sessionsToSave);
-  }, [setSessions]);
+    // Apenas atualizar se realmente mudou
+    setSessions(prev => {
+      const prevJson = JSON.stringify(prev);
+      const newJson = JSON.stringify(sessionsToSave);
+      return prevJson !== newJson ? sessionsToSave : prev;
+    });
+  }, []);
 
   // Criar nova sessão
   const createNewSession = useCallback(
-    (mode: 'normal' | 'intelligent' | 'analysis'): ChatSession => {
+    (mode: 'normal' | 'intelligent' | 'analysis' | 'conversational'): ChatSession => {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const now = new Date();
 

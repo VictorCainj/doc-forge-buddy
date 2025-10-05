@@ -178,18 +178,19 @@ interface ContractData {
     nomeLocatario?: string;
     enderecoImovel?: string;
     dataTerminoRescisao?: string;
-    [key: string]: any;
+    [key: string]: string | undefined;
   };
-  [key: string]: any;
+  created_at: string;
+  [key: string]: string | Record<string, string | undefined>;
 }
 
 export const ContractItem = React.memo<{
   contract: ContractData;
   onEdit?: (contract: ContractData) => void;
-  _onDelete?: (contract: ContractData) => void;
+  onDelete?: (contract: ContractData) => void;
   onGenerate?: (contract: ContractData, documentType: string) => void;
   isGenerating?: boolean;
-}>(({ contract, onEdit, _onDelete, onGenerate, isGenerating = false }) => {
+}>(({ contract, onEdit, onGenerate, isGenerating = false }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };

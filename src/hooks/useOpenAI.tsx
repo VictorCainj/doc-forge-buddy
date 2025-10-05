@@ -3,6 +3,9 @@ import {
   correctTextWithAI,
   improveTextWithAI,
   analyzeContractsWithAI,
+  chatCompletionWithAI,
+  generateImageWithAI,
+  analyzeImageWithAI,
 } from '@/utils/openai';
 import { Contract } from './useContractAnalysis';
 import { CompleteContractData } from './useCompleteContractData';
@@ -17,6 +20,9 @@ interface UseOpenAIReturn {
     contracts: Contract[],
     completeContracts?: CompleteContractData[]
   ) => Promise<string>;
+  chatCompletion: (prompt: string) => Promise<string>;
+  generateImageFromPrompt: (prompt: string) => Promise<string>;
+  analyzeImage: (imageBase64: string, userPrompt?: string) => Promise<string>;
   isLoading: boolean;
   error: string | null;
 }
@@ -135,10 +141,84 @@ export const useOpenAI = (): UseOpenAIReturn => {
     }
   };
 
+  const chatCompletion = async (prompt: string): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Verificar cache primeiro
+      const cachedResponse = getCachedResponse(prompt, 'conversational');
+      if (cachedResponse) {
+        log.debug('Usando resposta em cache para chat');
+        return cachedResponse;
+      }
+
+      // Se não estiver no cache, fazer chamada para API
+      const response = await chatCompletionWithAI(prompt);
+      
+      // Salvar no cache
+      setCachedResponse(prompt, response, 'conversational', 0.85, {
+        timestamp: new Date().toISOString(),
+        model: 'gpt-4o'
+      });
+
+      return response;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateImageFromPrompt = async (prompt: string): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Gerar imagem não usa cache devido à natureza única de cada geração
+      const imageUrl = await generateImageWithAI(prompt);
+      
+      log.debug('Imagem gerada com sucesso');
+      return imageUrl;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro ao gerar imagem';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const analyzeImage = async (imageBase64: string, userPrompt?: string): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const analysis = await analyzeImageWithAI(imageBase64, userPrompt);
+      
+      log.debug('Imagem analisada com sucesso');
+      return analysis;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro ao analisar imagem';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     correctText,
     improveText,
     analyzeContracts,
+    chatCompletion,
+    generateImageFromPrompt,
+    analyzeImage,
     isLoading,
     error,
   };

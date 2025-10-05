@@ -4,7 +4,7 @@
  */
 
 export type ChatRole = 'user' | 'assistant';
-export type ChatMode = 'normal' | 'intelligent' | 'analysis';
+export type ChatMode = 'normal' | 'intelligent' | 'analysis' | 'conversational';
 export type EmotionalState = 'positive' | 'neutral' | 'negative' | 'excited' | 'frustrated';
 
 /**

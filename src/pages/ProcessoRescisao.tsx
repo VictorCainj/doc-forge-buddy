@@ -103,24 +103,31 @@ const ProcessoRescisao = () => {
   }, [contratoId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-2">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-4">
-          <div className="flex items-center gap-3 mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden p-6">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+      </div>
+
+      <div className="max-w-6xl mx-auto relative z-10">
+        <header className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
             <Link to="/contratos">
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 text-white hover:bg-white/10">
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
             </Link>
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
               Processo de Rescisão
             </h1>
-            <p className="text-muted-foreground mt-2">
-              Contrato #{contratoId} - Gerencie todos os documentos da processo
-              de rescisão
+            <p className="text-blue-200 mt-2">
+              Contrato #{contratoId} - Gerencie todos os documentos do processo de rescisão
             </p>
           </div>
         </header>
@@ -129,23 +136,23 @@ const ProcessoRescisao = () => {
           {processos.map((processo) => (
             <Card
               key={processo.id}
-              className="hover:shadow-lg transition-shadow"
+              className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-200"
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
                     {processo.icon}
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{processo.title}</CardTitle>
-                    <CardDescription>{processo.description}</CardDescription>
+                    <CardTitle className="text-lg text-white">{processo.title}</CardTitle>
+                    <CardDescription className="text-blue-200">{processo.description}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
                   <Link to={processo.route} className="flex-1">
-                    <Button className="w-full gap-2">
+                    <Button className="w-full gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
                       <FileText className="h-4 w-4" />
                       Gerar Documento
                     </Button>

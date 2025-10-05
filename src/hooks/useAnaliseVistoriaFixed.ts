@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hook corrigido para análise de vistoria
  * Corrige dependências ausentes e organiza efeitos
@@ -9,7 +8,6 @@ import { useLocation } from 'react-router-dom';
 import { Contract } from '@/types/contract';
 import { ApontamentoVistoria, DadosVistoria, VistoriaAnaliseWithImages } from '@/types/vistoria';
 import { useVistoriaAnalises } from './useVistoriaAnalises';
-import { useVistoriaImages } from './useVistoriaImages';
 import { useToast } from './use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -51,7 +49,6 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
   const location = useLocation();
   const { toast } = useToast();
   const { saveAnalise: saveAnaliseToDb, updateAnalise } = useVistoriaAnalises();
-  const { } = useVistoriaImages();
 
   // ✅ Estados organizados
   const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
@@ -158,7 +155,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
           if (hasDatabaseImages) {
             // Carregar imagens do banco de dados
             const _apontamentoImages = analiseData.images.filter(
-              (img: any) => img.apontamento_id === apontamento.id
+              (img: { apontamento_id: string }) => img.apontamento_id === apontamento.id
             );
 
             // Processar imagens...
@@ -206,7 +203,7 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
       
       // Encontrar e selecionar o contrato correspondente
       if (state.analiseData?.contract_id) {
-        const contract = contracts.find(c => c.id === state.analiseData!.contract_id);
+        const contract = contracts.find(c => c.id === state.analiseData?.contract_id);
         if (contract) {
           setSelectedContract(contract);
         }
@@ -362,8 +359,8 @@ export const useAnaliseVistoriaFixed = (): UseAnaliseVistoriaReturn => {
         });
       } else {
         const novaAnalise = await saveAnaliseToDb(analiseData);
-        if (novaAnalise && typeof novaAnalise === 'object') {
-          setSavedAnaliseId((novaAnalise as any).id || null);
+        if (novaAnalise && typeof novaAnalise === 'object' && 'id' in novaAnalise) {
+          setSavedAnaliseId(novaAnalise.id);
           setIsEditMode(true);
           toast({
             title: 'Análise salva',

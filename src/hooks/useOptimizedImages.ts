@@ -115,7 +115,8 @@ export const useOptimizedImages = (
       const tryCompress = () => {
         canvas.toBlob((blob) => {
           if (!blob) {
-            resolve(blob!);
+            // Blob is null, resolve with empty blob
+            resolve(new Blob());
             return;
           }
 
@@ -150,6 +151,7 @@ export const useOptimizedImages = (
         
         // Verificar se é imagem
         if (!file.type.startsWith('image/')) {
+          // eslint-disable-next-line no-console
           console.warn(`Arquivo ${file.name} não é uma imagem`);
           continue;
         }
@@ -190,6 +192,7 @@ export const useOptimizedImages = (
           });
 
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error(`Erro ao processar ${file.name}:`, error);
         }
 

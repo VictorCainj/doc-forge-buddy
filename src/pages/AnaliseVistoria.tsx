@@ -53,6 +53,8 @@ import {
   DadosVistoria,
   VistoriaAnaliseWithImages,
 } from '@/types/vistoria';
+import { BudgetItemType, DadosPrestador } from '@/types/orcamento';
+import { Package, Wrench } from 'lucide-react';
 
 interface Contract {
   id: string;
@@ -70,7 +72,7 @@ const AnaliseVistoria = () => {
 
   const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
   const [currentApontamento, setCurrentApontamento] = useState<
-    Partial<ApontamentoVistoria>
+    Partial<ApontamentoVistoria & { tipo?: BudgetItemType; valor?: number; quantidade?: number }>
   >({
     ambiente: '',
     subtitulo: '',
@@ -78,6 +80,9 @@ const AnaliseVistoria = () => {
     vistoriaInicial: { fotos: [], descritivoLaudo: '' },
     vistoriaFinal: { fotos: [] },
     observacao: '',
+    tipo: 'material',
+    valor: 0,
+    quantidade: 0,
   });
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
@@ -104,6 +109,14 @@ const AnaliseVistoria = () => {
   const [hasExistingAnalise, setHasExistingAnalise] = useState(false);
   const [loadingExistingAnalise, setLoadingExistingAnalise] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>('analise');
+  const [dadosPrestador, setDadosPrestador] = useState<DadosPrestador>({
+    nome: '',
+    cnpj: '',
+    telefone: '',
+    email: '',
+  });
+  const [showDadosPrestador, setShowDadosPrestador] = useState(false);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -125,6 +138,23 @@ const AnaliseVistoria = () => {
             endereco: dados.endereco || '',
             dataVistoria: dados.dataVistoria || '',
           });
+          
+          // Carregar o modo do documento se existir
+          if (dados.documentMode) {
+            setDocumentMode(dados.documentMode as 'analise' | 'orcamento');
+          }
+          
+          // Carregar dados do prestador se existirem
+          if (dados.prestador) {
+            const prestador = dados.prestador as Record<string, unknown>;
+            setDadosPrestador({
+              nome: (prestador.nome as string) || '',
+              cnpj: (prestador.cnpj as string) || '',
+              telefone: (prestador.telefone as string) || '',
+              email: (prestador.email as string) || '',
+            });
+            setShowDadosPrestador(true);
+          }
         }
 
         // Carregar apontamentos com imagens
@@ -614,6 +644,7 @@ const AnaliseVistoria = () => {
           locatario: dadosVistoria.locatario,
           endereco: dadosVistoria.endereco,
           dataVistoria: dadosVistoria.dataVistoria,
+          documentMode,
           apontamentos: apontamentosComFotos,
         });
 
@@ -624,7 +655,7 @@ const AnaliseVistoria = () => {
     };
 
     updateDocumentPreview();
-  }, [apontamentos, dadosVistoria]);
+  }, [apontamentos, dadosVistoria, documentMode]);
 
   // Filtrar contratos baseado no termo de busca
   const filteredContracts = contracts.filter((contract) => {
@@ -847,6 +878,12 @@ const AnaliseVistoria = () => {
       },
       vistoriaFinal: { fotos: currentApontamento.vistoriaFinal?.fotos || [] },
       observacao: currentApontamento.observacao || '',
+      // Salvar valores de orçamento se estiver no modo orçamento
+      ...(documentMode === 'orcamento' && {
+        tipo: currentApontamento.tipo || 'material',
+        valor: currentApontamento.valor || 0,
+        quantidade: currentApontamento.quantidade || 0,
+      }),
     };
 
     setApontamentos([...apontamentos, newApontamento]);
@@ -857,6 +894,9 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      tipo: 'material',
+      valor: 0,
+      quantidade: 0,
     });
 
     toast({
@@ -988,7 +1028,11 @@ const AnaliseVistoria = () => {
         const success = await updateAnalise(editingAnaliseId, {
           title,
           contract_id: selectedContract.id,
-          dados_vistoria: dadosVistoria,
+          dados_vistoria: {
+            ...dadosVistoria,
+            documentMode, // Salvar o modo do documento
+            prestador: documentMode === 'orcamento' ? dadosPrestador : undefined, // Salvar dados do prestador
+          },
           apontamentos: apontamentos,
         });
 
@@ -1004,7 +1048,11 @@ const AnaliseVistoria = () => {
         analiseId = await saveAnalise({
           title,
           contract_id: selectedContract.id,
-          dados_vistoria: dadosVistoria,
+          dados_vistoria: {
+            ...dadosVistoria,
+            documentMode, // Salvar o modo do documento
+            prestador: documentMode === 'orcamento' ? dadosPrestador : undefined, // Salvar dados do prestador
+          },
           apontamentos: apontamentos,
         });
 
@@ -1110,16 +1158,18 @@ const AnaliseVistoria = () => {
         locatario: dadosVistoria.locatario,
         endereco: dadosVistoria.endereco,
         dataVistoria: dadosVistoria.dataVistoria,
+        documentMode,
+        prestador: documentMode === 'orcamento' ? dadosPrestador : undefined,
         apontamentos: apontamentosComFotos,
       });
 
       // Navegar para a página de geração de documento
       navigate('/gerar-documento', {
         state: {
-          title: `Análise Comparativa de Vistoria - ${dadosVistoria.locatario}`,
+          title: `${documentMode === 'orcamento' ? 'Orçamento de Reparos' : 'Análise Comparativa de Vistoria'} - ${dadosVistoria.locatario}`,
           template: template,
           formData: selectedContract.form_data,
-          documentType: 'Análise de Vistoria',
+          documentType: documentMode === 'orcamento' ? 'Orçamento de Reparos' : 'Análise de Vistoria',
           // Preservar estado da análise para retorno
           preserveAnalysisState: {
             apontamentos,
@@ -1180,6 +1230,10 @@ const AnaliseVistoria = () => {
       },
       vistoriaFinal: { fotos: apontamento.vistoriaFinal.fotos },
       observacao: apontamento.observacao,
+      // Carregar valores de orçamento se existirem
+      tipo: apontamento.tipo || 'material',
+      valor: apontamento.valor || 0,
+      quantidade: apontamento.quantidade || 0,
     });
     toast({
       title: 'Editando apontamento',
@@ -1206,6 +1260,12 @@ const AnaliseVistoria = () => {
               fotos: currentApontamento.vistoriaFinal?.fotos || [],
             },
             observacao: currentApontamento.observacao || '',
+            // Preservar valores de orçamento se estiver no modo orçamento
+            ...(documentMode === 'orcamento' && {
+              tipo: currentApontamento.tipo || 'material',
+              valor: currentApontamento.valor || 0,
+              quantidade: currentApontamento.quantidade || 0,
+            }),
           }
         : apontamento
     );
@@ -1219,6 +1279,9 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      tipo: 'material',
+      valor: 0,
+      quantidade: 0,
     });
 
     toast({
@@ -1236,6 +1299,9 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      tipo: 'material',
+      valor: 0,
+      quantidade: 0,
     });
   };
 
@@ -1270,21 +1336,28 @@ const AnaliseVistoria = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden p-6">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto space-y-6 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <ClipboardList className="h-6 w-6 text-primary" />
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+              <ClipboardList className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
+              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
                 {isEditMode
                   ? 'Editar Análise de Vistoria'
                   : 'Análise de Vistoria'}
               </h1>
-              <p className="text-muted-foreground mt-2 flex items-center space-x-2">
+              <p className="text-blue-200 mt-2 flex items-center space-x-2">
                 <Camera className="h-4 w-4" />
                 <span>Sistema de análise comparativa de vistoria de saída</span>
               </p>
@@ -1338,7 +1411,7 @@ const AnaliseVistoria = () => {
             <Button
               onClick={generateDocument}
               disabled={apontamentos.length === 0 || !selectedContract}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
             >
               <FileText className="h-4 w-4 mr-2" />
               Gerar Documento
@@ -1464,10 +1537,10 @@ const AnaliseVistoria = () => {
 
                 {/* Informações do Contrato Selecionado */}
                 {selectedContract && (
-                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-6">
+                  <div className="bg-gradient-to-r from-blue-500/10 to-indigo-600/10 border border-blue-400/30 rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                        <CheckCircle2 className="h-5 w-5 text-blue-400" />
                         <h3 className="font-semibold text-primary">
                           Contrato Selecionado
                         </h3>
@@ -1568,13 +1641,98 @@ const AnaliseVistoria = () => {
           </Card>
         )}
 
+        {/* Dados do Prestador - Apenas no modo orçamento */}
+        {documentMode === 'orcamento' && (
+          <Card className="mb-6">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2 text-xl">
+                  <User className="h-5 w-5 text-primary" />
+                  <span>Dados do Prestador</span>
+                </CardTitle>
+                <Button
+                  onClick={() => setShowDadosPrestador(!showDadosPrestador)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                  title={showDadosPrestador ? "Ocultar dados do prestador" : "Exibir dados do prestador"}
+                >
+                  {showDadosPrestador ? <X className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
+                </Button>
+              </div>
+            </CardHeader>
+            {showDadosPrestador && (
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="prestador-nome" className="text-sm font-medium">
+                      Nome/Razão Social *
+                    </Label>
+                    <Input
+                      id="prestador-nome"
+                      placeholder="Nome do prestador"
+                      value={dadosPrestador.nome}
+                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, nome: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prestador-cnpj" className="text-sm font-medium">
+                      CNPJ/CPF
+                    </Label>
+                    <Input
+                      id="prestador-cnpj"
+                      placeholder="00.000.000/0000-00"
+                      value={dadosPrestador.cnpj}
+                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, cnpj: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prestador-telefone" className="text-sm font-medium">
+                      Telefone
+                    </Label>
+                    <Input
+                      id="prestador-telefone"
+                      placeholder="(00) 00000-0000"
+                      value={dadosPrestador.telefone}
+                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, telefone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prestador-email" className="text-sm font-medium">
+                      E-mail
+                    </Label>
+                    <Input
+                      id="prestador-email"
+                      type="email"
+                      placeholder="contato@prestador.com"
+                      value={dadosPrestador.email}
+                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Formulário de Novo Apontamento */}
           <Card className="xl:col-span-1">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2 text-lg">
-                <Plus className="h-5 w-5 text-primary" />
-                <span>Novo Apontamento</span>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Plus className="h-5 w-5 text-primary" />
+                  <span>Novo Apontamento</span>
+                </div>
+                <Select value={documentMode} onValueChange={(value: 'analise' | 'orcamento') => setDocumentMode(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="analise">Análise</SelectItem>
+                    <SelectItem value="orcamento">Orçamento</SelectItem>
+                  </SelectContent>
+                </Select>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -1647,6 +1805,88 @@ const AnaliseVistoria = () => {
                   className="text-sm"
                 />
               </div>
+
+              {/* Campos de Orçamento - Apenas no modo orçamento */}
+              {documentMode === 'orcamento' && (
+                <>
+                  <Separator />
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Tipo</Label>
+                      <Select
+                        value={currentApontamento.tipo || 'material'}
+                        onValueChange={(value: BudgetItemType) =>
+                          setCurrentApontamento(prev => ({ ...prev, tipo: value }))
+                        }
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="material">
+                            <div className="flex items-center space-x-2">
+                              <Package className="h-4 w-4" />
+                              <span>Material</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="mao_de_obra">
+                            <div className="flex items-center space-x-2">
+                              <Wrench className="h-4 w-4" />
+                              <span>Mão de Obra</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="ambos">
+                            <div className="flex items-center space-x-2">
+                              <Package className="h-4 w-4" />
+                              <Wrench className="h-4 w-4 ml-1" />
+                              <span className="ml-1">Ambos</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Valor Unit.</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={currentApontamento.valor || ''}
+                        onChange={(e) =>
+                          setCurrentApontamento(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))
+                        }
+                        className="h-8 text-sm"
+                        placeholder="0,00"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Quantidade</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={currentApontamento.quantidade || ''}
+                        onChange={(e) =>
+                          setCurrentApontamento(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))
+                        }
+                        className="h-8 text-sm"
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Subtotal</Label>
+                      <div className="flex items-center space-x-1 h-8 px-2 bg-muted/50 rounded border text-sm font-medium">
+                        <span>
+                          {((currentApontamento.valor || 0) * (currentApontamento.quantidade || 0))
+                            .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <Separator />
 
@@ -1948,8 +2188,8 @@ const AnaliseVistoria = () => {
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center space-x-3">
-                              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-primary-foreground">
+                              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-white">
                                   {index + 1}
                                 </span>
                               </div>
@@ -1965,6 +2205,22 @@ const AnaliseVistoria = () => {
                                 <p className="text-xs text-muted-foreground mt-1">
                                   {apontamento.descricao}
                                 </p>
+                                {/* Exibir valores de orçamento se existirem */}
+                                {documentMode === 'orcamento' && apontamento.valor !== undefined && apontamento.quantidade !== undefined && (
+                                  <div className="mt-2 flex items-center gap-2 text-xs">
+                                    <Badge variant="outline" className="text-xs">
+                                      {apontamento.tipo === 'material' ? 'Material' : 
+                                       apontamento.tipo === 'mao_de_obra' ? 'Mão de Obra' : 
+                                       'Material + M.O.'}
+                                    </Badge>
+                                    <span className="text-muted-foreground">
+                                      {apontamento.quantidade}x R$ {(apontamento.valor || 0).toFixed(2)}
+                                    </span>
+                                    <span className="font-semibold text-green-600">
+                                      = {((apontamento.valor || 0) * (apontamento.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-1">

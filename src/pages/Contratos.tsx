@@ -38,7 +38,6 @@ import {
   Timer,
   User2,
   CalendarDays,
-  Phone,
   Edit,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -58,8 +57,7 @@ import {
   // DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
   // DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
   TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
-  NPS_WHATSAPP_TEMPLATE,
-  NPS_EMAIL_TEMPLATE,
+  STATUS_VISTORIA_WHATSAPP_TEMPLATE,
 } from '@/templates/documentos';
 import {
   formatDateBrazilian,
@@ -76,11 +74,12 @@ import {
   Contract, 
   VistoriaType,
   PersonType,
-  _NPSData,
   _AgendamentoData,
   _RecusaAssinaturaData,
   _WhatsAppData 
 } from '@/types/contract';
+import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
+import { processContractTemplate } from '@/features/contracts/utils/templateProcessor';
 
 const Contratos = () => {
   // Hook de otimização de componentes
@@ -137,26 +136,13 @@ const Contratos = () => {
   const [selectedPerson, setSelectedPerson] = useState<string>('');
   const [assinanteSelecionado, setAssinanteSelecionado] = useState<string>('');
   const [showAssinanteModal, setShowAssinanteModal] = useState(false);
+  const [showStatusVistoriaModal, setShowStatusVistoriaModal] = useState(false);
+  const [statusVistoria, setStatusVistoria] = useState<'APROVADA' | 'REPROVADA'>('APROVADA');
   const [pendingDocumentData, setPendingDocumentData] = useState<{
     contract: Contract;
     template: string;
     documentType: string;
   } | null>(null);
-  const [showNPSModal, setShowNPSModal] = useState(false);
-  const [selectedNPSContract, setSelectedNPSContract] =
-    useState<Contract | null>(null);
-  const [npsMethod, setNpsMethod] = useState<'email' | 'whatsapp' | null>(null);
-  const [npsWhatsAppType, setNpsWhatsAppType] = useState<PersonType | null>(null);
-  const [selectedNPSPerson, setSelectedNPSPerson] = useState<string>('');
-  const [_selectedNPSParties, setSelectedNPSParties] = useState<{
-    locadores: string[];
-    locatarios: string[];
-  }>({ locadores: [], locatarios: [] });
-  const [showNPSNumbersModal, setShowNPSNumbersModal] = useState(false);
-  const [npsNumbers, setNpsNumbers] = useState<Record<string, string>>({});
-  const [npsSelectedParties, setNpsSelectedParties] = useState<
-    Record<string, boolean>
-  >({});
   const [_deletingContract, setDeletingContract] = useState<string | null>(
     null
   );
@@ -241,8 +227,9 @@ const Contratos = () => {
     return formData.qualificacaoCompletaLocadores || '[TEXTOLIVRE]';
   };
 
-  // Função para aplicar conjunções verbais
-  const applyConjunctions = (formData: Record<string, string>) => {
+  // Função movida para: @/features/contracts/utils/contractConjunctions
+  // Mantida aqui apenas para referência - REMOVER após migração completa
+  const applyConjunctions_DEPRECATED = (formData: Record<string, string>) => {
     const enhancedData = { ...formData };
 
     // Obter qualificação completa dos locatários (texto livre)
@@ -624,7 +611,7 @@ const Contratos = () => {
     const formData = contract.form_data;
 
     // Aplicar conjunções verbais antes de processar o template
-    const enhancedData = applyConjunctions(formData);
+    const enhancedData = applyContractConjunctions(formData);
     enhancedData.assinanteSelecionado = assinante;
 
     // Se for notificação de agendamento, adicionar dados específicos
@@ -757,12 +744,12 @@ const Contratos = () => {
 
     // Documentos que não precisam de assinatura
     const documentosSemAssinatura = [
-      'Devolutiva via E-mail - Locador',
+      'Notificação de Desocupação e Agendamento de Vistoria',
       'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734',
       'Devolutiva Cobrança de Consumo',
       'Devolutiva Caderninho',
       'Caderninho',
-      'WhatsApp - Comercial',
+      'Notificação de Desocupação - Comercial',
       'Distrato de Contrato de Locação',
       'Notificação de Agendamento',
     ];
@@ -787,6 +774,11 @@ const Contratos = () => {
       // Abrir modal para preencher data e hora da vistoria
       setSelectedContract(contract);
       setShowAgendamentoModal(true);
+    } else if (documentType === 'Status Vistoria') {
+      // Abrir modal para selecionar status da vistoria
+      setSelectedContract(contract);
+      setShowStatusVistoriaModal(true);
+      setGeneratingDocument(null);
     } else if (
       documentType === 'Devolutiva Locador WhatsApp' ||
       documentType === 'Devolutiva Locatário WhatsApp' ||
@@ -806,24 +798,10 @@ const Contratos = () => {
       setSelectedPerson('');
       setShowWhatsAppModal(true);
       setGeneratingDocument(null);
-    } else if (documentType === 'NPS WhatsApp') {
-      // NPS WhatsApp - usar modal específico
-      setSelectedNPSContract(contract);
-      setNpsMethod('whatsapp');
-      setNpsWhatsAppType(null);
-      setSelectedNPSPerson('');
-      setShowNPSModal(true);
-      setGeneratingDocument(null);
-    } else if (documentType === 'NPS E-mail') {
-      // NPS E-mail - usar modal específico
-      setSelectedNPSContract(contract);
-      setNpsMethod('email');
-      setShowNPSModal(true);
-      setGeneratingDocument(null);
     } else if (documentosSemAssinatura.includes(documentType)) {
       // Documentos que não precisam de assinatura - gerar diretamente
-      const enhancedData = applyConjunctions(formData);
-      const processedTemplate = replaceTemplateVariables(
+      const enhancedData = applyContractConjunctions(formData);
+      const processedTemplate = processContractTemplate(
         template,
         enhancedData
       );
@@ -852,7 +830,9 @@ const Contratos = () => {
     }
   };
 
-  const replaceTemplateVariables = (
+  // Função movida para: @/features/contracts/utils/templateProcessor
+  // Mantida aqui apenas para referência - REMOVER após migração completa
+  const replaceTemplateVariables_DEPRECATED = (
     template: string,
     data: Record<string, string>
   ) => {
@@ -996,7 +976,7 @@ const Contratos = () => {
     const formData = selectedContract.form_data;
 
     // Aplicar conjunções verbais antes de processar o template
-    const enhancedData = applyConjunctions(formData);
+    const enhancedData = applyContractConjunctions(formData);
 
     // Adicionar campos específicos para notificação de agendamento
     enhancedData.dataAtual = formatDateBrazilian(new Date());
@@ -1128,7 +1108,7 @@ const Contratos = () => {
       }
     }
 
-    const processedTemplate = replaceTemplateVariables(
+    const processedTemplate = processContractTemplate(
       NOTIFICACAO_AGENDAMENTO_TEMPLATE,
       enhancedData
     );
@@ -1157,6 +1137,62 @@ const Contratos = () => {
     setTipoVistoria('final');
   };
 
+  const handleGenerateStatusVistoria = () => {
+    if (!selectedContract || !assinanteSelecionado) {
+      showError('validation', { 
+        description: 'Por favor, selecione o assinante' 
+      });
+      return;
+    }
+
+    const formData = selectedContract.form_data;
+    const enhancedData = applyContractConjunctions(formData);
+
+    // Adicionar campos específicos para status vistoria
+    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.statusVistoria = statusVistoria;
+    enhancedData.assinanteSelecionado = assinanteSelecionado;
+    enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
+    enhancedData.numeroContrato = formData.numeroContrato || '[NÚMERO DO CONTRATO]';
+
+    // Adicionar saudação do locatário
+    const primeiroNomeLocatario = (formData.nomeLocatario || '').split(' ')[0];
+    enhancedData.primeiroNomeLocatario = primeiroNomeLocatario;
+    enhancedData.saudacaoLocatario = primeiroNomeLocatario ? `Olá, ${primeiroNomeLocatario}` : 'Olá';
+
+    const processedTemplate = processContractTemplate(
+      STATUS_VISTORIA_WHATSAPP_TEMPLATE,
+      enhancedData
+    );
+
+    const documentTitle = `Status Vistoria - ${selectedContract.title}`;
+
+    setTimeout(() => {
+      navigate('/gerar-documento', {
+        state: {
+          title: documentTitle,
+          template: processedTemplate,
+          formData: enhancedData,
+          documentType: 'Status Vistoria',
+        },
+      });
+      setGeneratingDocument(null);
+    }, 800);
+
+    // Fechar modal e limpar campos
+    setShowStatusVistoriaModal(false);
+    setSelectedContract(null);
+    setStatusVistoria('APROVADA');
+    setAssinanteSelecionado('');
+  };
+
+  const handleCancelStatusVistoria = () => {
+    setShowStatusVistoriaModal(false);
+    setSelectedContract(null);
+    setStatusVistoria('APROVADA');
+    setAssinanteSelecionado('');
+  };
+
   const handleGenerateRecusaAssinatura = () => {
     if (!selectedContract || !dataRealizacaoVistoria || !assinanteSelecionado) {
       showError('validation', { 
@@ -1166,7 +1202,7 @@ const Contratos = () => {
     }
 
     const formData = selectedContract.form_data;
-    const enhancedData = applyConjunctions(formData);
+    const enhancedData = applyContractConjunctions(formData);
 
     // Adicionar dados específicos para recusa de assinatura
     enhancedData.dataAtual = formatDateBrazilian(new Date());
@@ -1179,7 +1215,7 @@ const Contratos = () => {
     enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
 
     // Processar o template
-    const processedTemplate = replaceTemplateVariables(
+    const processedTemplate = processContractTemplate(
       TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
       enhancedData
     );
@@ -1225,7 +1261,7 @@ const Contratos = () => {
 
     const formData = selectedContract.form_data;
     const enhancedData = {
-      ...applyConjunctions(formData),
+      ...applyContractConjunctions(formData),
       assinanteSelecionado,
     } as Record<string, string>;
 
@@ -1252,7 +1288,7 @@ const Contratos = () => {
       whatsAppType === 'locador'
         ? DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE
         : DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE;
-    const processedTemplate = replaceTemplateVariables(template, enhancedData);
+    const processedTemplate = processContractTemplate(template, enhancedData);
     const documentTitle = `Devolutiva ${whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp - ${selectedContract.title}`;
 
     navigate('/gerar-documento', {
@@ -1339,245 +1375,6 @@ const Contratos = () => {
     );
   };
 
-
-  const handleGenerateNPSWhatsApp = () => {
-    if (!selectedNPSContract || !npsWhatsAppType || !selectedNPSPerson) {
-      toast.error('Por favor, selecione uma pessoa');
-      return;
-    }
-
-    const formData = selectedNPSContract.form_data;
-    const primeiroNome = selectedNPSPerson.split(' ')[0];
-    const primeiroNomeCapitalizado =
-      primeiroNome.charAt(0).toUpperCase() +
-      primeiroNome.slice(1).toLowerCase();
-
-    const mensagem = `Olá ${primeiroNomeCapitalizado}, tudo bem? Posso enviar a você nossa pesquisa de satisfação? Seu feedback nos ajudará a aprimorar nossos processos internos`;
-
-    // Aplicar conjunções verbais antes de processar o template
-    const enhancedData = applyConjunctions(formData);
-
-    // Adicionar dados específicos do NPS WhatsApp
-    enhancedData.nomePessoaSelecionada = primeiroNomeCapitalizado;
-    enhancedData.tipoPessoaNPS =
-      npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário';
-    enhancedData.mensagemNPSWhatsApp = mensagem;
-
-    const processedTemplate = replaceTemplateVariables(
-      NPS_WHATSAPP_TEMPLATE,
-      enhancedData
-    );
-    const documentTitle = `NPS WhatsApp - ${npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário'} - ${selectedNPSContract.title}`;
-
-    // Navegar para a página de geração de documento
-    setTimeout(() => {
-      navigate('/gerar-documento', {
-        state: {
-          title: documentTitle,
-          template: processedTemplate,
-          formData: enhancedData,
-          documentType: 'NPS WhatsApp',
-        },
-      });
-    }, 800);
-
-    // Fechar modal e limpar campos
-    setShowNPSModal(false);
-    setSelectedNPSContract(null);
-    setNpsMethod(null);
-    setNpsWhatsAppType(null);
-    setSelectedNPSPerson('');
-  };
-
-  const handleGenerateNPSEmail = () => {
-    if (!selectedNPSContract) {
-      toast.error('Erro ao gerar e-mail');
-      return;
-    }
-
-    const formData = selectedNPSContract.form_data;
-    const _numeroContrato = formData.numeroContrato || '[NÚMERO]';
-
-    // Extrair nomes dos locadores
-    const nomesLocadores =
-      formData.nomesResumidosLocadores || formData.nomeProprietario || '';
-    const nomesLocadoresArray = nomesLocadores
-      .split(/ e | E /)
-      .map((nome) => nome.trim())
-      .filter((nome) => nome);
-
-    // Extrair nomes dos locatários
-    const nomesLocatarios = formData.nomeLocatario || '';
-    const nomesLocatariosArray = nomesLocatarios
-      .split(/ e | E /)
-      .map((nome) => nome.trim())
-      .filter((nome) => nome);
-
-    // Verificar se há números cadastrados
-    const _hasLocadorNumbers = nomesLocadoresArray.some(
-      (nome) =>
-        formData[`numeroLocador_${nome.replace(/\s+/g, '_')}`] ||
-        formData.celularProprietario ||
-        formData.telefoneProprietario ||
-        formData.celularLocador ||
-        formData.telefoneLocador
-    );
-
-    const _hasLocatarioNumbers = nomesLocatariosArray.some(
-      (nome) =>
-        formData[`numeroLocatario_${nome.replace(/\s+/g, '_')}`] ||
-        formData.celularLocatario ||
-        formData.telefoneLocatario ||
-        formData.celularLocatario ||
-        formData.telefoneLocatario
-    );
-
-    // Sempre mostrar modal de números com checkboxes para seleção
-    setShowNPSNumbersModal(true);
-  };
-
-  const generateNPSEmailWithData = () => {
-    if (!selectedNPSContract) return;
-
-    const formData = selectedNPSContract.form_data;
-    const numeroContrato = formData.numeroContrato || '[NÚMERO]';
-
-    // Usar apenas as partes selecionadas no modal de números
-    const nomesLocadoresArray = Object.keys(npsSelectedParties)
-      .filter((key) => key.startsWith('locador_') && npsSelectedParties[key])
-      .map((key) => key.replace('locador_', ''));
-
-    const nomesLocatariosArray = Object.keys(npsSelectedParties)
-      .filter((key) => key.startsWith('locatario_') && npsSelectedParties[key])
-      .map((key) => key.replace('locatario_', ''));
-
-    // Extrair números dos locadores selecionados do estado npsNumbers
-    const numerosLocadoresArray = nomesLocadoresArray.map(
-      (nome) => npsNumbers[`locador_${nome}`] || '[NÚMERO]'
-    );
-
-    // Extrair números dos locatários selecionados do estado npsNumbers
-    const numerosLocatariosArray = nomesLocatariosArray.map(
-      (nome) => npsNumbers[`locatario_${nome}`] || '[NÚMERO]'
-    );
-
-    // Aplicar conjunções verbais antes de processar o template
-    const enhancedData = applyConjunctions(formData);
-
-    // Funções para detectar gênero e plural
-    const isPlural = (text: string) => {
-      return text.includes(',') || text.includes(' e ') || text.includes(' E ');
-    };
-
-    const isFeminine = (text: string) => {
-      const femaleNames = [
-        'ana',
-        'maria',
-        'carla',
-        'sandra',
-        'patricia',
-        'fernanda',
-        'juliana',
-        'carolina',
-        'gabriela',
-        'mariana',
-        'raquel',
-        'thais',
-        'adriana',
-      ];
-      const firstNameLower = text.split(' ')[0].toLowerCase();
-      return (
-        text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower)
-      );
-    };
-
-    // Calcular termos corretos baseados no gênero
-    const getLocadorTerm = (nomes: string[]) => {
-      if (nomes.length === 0) return 'LOCADOR(a)';
-      const nomeCompleto = nomes.join(', ');
-      if (isPlural(nomeCompleto)) {
-        return 'LOCADORES';
-      }
-      return isFeminine(nomeCompleto) ? 'LOCADORA' : 'LOCADOR';
-    };
-
-    const getLocatarioTerm = (nomes: string[]) => {
-      if (nomes.length === 0) return 'LOCATÁRIO(a)';
-      const nomeCompleto = nomes.join(', ');
-      if (isPlural(nomeCompleto)) {
-        return 'LOCATÁRIOS';
-      }
-      return isFeminine(nomeCompleto) ? 'LOCATÁRIA' : 'LOCATÁRIO';
-    };
-
-    // Criar formato "Nome Número" para cada pessoa
-    const formatarPessoasComNumeros = (nomes: string[], numeros: string[]) => {
-      return nomes
-        .map((nome, index) => {
-          const numero = numeros[index] || '[NÚMERO]';
-          return `${nome}<br>Número: ${numero}`;
-        })
-        .join('<br><br>');
-    };
-
-    // Adicionar dados específicos do NPS E-mail
-    enhancedData.numeroContratoNPS = numeroContrato;
-    enhancedData.nomesLocadoresNPS =
-      nomesLocadoresArray.length > 0
-        ? formatarPessoasComNumeros(nomesLocadoresArray, numerosLocadoresArray)
-        : '';
-    enhancedData.nomesLocatariosNPS =
-      nomesLocatariosArray.length > 0
-        ? formatarPessoasComNumeros(
-            nomesLocatariosArray,
-            numerosLocatariosArray
-          )
-        : '';
-    enhancedData.numerosLocadoresNPS = numerosLocadoresArray.join(', ');
-    enhancedData.numerosLocatariosNPS = numerosLocatariosArray.join(', ');
-    enhancedData.termoLocadorNPS = getLocadorTerm(nomesLocadoresArray);
-    enhancedData.termoLocatarioNPS = getLocatarioTerm(nomesLocatariosArray);
-
-    const processedTemplate = replaceTemplateVariables(
-      NPS_EMAIL_TEMPLATE,
-      enhancedData
-    );
-    const documentTitle = `NPS E-mail - Contrato ${numeroContrato} - ${selectedNPSContract.title}`;
-
-    // Navegar para a página de geração de documento
-    setTimeout(() => {
-      navigate('/gerar-documento', {
-        state: {
-          title: documentTitle,
-          template: processedTemplate,
-          formData: enhancedData,
-          documentType: 'NPS E-mail',
-        },
-      });
-    }, 800);
-
-    // Fechar modal e limpar campos
-    setShowNPSModal(false);
-    setSelectedNPSContract(null);
-    setNpsMethod(null);
-    setNpsWhatsAppType(null);
-    setSelectedNPSPerson('');
-    setSelectedNPSParties({ locadores: [], locatarios: [] });
-    setNpsNumbers({});
-  };
-
-  const handleCancelNPS = () => {
-    setShowNPSModal(false);
-    setSelectedNPSContract(null);
-    setNpsMethod(null);
-    setNpsWhatsAppType(null);
-    setSelectedNPSPerson('');
-    setSelectedNPSParties({ locadores: [], locatarios: [] });
-    setNpsNumbers({});
-    setNpsSelectedParties({});
-    setShowNPSNumbersModal(false);
-  };
-
   // Função auxiliar para renderizar ícone com loading
   const _renderIconWithLoading = (
     _icon: React.ReactNode,
@@ -1595,14 +1392,21 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+          <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+          <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        </div>
+        
         {/* Main Content */}
-        <div className="p-6">
+        <div className="p-6 relative z-10">
           {/* Lista de Contratos */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-white">
                   Contratos Cadastrados
                 </h2>
                 <Link to="/cadastrar-contrato">
@@ -1639,16 +1443,16 @@ const Contratos = () => {
             </div>
 
             {loading ? (
-              <Card className="glass-card">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-12">
                   <div className="text-center">
-                    <div className="p-4 bg-primary/10 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-primary animate-pulse" />
+                    <div className="p-4 bg-blue-500/20 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-blue-400 animate-pulse" />
                     </div>
-                    <p className="text-lg font-medium text-foreground">
+                    <p className="text-lg font-medium text-white">
                       Carregando contratos...
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-blue-200 mt-1">
                       Aguarde um momento
                     </p>
                   </div>
@@ -1656,16 +1460,16 @@ const Contratos = () => {
               </Card>
             ) : displayedContracts.length === 0 &&
               filteredContracts.length === 0 ? (
-              <Card className="glass-card">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-12">
                   <div className="text-center">
-                    <div className="p-4 bg-muted rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-muted-foreground" />
+                    <div className="p-4 bg-blue-500/20 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-blue-300" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                    <h3 className="text-lg font-semibold text-white mb-2">
                       Nenhum contrato cadastrado ainda
                     </h3>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-blue-200 mb-6">
                       Comece criando seu primeiro contrato no sistema
                     </p>
                     <Link to="/cadastrar-contrato">
@@ -1682,7 +1486,7 @@ const Contratos = () => {
                 {displayedContracts.map((contract) => (
                   <Card
                     key={contract.id}
-                    className="metric-card glass-card border-border hover:shadow-soft transition-all duration-300 overflow-visible"
+                    className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 hover:border-blue-400/40 transition-all duration-300 overflow-visible shadow-lg"
                   >
                     <CardContent className="p-6">
                       {/* Header do Contrato */}
@@ -1692,11 +1496,11 @@ const Contratos = () => {
                             <FileText className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-sm text-foreground">
+                            <h3 className="font-bold text-sm text-white">
                               Contrato{' '}
                               {contract.form_data.numeroContrato || '[NÚMERO]'}
                             </h3>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-blue-200">
                               ID: {contract.id.slice(0, 8)}...
                             </p>
                           </div>
@@ -1711,7 +1515,7 @@ const Contratos = () => {
 
                       {/* PARTES ENVOLVIDAS */}
                       <div className="mb-4">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
                           Partes Envolvidas
                         </h4>
                         <div className="space-y-3">
@@ -1720,14 +1524,14 @@ const Contratos = () => {
                               <User className="h-3 w-3 text-green-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              <p className="text-xs font-medium text-blue-200 uppercase tracking-wide">
                                 {isMultipleProprietarios(
                                   contract.form_data.nomeProprietario
                                 )
                                   ? 'Proprietários'
                                   : 'Proprietário'}
                               </p>
-                              <p className="text-xs font-bold text-foreground truncate">
+                              <p className="text-xs font-bold text-white truncate">
                                 {contract.form_data.nomeProprietario}
                               </p>
                             </div>
@@ -1737,14 +1541,14 @@ const Contratos = () => {
                               <User2 className="h-3 w-3 text-blue-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              <p className="text-xs font-medium text-blue-200 uppercase tracking-wide">
                                 {isMultipleLocatarios(
                                   contract.form_data.nomeLocatario
                                 )
                                   ? 'Locatários'
                                   : 'Locatário'}
                               </p>
-                              <p className="text-xs font-bold text-foreground truncate">
+                              <p className="text-xs font-bold text-white truncate">
                                 {contract.form_data.nomeLocatario}
                               </p>
                             </div>
@@ -1754,7 +1558,7 @@ const Contratos = () => {
 
                       {/* TERMOS DO CONTRATO */}
                       <div className="mb-4">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
                           Termos do Contrato
                         </h4>
                         <div className="space-y-3">
@@ -1763,11 +1567,11 @@ const Contratos = () => {
                               <div className="p-1 rounded bg-yellow-500/10">
                                 <Timer className="h-3 w-3 text-yellow-600" />
                               </div>
-                              <span className="text-xs font-medium text-muted-foreground">
+                              <span className="text-xs font-medium text-blue-200">
                                 Prazo
                               </span>
                             </div>
-                            <span className="text-xs font-bold text-foreground">
+                            <span className="text-xs font-bold text-white">
                               {contract.form_data.prazoDias} dias
                             </span>
                           </div>
@@ -1777,11 +1581,11 @@ const Contratos = () => {
                                 <div className="p-1 rounded bg-green-500/10">
                                   <CalendarDays className="h-3 w-3 text-green-600" />
                                 </div>
-                                <span className="text-xs font-medium text-muted-foreground">
+                                <span className="text-xs font-medium text-blue-200">
                                   Início
                                 </span>
                               </div>
-                              <span className="text-xs font-bold text-foreground">
+                              <span className="text-xs font-bold text-white">
                                 {contract.form_data.dataInicioRescisao ||
                                   '01/09/2026'}
                               </span>
@@ -1791,11 +1595,11 @@ const Contratos = () => {
                                 <div className="p-1 rounded bg-red-500/10">
                                   <Clock className="h-3 w-3 text-red-600" />
                                 </div>
-                                <span className="text-xs font-medium text-muted-foreground">
+                                <span className="text-xs font-medium text-blue-200">
                                   Término
                                 </span>
                               </div>
-                              <span className="text-xs font-bold text-foreground">
+                              <span className="text-xs font-bold text-white">
                                 {contract.form_data.dataTerminoRescisao ||
                                   '01/10/2026'}
                               </span>
@@ -1806,7 +1610,7 @@ const Contratos = () => {
 
                       {/* LOCALIZAÇÃO */}
                       <div className="mb-4">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
                           Localização
                         </h4>
                         <div className="flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
@@ -1817,7 +1621,18 @@ const Contratos = () => {
                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                               Endereço
                             </p>
-                            <p className="text-xs font-bold text-foreground line-clamp-2">
+                            <p 
+                              className="text-xs font-bold text-foreground line-clamp-2 cursor-pointer hover:text-primary hover:underline transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const endereco = contract.form_data.endereco || contract.form_data.enderecoImovel;
+                                if (endereco) {
+                                  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+                                  window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+                                }
+                              }}
+                              title="Clique para abrir no Google Maps"
+                            >
                               {contract.form_data.endereco ||
                                 contract.form_data.enderecoImovel ||
                                 '460 - Rua Interna: Rua dos Sablas, Casa 421 - Condomínio Green Valley, Bairro Flores, Manaus - AM'}
@@ -2039,6 +1854,64 @@ const Contratos = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Modal para Status Vistoria */}
+      <Dialog open={showStatusVistoriaModal} onOpenChange={setShowStatusVistoriaModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Status da Vistoria</DialogTitle>
+            <DialogDescription>
+              Informe o resultado da vistoria para o contrato: {selectedContract?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="status-vistoria">Status da Vistoria</Label>
+              <Select
+                value={statusVistoria}
+                onValueChange={(value: 'APROVADA' | 'REPROVADA') => setStatusVistoria(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="APROVADA">
+                    Aprovada
+                  </SelectItem>
+                  <SelectItem value="REPROVADA">
+                    Reprovada
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="assinante-status">Assinante</Label>
+              <Select
+                value={assinanteSelecionado}
+                onValueChange={setAssinanteSelecionado}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o assinante" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Victor Cain Jorge">Victor Cain Jorge</SelectItem>
+                  <SelectItem value="Fabiana Salotti Martins">Fabiana Salotti Martins</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelStatusVistoria}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGenerateStatusVistoria} disabled={!assinanteSelecionado}>
+              Gerar Mensagem
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal para Seleção de WhatsApp */}
       <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
         <DialogContent className="sm:max-w-[425px]">
@@ -2198,443 +2071,6 @@ const Contratos = () => {
       </Dialog>
 
 
-      {/* Modal para NPS */}
-      <Dialog open={showNPSModal} onOpenChange={setShowNPSModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Pesquisa de Satisfação (NPS)</DialogTitle>
-            <DialogDescription>
-              Selecione o método para enviar a pesquisa de satisfação.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {!npsMethod ? (
-              <div className="space-y-4">
-                <p className="text-sm font-medium">Escolha o método:</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setNpsMethod('email')}
-                    className="flex flex-col items-center gap-2 p-4 h-auto"
-                  >
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span className="text-sm">E-mail</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setNpsMethod('whatsapp')}
-                    className="flex flex-col items-center gap-2 p-4 h-auto"
-                  >
-                    <Phone className="h-6 w-6" />
-                    <span className="text-sm">WhatsApp</span>
-                  </Button>
-                </div>
-              </div>
-            ) : npsMethod === 'whatsapp' && !npsWhatsAppType ? (
-              <div className="space-y-4">
-                <p className="text-sm font-medium">
-                  Selecione para quem enviar:
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setNpsWhatsAppType('locador')}
-                    className="flex flex-col items-center gap-2 p-4 h-auto"
-                  >
-                    <User className="h-6 w-6" />
-                    <span className="text-sm">Locador</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setNpsWhatsAppType('locatario')}
-                    className="flex flex-col items-center gap-2 p-4 h-auto"
-                  >
-                    <User2 className="h-6 w-6" />
-                    <span className="text-sm">Locatário</span>
-                  </Button>
-                </div>
-              </div>
-            ) : npsMethod === 'whatsapp' &&
-              npsWhatsAppType &&
-              !selectedNPSPerson ? (
-              <div className="grid gap-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="selectedNPSPerson" className="text-right">
-                    {npsWhatsAppType === 'locador' ? 'Locador' : 'Locatário'}
-                  </Label>
-                  <Select
-                    value={selectedNPSPerson}
-                    onValueChange={setSelectedNPSPerson}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue
-                        placeholder={`Selecione um ${npsWhatsAppType === 'locador' ? 'locador' : 'locatário'}`}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {npsWhatsAppType === 'locador'
-                        ? (() => {
-                            const nomesLocadores =
-                              selectedNPSContract?.form_data
-                                .nomesResumidosLocadores ||
-                              selectedNPSContract?.form_data.nomeProprietario;
-                            if (nomesLocadores) {
-                              const nomesArray = nomesLocadores
-                                .split(/ e | E /)
-                                .map((nome) => nome.trim())
-                                .filter((nome) => nome);
-                              return nomesArray.map((nome, index) => (
-                                <SelectItem key={index} value={nome}>
-                                  {nome}
-                                </SelectItem>
-                              ));
-                            }
-                            return (
-                              <SelectItem
-                                value="Nenhum locador encontrado"
-                                disabled
-                              >
-                                Nenhum locador encontrado
-                              </SelectItem>
-                            );
-                          })()
-                        : (() => {
-                            const nomesLocatarios =
-                              selectedNPSContract?.form_data.nomeLocatario ||
-                              selectedNPSContract?.form_data.primeiroLocatario;
-                            if (nomesLocatarios) {
-                              const nomesArray = nomesLocatarios
-                                .split(/ e | E /)
-                                .map((nome) => nome.trim())
-                                .filter((nome) => nome);
-                              return nomesArray.map((nome, index) => (
-                                <SelectItem key={index} value={nome}>
-                                  {nome}
-                                </SelectItem>
-                              ));
-                            }
-                            return (
-                              <SelectItem
-                                value="Nenhum locatário encontrado"
-                                disabled
-                              >
-                                Nenhum locatário encontrado
-                              </SelectItem>
-                            );
-                          })()}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelNPS}>
-              Cancelar
-            </Button>
-            {npsMethod === 'email' ? (
-              <Button onClick={handleGenerateNPSEmail}>Gerar E-mail</Button>
-            ) : npsMethod === 'whatsapp' && selectedNPSPerson ? (
-              <Button onClick={handleGenerateNPSWhatsApp}>
-                Gerar WhatsApp
-              </Button>
-            ) : null}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal para Preenchimento de Números NPS */}
-      <Dialog open={showNPSNumbersModal} onOpenChange={setShowNPSNumbersModal}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Preencher Números para NPS</DialogTitle>
-            <DialogDescription>
-              Preencha os números de telefone das partes para incluir no e-mail
-              NPS.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {selectedNPSContract &&
-              (() => {
-                const formData = selectedNPSContract.form_data;
-                const nomesLocadores =
-                  formData.nomesResumidosLocadores ||
-                  formData.nomeProprietario ||
-                  '';
-                const nomesLocadoresArray = nomesLocadores
-                  .split(/ e | E |,/)
-                  .map((nome) => nome.trim())
-                  .filter((nome) => nome);
-                const nomesLocatarios = formData.nomeLocatario || '';
-                const nomesLocatariosArray = nomesLocatarios
-                  .split(/ e | E |,/)
-                  .map((nome) => nome.trim())
-                  .filter((nome) => nome);
-
-                // Inicializar números e seleções se não estiverem no estado
-                if (Object.keys(npsNumbers).length === 0) {
-                  const initialNumbers: Record<string, string> = {};
-                  const initialSelections: Record<string, boolean> = {};
-
-                  // Preencher números dos locadores
-                  nomesLocadoresArray.forEach((nome) => {
-                    const key = `locador_${nome}`;
-                    initialNumbers[key] =
-                      formData[`numeroLocador_${nome.replace(/\s+/g, '_')}`] ||
-                      formData.celularProprietario ||
-                      formData.telefoneProprietario ||
-                      formData.celularLocador ||
-                      formData.telefoneLocador ||
-                      '';
-                    // Marcar como selecionado por padrão
-                    initialSelections[key] = true;
-                  });
-
-                  // Preencher números dos locatários
-                  nomesLocatariosArray.forEach((nome) => {
-                    const key = `locatario_${nome}`;
-                    initialNumbers[key] =
-                      formData[
-                        `numeroLocatario_${nome.replace(/\s+/g, '_')}`
-                      ] ||
-                      formData.celularLocatario ||
-                      formData.telefoneLocatario ||
-                      '';
-                    // Marcar como selecionado por padrão
-                    initialSelections[key] = true;
-                  });
-
-                  setNpsNumbers(initialNumbers);
-                  setNpsSelectedParties(initialSelections);
-                }
-
-                return (
-                  <>
-                    {/* Locadores */}
-                    {nomesLocadoresArray.length > 0 && (
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-sm text-gray-700">
-                          Locadores
-                        </h4>
-                        {nomesLocadoresArray.map((nome, index) => (
-                          <div
-                            key={index}
-                            className="grid grid-cols-3 gap-4 items-center"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`nps-locador-${index}`}
-                                checked={
-                                  npsSelectedParties[`locador_${nome}`] || false
-                                }
-                                onChange={(e) =>
-                                  setNpsSelectedParties((prev) => ({
-                                    ...prev,
-                                    [`locador_${nome}`]: e.target.checked,
-                                  }))
-                                }
-                                className="rounded border-gray-300"
-                              />
-                              <Label
-                                htmlFor={`nps-locador-${index}`}
-                                className="text-sm"
-                              >
-                                {nome}
-                              </Label>
-                            </div>
-                            <Input
-                              placeholder="(19) 99999-9999"
-                              value={npsNumbers[`locador_${nome}`] || ''}
-                              onChange={(e) =>
-                                setNpsNumbers((prev) => ({
-                                  ...prev,
-                                  [`locador_${nome}`]: e.target.value,
-                                }))
-                              }
-                              disabled={!npsSelectedParties[`locador_${nome}`]}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Locatários */}
-                    {nomesLocatariosArray.length > 0 && (
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-sm text-gray-700">
-                          Locatários
-                        </h4>
-                        {nomesLocatariosArray.map((nome, index) => (
-                          <div
-                            key={index}
-                            className="grid grid-cols-3 gap-4 items-center"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`nps-locatario-${index}`}
-                                checked={
-                                  npsSelectedParties[`locatario_${nome}`] ||
-                                  false
-                                }
-                                onChange={(e) =>
-                                  setNpsSelectedParties((prev) => ({
-                                    ...prev,
-                                    [`locatario_${nome}`]: e.target.checked,
-                                  }))
-                                }
-                                className="rounded border-gray-300"
-                              />
-                              <Label
-                                htmlFor={`nps-locatario-${index}`}
-                                className="text-sm"
-                              >
-                                {nome}
-                              </Label>
-                            </div>
-                            <Input
-                              placeholder="(19) 99999-9999"
-                              value={npsNumbers[`locatario_${nome}`] || ''}
-                              onChange={(e) =>
-                                setNpsNumbers((prev) => ({
-                                  ...prev,
-                                  [`locatario_${nome}`]: e.target.value,
-                                }))
-                              }
-                              disabled={
-                                !npsSelectedParties[`locatario_${nome}`]
-                              }
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowNPSNumbersModal(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                // Salvar números no contrato e gerar e-mail
-                if (selectedNPSContract) {
-                  const formData = selectedNPSContract.form_data;
-                  const nomesLocadores =
-                    formData.nomesResumidosLocadores ||
-                    formData.nomeProprietario ||
-                    '';
-                  const nomesLocadoresArray = nomesLocadores
-                    .split(/ e | E /)
-                    .map((nome) => nome.trim())
-                    .filter((nome) => nome);
-                  const nomesLocatarios = formData.nomeLocatario || '';
-                  const nomesLocatariosArray = nomesLocatarios
-                    .split(/ e | E /)
-                    .map((nome) => nome.trim())
-                    .filter((nome) => nome);
-
-                  const updatedFormData = {
-                    ...selectedNPSContract.form_data,
-                  };
-                  Object.entries(npsNumbers).forEach(([key, value]) => {
-                    if (value && npsSelectedParties[key]) {
-                      if (key.startsWith('locador_')) {
-                        const nome = key.replace('locador_', '');
-                        updatedFormData[
-                          `numeroLocador_${nome.replace(/\s+/g, '_')}`
-                        ] = value;
-                        // Também atualizar campos gerais se for o primeiro locador
-                        if (nome === nomesLocadoresArray[0]) {
-                          updatedFormData.celularProprietario = value;
-                          updatedFormData.celularLocador = value;
-                        }
-                      } else if (key.startsWith('locatario_')) {
-                        const nome = key.replace('locatario_', '');
-                        updatedFormData[
-                          `numeroLocatario_${nome.replace(/\s+/g, '_')}`
-                        ] = value;
-                        // Também atualizar campos gerais se for o primeiro locatário
-                        if (nome === nomesLocatariosArray[0]) {
-                          updatedFormData.celularLocatario = value;
-                        }
-                      }
-                    }
-                  });
-
-                  // Atualizar o contrato no banco
-                  const updateContract = async () => {
-                    try {
-                      await supabase
-                        .from('saved_terms')
-                        .update({ form_data: updatedFormData })
-                        .eq('id', selectedNPSContract.id);
-
-                      // Recarregar a lista de contratos para refletir as mudanças
-                      await refetch();
-
-                      // Atualizar o contrato selecionado
-                      setSelectedNPSContract((prev) =>
-                        prev ? { ...prev, form_data: updatedFormData } : null
-                      );
-
-                      // Definir as partes selecionadas no estado principal
-                      const selectedLocadores = Object.keys(npsSelectedParties)
-                        .filter(
-                          (key) =>
-                            key.startsWith('locador_') &&
-                            npsSelectedParties[key]
-                        )
-                        .map((key) => key.replace('locador_', ''));
-
-                      const selectedLocatarios = Object.keys(npsSelectedParties)
-                        .filter(
-                          (key) =>
-                            key.startsWith('locatario_') &&
-                            npsSelectedParties[key]
-                        )
-                        .map((key) => key.replace('locatario_', ''));
-
-                      setSelectedNPSParties({
-                        locadores: selectedLocadores,
-                        locatarios: selectedLocatarios,
-                      });
-
-                      // Fechar modal e gerar e-mail
-                      setShowNPSNumbersModal(false);
-                      generateNPSEmailWithData();
-                    } catch {
-                      toast.error('Erro ao salvar números');
-                    }
-                  };
-
-                  updateContract();
-                }
-              }}
-            >
-              Salvar e Gerar E-mail
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </TooltipProvider>
   );
 };

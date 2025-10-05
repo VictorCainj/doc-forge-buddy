@@ -1,4 +1,10 @@
-import { File } from 'buffer';
+export type VistoriaFoto = File | {
+  name: string;
+  url: string;
+  isFromDatabase: boolean;
+  size: number;
+  type: string;
+};
 
 export interface ApontamentoVistoria {
   id: string;
@@ -6,13 +12,17 @@ export interface ApontamentoVistoria {
   subtitulo: string;
   descricao: string;
   vistoriaInicial: {
-    fotos: File[];
+    fotos: VistoriaFoto[];
     descritivoLaudo?: string;
   };
   vistoriaFinal: {
-    fotos: File[];
+    fotos: VistoriaFoto[];
   };
   observacao: string;
+  tipo?: 'material' | 'mao_de_obra';
+  valor?: number;
+  quantidade?: number;
+  unidade?: string;
 }
 
 export interface DadosVistoria {

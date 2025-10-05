@@ -62,7 +62,6 @@ export const useOptimizedSearch = (
    */
   const performSearch = useCallback(async (term: string) => {
     if (!term.trim()) {
-      setResults([]);
       setTotalResults(0);
       setHasSearched(false);
       return;
@@ -70,8 +69,8 @@ export const useOptimizedSearch = (
 
     // Verificar cache primeiro
     const cacheKey = `${term.toLowerCase()}-${documentType}`;
-    if (searchCache.current.has(cacheKey)) {
-      const cachedResults = searchCache.current.get(cacheKey)!;
+    const cachedResults = searchCache.current.get(cacheKey);
+    if (cachedResults) {
       setResults(cachedResults.slice(0, maxResults));
       setTotalResults(cachedResults.length);
       setHasSearched(true);
@@ -116,6 +115,7 @@ export const useOptimizedSearch = (
       setResults(sortedResults.slice(0, maxResults) as SearchResult[]);
       setTotalResults(sortedResults.length);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Erro na busca:', error);
       setResults([]);
       setTotalResults(0);

@@ -102,6 +102,7 @@ export const useContractList = (): UseContractListReturn => {
     try {
       await loadMoreData();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Erro ao carregar mais contratos:', error);
     } finally {
       setLoadingMore(false);

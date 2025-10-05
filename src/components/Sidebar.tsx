@@ -1,13 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
   FileText,
   MessageSquare,
   LogOut,
-  Shield,
+  Building2,
   SearchCheck,
-  Archive,
-  FileSpreadsheet,
+  FolderArchive,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -45,13 +44,6 @@ const Sidebar = () => {
 
   const menuItems = [
     {
-      name: 'Dashboard',
-      icon: LayoutDashboard,
-      path: '/',
-      active: location.pathname === '/',
-      badge: null,
-    },
-    {
       name: 'Contratos',
       icon: FileText,
       path: '/contratos',
@@ -59,14 +51,7 @@ const Sidebar = () => {
       badge: null,
     },
     {
-      name: 'Criar Orçamento',
-      icon: FileSpreadsheet,
-      path: '/criar-orcamento',
-      active: location.pathname === '/criar-orcamento',
-      badge: null,
-    },
-    {
-      name: 'Análise',
+      name: 'Criar Análise',
       icon: SearchCheck,
       path: '/analise-vistoria',
       active: location.pathname === '/analise-vistoria',
@@ -74,13 +59,13 @@ const Sidebar = () => {
     },
     {
       name: 'Análises Salvas',
-      icon: Archive,
+      icon: FolderArchive,
       path: '/vistoria-analises',
       active: location.pathname === '/vistoria-analises',
       badge: null,
     },
     {
-      name: 'Chat',
+      name: 'Chat IA',
       icon: MessageSquare,
       path: '/chat',
       active: location.pathname === '/chat',
@@ -91,18 +76,18 @@ const Sidebar = () => {
   if (!user) return null;
 
   return (
-    <aside className="w-72 sidebar-professional min-h-screen flex flex-col">
+    <aside className="w-72 min-h-screen flex flex-col bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-white/10">
       {/* Professional Header */}
-      <div className="p-6 border-b border-sidebar-border">
+      <div className="p-6 border-b border-white/10">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-glow">
-            <Shield className="h-6 w-6 text-white" />
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Building2 className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-sidebar-foreground">
+            <h1 className="text-xl font-bold text-white">
               DocForge
             </h1>
-            <p className="text-sm text-muted-foreground">Enterprise Suite</p>
+            <p className="text-sm text-blue-200">Gestão Imobiliária</p>
           </div>
         </div>
       </div>
@@ -110,7 +95,7 @@ const Sidebar = () => {
       {/* Navigation Menu */}
       <nav className="flex-1 p-6">
         <div className="space-y-1">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-semibold text-blue-300 uppercase tracking-wider mb-4">
             Principal
           </h3>
           <ul className="space-y-1">
@@ -120,15 +105,15 @@ const Sidebar = () => {
                 <li key={item.name}>
                   <Link
                     to={item.path}
-                    className={`nav-item flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
                       item.active
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                        ? 'bg-gradient-to-r from-blue-500/20 to-indigo-600/20 text-white border border-blue-400/30 shadow-lg'
+                        : 'text-blue-100 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
                       <Icon
-                        className={`h-5 w-5 ${item.active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}
+                        className={`h-5 w-5 ${item.active ? 'text-blue-400' : 'text-blue-300 group-hover:text-white'}`}
                       />
                       <span className="font-medium">{item.name}</span>
                     </div>
@@ -151,23 +136,23 @@ const Sidebar = () => {
       </nav>
 
       {/* Professional Profile Section */}
-      <div className="p-6 border-t border-sidebar-border">
+      <div className="p-6 border-t border-white/10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start h-auto p-3 hover:bg-sidebar-accent/50 rounded-xl transition-all duration-200"
+              className="w-full justify-start h-auto p-3 hover:bg-white/10 rounded-xl transition-all duration-200"
             >
-              <Avatar className="h-10 w-10 mr-3 ring-2 ring-primary/20">
-                <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-sm font-semibold">
+              <Avatar className="h-10 w-10 mr-3 ring-2 ring-blue-400/30">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-sm font-semibold">
                   {getUserInitials(user.email || '')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-semibold text-sidebar-foreground">
+                <span className="text-sm font-semibold text-white">
                   {user.email?.split('@')[0] || 'Usuário'}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-blue-200">
                   Administrador
                 </span>
               </div>

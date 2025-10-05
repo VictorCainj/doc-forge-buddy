@@ -586,50 +586,44 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
 </div>
 `;
 
-// NPS WhatsApp Template
-export const NPS_WHATSAPP_TEMPLATE = `
-<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-  <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 40px;">
-    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+export const STATUS_VISTORIA_WHATSAPP_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div style="flex: 0 0 auto;">
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+    </div>
+    <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
+      Valinhos, {{dataAtual}}.
+    </div>
   </div>
   
-  <div style="text-align: center; margin: 50px 0;">
-    <p style="font-size: 18px; line-height: 1.6; margin: 0; color: #333;">{{mensagemNPSWhatsApp}}</p>
-  </div>
-</div>
-`;
-
-// NPS E-mail Template
-export const NPS_EMAIL_TEMPLATE = `
-<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-  <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 40px;">
-    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
-  </div>
+  {{#if saudacaoLocatario}}
+  <p style="margin-bottom: 25px;">{{saudacaoLocatario}}, tudo bem?</p>
+  {{/if}}
   
-  <div style="text-align: left; margin: 40px 0;">
-    <p style="font-size: 18px; line-height: 1.6; margin-bottom: 25px; color: #333;">Prezadas, tudo bem?</p>
-    
-    <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #333;">Enviei a pesquisa de satisfação para as partes do contrato <strong>{{numeroContrato}}</strong>:</p>
-    
-    <div style="margin: 30px 0; font-size: 16px; line-height: 1.8; background-color: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #007bff;">
-      {{#if nomesLocadoresNPS}}
-      <div style="margin-bottom: 20px;">
-        <p style="margin-bottom: 8px; font-weight: bold; color: #007bff;">{{termoLocadorNPS}}:</p>
-        <div style="margin-bottom: 0; color: #333;">{{{nomesLocadoresNPS}}}</div>
-      </div>
-      {{/if}}
-      
-      {{#if nomesLocatariosNPS}}
-      <div>
-        <p style="margin-bottom: 8px; font-weight: bold; color: #007bff;">{{termoLocatarioNPS}}:</p>
-        <div style="margin-bottom: 0; color: #333;">{{{nomesLocatariosNPS}}}</div>
-      </div>
-      {{/if}}
-    </div>
-    
-    <div style="text-align: left; margin-top: 50px;">
-      <p style="font-size: 16px; color: #666; margin: 0;">Atenciosamente,</p>
-    </div>
+  <p style="margin-bottom: 25px;">Informamos que a vistoria do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>) foi <strong>{{statusVistoria}}</strong>.</p>
+  
+  {{#eq statusVistoria "APROVADA"}}
+  <p style="margin-bottom: 25px;"><strong>Vistoria Aprovada</strong></p>
+  <p style="margin-bottom: 25px;">As chaves já podem ser entregues na <strong>Imobiliária Madia</strong>, localizada na <strong>Av. Dom Nery, 445 - Vila Embare, Valinhos - SP, 13271-170</strong>.</p>
+  {{/eq}}
+  
+  {{#eq statusVistoria "REPROVADA"}}
+  <p style="margin-bottom: 25px;"><strong>Vistoria Reprovada</strong></p>
+  <p style="margin-bottom: 25px;">Os reparos apontados pelo vistoriador devem ser realizados para que possamos reagendar a <strong>Revistoria</strong>.</p>
+  <p style="margin-bottom: 25px;">O valor da taxa de Revistoria é de <strong>R$ 150,00</strong>.</p>
+  {{/eq}}
+  
+  <p style="margin-bottom: 25px;">O <strong>laudo completo</strong> está sendo enviado via <strong>e-mail</strong> para assinatura digital.</p>
+  
+  <p style="margin-bottom: 25px;">Caso tenha alguma dúvida, ou conteste alguns dos itens permanecemos à disposição pelos nossos canais de atendimento.</p>
+  
+  <p style="margin-top: 50px;">Atenciosamente,</p>
+  
+  <div style="margin-top: 30px;">
+    <p style="margin-bottom: 8px;"><strong>{{assinanteSelecionado}}</strong></p>
+    <p style="margin-bottom: 8px; font-size: 15px;">Setor de Rescisão</p>
+    <p style="font-size: 15px;">MADIA IMÓVEIS LTDA</p>
   </div>
 </div>
 `;

@@ -48,6 +48,7 @@ export const useContractData = (): UseContractDataReturn => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar contrato';
       setError(errorMessage);
+      // eslint-disable-next-line no-console
       console.error('Erro ao buscar contrato:', err);
       return null;
     } finally {
@@ -84,6 +85,7 @@ export const useContractData = (): UseContractDataReturn => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar contratos';
       setError(errorMessage);
+      // eslint-disable-next-line no-console
       console.error('Erro ao buscar contratos:', err);
       return [];
     } finally {

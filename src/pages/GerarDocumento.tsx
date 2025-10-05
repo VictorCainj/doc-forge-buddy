@@ -45,8 +45,10 @@ const GerarDocumento = () => {
       }
       case 'Devolutiva Comercial':
         return `Título: Devolutiva Comercial - Contrato ${contractNumber}`;
-      case 'WhatsApp - Comercial':
+      case 'Notificação de Desocupação - Comercial':
         return `Título: Notificação de Desocupação - Comercial - Contrato ${contractNumber}`;
+      case 'Notificação de Desocupação e Agendamento de Vistoria':
+        return `Título: Contrato ${contractNumber} - Notificação de Desocupação e Agendamento de Vistoria`;
       case 'Distrato de Contrato de Locação':
         return `Título: Instrumento Particular de Rescisão de Contrato de Locação - Contrato ${contractNumber}`;
       case 'Termo de Recusa de Assinatura - E-mail':
@@ -199,9 +201,17 @@ const GerarDocumento = () => {
   const isWhatsAppMessage = documentType?.includes('WhatsApp');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+      </div>
+
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           {/* Back Button */}
           <div className="mb-6">

@@ -218,3 +218,112 @@ Por favor, responda de forma conversacional e natural, como se estivesse convers
     throw new Error('Erro ao analisar os contratos. Tente novamente.');
   }
 };
+
+export const chatCompletionWithAI = async (prompt: string): Promise<string> => {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente de IA avançado e versátil, capaz de ajudar com qualquer tipo de pergunta ou tarefa.
+          
+          Suas características:
+          - Responda de forma natural, clara e amigável
+          - Adapte-se ao contexto da conversa
+          - Forneça informações precisas e úteis
+          - Seja criativo quando necessário
+          - Mantenha um tom profissional mas acessível
+          - Se não souber algo, seja honesto e sugira alternativas
+          
+          Você pode ajudar com:
+          - Análise de documentos e contratos
+          - Questões técnicas e programação
+          - Escrita criativa e revisão de textos
+          - Matemática e ciências
+          - Pesquisa e informações gerais
+          - Brainstorming e resolução de problemas
+          - E qualquer outro assunto que o usuário precisar
+          
+          Importante: Interprete o contexto da conversa para entender se o usuário quer gerar uma imagem, analisar algo ou apenas conversar. Não peça confirmação, apenas responda de acordo com a intenção percebida.`,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      max_tokens: 3000,
+      temperature: 0.7,
+    });
+
+    const response = completion.choices[0]?.message?.content;
+
+    if (!response) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    return response.trim();
+  } catch {
+    throw new Error('Erro ao processar sua mensagem. Tente novamente.');
+  }
+};
+
+export const analyzeImageWithAI = async (imageBase64: string, userPrompt?: string): Promise<string> => {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: userPrompt || 'Analise esta imagem em detalhes. Se for um documento, extraia todas as informações relevantes. Se for uma foto, descreva o que você vê.',
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageBase64,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 4000,
+      temperature: 0.7,
+    });
+
+    const analysis = completion.choices[0]?.message?.content;
+
+    if (!analysis) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    return analysis.trim();
+  } catch (error) {
+    console.error('Erro ao analisar imagem:', error);
+    throw new Error('Erro ao analisar a imagem. Tente novamente.');
+  }
+};
+
+export const generateImageWithAI = async (prompt: string): Promise<string> => {
+  try {
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: `Create a professional, high-quality image: ${prompt}`,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard',
+    });
+
+    const imageUrl = response.data[0]?.url;
+
+    if (!imageUrl) {
+      throw new Error('URL da imagem não retornada pela API');
+    }
+
+    return imageUrl;
+  } catch {
+    throw new Error('Erro ao gerar imagem. Tente novamente.');
+  }
+};

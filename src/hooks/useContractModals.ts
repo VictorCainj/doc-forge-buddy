@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hook para gerenciar estados de modais do componente Contratos
  * Centraliza toda a lógica de abertura/fechamento de modais

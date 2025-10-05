@@ -16,14 +16,14 @@ export interface UseOptimizedFiltersReturn<T> {
   searchTerm: string;
   filteredItems: T[];
   setSearchTerm: (term: string) => void;
-  addFilter: (key: string, value: any) => void;
+  addFilter: (key: string, value: unknown) => void;
   removeFilter: (key: string) => void;
   clearFilters: () => void;
   isFiltering: boolean;
   resultsCount: number;
 }
 
-export const useOptimizedFilters = <T extends Record<string, any>>(
+export const useOptimizedFilters = <T extends Record<string, unknown>>(
   items: T[],
   options: FilterOptions
 ): UseOptimizedFiltersReturn<T> => {
@@ -36,7 +36,7 @@ export const useOptimizedFilters = <T extends Record<string, any>>(
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [isFiltering, setIsFiltering] = useState(false);
   
   const debounceRef = useRef<NodeJS.Timeout>();
@@ -129,10 +129,10 @@ export const useOptimizedFilters = <T extends Record<string, any>>(
     result = result.filter(filterFunction);
 
     return result;
-  }, [items, searchFunction, filterFunction]);
+  }, [items, searchFunction, filterFunction, debouncedSearchTerm]);
 
   // ✅ Callbacks otimizados
-  const addFilter = useCallback((key: string, value: any) => {
+  const addFilter = useCallback((key: string, value: unknown) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
 
@@ -162,18 +162,21 @@ export const useOptimizedFilters = <T extends Record<string, any>>(
 };
 
 // ✅ Função utilitária para acessar valores aninhados
-const getNestedValue = (obj: any, path: string): any => {
-  return path.split('.').reduce((current, key) => {
-    return current && current[key] !== undefined ? current[key] : null;
-  }, obj);
+const getNestedValue = (obj: Record<string, unknown>, path: string): unknown => {
+  return path.split('.').reduce((current: unknown, key: string) => {
+    if (current && typeof current === 'object' && key in current) {
+      return (current as Record<string, unknown>)[key];
+    }
+    return null;
+  }, obj as unknown);
 };
 
 // ✅ Função utilitária para comparar datas
-const compareDates = (itemDate: any, filterValue: any): boolean => {
+const compareDates = (itemDate: unknown, filterValue: unknown): boolean => {
   if (!itemDate || !filterValue) return false;
   
-  const itemDateObj = new Date(itemDate);
-  const filterDateObj = new Date(filterValue);
+  const itemDateObj = new Date(itemDate as string | number | Date);
+  const filterDateObj = new Date(filterValue as string | number | Date);
   
   // Comparar apenas a data (ignorar horário)
   return itemDateObj.toDateString() === filterDateObj.toDateString();

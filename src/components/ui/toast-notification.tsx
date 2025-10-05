@@ -3,7 +3,7 @@
  * Sistema de notificações simples e funcional
  */
 
-import React, { useState, useEffect, createContext, useContext, useCallback, useMemo } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback, useMemo } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +24,8 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const useToast = () => {
+// eslint-disable-next-line react-refresh/only-export-components
+export const useToastNotification = () => {
   const context = useContext(ToastContext);
   if (!context) {
     // Retornar funções vazias ao invés de quebrar
@@ -44,6 +45,13 @@ const ToastComponent: React.FC<{
   const [isVisible, setIsVisible] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
+  const handleRemove = useCallback(() => {
+    setIsRemoving(true);
+    setTimeout(() => {
+      onRemove(toast.id);
+    }, 300); // Tempo da animação de saída
+  }, [onRemove, toast.id]);
+
   useEffect(() => {
     // Animar entrada
     const timer = setTimeout(() => setIsVisible(true), 10);
@@ -58,14 +66,7 @@ const ToastComponent: React.FC<{
       }, toast.duration);
       return () => clearTimeout(timer);
     }
-  }, [toast.duration]);
-
-  const handleRemove = () => {
-    setIsRemoving(true);
-    setTimeout(() => {
-      onRemove(toast.id);
-    }, 300); // Tempo da animação de saída
-  };
+  }, [toast.duration, handleRemove]);
 
   const getIcon = () => {
     switch (toast.type) {
@@ -181,8 +182,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 };
 
 // ✅ Hook utilitário para toasts comuns
+// eslint-disable-next-line react-refresh/only-export-components
 export const useToastHelpers = () => {
-  const { addToast } = useToast();
+  const { addToast } = useToastNotification();
 
   return useMemo(() => ({
     success: (title: string, description?: string) => 

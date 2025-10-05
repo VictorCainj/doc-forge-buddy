@@ -186,7 +186,18 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Endereço
               </p>
-              <p className="text-sm font-medium text-foreground truncate">
+              <p 
+                className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary hover:underline transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const endereco = contract.form_data.enderecoImovel || contract.form_data.endereco;
+                  if (endereco && endereco !== '[ENDEREÇO DO IMÓVEL]') {
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+                    window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                title="Clique para abrir no Google Maps"
+              >
                 {contract.form_data.enderecoImovel ||
                   contract.form_data.endereco ||
                   '[ENDEREÇO DO IMÓVEL]'}

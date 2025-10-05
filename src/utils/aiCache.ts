@@ -4,7 +4,7 @@ interface CacheEntry {
   id: string;
   input: string;
   output: string;
-  mode: 'normal' | 'intelligent' | 'analysis';
+  mode: 'normal' | 'intelligent' | 'analysis' | 'conversational';
   timestamp: Date;
   usageCount: number;
   lastUsed: Date;
@@ -97,7 +97,7 @@ class AICache {
   // Obter entrada do cache
   get(
     input: string,
-    mode: 'normal' | 'intelligent' | 'analysis'
+    mode: 'normal' | 'intelligent' | 'analysis' | 'conversational'
   ): CacheEntry | null {
     const key = this.generateKey(input, mode);
     const entry = this.cache.get(key);
@@ -160,7 +160,7 @@ class AICache {
   set(
     input: string,
     output: string,
-    mode: 'normal' | 'intelligent' | 'analysis',
+    mode: 'normal' | 'intelligent' | 'analysis' | 'conversational',
     confidence: number = 0.9,
     metadata?: Record<string, unknown>
   ): void {
@@ -353,7 +353,7 @@ export const aiCache = new AICache();
 // Função utilitária para usar o cache
 export const getCachedResponse = (
   input: string,
-  mode: 'normal' | 'intelligent' | 'analysis'
+  mode: 'normal' | 'intelligent' | 'analysis' | 'conversational'
 ): string | null => {
   const cached = aiCache.get(input, mode);
   return cached ? cached.output : null;
@@ -362,7 +362,7 @@ export const getCachedResponse = (
 export const setCachedResponse = (
   input: string,
   output: string,
-  mode: 'normal' | 'intelligent' | 'analysis',
+  mode: 'normal' | 'intelligent' | 'analysis' | 'conversational',
   confidence?: number,
   metadata?: Record<string, unknown>
 ): void => {

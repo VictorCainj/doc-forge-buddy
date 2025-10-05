@@ -2,6 +2,13 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   locatario: string;
   endereco: string;
   dataVistoria: string;
+  documentMode?: 'analise' | 'orcamento';
+  prestador?: {
+    nome: string;
+    cnpj?: string;
+    telefone?: string;
+    email?: string;
+  };
   apontamentos: Array<{
     ambiente: string;
     subtitulo: string;
@@ -18,6 +25,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       >;
     };
     observacao: string;
+    // Campos de orçamento
+    tipo?: 'material' | 'mao_de_obra' | 'ambos';
+    valor?: number;
+    quantidade?: number;
   }>;
 }) => {
   // Função para converter File para base64
@@ -92,12 +103,43 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       <!-- Cabeçalho Minimalista -->
       <div style="text-align: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;">
         <h1 style="color: #000000; font-size: 24px; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
-          ANÁLISE COMPARATIVA DE VISTORIA
+          ${dados.documentMode === 'orcamento' ? 'ORÇAMENTO DE REPAROS' : 'ANÁLISE COMPARATIVA DE VISTORIA'}
         </h1>
         <p style="color: #6B7280; font-size: 14px; margin: 12px 0 0 0; font-weight: 400;">
-          Relatório de Contestação de Vistoria de Saída
+          ${dados.documentMode === 'orcamento' ? 'Orçamento Detalhado para Reparos' : 'Relatório de Contestação de Vistoria de Saída'}
         </p>
       </div>
+      
+      ${dados.documentMode === 'orcamento' && dados.prestador && dados.prestador.nome ? `
+      <!-- Informações do Prestador -->
+      <div style="margin-bottom: 32px; padding: 20px 24px; background: #FFFFFF; border-radius: 8px; border: 1px solid #E5E7EB;">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: bold; color: #374151; text-transform: uppercase; border-bottom: 2px solid #374151; padding-bottom: 8px;">Dados do Prestador</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; font-size: 14px;">
+          <div>
+            <span style="color: #6B7280; font-weight: 600;">Nome/Razão Social:</span>
+            <span style="color: #000000; margin-left: 8px;">${dados.prestador.nome}</span>
+          </div>
+          ${dados.prestador.cnpj ? `
+          <div>
+            <span style="color: #6B7280; font-weight: 600;">CNPJ/CPF:</span>
+            <span style="color: #000000; margin-left: 8px;">${dados.prestador.cnpj}</span>
+          </div>
+          ` : ''}
+          ${dados.prestador.telefone ? `
+          <div>
+            <span style="color: #6B7280; font-weight: 600;">Telefone:</span>
+            <span style="color: #000000; margin-left: 8px;">${dados.prestador.telefone}</span>
+          </div>
+          ` : ''}
+          ${dados.prestador.email ? `
+          <div>
+            <span style="color: #6B7280; font-weight: 600;">E-mail:</span>
+            <span style="color: #000000; margin-left: 8px;">${dados.prestador.email}</span>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+      ` : ''}
 
       <!-- Informações do Contrato - Design Limpo -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding: 20px 24px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
@@ -110,6 +152,116 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         </div>
       </div>
   `;
+
+  // Adicionar resumo do orçamento no início (se modo orçamento)
+  if (dados.documentMode === 'orcamento') {
+    const itensComValor = dados.apontamentos.filter(ap => 
+      ap.valor !== undefined && ap.quantidade !== undefined && ap.valor > 0 && ap.quantidade > 0
+    );
+    
+    if (itensComValor.length > 0) {
+      const totalGeral = itensComValor.reduce((total, ap) => 
+        total + ((ap.valor || 0) * (ap.quantidade || 0)), 0
+      );
+      
+      const totalMaterial = itensComValor
+        .filter(ap => ap.tipo === 'material' || ap.tipo === 'ambos')
+        .reduce((total, ap) => total + ((ap.valor || 0) * (ap.quantidade || 0)), 0);
+      
+      const totalMaoDeObra = itensComValor
+        .filter(ap => ap.tipo === 'mao_de_obra' || ap.tipo === 'ambos')
+        .reduce((total, ap) => total + ((ap.valor || 0) * (ap.quantidade || 0)), 0);
+      
+      template += `
+        <!-- Resumo Total do Orçamento -->
+        <div style="margin-bottom: 40px; page-break-inside: avoid; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+          <!-- Cabeçalho do Resumo -->
+          <div style="background: #374151; color: #FFFFFF; padding: 16px 20px; text-align: center;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">
+              Resumo do Orçamento
+            </h2>
+          </div>
+          
+          <!-- Lista Minimalista de Itens -->
+          <div style="background: #FFFFFF; padding: 20px;">
+            ${itensComValor.map((ap, index) => `
+            <div style="margin-bottom: ${index < itensComValor.length - 1 ? '20px' : '0'}; padding-bottom: ${index < itensComValor.length - 1 ? '20px' : '0'}; border-bottom: ${index < itensComValor.length - 1 ? '1px solid #E5E7EB' : 'none'};">
+              <div style="margin-bottom: 12px;">
+                <strong style="color: #000000; font-size: 14px;">${index + 1}. ${ap.ambiente}${ap.subtitulo ? ` - ${ap.subtitulo}` : ''}</strong>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 13px;">
+                <div>
+                  <div style="color: #6B7280; font-size: 11px; margin-bottom: 4px;">Tipo de Serviço</div>
+                  <div style="color: #000000; font-weight: 500;">
+                    ${ap.tipo === 'material' ? 'Material' : ap.tipo === 'mao_de_obra' ? 'Mão de Obra' : 'Material e Mão de Obra'}
+                  </div>
+                </div>
+                <div>
+                  <div style="color: #6B7280; font-size: 11px; margin-bottom: 4px;">Valor Unitário</div>
+                  <div style="color: #000000; font-weight: 500; font-family: 'Courier New', monospace;">
+                    ${(ap.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </div>
+                <div>
+                  <div style="color: #6B7280; font-size: 11px; margin-bottom: 4px;">Quantidade</div>
+                  <div style="color: #000000; font-weight: 500;">${ap.quantidade || 0}</div>
+                </div>
+                <div>
+                  <div style="color: #6B7280; font-size: 11px; margin-bottom: 4px;">Subtotal</div>
+                  <div style="color: #000000; font-weight: 700; font-family: 'Courier New', monospace;">
+                    ${((ap.valor || 0) * (ap.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </div>
+              </div>
+            </div>
+            `).join('')}
+          </div>
+          
+          <!-- Totais Parciais -->
+          ${totalMaterial > 0 || totalMaoDeObra > 0 ? `
+          <div style="background: #F9FAFB; padding: 16px 20px; border-top: 1px solid #E5E7EB;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              ${totalMaterial > 0 ? `
+              <div style="text-align: center; padding: 12px; background: #FFFFFF; border-radius: 6px; border: 1px solid #E5E7EB;">
+                <div style="font-size: 11px; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">Total Material</div>
+                <div style="font-size: 16px; font-weight: 600; color: #374151; font-family: 'Courier New', monospace;">
+                  ${totalMaterial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              ` : ''}
+              ${totalMaoDeObra > 0 ? `
+              <div style="text-align: center; padding: 12px; background: #FFFFFF; border-radius: 6px; border: 1px solid #E5E7EB;">
+                <div style="font-size: 11px; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">Total Mão de Obra</div>
+                <div style="font-size: 16px; font-weight: 600; color: #374151; font-family: 'Courier New', monospace;">
+                  ${totalMaoDeObra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+          ` : ''}
+          
+          <!-- Total Geral -->
+          <div style="background: #374151; color: #FFFFFF; padding: 18px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 16px; font-weight: 600; text-transform: uppercase;">Valor Total do Orçamento</div>
+              <div style="font-size: 24px; font-weight: bold; font-family: 'Courier New', monospace;">
+                ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Observações Finais -->
+          <div style="background: #F9FAFB; padding: 14px 20px; border-top: 1px solid #E5E7EB;">
+            <p style="margin: 0; font-size: 11px; color: #6B7280; line-height: 1.6;">
+              <strong>Observações:</strong> Este orçamento tem validade de 30 dias a partir da data de emissão. 
+              Os valores estão sujeitos a alteração sem aviso prévio. Não inclui custos adicionais não especificados.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+  }
 
   // Processar todos os apontamentos
   for (let index = 0; index < dados.apontamentos.length; index++) {
@@ -146,7 +298,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         <!-- Descrição do Laudo de Entrada -->
         <div style="padding: 16px 20px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB;">
           <p style="margin: 0; color: #000000; font-size: 14px; line-height: 1.6; font-weight: 500;">
-            <strong>Descritivo:</strong> ${apontamento.descricao}
+            <strong>Apontamento realizado pelo vistoriador:</strong> ${apontamento.descricao}
           </p>
         </div>
         
@@ -227,12 +379,49 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
           apontamento.observacao
             ? `
         <div style="background: #374151; color: #FFFFFF; padding: 16px 20px; border-top: 1px solid #E5E7EB;">
-          <h4 style="color: #FFFFFF; margin: 0 0 12px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">OBSERVAÇÃO</h4>
+          <h4 style="color: #FFFFFF; margin: 0 0 12px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">CONSIDERAÇÕES DEPARTAMENTO DE RESCISÃO</h4>
           <p style="margin: 0; color: #FFFFFF; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">${apontamento.observacao}</p>
         </div>
         `
             : ''
         }
+        
+        ${dados.documentMode === 'orcamento' && apontamento.tipo && apontamento.valor !== undefined && apontamento.quantidade !== undefined ? `
+        <!-- Seção de Orçamento -->
+        <div style="background: #F9FAFB; padding: 20px; border-top: 1px solid #E5E7EB;">
+          <h4 style="margin: 0 0 16px 0; font-size: 15px; font-weight: bold; color: #374151; text-transform: uppercase; border-bottom: 2px solid #374151; padding-bottom: 8px;">Orçamento</h4>
+          <div style="background: #FFFFFF; border-radius: 6px; border: 1px solid #E5E7EB; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tbody>
+                <tr style="border-bottom: 1px solid #E5E7EB;">
+                  <td style="padding: 12px 16px; font-weight: 600; color: #6B7280; width: 30%;">Tipo de Serviço</td>
+                  <td style="padding: 12px 16px; color: #000000;">
+                    ${apontamento.tipo === 'material' ? 'Material' : 
+                      apontamento.tipo === 'mao_de_obra' ? 'Mão de Obra' : 
+                      'Material e Mão de Obra'}
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E5E7EB;">
+                  <td style="padding: 12px 16px; font-weight: 600; color: #6B7280;">Valor Unitário</td>
+                  <td style="padding: 12px 16px; color: #000000; font-family: 'Courier New', monospace;">
+                    ${apontamento.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #E5E7EB;">
+                  <td style="padding: 12px 16px; font-weight: 600; color: #6B7280;">Quantidade</td>
+                  <td style="padding: 12px 16px; color: #000000;">${apontamento.quantidade}</td>
+                </tr>
+                <tr style="background: #F3F4F6;">
+                  <td style="padding: 14px 16px; font-weight: 700; color: #374151; font-size: 15px;">Subtotal</td>
+                  <td style="padding: 14px 16px; color: #000000; font-weight: 700; font-size: 16px; font-family: 'Courier New', monospace;">
+                    ${(apontamento.valor * apontamento.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        ` : ''}
       </div>
     `;
     } catch {
@@ -251,6 +440,8 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       `;
     }
   }
+
+  // Resumo do orçamento já foi adicionado no início do documento
 
   template += `
     </div>
