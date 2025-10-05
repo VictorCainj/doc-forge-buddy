@@ -36,7 +36,7 @@ export function useTermoLocatario(contractData: ContractData) {
   const [pendingFormData, setPendingFormData] = useState<Record<string, string> | null>(null);
 
   // Validar campos de contato
-  const validateContactFields = useCallback((data: Record<string, string>) => {
+  const validateContactFields = useCallback((_data: Record<string, string>) => {
     const celular = contractData.celularLocatario || contactData.celularLocatario;
     const email = contractData.emailLocatario || contactData.emailLocatario;
 

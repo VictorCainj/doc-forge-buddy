@@ -72,7 +72,7 @@ export const useChatHistory = (): UseChatHistoryReturn => {
       const newJson = JSON.stringify(sessionsToSave);
       return prevJson !== newJson ? sessionsToSave : prev;
     });
-  }, []);
+  }, [setSessions]);
 
   // Criar nova sessão
   const createNewSession = useCallback(

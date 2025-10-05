@@ -153,37 +153,37 @@ const ChatMessage = memo(
                   remarkPlugins={[remarkGfm]}
                   components={{
                     // Customizar estilos dos elementos Markdown
-                    h1: ({ node, ...props }) => (
+                    h1: ({ ...props }) => (
                       <h1 className="text-xl font-bold text-white mb-3 mt-4" {...props} />
                     ),
-                    h2: ({ node, ...props }) => (
+                    h2: ({ ...props }) => (
                       <h2 className="text-lg font-bold text-white mb-2 mt-3" {...props} />
                     ),
-                    h3: ({ node, ...props }) => (
+                    h3: ({ ...props }) => (
                       <h3 className="text-base font-bold text-white mb-2 mt-3" {...props} />
                     ),
-                    h4: ({ node, ...props }) => (
+                    h4: ({ ...props }) => (
                       <h4 className="text-sm font-bold text-white mb-2 mt-2" {...props} />
                     ),
-                    p: ({ node, ...props }) => (
+                    p: ({ ...props }) => (
                       <p className="text-sm leading-relaxed mb-3 text-white" {...props} />
                     ),
-                    strong: ({ node, ...props }) => (
+                    strong: ({ ...props }) => (
                       <strong className="font-bold text-blue-200" {...props} />
                     ),
-                    em: ({ node, ...props }) => (
+                    em: ({ ...props }) => (
                       <em className="italic text-blue-100" {...props} />
                     ),
-                    ul: ({ node, ...props }) => (
+                    ul: ({ ...props }) => (
                       <ul className="list-disc ml-4 mb-3 space-y-1.5" {...props} />
                     ),
-                    ol: ({ node, ...props }) => (
+                    ol: ({ ...props }) => (
                       <ol className="list-decimal ml-4 mb-3 space-y-1.5" {...props} />
                     ),
-                    li: ({ node, ...props }) => (
+                    li: ({ ...props }) => (
                       <li className="text-sm text-white ml-1" {...props} />
                     ),
-                    code: ({ node, inline, ...props }: any) =>
+                    code: ({ inline, ...props }: React.HTMLAttributes<HTMLElement> & { inline?: boolean }) =>
                       inline ? (
                         <code
                           className="bg-black/30 px-1.5 py-0.5 rounded text-blue-300 text-xs font-mono"
@@ -195,16 +195,16 @@ const ChatMessage = memo(
                           {...props}
                         />
                       ),
-                    pre: ({ node, ...props }) => (
+                    pre: ({ ...props }) => (
                       <pre className="bg-black/30 p-3 rounded-lg overflow-x-auto mb-2" {...props} />
                     ),
-                    blockquote: ({ node, ...props }) => (
+                    blockquote: ({ ...props }) => (
                       <blockquote
                         className="border-l-4 border-blue-400 pl-4 italic text-blue-100 my-2"
                         {...props}
                       />
                     ),
-                    a: ({ node, ...props }) => (
+                    a: ({ ...props }) => (
                       <a
                         className="text-blue-300 hover:text-blue-200 underline"
                         target="_blank"
@@ -212,7 +212,7 @@ const ChatMessage = memo(
                         {...props}
                       />
                     ),
-                    hr: ({ node, ...props }) => (
+                    hr: ({ ...props }) => (
                       <hr className="border-white/20 my-4" {...props} />
                     ),
                   }}

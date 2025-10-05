@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { Contract } from '@/hooks/useContractAnalysis';
 import { CompleteContractData } from '@/hooks/useCompleteContractData';
+import { log } from '@/utils/logger';
 
 const openai = new OpenAI({
   apiKey:
@@ -301,7 +302,7 @@ export const analyzeImageWithAI = async (imageBase64: string, userPrompt?: strin
 
     return analysis.trim();
   } catch (error) {
-    console.error('Erro ao analisar imagem:', error);
+    log.error('Erro ao analisar imagem:', error);
     throw new Error('Erro ao analisar a imagem. Tente novamente.');
   }
 };

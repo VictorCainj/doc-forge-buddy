@@ -6,7 +6,6 @@ import {
   Building2,
   SearchCheck,
   FolderArchive,
-  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';

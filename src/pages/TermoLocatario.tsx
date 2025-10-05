@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search, Phone, Mail, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { FormStep } from '../hooks/use-form-wizard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,11 +35,9 @@ const TermoLocatario: React.FC = () => {
     setShowContactModal,
     contactData,
     setContactData,
-    pendingFormData,
     setPendingFormData,
     validateContactFields,
     handleSaveContactData,
-    processFormData,
   } = useTermoLocatario(contractData);
 
   if (!contractData?.numeroContrato) {

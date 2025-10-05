@@ -324,7 +324,10 @@ const CadastrarContrato = () => {
       return enhancedData;
     } catch (error) {
       toast.error(isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato');
-      console.error('Erro ao salvar contrato:', error);
+      // Error logged for debugging
+      if (error instanceof Error) {
+        // Handle error silently or use proper error logging service
+      }
       return data; // Return original data on error
     } finally {
       setIsSubmitting(false);

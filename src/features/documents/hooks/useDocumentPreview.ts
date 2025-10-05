@@ -28,7 +28,6 @@ interface UseDocumentPreviewReturn {
 export const useDocumentPreview = ({
   title,
   template,
-  getTemplate,
   termId,
   isEditing = false,
 }: UseDocumentPreviewProps): UseDocumentPreviewReturn => {

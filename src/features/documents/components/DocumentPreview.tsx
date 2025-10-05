@@ -26,7 +26,6 @@ interface DocumentPreviewProps {
  * Componente de preview do documento
  */
 export const DocumentPreview: React.FC<DocumentPreviewProps> = React.memo(({
-  title,
   documentContent,
   fontSize,
   saving,

@@ -8,7 +8,6 @@ import {
   Menu,
   Plus,
   Save,
-  History,
   Images,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -65,9 +64,9 @@ const Chat = () => {
   // Extrair imagens das mensagens
   const chatImages = useMemo(() => {
     const images = messages
-      .filter(msg => (msg as any).imageUrl || (msg as any).imageData)
+      .filter(msg => msg.imageUrl || msg.imageData)
       .map(msg => ({
-        url: (msg as any).imageUrl || (msg as any).imageData || '',
+        url: msg.imageUrl || msg.imageData || '',
         timestamp: msg.timestamp,
         messageId: msg.id,
       }));

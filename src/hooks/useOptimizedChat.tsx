@@ -32,7 +32,8 @@ interface ChatMode {
   description: string;
 }
 
-const CHAT_MODES: ChatMode[] = [
+// Chat modes configuration (exported for potential future use)
+export const CHAT_MODES: ChatMode[] = [
   {
     type: 'normal',
     title: 'Normal',
@@ -368,7 +369,7 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
             variant: 'destructive',
           });
         }
-      } catch (error) {
+      } catch {
         toast({
           title: 'Erro ao carregar imagem',
           description: 'Não foi possível fazer upload da imagem.',

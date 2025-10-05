@@ -20,7 +20,6 @@ const ChatInput = memo(
     value,
     onChange,
     onSubmit,
-    onUploadImage,
     onUploadMultipleImages,
     onGenerateImage,
     isLoading,
@@ -115,7 +114,6 @@ const ChatInput = memo(
         if (!value.trim()) return;
 
         // Intelligent detection for image generation
-        const lowerValue = value.toLowerCase();
         
         // Comprehensive and natural language detection for image generation
         const imageGenerationPatterns = [

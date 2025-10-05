@@ -24,15 +24,6 @@ interface ChatSession {
   metadata?: Record<string, unknown>;
 }
 
-interface ChatImage {
-  id: string;
-  message_id: string;
-  image_url: string;
-  image_data?: string;
-  file_name?: string;
-  file_size?: number;
-  file_type?: string;
-}
 
 export const useChatPersistence = () => {
   const [isLoading, setIsLoading] = useState(false);

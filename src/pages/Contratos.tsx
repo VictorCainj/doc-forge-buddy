@@ -229,7 +229,7 @@ const Contratos = () => {
 
   // Função movida para: @/features/contracts/utils/contractConjunctions
   // Mantida aqui apenas para referência - REMOVER após migração completa
-  const applyConjunctions_DEPRECATED = (formData: Record<string, string>) => {
+  const _applyConjunctions_DEPRECATED = (formData: Record<string, string>) => {
     const enhancedData = { ...formData };
 
     // Obter qualificação completa dos locatários (texto livre)
@@ -832,7 +832,7 @@ const Contratos = () => {
 
   // Função movida para: @/features/contracts/utils/templateProcessor
   // Mantida aqui apenas para referência - REMOVER após migração completa
-  const replaceTemplateVariables_DEPRECATED = (
+  const _replaceTemplateVariables_DEPRECATED = (
     template: string,
     data: Record<string, string>
   ) => {

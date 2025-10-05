@@ -32,7 +32,6 @@ const ApontamentoForm = memo(({
   onCancelEdit,
   onRemoveFotoInicial,
   onRemoveFotoFinal,
-  onPaste,
 }: ApontamentoFormProps) => {
   const handleFileUpload = (files: FileList | null, tipo: 'inicial' | 'final') => {
     if (!files) return;

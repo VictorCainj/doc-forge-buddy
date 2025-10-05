@@ -25,16 +25,16 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
   const [loading, setLoading] = useState(true);
   const { loadSessions, deleteSession } = useChatPersistence();
 
-  const fetchSessions = async () => {
-    setLoading(true);
-    const loadedSessions = await loadSessions();
-    setSessions(loadedSessions);
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const fetchSessions = async () => {
+      setLoading(true);
+      const loadedSessions = await loadSessions();
+      setSessions(loadedSessions);
+      setLoading(false);
+    };
+    
     fetchSessions();
-  }, []);
+  }, [loadSessions]);
 
   const handleDelete = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
