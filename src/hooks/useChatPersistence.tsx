@@ -8,7 +8,7 @@ interface ChatMessage {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  imageData?: string;
+  imageData?: string | null;
   metadata?: {
     model?: string;
     tokens?: number;
@@ -19,8 +19,8 @@ interface ChatSession {
   id: string;
   title: string;
   mode: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -163,7 +163,7 @@ export const useChatPersistence = () => {
           content: msg.content,
           role: msg.role as 'user' | 'assistant',
           timestamp: new Date(msg.created_at),
-          imageData: firstImage?.image_data,
+          imageData: firstImage?.image_data || null,
           metadata: msg.metadata as { model?: string; tokens?: number }
         };
       });

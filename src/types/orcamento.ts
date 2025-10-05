@@ -1,6 +1,6 @@
 import { File } from 'buffer';
 
-export type BudgetItemType = 'material' | 'mao_de_obra' | 'ambos';
+export type BudgetItemType = 'material' | 'servico';
 
 export interface BudgetItem {
   id: string;

@@ -47,7 +47,7 @@ const initialCurrentApontamento = {
   vistoriaInicial: { fotos: [], descritivoLaudo: '' },
   vistoriaFinal: { fotos: [] },
   observacao: '',
-  tipo: 'material' as BudgetItemType,
+  tipo: 'material' as const,
   valor: 0,
   quantidade: 0,
 };

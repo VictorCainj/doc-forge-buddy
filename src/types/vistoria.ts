@@ -19,7 +19,7 @@ export interface ApontamentoVistoria {
     fotos: VistoriaFoto[];
   };
   observacao: string;
-  tipo?: 'material' | 'mao_de_obra';
+  tipo?: 'material' | 'servico';
   valor?: number;
   quantidade?: number;
   unidade?: string;

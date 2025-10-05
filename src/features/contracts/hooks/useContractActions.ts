@@ -33,12 +33,12 @@ export function useContractActions() {
   }, []);
   
   /**
-   * Duplicar contrato
+   * Duplicar contrato (usando saved_terms)
    */
   const duplicateContract = useCallback(async (contract: Contract): Promise<Contract | null> => {
     try {
       const { data, error } = await supabase
-        .from('contracts')
+        .from('saved_terms')
         .insert({
           title: `${contract.title} (Cópia)`,
           form_data: {
@@ -54,7 +54,7 @@ export function useContractActions() {
       if (error) throw error;
       
       toast.success('Contrato duplicado com sucesso');
-      return data as Contract;
+      return data as unknown as Contract;
     } catch (error) {
       console.error('Erro ao duplicar contrato:', error);
       toast.error('Erro ao duplicar contrato');
@@ -124,27 +124,14 @@ export function useContractActions() {
   }, []);
   
   /**
-   * Atualizar status de múltiplos contratos
+   * Atualizar status de múltiplos contratos (funcionalidade removida - tabela contracts não tem campo status)
    */
   const bulkUpdateStatus = useCallback(async (
     ids: string[], 
     status: string
   ): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('contracts')
-        .update({ status })
-        .in('id', ids);
-        
-      if (error) throw error;
-      
-      toast.success(`Status atualizado para ${ids.length} contratos`);
-      return true;
-    } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status em lote');
-      return false;
-    }
+    toast.error('Funcionalidade de status não disponível');
+    return false;
   }, []);
   
   return {

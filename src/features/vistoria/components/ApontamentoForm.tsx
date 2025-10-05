@@ -107,7 +107,7 @@ const ApontamentoForm = memo(({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="material">Material</SelectItem>
-                  <SelectItem value="mao_de_obra">Mão de Obra</SelectItem>
+                  <SelectItem value="servico">Serviço</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -166,13 +166,16 @@ const ApontamentoForm = memo(({
           
           {currentApontamento.vistoriaInicial?.fotos && currentApontamento.vistoriaInicial.fotos.length > 0 && (
             <div className="mt-2 grid grid-cols-3 gap-2">
-              {currentApontamento.vistoriaInicial.fotos.map((foto, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={foto.isFromDatabase ? foto.url : URL.createObjectURL(foto)}
-                    alt={`Inicial ${index + 1}`}
-                    className="w-full h-24 object-cover rounded"
-                  />
+              {currentApontamento.vistoriaInicial.fotos.map((foto, index) => {
+                const isFile = foto instanceof File;
+                const url = isFile ? URL.createObjectURL(foto) : (foto as any).url;
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Inicial ${index + 1}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
                   <Button
                     type="button"
                     variant="destructive"
@@ -183,7 +186,8 @@ const ApontamentoForm = memo(({
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -212,13 +216,16 @@ const ApontamentoForm = memo(({
           
           {currentApontamento.vistoriaFinal?.fotos && currentApontamento.vistoriaFinal.fotos.length > 0 && (
             <div className="mt-2 grid grid-cols-3 gap-2">
-              {currentApontamento.vistoriaFinal.fotos.map((foto, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={foto.isFromDatabase ? foto.url : URL.createObjectURL(foto)}
-                    alt={`Final ${index + 1}`}
-                    className="w-full h-24 object-cover rounded"
-                  />
+              {currentApontamento.vistoriaFinal.fotos.map((foto, index) => {
+                const isFile = foto instanceof File;
+                const url = isFile ? URL.createObjectURL(foto) : (foto as any).url;
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Final ${index + 1}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
                   <Button
                     type="button"
                     variant="destructive"
@@ -229,7 +236,8 @@ const ApontamentoForm = memo(({
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
