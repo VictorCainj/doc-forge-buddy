@@ -4,3 +4,4 @@ export { ContractFilters } from './ContractFilters';
 export { ContractStats } from './ContractStats';
 export { ContractList } from './ContractList';
 export { ContractModals } from './ContractModals';
+export { ContractWizardModal } from './ContractWizardModal';

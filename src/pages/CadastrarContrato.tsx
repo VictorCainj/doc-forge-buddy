@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import DocumentFormWizard from '@/components/DocumentFormWizard';
+import { ContractWizardModal } from '@/features/contracts/components';
 import { FormStep } from '@/hooks/use-form-wizard';
 import {
   Users,
@@ -12,7 +12,6 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
 
 const CadastrarContrato = () => {
   const navigate = useNavigate();
@@ -270,13 +269,11 @@ const CadastrarContrato = () => {
     },
   ];
 
-  // Função para lidar com mudanças no formulário (memoizada para evitar re-renders)
-  const handleFormChange = useCallback((data: Record<string, string>) => {
-    setFormData(data);
-  }, []);
+  // Estado do modal
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
-  const handleGenerate = async (data: Record<string, string>): Promise<Record<string, string>> => {
-    if (isSubmitting) return data;
+  const handleSubmit = async (data: Record<string, string>): Promise<void> => {
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
 
@@ -320,22 +317,23 @@ const CadastrarContrato = () => {
         toast.success('Contrato cadastrado com sucesso!');
       }
 
-      navigate('/contratos');
-      return enhancedData;
+      setIsModalOpen(false);
+      setTimeout(() => navigate('/contratos'), 300);
     } catch (error) {
       toast.error(isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato');
-      // Error logged for debugging
-      if (error instanceof Error) {
-        // Handle error silently or use proper error logging service
-      }
-      return data; // Return original data on error
+      console.error('Erro ao salvar contrato:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Template vazio para o cadastro (não gera documento)
-  const _getTemplate = () => '';
+  // Manipula o fechamento do modal
+  const handleModalClose = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+      setTimeout(() => navigate('/contratos'), 300);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
@@ -347,32 +345,21 @@ const CadastrarContrato = () => {
         <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-6 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          {/* Form Wizard */}
-          <Card className="glass-card">
-            <CardContent className="p-0">
-              <DocumentFormWizard
-                title=""
-                description=""
-                steps={steps}
-                template=""
-                onGenerate={handleGenerate}
-                onFormDataChange={handleFormChange}
-                isSubmitting={isSubmitting}
-                submitButtonText={
-                  isSubmitting 
-                    ? (isEditMode ? 'Atualizando...' : 'Cadastrando...') 
-                    : (isEditMode ? 'Atualizar Contrato' : 'Cadastrar Contrato')
-                }
-                externalFormData={formData}
-                hideSaveButton={true}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Modal Wizard Tecnológico */}
+      <ContractWizardModal
+        open={isModalOpen}
+        onOpenChange={handleModalClose}
+        steps={steps}
+        initialData={formData}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        submitButtonText={
+          isEditMode ? 'Atualizar Contrato' : 'Cadastrar Contrato'
+        }
+        title={
+          isEditMode ? 'Editar Contrato' : 'Novo Contrato'
+        }
+      />
     </div>
   );
 };

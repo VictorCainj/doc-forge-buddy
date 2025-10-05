@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import DocumentFormWizard from '@/components/DocumentFormWizard';
+import React, { useState, useEffect } from 'react';
+import { ContractWizardModal } from '@/features/contracts/components';
 import { FormStep } from '@/hooks/use-form-wizard';
 import {
   Users,
@@ -12,7 +12,6 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
 import { ContractFormData } from '@/types/contract';
 
 const EditarContrato = () => {
@@ -22,6 +21,7 @@ const EditarContrato = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // console.log('EditarContrato mounted with params:', params);
   // console.log('ContractId extracted:', contractId);
@@ -64,6 +64,7 @@ const EditarContrato = () => {
         // console.log('nomeLocatario:', mappedData.nomeLocatario);
 
         setFormData(mappedData);
+        setIsModalOpen(true);
       } catch {
         // console.error('Erro ao carregar contrato:', error);
         toast.error('Erro ao carregar dados do contrato');
@@ -299,48 +300,8 @@ const EditarContrato = () => {
     },
   ];
 
-  // Função para lidar com mudanças no formulário (memoizada para evitar re-renders)
-  const handleFormChange = useCallback((data: Record<string, string>) => {
-    // console.log('Form data changed - BEFORE:', formData.nomeProprietario, formData.nomeLocatario);
-    // console.log('Form data changed - NEW:', data.nomeProprietario, data.nomeLocatario);
-
-    // Lógica especial: sempre preservar dados válidos sobre dados vazios
-    const shouldUpdate = () => {
-      // Se os dados atuais estão vazios e os novos têm valores, atualizar
-      if ((!formData.nomeProprietario || formData.nomeProprietario.trim() === '') &&
-          (data.nomeProprietario && data.nomeProprietario.trim() !== '')) {
-        return true;
-      }
-
-      // Se os dados atuais têm valores e os novos estão vazios, NÃO atualizar
-      if ((formData.nomeProprietario && formData.nomeProprietario.trim() !== '') &&
-          (!data.nomeProprietario || data.nomeProprietario.trim() === '')) {
-        // console.log('Blocking update: trying to replace valid names with empty values');
-        return false;
-      }
-
-      // Se os dados atuais têm valores e os novos são diferentes, atualizar
-      if (formData.nomeProprietario && data.nomeProprietario &&
-          formData.nomeProprietario !== data.nomeProprietario) {
-        return true;
-      }
-
-      // Se os dados atuais estão vazios e os novos também estão vazios, não atualizar
-      return false;
-    };
-
-    if (shouldUpdate()) {
-      // console.log('Updating formData with new values');
-      setFormData(data);
-    } else {
-      // console.log('Blocking unnecessary update');
-    }
-  }, [formData]);
-
-  const handleUpdate = async (data: Record<string, string>): Promise<Record<string, string>> => {
-    if (isSubmitting || !contractId) {
-      throw new Error('Submissão em andamento ou ID inválido');
-    }
+  const handleSubmit = async (data: Record<string, string>): Promise<void> => {
+    if (isSubmitting || !contractId) return;
 
     setIsSubmitting(true);
 
@@ -368,54 +329,56 @@ const EditarContrato = () => {
       if (error) throw error;
 
       toast.success('Contrato atualizado com sucesso!');
-      navigate('/contratos');
-      return enhancedData;
+      setIsModalOpen(false);
+      setTimeout(() => navigate('/contratos'), 300);
     } catch (error) {
       toast.error('Erro ao atualizar contrato');
-      // console.error('Erro ao atualizar contrato:', error);
-      throw error;
+      console.error('Erro ao atualizar contrato:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Manipula o fechamento do modal
+  const handleModalClose = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+      setTimeout(() => navigate('/contratos'), 300);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-700">Carregando dados do contrato...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-white">Carregando dados do contrato...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
-      {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Form Wizard */}
-          <Card className="glass-card bg-white/80 backdrop-blur-sm shadow-lg">
-            <CardContent className="p-0">
-              <DocumentFormWizard
-                title=""
-                description=""
-                steps={steps}
-                template=""
-                onGenerate={handleUpdate}
-                onFormDataChange={handleFormChange}
-                isSubmitting={isSubmitting}
-                submitButtonText={
-                  isSubmitting ? 'Atualizando...' : 'Atualizar Contrato'
-                }
-                externalFormData={formData}
-                hideSaveButton={true}
-              />
-            </CardContent>
-          </Card>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
       </div>
+
+      {/* Modal Wizard Profissional */}
+      <ContractWizardModal
+        open={isModalOpen}
+        onOpenChange={handleModalClose}
+        steps={steps}
+        initialData={formData}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        submitButtonText="Atualizar Contrato"
+        title="Editar Contrato"
+      />
     </div>
   );
 };

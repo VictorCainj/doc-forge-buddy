@@ -357,4 +357,80 @@ All colors MUST be HSL.
     stroke-dashoffset: 251.2;
     transition: stroke-dashoffset 0.5s ease-in-out;
   }
+
+  /* Custom scrollbar for modal */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgb(37, 99, 235), rgb(59, 130, 246));
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgb(29, 78, 216), rgb(37, 99, 235));
+  }
+
+  /* Grid pattern background */
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* PersonManager dentro do modal - tema azul profissional */
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card .person-item {
+    background: rgba(30, 41, 59, 0.5) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card .person-item:hover {
+    background: rgba(51, 65, 85, 0.5) !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card .person-add {
+    background: rgba(30, 41, 59, 0.3) !important;
+    border: 2px dashed rgba(59, 130, 246, 0.3) !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card label {
+    color: rgb(203, 213, 225) !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card input {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: white !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card input::placeholder {
+    color: rgb(148, 163, 184) !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card input:focus {
+    border-color: rgb(59, 130, 246) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    outline: none !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card .card-title {
+    color: white !important;
+  }
+
+  [class*="bg-gradient-to-br from-slate-900"] .person-manager-card .text-muted-foreground {
+    color: rgb(148, 163, 184) !important;
+  }
 }

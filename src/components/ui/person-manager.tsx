@@ -56,9 +56,9 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
   };
 
   return (
-    <Card>
+    <Card className="person-manager-card">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 card-title">
           <User className="h-5 w-5" />
           {title}
         </CardTitle>
@@ -68,7 +68,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
         {people.map((person, index) => (
           <div
             key={person.id}
-            className="flex items-center gap-2 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
+            className="person-item flex items-center gap-2 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
           >
             <div className="flex-1">
               <Label
@@ -99,7 +99,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
 
         {/* Campo para adicionar nova pessoa */}
         {people.length < maxPeople && (
-          <div className="flex items-end gap-2 p-3 border-2 border-dashed border-border rounded-lg bg-card/50">
+          <div className="person-add flex items-end gap-2 p-3 border-2 border-dashed border-border rounded-lg bg-card/50">
             <div className="flex-1">
               <Label htmlFor="new-person" className="text-sm font-medium">
                 Adicionar {title}:
@@ -118,7 +118,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
               onClick={addPerson}
               disabled={!newPersonName.trim()}
               size="sm"
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" />
             </Button>
