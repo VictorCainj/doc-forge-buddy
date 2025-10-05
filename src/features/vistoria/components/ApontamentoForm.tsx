@@ -79,17 +79,33 @@ const ApontamentoForm = memo(({
           />
         </div>
 
-        {/* Descrição */}
+        {/* Descrição do Vistoriador */}
         <div>
-          <Label htmlFor="descricao">Descrição *</Label>
+          <Label htmlFor="descricao">
+            {documentMode === 'orcamento' ? 'Descrição do Vistoriador *' : 'Descrição *'}
+          </Label>
           <Textarea
             id="descricao"
-            placeholder="Descreva o apontamento..."
+            placeholder="Apontamento realizado pelo vistoriador..."
             value={currentApontamento.descricao || ''}
             onChange={(e) => onCurrentChange({ ...currentApontamento, descricao: e.target.value })}
             rows={3}
           />
         </div>
+
+        {/* Descrição do Serviço (somente modo orçamento) */}
+        {documentMode === 'orcamento' && (
+          <div>
+            <Label htmlFor="descricaoServico">Descrição do Serviço *</Label>
+            <Textarea
+              id="descricaoServico"
+              placeholder="Descrição detalhada do serviço a ser executado..."
+              value={currentApontamento.descricaoServico || ''}
+              onChange={(e) => onCurrentChange({ ...currentApontamento, descricaoServico: e.target.value })}
+              rows={3}
+            />
+          </div>
+        )}
 
         {/* Campos de Orçamento */}
         {documentMode === 'orcamento' && (

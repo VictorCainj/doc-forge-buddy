@@ -82,6 +82,7 @@ const AnaliseVistoria = () => {
     ambiente: '',
     subtitulo: '',
     descricao: '',
+    descricaoServico: '',
     vistoriaInicial: { fotos: [], descritivoLaudo: '' },
     vistoriaFinal: { fotos: [] },
     observacao: '',
@@ -862,6 +863,7 @@ const AnaliseVistoria = () => {
       ambiente: currentApontamento.ambiente || '',
       subtitulo: currentApontamento.subtitulo || '',
       descricao: currentApontamento.descricao || '',
+      descricaoServico: currentApontamento.descricaoServico || '',
       vistoriaInicial: {
         fotos: currentApontamento.vistoriaInicial?.fotos || [],
       },
@@ -880,6 +882,7 @@ const AnaliseVistoria = () => {
       ambiente: '',
       subtitulo: '',
       descricao: '',
+      descricaoServico: '',
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
@@ -1239,6 +1242,7 @@ const AnaliseVistoria = () => {
       ambiente: '',
       subtitulo: '',
       descricao: '',
+      descricaoServico: '',
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
@@ -1258,6 +1262,7 @@ const AnaliseVistoria = () => {
       ambiente: apontamento.ambiente,
       subtitulo: apontamento.subtitulo,
       descricao: apontamento.descricao,
+      descricaoServico: apontamento.descricaoServico || '',
       vistoriaInicial: {
         fotos: apontamento.vistoriaInicial.fotos,
         descritivoLaudo: apontamento.vistoriaInicial.descritivoLaudo || '',
@@ -1285,6 +1290,7 @@ const AnaliseVistoria = () => {
             ambiente: currentApontamento.ambiente || '',
             subtitulo: currentApontamento.subtitulo || '',
             descricao: currentApontamento.descricao || '',
+            descricaoServico: currentApontamento.descricaoServico || '',
             vistoriaInicial: {
               fotos: currentApontamento.vistoriaInicial?.fotos || [],
               descritivoLaudo:
@@ -1310,6 +1316,7 @@ const AnaliseVistoria = () => {
       ambiente: '',
       subtitulo: '',
       descricao: '',
+      descricaoServico: '',
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
@@ -1330,6 +1337,7 @@ const AnaliseVistoria = () => {
       ambiente: '',
       subtitulo: '',
       descricao: '',
+      descricaoServico: '',
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
@@ -1737,11 +1745,11 @@ const AnaliseVistoria = () => {
                   className="text-sm font-medium flex items-center space-x-2"
                 >
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span>Descrição *</span>
+                  <span>{documentMode === 'orcamento' ? 'Descrição do Vistoriador *' : 'Descrição *'}</span>
                 </Label>
                 <Textarea
                   id="descricao"
-                  placeholder="Ex: Está com lascado nas portas"
+                  placeholder={documentMode === 'orcamento' ? 'Apontamento realizado pelo vistoriador...' : 'Ex: Está com lascado nas portas'}
                   value={currentApontamento.descricao || ''}
                   onChange={(e) =>
                     setCurrentApontamento((prev) => ({
@@ -1753,6 +1761,32 @@ const AnaliseVistoria = () => {
                   className="text-sm"
                 />
               </div>
+
+              {/* Descrição do Serviço - Apenas no modo orçamento */}
+              {documentMode === 'orcamento' && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="descricaoServico"
+                    className="text-sm font-medium flex items-center space-x-2"
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span>Descrição do Serviço *</span>
+                  </Label>
+                  <Textarea
+                    id="descricaoServico"
+                    placeholder="Descrição detalhada do serviço a ser executado..."
+                    value={currentApontamento.descricaoServico || ''}
+                    onChange={(e) =>
+                      setCurrentApontamento((prev) => ({
+                        ...prev,
+                        descricaoServico: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                    className="text-sm"
+                  />
+                </div>
+              )}
 
               {/* Campos de Orçamento - Apenas no modo orçamento */}
               {documentMode === 'orcamento' && (

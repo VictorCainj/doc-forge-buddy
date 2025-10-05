@@ -11,6 +11,7 @@ export interface ApontamentoVistoria {
   ambiente: string;
   subtitulo: string;
   descricao: string;
+  descricaoServico?: string; // Descrição específica para orçamento
   vistoriaInicial: {
     fotos: VistoriaFoto[];
     descritivoLaudo?: string;
