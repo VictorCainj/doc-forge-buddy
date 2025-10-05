@@ -56,11 +56,11 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
   if (sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
-        <MessageSquare className="h-12 w-12 text-blue-400/50 mb-4" />
-        <p className="text-sm text-blue-200">
+        <MessageSquare className="h-12 w-12 text-blue-300/50 mb-4" />
+        <p className="text-sm text-white">
           Nenhuma conversa salva ainda
         </p>
-        <p className="text-xs text-blue-300/70 mt-2">
+        <p className="text-xs text-blue-200/70 mt-2">
           Suas conversas salvas aparecerão aqui
         </p>
       </div>

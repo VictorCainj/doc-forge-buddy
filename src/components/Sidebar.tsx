@@ -6,6 +6,7 @@ import {
   Building2,
   SearchCheck,
   FolderArchive,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -61,6 +62,13 @@ const Sidebar = () => {
       icon: FolderArchive,
       path: '/vistoria-analises',
       active: location.pathname === '/vistoria-analises',
+      badge: null,
+    },
+    {
+      name: 'Prestadores',
+      icon: Users,
+      path: '/prestadores',
+      active: location.pathname === '/prestadores',
       badge: null,
     },
     {

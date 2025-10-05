@@ -93,7 +93,7 @@ const Chat = () => {
         <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
         <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
         <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/30 rounded-lg -rotate-45"></div>
       </div>
 
       {/* Sidebar - Chat History */}
@@ -104,9 +104,9 @@ const Chat = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="w-72 bg-slate-900/50 backdrop-blur-xl border-r border-white/10 flex flex-col relative z-20"
+            className="w-72 bg-slate-900/95 backdrop-blur-xl border-r border-blue-400/30 flex flex-col relative z-20 shadow-lg"
           >
-            <div className="p-4 border-b border-white/10">
+            <div className="p-4 border-b border-blue-400/30">
               <Button
                 onClick={() => {
                   clearChat();
@@ -134,7 +134,7 @@ const Chat = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative z-10">
         {/* Header */}
-        <div className="bg-slate-900/30 backdrop-blur-xl border-b border-white/10">
+        <div className="bg-slate-900/80 backdrop-blur-xl border-b border-blue-400/30 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
@@ -167,7 +167,7 @@ const Chat = () => {
                   }
                 }}
                 disabled={chatImages.length === 0}
-                className="text-white hover:bg-white/10"
+                className="text-slate-700 hover:bg-blue-100/50"
                 title={`Ver ${chatImages.length} imagem(ns)`}
               >
                 <Images className="h-4 w-4 mr-2" />
@@ -179,7 +179,7 @@ const Chat = () => {
                 size="sm"
                 onClick={saveCurrentSession}
                 disabled={messages.length === 0}
-                className="text-white hover:bg-white/10"
+                className="text-slate-700 hover:bg-blue-100/50"
                 title="Salvar conversa"
               >
                 <Save className="h-4 w-4 mr-2" />
@@ -190,7 +190,7 @@ const Chat = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/contratos')}
-                className="text-white hover:bg-white/10"
+                className="text-slate-700 hover:bg-blue-100/50"
               >
                 Voltar
               </Button>
@@ -221,7 +221,7 @@ const Chat = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setInputText('Me ajude com uma análise detalhada')}
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-left hover:bg-white/20 transition-all"
+                    className="bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 text-left hover:bg-white/20 hover:border-blue-400/60 transition-all shadow-sm"
                   >
                     <MessageSquare className="h-5 w-5 text-blue-400 mb-2" />
                     <p className="text-white font-medium mb-1">Conversação Inteligente</p>
@@ -231,9 +231,9 @@ const Chat = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setInputText('Gere uma imagem de um contrato moderno')}
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-left hover:bg-white/20 transition-all"
+                    className="bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 text-left hover:bg-white/20 hover:border-blue-400/60 transition-all shadow-sm"
                   >
-                    <ImageIcon className="h-5 w-5 text-indigo-400 mb-2" />
+                    <ImageIcon className="h-5 w-5 text-blue-300 mb-2" />
                     <p className="text-white font-medium mb-1">Geração de Imagens</p>
                     <p className="text-sm text-blue-200">Crie visualizações e diagramas</p>
                   </motion.button>
@@ -262,10 +262,10 @@ const Chat = () => {
                         <Bot className="h-5 w-5 text-white" />
                       </div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3">
+                    <div className="bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-2xl px-4 py-3 shadow-sm">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-                        <span className="text-sm text-blue-200">Pensando...</span>
+                        <span className="text-sm text-white">Pensando...</span>
                       </div>
                     </div>
                   </motion.div>
@@ -278,7 +278,7 @@ const Chat = () => {
         </div>
 
         {/* Input Area */}
-        <div className="bg-slate-900/30 backdrop-blur-xl border-t border-white/10">
+        <div className="bg-slate-900/80 backdrop-blur-xl border-t border-blue-400/30 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <ChatInput
               value={inputText}

@@ -381,22 +381,22 @@ const EditarContrato = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando dados do contrato...</p>
+          <p className="text-slate-700">Carregando dados do contrato...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
       {/* Main Content */}
       <div className="p-6">
         <div className="max-w-6xl mx-auto">
           {/* Form Wizard */}
-          <Card className="glass-card">
+          <Card className="glass-card bg-white/80 backdrop-blur-sm shadow-lg">
             <CardContent className="p-0">
               <DocumentFormWizard
                 title=""

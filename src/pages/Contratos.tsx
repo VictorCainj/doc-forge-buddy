@@ -1,97 +1,40 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import OptimizedSearch from '@/components/ui/optimized-search';
-// import { VirtualizedList, ContractItem } from '@/components/ui/virtualized-list';
-import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
-import { useComponentOptimization } from '@/hooks/useComponentOptimization';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  // Tooltip,
-  // TooltipContent,
-  TooltipProvider,
-  // TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  Plus,
-  FileText,
-  Clock,
-  MapPin,
-  User,
-  Timer,
-  User2,
-  CalendarDays,
-  Edit,
-} from 'lucide-react';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import QuickActionsDropdown from '@/components/QuickActionsDropdown';
-// import { useSearchContext } from '@/hooks/useSearchContext';
+import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
 import { useOptimizedData } from '@/hooks/useOptimizedData';
+import { useStandardToast } from '@/utils/toastHelpers';
+import { formatDateBrazilian, convertDateToBrazilian } from '@/utils/dateFormatter';
+import { TemplateProcessor } from '@/utils/templateProcessor';
+import { Contract } from '@/types/contract';
+import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
+import { processContractTemplate } from '@/features/contracts/utils/templateProcessor';
 import {
-  // DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
-  // DEVOLUTIVA_LOCATARIO_TEMPLATE,
   NOTIFICACAO_AGENDAMENTO_TEMPLATE,
   DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
   DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
-  // DEVOLUTIVA_COMERCIAL_TEMPLATE,
-  // DEVOLUTIVA_CADERNINHO_TEMPLATE,
-  // DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
-  // DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
   TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
   STATUS_VISTORIA_WHATSAPP_TEMPLATE,
 } from '@/templates/documentos';
 import {
-  formatDateBrazilian,
-  convertDateToBrazilian,
-} from '@/utils/dateFormatter';
-import { DateHelpers } from '@/utils/dateHelpers';
-import { TemplateProcessor } from '@/utils/templateProcessor';
-import { useStandardToast } from '@/utils/toastHelpers';
-import {
-  gerarDocumentosSolicitados,
-  ConfiguracaoDocumentos,
-} from '@/utils/documentosSolicitados';
-import { 
-  Contract, 
-  VistoriaType,
-  PersonType,
-  _AgendamentoData,
-  _RecusaAssinaturaData,
-  _WhatsAppData 
-} from '@/types/contract';
-import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
-import { processContractTemplate } from '@/features/contracts/utils/templateProcessor';
+  ContractList,
+  ContractModals,
+} from '@/features/contracts/components';
+import { useContractReducer } from '@/features/contracts/hooks/useContractReducer';
+import OptimizedSearch from '@/components/ui/optimized-search';
 
 const Contratos = () => {
-  // Hook de otimização de componentes
-  const { memoizeWithCache: _memoizeWithCache, createDebounce: _createDebounce } = useComponentOptimization();
-  
-  // Hook de toast padronizado
+  const navigate = useNavigate();
   const { showSuccess, showError } = useStandardToast();
+  
+  // Reducer state (substitui ~20 useState)
+  const { state, actions } = useContractReducer();
   
   // Sistema de busca otimizado
   const {
-    // searchTerm,
-    // setSearchTerm,
     results: searchResults,
     isLoading: isSearching,
     hasSearched,
@@ -104,7 +47,7 @@ const Contratos = () => {
     maxResults: 100,
   });
 
-  // Dados principais (sem busca)
+  // Dados principais
   const {
     data: contracts,
     loading,
@@ -117,632 +60,104 @@ const Contratos = () => {
     limit: 6,
   });
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [contractsPerPage] = useState(6); // Mostrar 6 contratos por vez
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
-  const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] =
-    useState(false);
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(
-    null
-  );
-  const [dataVistoria, setDataVistoria] = useState('');
-  const [horaVistoria, setHoraVistoria] = useState('');
-  const [tipoVistoria, setTipoVistoria] = useState<VistoriaType>('final');
-  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState<VistoriaType>('vistoria');
-  const [dataRealizacaoVistoria, setDataRealizacaoVistoria] = useState('');
-  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [whatsAppType, setWhatsAppType] = useState<PersonType | null>(null);
-  const [selectedPerson, setSelectedPerson] = useState<string>('');
-  const [assinanteSelecionado, setAssinanteSelecionado] = useState<string>('');
-  const [showAssinanteModal, setShowAssinanteModal] = useState(false);
-  const [showStatusVistoriaModal, setShowStatusVistoriaModal] = useState(false);
-  const [statusVistoria, setStatusVistoria] = useState<'APROVADA' | 'REPROVADA'>('APROVADA');
-  const [pendingDocumentData, setPendingDocumentData] = useState<{
-    contract: Contract;
-    template: string;
-    documentType: string;
-  } | null>(null);
-  const [_deletingContract, setDeletingContract] = useState<string | null>(
-    null
-  );
-  const [generatingDocument, setGeneratingDocument] = useState<string | null>(
-    null
-  );
-
-
-  const navigate = useNavigate();
-
-  // Usar resultados da busca otimizada ou dados normais
-  const filteredContracts = useMemo(() => {
+  // Contratos exibidos (busca ou paginação normal)
+  const displayedContracts = useMemo(() => {
     if (hasSearched && searchResults.length > 0) {
       return searchResults;
     }
     return contracts;
   }, [hasSearched, searchResults, contracts]);
 
-  // Paginação dos contratos filtrados com useMemo
-  const displayedContracts = useMemo(() => {
-    if (hasSearched) {
-      // Em modo de busca, exibir todos os resultados
-      return filteredContracts;
-    }
-    const startIndex = (currentPage - 1) * contractsPerPage;
-    const endIndex = startIndex + contractsPerPage;
-    return filteredContracts.slice(0, endIndex);
-  }, [filteredContracts, currentPage, contractsPerPage, hasSearched]);
+  // ============================================================
+  // DOCUMENT GENERATION HANDLERS
+  // ============================================================
 
-  // Resetar página quando buscar
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [hasSearched]);
-
-  // Carregar automaticamente páginas adicionais durante a busca, de forma incremental
-  useEffect(() => {
-    if (!hasSearched) return; // só em modo de busca
-    if (hasMore && !loading) {
-      // dispara uma carga por renderização, o efeito reexecuta ao atualizar hasMore/loading
-      loadMore();
-    }
-  }, [hasSearched, hasMore, loading, loadMore]);
-
-  const loadMoreContracts = async () => {
-    setLoadingMore(true);
-    try {
-      await loadMore(); // Carrega todos os contratos restantes do sistema
-      setCurrentPage((prev) => prev + 1); // Avança para a próxima página para mostrar mais contratos
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  const hasMoreContracts = hasMore;
-
-  // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
-  const generateMesesComprovantes = () => {
-    const hoje = new Date();
-    const meses: string[] = [];
-    const nomesMeses = [
-      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-    ];
-
-    // Pegar os 3 últimos meses
-    for (let i = 2; i >= 0; i--) {
-      const mes = new Date(hoje);
-      mes.setMonth(hoje.getMonth() - i);
-      meses.push(nomesMeses[mes.getMonth()]);
-    }
-
-    return `${meses.join(', ')} de ${hoje.getFullYear()}`;
-  };
-
-  // Função para obter qualificação completa dos locatários (texto livre)
-  const getLocatarioQualificacao = (formData: Record<string, string>) => {
-    return formData.qualificacaoCompletaLocatarios || '[TEXTOLIVRE]';
-  };
-
-  // Função para obter qualificação completa dos proprietários (texto livre)
-  const getProprietarioQualificacao = (formData: Record<string, string>) => {
-    return formData.qualificacaoCompletaLocadores || '[TEXTOLIVRE]';
-  };
-
-  // Função movida para: @/features/contracts/utils/contractConjunctions
-  // Mantida aqui apenas para referência - REMOVER após migração completa
-  const _applyConjunctions_DEPRECATED = (formData: Record<string, string>) => {
-    const enhancedData = { ...formData };
-
-    // Obter qualificação completa dos locatários (texto livre)
-    enhancedData.qualificacaoCompletaLocatarios =
-      getLocatarioQualificacao(formData);
-
-    // Obter qualificação completa dos proprietários (texto livre)
-    enhancedData.qualificacaoCompletaProprietario =
-      getProprietarioQualificacao(formData);
-
-    // O assinante será definido pelo usuário em cada geração de documento
-
-    // Aplicar conjunções para locatários baseado na quantidade adicionada
-    const isMultipleLocatarios = !!(
-      formData.primeiroLocatario &&
-      (formData.segundoLocatario ||
-        formData.terceiroLocatario ||
-        formData.quartoLocatario)
-    );
-    enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
-
-    if (isMultipleLocatarios) {
-      enhancedData.locatarioTerm = 'LOCATÁRIOS';
-      enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
-      enhancedData.locatarioTermNoArtigo = 'os locatários';
-      enhancedData.locatarioComunicou = 'informaram';
-      enhancedData.locatarioIra = 'irão';
-      enhancedData.locatarioTermo = 'do locatário';
-      enhancedData.locatarioPrezado = 'Prezado';
-      enhancedData.locatarioDocumentacao = 'dos locatários';
-      enhancedData.locatarioResponsabilidade = 'dos locatários';
-    } else if (formData.primeiroLocatario) {
-      // Usar o gênero do locatário para definir o termo correto
-      const generoLocatario = formData.generoLocatario;
-      if (generoLocatario === 'feminino') {
-        enhancedData.locatarioTerm = 'LOCATÁRIA';
-        enhancedData.locatarioTermComercial = 'LOCATÁRIA';
-        enhancedData.locatarioTermNoArtigo = 'a locatária';
-        enhancedData.locatarioDocumentacao = 'da locatária';
-        enhancedData.locatarioResponsabilidade = 'da locatária';
-      } else if (generoLocatario === 'masculino') {
-        enhancedData.locatarioTerm = 'LOCATÁRIO';
-        enhancedData.locatarioTermComercial = 'LOCATÁRIO';
-        enhancedData.locatarioTermNoArtigo = 'o locatário';
-        enhancedData.locatarioDocumentacao = 'do locatário';
-        enhancedData.locatarioResponsabilidade = 'do locatário';
-      } else {
-        enhancedData.locatarioTerm = 'LOCATÁRIO'; // fallback
-        enhancedData.locatarioTermComercial = 'LOCATÁRIO'; // fallback
-        enhancedData.locatarioTermNoArtigo = 'o locatário';
-        enhancedData.locatarioDocumentacao = 'do locatário';
-        enhancedData.locatarioResponsabilidade = 'do locatário';
-      }
-      enhancedData.locatarioComunicou = 'informou';
-      enhancedData.locatarioIra = 'irá';
-      enhancedData.locatarioTermo = 'do locatário';
-      enhancedData.locatarioPrezado = 'Prezado';
-    }
-
-    // Usar os dados dos locatários adicionados manualmente
-    enhancedData.primeiroLocatario = formData.primeiroLocatario || '';
-    enhancedData.segundoLocatario = formData.segundoLocatario || '';
-    enhancedData.terceiroLocatario = formData.terceiroLocatario || '';
-    enhancedData.quartoLocatario = formData.quartoLocatario || '';
-
-    // Aplicar conjunções para proprietários baseado na quantidade adicionada
-    const isMultipleProprietarios =
-      formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
-    if (isMultipleProprietarios) {
-      enhancedData.proprietarioTerm = 'os proprietários';
-      enhancedData.locadorTerm = 'LOCADORES';
-      enhancedData.locadorTermComercial = 'LOCADORES';
-      enhancedData.proprietarioPrezado = 'Prezado';
-    } else if (formData.nomeProprietario) {
-      // Usar o gênero do proprietário para definir o termo correto
-      const generoProprietario = formData.generoProprietario;
-      if (generoProprietario === 'feminino') {
-        enhancedData.proprietarioTerm = 'a proprietária';
-        enhancedData.locadorTerm = 'LOCADORA';
-        enhancedData.locadorTermComercial = 'LOCADORA';
-      } else if (generoProprietario === 'masculino') {
-        enhancedData.proprietarioTerm = 'o proprietário';
-        enhancedData.locadorTerm = 'LOCADOR';
-        enhancedData.locadorTermComercial = 'LOCADOR';
-      } else {
-        enhancedData.proprietarioTerm = 'o proprietário'; // fallback
-        enhancedData.locadorTerm = 'LOCADOR'; // fallback
-        enhancedData.locadorTermComercial = 'LOCADOR'; // fallback
-      }
-      enhancedData.proprietarioPrezado = 'Prezado';
-    }
-
-    // Gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
-    const mesesComprovantes = generateMesesComprovantes();
-    enhancedData.mesesComprovantes = mesesComprovantes;
-
-    // Extrair primeiro nome do locatário e capitalizar apenas a primeira letra
-    const nomeLocatarioCompleto =
-      formData.nomeLocatario || formData.primeiroLocatario || '[PRIMEIRO NOME]';
-    const primeiroNome =
-      nomeLocatarioCompleto?.split(' ')[0] ||
-      nomeLocatarioCompleto ||
-      '[PRIMEIRO NOME]';
-    const primeiroNomeCapitalizado =
-      primeiroNome.charAt(0).toUpperCase() +
-      primeiroNome.slice(1).toLowerCase();
-    enhancedData.primeiroNomeLocatario = primeiroNomeCapitalizado;
-
-    // Extrair primeiro nome do proprietário e capitalizar apenas a primeira letra
-    const nomeProprietarioCompleto =
-      formData.nomeProprietario ||
-      formData.nomesResumidosLocadores ||
-      '[PRIMEIRO NOME]';
-    const primeiroNomeProprietario =
-      nomeProprietarioCompleto?.split(' ')[0] ||
-      nomeProprietarioCompleto ||
-      '[PRIMEIRO NOME]';
-    const primeiroNomeProprietarioCapitalizado =
-      primeiroNomeProprietario.charAt(0).toUpperCase() +
-      primeiroNomeProprietario.slice(1).toLowerCase();
-    enhancedData.primeiroNomeProprietario =
-      primeiroNomeProprietarioCapitalizado;
-
-    // Gerar saudação para devolutiva do proprietário (usando gênero correto)
-    const generoProprietario = formData.generoProprietario;
-    const nomeProprietarioCompletoSaudacao =
-      formData.nomeProprietario || formData.nomesResumidosLocadores || '';
-    const isMultipleProprietariosSaudacao =
-      nomeProprietarioCompletoSaudacao.includes(' e ') ||
-      nomeProprietarioCompletoSaudacao.includes(' E ');
-
-    // Determinar tratamento baseado na quantidade e gênero
-    let tratamentoProprietario;
-    if (isMultipleProprietariosSaudacao) {
-      tratamentoProprietario =
-        generoProprietario === 'feminino' ? 'Prezadas' : 'Prezados';
-    } else {
-      tratamentoProprietario =
-        generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
-    }
-
-    // Para múltiplos proprietários, incluir apenas o primeiro nome de cada pessoa na saudação
-    if (isMultipleProprietariosSaudacao) {
-      const nomesProprietariosSaudacao = nomeProprietarioCompletoSaudacao
-        .split(/ e | E /)
-        .map((nome) => nome.trim());
-      const primeirosNomes = nomesProprietariosSaudacao.map((nome) => {
-        const primeiroNome = nome.split(' ')[0];
-        return (
-          primeiroNome.charAt(0).toUpperCase() +
-          primeiroNome.slice(1).toLowerCase()
-        );
-      });
-      const nomesFormatados =
-        primeirosNomes.length > 1
-          ? primeirosNomes
-              .slice(0, -1)
-              .map((nome) => `<strong>${nome}</strong>`)
-              .join(', ') +
-            ' e ' +
-            `<strong>${primeirosNomes[primeirosNomes.length - 1]}</strong>`
-          : `<strong>${primeirosNomes[0]}</strong>`;
-      enhancedData.saudacaoProprietario = `${tratamentoProprietario} ${nomesFormatados}`;
-    } else {
-      enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${primeiroNomeProprietarioCapitalizado}</strong>`;
-    }
-
-    // Gerar saudação para devolutiva do locatário (usando gênero correto)
-    const generoLocatario = formData.generoLocatario;
-    const nomeLocatarioCompletoSaudacao =
-      formData.nomeLocatario || formData.primeiroLocatario || '';
-    const isMultipleLocatariosSaudacao =
-      nomeLocatarioCompletoSaudacao.includes(' e ') ||
-      nomeLocatarioCompletoSaudacao.includes(' E ');
-
-    // Determinar tratamento baseado na quantidade e gênero
-    let tratamentoLocatario;
-    if (isMultipleLocatariosSaudacao) {
-      tratamentoLocatario =
-        generoLocatario === 'feminino' ? 'Prezadas' : 'Prezados';
-    } else {
-      tratamentoLocatario =
-        generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
-    }
-
-    // Para múltiplos locatários, incluir apenas o primeiro nome de cada pessoa na saudação
-    if (isMultipleLocatariosSaudacao) {
-      const nomesLocatariosSaudacao = nomeLocatarioCompletoSaudacao
-        .split(/ e | E /)
-        .map((nome) => nome.trim());
-      const primeirosNomes = nomesLocatariosSaudacao.map((nome) => {
-        const primeiroNome = nome.split(' ')[0];
-        return (
-          primeiroNome.charAt(0).toUpperCase() +
-          primeiroNome.slice(1).toLowerCase()
-        );
-      });
-      const nomesFormatados =
-        primeirosNomes.length > 1
-          ? primeirosNomes
-              .slice(0, -1)
-              .map((nome) => `<strong>${nome}</strong>`)
-              .join(', ') +
-            ' e ' +
-            `<strong>${primeirosNomes[primeirosNomes.length - 1]}</strong>`
-          : `<strong>${primeirosNomes[0]}</strong>`;
-      enhancedData.saudacaoLocatario = `${tratamentoLocatario} ${nomesFormatados}`;
-    } else {
-      enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${primeiroNomeCapitalizado}</strong>`;
-    }
-
-    // Gerar saudação para WhatsApp do proprietário (com Sr/Sra)
-    enhancedData.proprietarioPrezadoWhatsapp = tratamentoProprietario;
-
-    // Gerar saudação para WhatsApp do locatário (com Sr/Sra)
-    enhancedData.locatarioPrezadoWhatsapp = tratamentoLocatario;
-
-    // Gerar saudação para processo de rescisão (bom dia/boa tarde)
-    const agora = new Date();
-    const hora = agora.getHours();
-    const saudacaoComercial = hora < 12 ? 'bom dia' : 'boa tarde';
-    enhancedData.saudacaoComercial = saudacaoComercial;
-
-    // Formatar nome do locatário com negrito apenas nos nomes, seguindo gramática portuguesa
-    const nomeLocatario =
-      formData.nomeLocatario ||
-      formData.primeiroLocatario ||
-      '[NOME DO LOCATÁRIO]';
-    const nomesLocatarioArray = nomeLocatario
-      .split(/ e | E /)
-      .map((nome) => nome.trim());
-    const nomeLocatarioFormatado =
-      nomesLocatarioArray.length > 1
-        ? nomesLocatarioArray.slice(0, -1).join(', ') +
-          ' e ' +
-          nomesLocatarioArray[nomesLocatarioArray.length - 1]
-        : nomesLocatarioArray[0];
-    enhancedData.nomeLocatarioFormatado = nomeLocatarioFormatado;
-
-    // Formatar nome do proprietário com negrito apenas nos nomes, seguindo gramática portuguesa
-    const nomeProprietario =
-      formData.nomeProprietario ||
-      formData.nomesResumidosLocadores ||
-      '[NOME DO PROPRIETÁRIO]';
-    const nomesProprietarioArray = nomeProprietario
-      .split(/ e | E /)
-      .map((nome) => nome.trim());
-    const nomeProprietarioFormatado =
-      nomesProprietarioArray.length > 1
-        ? nomesProprietarioArray
-            .slice(0, -1)
-            .map((nome) => `<strong>${nome}</strong>`)
-            .join(', ') +
-          ' e ' +
-          `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
-        : `<strong>${nomesProprietarioArray[0]}</strong>`;
-    enhancedData.nomeProprietarioFormatado = nomeProprietarioFormatado;
-
-    // Adicionar variáveis de data padrão
-    enhancedData.dataAtual = DateHelpers.getCurrentDateBrazilian();
-    enhancedData.dataComunicacao =
-      formData.dataComunicacao || DateHelpers.getCurrentDateBrazilian();
-    enhancedData.dataInicioRescisao =
-      formData.dataInicioRescisao || DateHelpers.getCurrentDateBrazilian();
-    enhancedData.dataTerminoRescisao =
-      formData.dataTerminoRescisao || DateHelpers.getCurrentDateBrazilian();
-    enhancedData.prazoDias = formData.prazoDias || '30';
-
-    // Adicionar variáveis específicas para Termo de Recusa de Assinatura - E-mail
-    enhancedData.dataRealizacaoVistoria =
-      formData.dataRealizacaoVistoria || DateHelpers.getCurrentDateBrazilian();
-    enhancedData.assinanteSelecionado =
-      formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
-
-    // Adicionar variáveis de endereço e contrato
-    enhancedData.enderecoImovel =
-      formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
-    enhancedData.numeroContrato =
-      formData.numeroContrato || '[NÚMERO DO CONTRATO]';
-    enhancedData.nomeProprietario =
-      formData.nomesResumidosLocadores ||
-      formData.nomeProprietario ||
-      '[NOME DO PROPRIETÁRIO]';
-    enhancedData.nomeLocatario =
-      formData.nomeLocatario || '[NOME DO LOCATÁRIO]';
-
-    // Adicionar campos de gênero para uso nos termos
-    enhancedData.generoProprietario = formData.generoProprietario;
-    enhancedData.generoLocatario = formData.generoLocatario;
-
-    // Adicionar variáveis de tratamento para pronomes de gênero
-    const generoProp = formData.generoProprietario;
-    const generoLoc = formData.generoLocatario;
-
-    // Tratamento para proprietário (senhor/senhora)
-    if (generoProp === 'feminino') {
-      enhancedData.tratamentoProprietarioGenero = 'a senhora';
-    } else {
-      enhancedData.tratamentoProprietarioGenero = 'o senhor';
-    }
-
-    // Tratamento para locatário (sua/seu)
-    if (generoLoc === 'feminino') {
-      enhancedData.tratamentoLocatarioGenero = 'sua';
-      enhancedData.tratamentoLocatarioGeneroPlural = 'suas';
-    } else if (generoLoc === 'masculino') {
-      enhancedData.tratamentoLocatarioGenero = 'seu';
-      enhancedData.tratamentoLocatarioGeneroPlural = 'seus';
-    } else {
-      // Fallback para casos não definidos - usar masculino como padrão
-      enhancedData.tratamentoLocatarioGenero = 'seu';
-      enhancedData.tratamentoLocatarioGeneroPlural = 'seus';
-    }
-
-    // Tratamento para locador (ao locador/à locadora)
-    if (generoProp === 'feminino') {
-      enhancedData.tratamentoLocadorGenero = 'à locadora';
-    } else {
-      enhancedData.tratamentoLocadorGenero = 'ao locador';
-    }
-
-    // Tratamento para notificação (V.Sa/V.S)
-    if (generoLoc === 'feminino') {
-      enhancedData.tratamentoLocatarioNotificacao = 'V.Sa';
-    } else {
-      enhancedData.tratamentoLocatarioNotificacao = 'V.S';
-    }
-
-    // Adicionar campos de nomes resumidos para uso nos termos
-    enhancedData.nomesResumidosLocadores = formData.nomesResumidosLocadores;
-
-    // Adicionar variáveis específicas dos termos
-    enhancedData.dataFirmamentoContrato =
-      formData.dataFirmamentoContrato || formatDateBrazilian(new Date());
-    enhancedData.dataVistoria =
-      formData.dataVistoria || formatDateBrazilian(new Date());
-    enhancedData.cpflDaev = formData.cpflDaev || '[CPFL/DAEV]';
-    enhancedData.quantidadeChaves =
-      formData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
-
-    // Adicionar campos de energia e água para o template de cobrança
-    // Usar os dados cadastrados no contrato ou valores padrão
-    enhancedData.cpfl = formData.cpfl || 'SIM';
-    enhancedData.statusAgua = formData.statusAgua || 'SIM';
-    enhancedData.tipoAgua = formData.tipoAgua || 'DAEV';
-
-    // Adicionar variáveis específicas do distrato
-    enhancedData.dataLiquidacao =
-      formData.dataLiquidacao || formatDateBrazilian(new Date());
-
-    // Gerar lista personalizada de documentos solicitados baseada nas contas cadastradas
-    const configDocumentos: ConfiguracaoDocumentos = {
-      solicitarCondominio: formData.solicitarCondominio || 'nao',
-      solicitarAgua: formData.statusAgua === 'SIM' ? 'sim' : 'nao',
-      solicitarEnergia: formData.cpfl === 'SIM' ? 'sim' : 'nao',
-      solicitarGas: formData.solicitarGas || 'nao',
-      solicitarCND: formData.solicitarCND || 'nao',
-    };
-
-    enhancedData.documentosSolicitados =
-      gerarDocumentosSolicitados(configDocumentos);
-
-    // Manter os campos individuais para uso em condicionais do template
-    enhancedData.solicitarCondominio = formData.solicitarCondominio || 'nao';
-    enhancedData.solicitarAgua = formData.statusAgua === 'SIM' ? 'sim' : 'nao';
-    enhancedData.solicitarEnergia = formData.cpfl === 'SIM' ? 'sim' : 'nao';
-    enhancedData.solicitarGas = formData.solicitarGas || 'nao';
-    enhancedData.solicitarCND = formData.solicitarCND || 'nao';
-
-    return enhancedData;
-  };
-
-  const generateDocumentWithAssinante = (
+  const generateDocumentWithAssinante = useCallback((
     contract: Contract,
     template: string,
     documentType: string,
     assinante: string
   ) => {
     const formData = contract.form_data;
-
-    // Aplicar conjunções verbais antes de processar o template
     const enhancedData = applyContractConjunctions(formData);
     enhancedData.assinanteSelecionado = assinante;
 
-    // Se for notificação de agendamento, adicionar dados específicos
+    // Adicionar lógica específica por tipo de documento
     if (documentType.includes('Notificação de Agendamento')) {
       enhancedData.dataAtual = formatDateBrazilian(new Date());
-      enhancedData.dataVistoria = dataVistoria;
-      enhancedData.horaVistoria = horaVistoria;
-      enhancedData.tipoVistoria = tipoVistoria;
-
-      // Configurar tipo de vistoria
-      const tipoVistoriaTexto =
-        tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
+      enhancedData.dataVistoria = state.formData.dataVistoria;
+      enhancedData.horaVistoria = state.formData.horaVistoria;
+      enhancedData.tipoVistoria = state.formData.tipoVistoria;
+      
+      const tipoVistoriaTexto = state.formData.tipoVistoria === 'revistoria' 
+        ? 'Revistoria' 
+        : 'Vistoria Final';
       enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
       enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
       enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
-
-      // Configurar tratamento do locatário para notificação
-      const isMultipleLocatarios = !!(
-        formData.primeiroLocatario &&
-        (formData.segundoLocatario ||
-          formData.terceiroLocatario ||
-          formData.quartoLocatario)
-      );
-      const generoLocatario = formData.generoLocatario;
-
-      if (isMultipleLocatarios) {
-        enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
-        enhancedData.tratamentoLocatarioNotificacao = 'dos locatários';
-      } else if (formData.primeiroLocatario) {
-        if (generoLocatario === 'masculino') {
-          enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-          enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
-        } else if (generoLocatario === 'feminino') {
-          enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
-          enhancedData.tratamentoLocatarioNotificacao = 'da locatária';
-        } else {
-          // Se não especificado, usar masculino como padrão
-          enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-          enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
-        }
-      }
     }
 
-    // Se for WhatsApp, adicionar dados específicos
     if (documentType.includes('WhatsApp')) {
-      const primeiroNome = selectedPerson.split(' ')[0];
-      const primeiroNomeCapitalizado =
-        primeiroNome.charAt(0).toUpperCase() +
-        primeiroNome.slice(1).toLowerCase();
+      const primeiroNome = state.formData.selectedPerson.split(' ')[0];
+      const primeiroNomeCapitalizado = 
+        primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
 
-      if (whatsAppType === 'locador') {
+      if (state.formData.whatsAppType === 'locador') {
         const generoProprietario = formData.generoProprietario;
-        const tratamento =
-          generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
+        const tratamento = generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
         enhancedData.saudacaoProprietario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
       } else {
         const generoLocatario = formData.generoLocatario;
-        const tratamento =
-          generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
+        const tratamento = generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
         enhancedData.saudacaoLocatario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
       }
     }
 
-    // Processar fiadores para o distrato
     if (documentType === 'Distrato de Contrato de Locação') {
       const temFiadores = formData.temFiador === 'sim';
       const fiadores: string[] = [];
 
       if (temFiadores && formData.nomeFiador) {
-        // Dividir os nomes dos fiadores (separados por " e " ou ",")
         const nomesFiadores = formData.nomeFiador
           .split(/ e | E |,/)
           .map((nome) => nome.trim())
           .filter((nome) => nome.length > 0);
-
         fiadores.push(...nomesFiadores);
       }
 
-      // Adicionar dados dos fiadores ao enhancedData
       enhancedData.temFiadores = temFiadores ? 'sim' : 'nao';
-      enhancedData.fiadores = fiadores;
-
-      // Adicionar fiadores como variáveis individuais para o template
       enhancedData.fiador1 = fiadores[0] || '';
       enhancedData.fiador2 = fiadores[1] || '';
       enhancedData.fiador3 = fiadores[2] || '';
       enhancedData.fiador4 = fiadores[3] || '';
-
-      // Adicionar variáveis booleanas para controlar a exibição
       enhancedData.temFiador2 = fiadores.length > 1 ? 'sim' : 'nao';
       enhancedData.temFiador3 = fiadores.length > 2 ? 'sim' : 'nao';
       enhancedData.temFiador4 = fiadores.length > 3 ? 'sim' : 'nao';
-
-      // console.log('=== DEBUG FIADORES DISTRATO ===');
-      // console.log('temFiador:', formData.temFiador);
-      // console.log('nomeFiador:', formData.nomeFiador);
-      // console.log('Array fiadores:', fiadores);
-      // console.log('fiador1:', enhancedData.fiador1);
-      // console.log('fiador2:', enhancedData.fiador2);
-      // console.log('fiador3:', enhancedData.fiador3);
-      // console.log('fiador4:', enhancedData.fiador4);
-      // console.log('===============================');
     }
 
     const processedTemplate = TemplateProcessor.processTemplate(template, enhancedData);
 
-    // Usar o título que já foi definido (já vem com formatação correta)
-    const documentTitle = documentType;
-
     setTimeout(() => {
       navigate('/gerar-documento', {
         state: {
-          title: documentTitle,
+          title: documentType,
           template: processedTemplate,
           formData: enhancedData,
           documentType: documentType,
         },
       });
-      setGeneratingDocument(null);
+      actions.setLoading('generating', null);
     }, 800);
-  };
+  }, [state.formData, actions, navigate]);
 
-  const generateDocument = (
+  const generateDocument = useCallback((
     contract: Contract,
     template: string,
     documentType: string
   ) => {
-    setGeneratingDocument(`${contract.id}-${documentType}`);
+    actions.setLoading('generating', `${contract.id}-${documentType}`);
     const formData = contract.form_data;
 
-    // Documentos que não precisam de assinatura
     const documentosSemAssinatura = [
       'Notificação de Desocupação e Agendamento de Vistoria',
       'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734',
@@ -755,57 +170,37 @@ const Contratos = () => {
     ];
 
     if (documentType === 'Termo do Locador') {
-      navigate('/termo-locador', {
-        state: {
-          contractData: formData,
-        },
-      });
+      navigate('/termo-locador', { state: { contractData: formData } });
     } else if (documentType === 'Termo do Locatário') {
-      navigate('/termo-locatario', {
-        state: {
-          contractData: formData,
-        },
-      });
+      navigate('/termo-locatario', { state: { contractData: formData } });
     } else if (documentType === 'Termo de Recusa de Assinatura - E-mail') {
-      // Abrir modal para preencher data da vistoria e selecionar assinante
-      setSelectedContract(contract);
-      setShowRecusaAssinaturaModal(true);
+      actions.selectContract(contract);
+      actions.openModal('recusaAssinatura');
     } else if (documentType === 'Notificação de Agendamento') {
-      // Abrir modal para preencher data e hora da vistoria
-      setSelectedContract(contract);
-      setShowAgendamentoModal(true);
+      actions.selectContract(contract);
+      actions.openModal('agendamento');
     } else if (documentType === 'Status Vistoria') {
-      // Abrir modal para selecionar status da vistoria
-      setSelectedContract(contract);
-      setShowStatusVistoriaModal(true);
-      setGeneratingDocument(null);
+      actions.selectContract(contract);
+      actions.openModal('statusVistoria');
+      actions.setLoading('generating', null);
     } else if (
       documentType === 'Devolutiva Locador WhatsApp' ||
       documentType === 'Devolutiva Locatário WhatsApp' ||
       documentType === 'WhatsApp - Proprietária' ||
       documentType === 'WhatsApp - Locatária'
     ) {
-      // Abrir modal para selecionar pessoa específica
-      setSelectedContract(contract);
-      let whatsAppType: 'locador' | 'locatario' | null = 'locador';
-      if (
-        documentType === 'Devolutiva Locatário WhatsApp' ||
-        documentType === 'WhatsApp - Locatária'
-      ) {
-        whatsAppType = 'locatario';
-      }
-      setWhatsAppType(whatsAppType);
-      setSelectedPerson('');
-      setShowWhatsAppModal(true);
-      setGeneratingDocument(null);
+      actions.selectContract(contract);
+      const whatsAppType = 
+        documentType === 'Devolutiva Locatário WhatsApp' || documentType === 'WhatsApp - Locatária'
+          ? 'locatario'
+          : 'locador';
+      actions.setFormData('whatsAppType', whatsAppType);
+      actions.setFormData('selectedPerson', '');
+      actions.openModal('whatsapp');
+      actions.setLoading('generating', null);
     } else if (documentosSemAssinatura.includes(documentType)) {
-      // Documentos que não precisam de assinatura - gerar diretamente
       const enhancedData = applyContractConjunctions(formData);
-      const processedTemplate = processContractTemplate(
-        template,
-        enhancedData
-      );
-
+      const processedTemplate = processContractTemplate(template, enhancedData);
       let documentTitle = `${documentType} - ${contract.title}`;
       if (documentType === 'Devolutiva Comercial') {
         documentTitle = `${documentType} - Rescisão - ${contract.title}`;
@@ -820,298 +215,50 @@ const Contratos = () => {
             documentType: documentType,
           },
         });
-        setGeneratingDocument(null);
+        actions.setLoading('generating', null);
       }, 800);
     } else {
-      // Para todos os outros documentos, mostrar modal de seleção de assinante
-      setPendingDocumentData({ contract, template, documentType });
-      setShowAssinanteModal(true);
-      setGeneratingDocument(null);
+      actions.setPendingDocument({ contract, template, documentType });
+      actions.openModal('assinante');
+      actions.setLoading('generating', null);
     }
-  };
+  }, [actions, navigate]);
 
-  // Função movida para: @/features/contracts/utils/templateProcessor
-  // Mantida aqui apenas para referência - REMOVER após migração completa
-  const _replaceTemplateVariables_DEPRECATED = (
-    template: string,
-    data: Record<string, string>
-  ) => {
-    let result = template;
+  // ============================================================
+  // MODAL HANDLERS
+  // ============================================================
 
-    // Processar condicionais Handlebars {{#eq}} (igualdade)
-    result = result.replace(
-      /\{\{#eq\s+(\w+)\s+"([^"]+)"\}\}([\s\S]*?)\{\{\/eq\}\}/g,
-      (match, variable, expectedValue, content) => {
-        if (data[variable] === expectedValue) {
-          return content;
-        }
-        return '';
-      }
-    );
-
-    // Processar condicionais Handlebars com else
-    result = result.replace(
-      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{#else\}\}([\s\S]*?)\{\{\/if\}\}/g,
-      (match, variable, ifContent, elseContent) => {
-        const value = data[variable];
-        if (value) {
-          if (typeof value === 'string' && value.trim()) {
-            return ifContent;
-          } else if (Array.isArray(value) && value.length > 0) {
-            return ifContent;
-          }
-        }
-        return elseContent;
-      }
-    );
-
-    // Processar condicionais Handlebars simples (sem else)
-    result = result.replace(
-      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
-      (match, variable, content) => {
-        const value = data[variable];
-        // console.log(`Verificando condicional {{#if ${variable}}}:`, value, typeof value);
-
-        // Verificar se a variável existe e não está vazia
-        if (value !== undefined && value !== null && value !== '') {
-          if (typeof value === 'string' && value.trim() !== '') {
-            // console.log(`Condicional ${variable} é verdadeira (string não vazia)`);
-            return content;
-          } else if (Array.isArray(value) && value.length > 0) {
-            // console.log(`Condicional ${variable} é verdadeira (array não vazio)`);
-            return content;
-          }
-        }
-        // console.log(`Condicional ${variable} é falsa`);
-        return '';
-      }
-    );
-
-    // Debug específico para fiador2
-    // console.log('=== DEBUG FIADOR2 ===');
-    // console.log('Template contém {{#if fiador2}}?', template.includes('{{#if fiador2}}'));
-    // console.log('Template contém {{/if}}?', template.includes('{{/if}}'));
-    // console.log('Resultado final contém fiador2?', result.includes('fiador2'));
-    // console.log('========================');
-
-    // Processar loops Handlebars {{#each}}
-    result = result.replace(
-      /\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      (match, arrayName, content) => {
-        const array = data[arrayName];
-        if (Array.isArray(array) && array.length > 0) {
-          return array
-            .map((item) => {
-              return content.replace(/\{\{this\}\}/g, item);
-            })
-            .join('');
-        }
-        return '';
-      }
-    );
-
-    // Substituir variáveis
-    Object.entries(data).forEach(([key, value]) => {
-      const placeholder = `{{${key}}}`;
-      // Para observações vazias, não exibir placeholder
-      let formattedValue =
-        value || (key === 'observacao' ? '' : `[${key.toUpperCase()}]`);
-
-      // Formatar datas automaticamente
-      if (
-        key.toLowerCase().includes('data') ||
-        key.toLowerCase().includes('date')
-      ) {
-        if (value && value.trim() !== '') {
-          formattedValue = convertDateToBrazilian(value);
-        }
-      }
-
-      result = result.replace(new RegExp(placeholder, 'g'), formattedValue);
-    });
-
-    // Limpeza final de símbolos indesejados (apenas chaves que não fazem parte de placeholders válidos)
-    // Remover apenas chaves que não estão dentro de tags HTML válidas
-    result = result.replace(/\{\{[^}]*\}\}/g, '');
-
-    return result;
-  };
-
-  const _handleDeleteContract = async (
-    contractId: string,
-    contractTitle: string
-  ) => {
-    if (
-      // eslint-disable-next-line no-alert
-      window.confirm(
-        `Tem certeza que deseja excluir o contrato "${contractTitle}"? Esta ação não pode ser desfeita.`
-      )
-    ) {
-      setDeletingContract(contractId);
-      try {
-        const { error } = await supabase
-          .from('saved_terms')
-          .delete()
-          .eq('id', contractId);
-
-        if (error) throw error;
-
-        // Recarregar a lista de contratos para refletir as mudanças
-        await refetch();
-        showSuccess('deleted', { description: 'Contrato excluído com sucesso!' });
-      } catch {
-        showError('delete');
-      } finally {
-        setDeletingContract(null);
-      }
-    }
-  };
-
-  const handleGenerateAgendamento = () => {
-    if (!selectedContract || !dataVistoria || !horaVistoria) {
+  const handleGenerateAgendamento = useCallback(() => {
+    if (!state.selectedContract || !state.formData.dataVistoria || !state.formData.horaVistoria) {
       showError('validation', { description: 'Por favor, preencha a data e hora da vistoria' });
       return;
     }
 
-    const formData = selectedContract.form_data;
-
-    // Aplicar conjunções verbais antes de processar o template
+    const formData = state.selectedContract.form_data;
     const enhancedData = applyContractConjunctions(formData);
-
-    // Adicionar campos específicos para notificação de agendamento
     enhancedData.dataAtual = formatDateBrazilian(new Date());
 
-    // Corrigir o processamento da data da vistoria para evitar problemas de fuso horário
-    let dataVistoriaFormatada = dataVistoria;
-    if (dataVistoria) {
-      // Se a data está no formato YYYY-MM-DD (do input date), converter corretamente
-      if (dataVistoria.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = dataVistoria.split('-');
-        const dateObj = new Date(
-          parseInt(year),
-          parseInt(month) - 1,
-          parseInt(day)
-        );
-        dataVistoriaFormatada = formatDateBrazilian(dateObj);
-      } else {
-        // Se já está em outro formato, usar convertDateToBrazilian
-        dataVistoriaFormatada = convertDateToBrazilian(dataVistoria);
-      }
-    }
-    enhancedData.dataVistoria = dataVistoriaFormatada;
-    enhancedData.horaVistoria = horaVistoria;
-    enhancedData.tipoVistoria = tipoVistoria;
-
-    // Adicionar variáveis de texto formatadas para o template
-    if (tipoVistoria === 'revistoria') {
-      enhancedData.tipoVistoriaTexto = 'REVISTORIA';
-      enhancedData.tipoVistoriaTextoMaiusculo = 'REVISTORIA';
-      enhancedData.tipoVistoriaTextoMinusculo = 'revistoria';
+    // Processar data da vistoria
+    let dataVistoriaFormatada = state.formData.dataVistoria;
+    if (state.formData.dataVistoria.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = state.formData.dataVistoria.split('-');
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      dataVistoriaFormatada = formatDateBrazilian(dateObj);
     } else {
-      enhancedData.tipoVistoriaTexto = 'VISTORIA FINAL';
-      enhancedData.tipoVistoriaTextoMaiusculo = 'VISTORIA FINAL';
-      enhancedData.tipoVistoriaTextoMinusculo = 'vistoria final';
-    }
-    enhancedData.enderecoImovel =
-      formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
-    enhancedData.numeroContrato =
-      formData.numeroContrato || '[NÚMERO DO CONTRATO]';
-    enhancedData.nomeProprietario =
-      formData.nomesResumidosLocadores ||
-      formData.nomeProprietario ||
-      '[NOME DO PROPRIETÁRIO]';
-    enhancedData.nomeLocatario =
-      formData.nomeLocatario || '[NOME DO LOCATÁRIO]';
-
-    // Adicionar versões formatadas para os templates
-    const nomeProprietario =
-      formData.nomesResumidosLocadores ||
-      formData.nomeProprietario ||
-      '[NOME DO PROPRIETÁRIO]';
-    const nomesProprietarioArray = nomeProprietario
-      .split(/ e | E /)
-      .map((nome) => nome.trim());
-    enhancedData.nomeProprietarioFormatado =
-      nomesProprietarioArray.length > 1
-        ? nomesProprietarioArray
-            .slice(0, -1)
-            .map((nome) => `<strong>${nome}</strong>`)
-            .join(', ') +
-          ' e ' +
-          `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
-        : `<strong>${nomesProprietarioArray[0]}</strong>`;
-
-    const nomeLocatario = formData.nomeLocatario || '[NOME DO LOCATÁRIO]';
-    const nomesLocatarioArray = nomeLocatario
-      .split(/ e | E /)
-      .map((nome) => nome.trim());
-    enhancedData.nomeLocatarioFormatado =
-      nomesLocatarioArray.length > 1
-        ? nomesLocatarioArray.slice(0, -1).join(', ') +
-          ' e ' +
-          nomesLocatarioArray[nomesLocatarioArray.length - 1]
-        : nomesLocatarioArray[0];
-
-    // Definir título para notificação de agendamento baseado na quantidade de locatários adicionados
-    const isMultipleLocatarios =
-      formData.primeiroLocatario &&
-      (formData.segundoLocatario ||
-        formData.terceiroLocatario ||
-        formData.quartoLocatario);
-    const generoLocatario = formData.generoLocatario;
-
-    if (isMultipleLocatarios) {
-      enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
-    } else if (formData.primeiroLocatario) {
-      // Para um único locatário, usar o gênero preenchido
-      if (generoLocatario === 'masculino') {
-        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-      } else if (generoLocatario === 'feminino') {
-        enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
-      } else {
-        // Se não especificado, usar masculino como padrão
-        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-      }
+      dataVistoriaFormatada = convertDateToBrazilian(state.formData.dataVistoria);
     }
 
-    const tipoVistoriaTexto =
-      tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
-    const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${selectedContract.title}`;
+    enhancedData.dataVistoria = dataVistoriaFormatada;
+    enhancedData.horaVistoria = state.formData.horaVistoria;
+    enhancedData.tipoVistoria = state.formData.tipoVistoria;
 
-    // Adicionar dados específicos da vistoria
-    enhancedData.dataAtual = formatDateBrazilian(new Date());
-    enhancedData.dataVistoria = dataVistoria;
-    enhancedData.horaVistoria = horaVistoria;
-    enhancedData.tipoVistoria = tipoVistoria;
-
-    // Configurar tipo de vistoria
+    const tipoVistoriaTexto = state.formData.tipoVistoria === 'revistoria' ? 'Revistoria' : 'Vistoria Final';
     enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
     enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
     enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
 
-    // Configurar tratamento do locatário para notificação (usar variável já declarada)
-
-    if (isMultipleLocatarios) {
-      enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
-      enhancedData.tratamentoLocatarioNotificacao = 'dos locatários';
-    } else if (formData.primeiroLocatario) {
-      if (generoLocatario === 'masculino') {
-        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-        enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
-      } else if (generoLocatario === 'feminino') {
-        enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
-        enhancedData.tratamentoLocatarioNotificacao = 'da locatária';
-      } else {
-        // Se não especificado, usar masculino como padrão
-        enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-        enhancedData.tratamentoLocatarioNotificacao = 'do locatário';
-      }
-    }
-
-    const processedTemplate = processContractTemplate(
-      NOTIFICACAO_AGENDAMENTO_TEMPLATE,
-      enhancedData
-    );
+    const processedTemplate = processContractTemplate(NOTIFICACAO_AGENDAMENTO_TEMPLATE, enhancedData);
+    const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${state.selectedContract.title}`;
 
     navigate('/gerar-documento', {
       state: {
@@ -1122,50 +269,63 @@ const Contratos = () => {
       },
     });
 
-    // Fechar modal e limpar campos
-    setShowAgendamentoModal(false);
-    setSelectedContract(null);
-    setDataVistoria('');
-    setHoraVistoria('');
-  };
+    actions.closeModal('agendamento');
+    actions.selectContract(null);
+    actions.resetFormData();
+  }, [state, actions, navigate, showError]);
 
-  const handleCancelAgendamento = () => {
-    setShowAgendamentoModal(false);
-    setSelectedContract(null);
-    setDataVistoria('');
-    setHoraVistoria('');
-    setTipoVistoria('final');
-  };
-
-  const handleGenerateStatusVistoria = () => {
-    if (!selectedContract || !assinanteSelecionado) {
-      showError('validation', { 
-        description: 'Por favor, selecione o assinante' 
-      });
+  const handleGenerateRecusaAssinatura = useCallback(() => {
+    if (!state.selectedContract || !state.formData.dataRealizacaoVistoria || !state.formData.assinanteSelecionado) {
+      showError('validation', { description: 'Por favor, preencha todos os campos' });
       return;
     }
 
-    const formData = selectedContract.form_data;
+    const formData = state.selectedContract.form_data;
     const enhancedData = applyContractConjunctions(formData);
-
-    // Adicionar campos específicos para status vistoria
     enhancedData.dataAtual = formatDateBrazilian(new Date());
-    enhancedData.statusVistoria = statusVistoria;
-    enhancedData.assinanteSelecionado = assinanteSelecionado;
+    enhancedData.dataRealizacaoVistoria = state.formData.dataRealizacaoVistoria;
+    enhancedData.assinanteSelecionado = state.formData.assinanteSelecionado;
+
+    const tipoVistoriaTexto = state.formData.tipoVistoriaRecusa === 'revistoria' ? 'revistoria' : 'vistoria';
+    enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
+
+    const processedTemplate = processContractTemplate(TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE, enhancedData);
+    const documentTitle = `Termo de Recusa de Assinatura - E-mail - ${state.selectedContract.title}`;
+
+    navigate('/gerar-documento', {
+      state: {
+        title: documentTitle,
+        template: processedTemplate,
+        formData: enhancedData,
+        documentType: 'Termo de Recusa de Assinatura - E-mail',
+      },
+    });
+
+    actions.closeModal('recusaAssinatura');
+    actions.selectContract(null);
+    actions.resetFormData();
+  }, [state, actions, navigate, showError]);
+
+  const handleGenerateStatusVistoria = useCallback(() => {
+    if (!state.selectedContract || !state.formData.assinanteSelecionado) {
+      showError('validation', { description: 'Por favor, selecione o assinante' });
+      return;
+    }
+
+    const formData = state.selectedContract.form_data;
+    const enhancedData = applyContractConjunctions(formData);
+    enhancedData.dataAtual = formatDateBrazilian(new Date());
+    enhancedData.statusVistoria = state.formData.statusVistoria;
+    enhancedData.assinanteSelecionado = state.formData.assinanteSelecionado;
     enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
     enhancedData.numeroContrato = formData.numeroContrato || '[NÚMERO DO CONTRATO]';
 
-    // Adicionar saudação do locatário
     const primeiroNomeLocatario = (formData.nomeLocatario || '').split(' ')[0];
     enhancedData.primeiroNomeLocatario = primeiroNomeLocatario;
     enhancedData.saudacaoLocatario = primeiroNomeLocatario ? `Olá, ${primeiroNomeLocatario}` : 'Olá';
 
-    const processedTemplate = processContractTemplate(
-      STATUS_VISTORIA_WHATSAPP_TEMPLATE,
-      enhancedData
-    );
-
-    const documentTitle = `Status Vistoria - ${selectedContract.title}`;
+    const processedTemplate = processContractTemplate(STATUS_VISTORIA_WHATSAPP_TEMPLATE, enhancedData);
+    const documentTitle = `Status Vistoria - ${state.selectedContract.title}`;
 
     setTimeout(() => {
       navigate('/gerar-documento', {
@@ -1176,219 +336,86 @@ const Contratos = () => {
           documentType: 'Status Vistoria',
         },
       });
-      setGeneratingDocument(null);
     }, 800);
 
-    // Fechar modal e limpar campos
-    setShowStatusVistoriaModal(false);
-    setSelectedContract(null);
-    setStatusVistoria('APROVADA');
-    setAssinanteSelecionado('');
-  };
+    actions.closeModal('statusVistoria');
+    actions.selectContract(null);
+    actions.resetFormData();
+  }, [state, actions, navigate, showError]);
 
-  const handleCancelStatusVistoria = () => {
-    setShowStatusVistoriaModal(false);
-    setSelectedContract(null);
-    setStatusVistoria('APROVADA');
-    setAssinanteSelecionado('');
-  };
-
-  const handleGenerateRecusaAssinatura = () => {
-    if (!selectedContract || !dataRealizacaoVistoria || !assinanteSelecionado) {
-      showError('validation', { 
-        description: 'Por favor, preencha a data da vistoria e selecione o assinante' 
-      });
-      return;
-    }
-
-    const formData = selectedContract.form_data;
-    const enhancedData = applyContractConjunctions(formData);
-
-    // Adicionar dados específicos para recusa de assinatura
-    enhancedData.dataAtual = formatDateBrazilian(new Date());
-    enhancedData.dataRealizacaoVistoria = dataRealizacaoVistoria;
-    enhancedData.assinanteSelecionado = assinanteSelecionado;
-
-    // Configurar tipo de vistoria no texto
-    const tipoVistoriaTexto =
-      tipoVistoriaRecusa === 'revistoria' ? 'revistoria' : 'vistoria';
-    enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
-
-    // Processar o template
-    const processedTemplate = processContractTemplate(
-      TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
-      enhancedData
-    );
-
-    const documentTitle = `Termo de Recusa de Assinatura - E-mail - ${selectedContract.title}`;
-
-    // Navegar para a página de geração do documento
-    navigate('/gerar-documento', {
-      state: {
-        title: documentTitle,
-        template: processedTemplate,
-        formData: enhancedData,
-        documentType: 'Termo de Recusa de Assinatura - E-mail',
-      },
-    });
-
-    // Fechar modal e limpar campos
-    setShowRecusaAssinaturaModal(false);
-    setSelectedContract(null);
-    setDataRealizacaoVistoria('');
-    setAssinanteSelecionado('');
-    setTipoVistoriaRecusa('vistoria');
-  };
-
-  const handleCancelRecusaAssinatura = () => {
-    setShowRecusaAssinaturaModal(false);
-    setSelectedContract(null);
-    setDataRealizacaoVistoria('');
-    setAssinanteSelecionado('');
-    setTipoVistoriaRecusa('vistoria');
-  };
-
-  const handleGenerateWhatsApp = () => {
-    if (
-      !selectedContract ||
-      !selectedPerson ||
-      !whatsAppType ||
-      !assinanteSelecionado
-    ) {
+  const handleGenerateWhatsApp = useCallback(() => {
+    if (!state.selectedContract || !state.formData.selectedPerson || !state.formData.whatsAppType || !state.formData.assinanteSelecionado) {
       toast.error('Por favor, selecione uma pessoa e um assinante');
       return;
     }
 
-    const formData = selectedContract.form_data;
+    const formData = state.selectedContract.form_data;
     const enhancedData = {
       ...applyContractConjunctions(formData),
-      assinanteSelecionado,
+      assinanteSelecionado: state.formData.assinanteSelecionado,
     } as Record<string, string>;
 
-    // Personalizar saudação para a pessoa selecionada
-    const primeiroNome = selectedPerson.split(' ')[0];
-    const primeiroNomeCapitalizado =
-      primeiroNome.charAt(0).toUpperCase() +
-      primeiroNome.slice(1).toLowerCase();
+    const primeiroNome = state.formData.selectedPerson.split(' ')[0];
+    const primeiroNomeCapitalizado = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
 
-    if (whatsAppType === 'locador') {
-      // Para WhatsApp, sempre é uma pessoa selecionada, então usar singular baseado no gênero
+    if (state.formData.whatsAppType === 'locador') {
       const generoProprietario = formData.generoProprietario;
-      const tratamento =
-        generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
+      const tratamento = generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
       enhancedData.saudacaoProprietario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
     } else {
-      // Para WhatsApp, sempre é uma pessoa selecionada, então usar singular baseado no gênero
       const generoLocatario = formData.generoLocatario;
       const tratamento = generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
       enhancedData.saudacaoLocatario = `${tratamento} <strong>${primeiroNomeCapitalizado}</strong>`;
     }
 
-    const template =
-      whatsAppType === 'locador'
-        ? DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE
-        : DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE;
+    const template = state.formData.whatsAppType === 'locador'
+      ? DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE
+      : DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE;
+    
     const processedTemplate = processContractTemplate(template, enhancedData);
-    const documentTitle = `Devolutiva ${whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp - ${selectedContract.title}`;
+    const documentTitle = `Devolutiva ${state.formData.whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp - ${state.selectedContract.title}`;
 
     navigate('/gerar-documento', {
       state: {
         title: documentTitle,
         template: processedTemplate,
         formData: enhancedData,
-        documentType: `Devolutiva ${whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp`,
+        documentType: `Devolutiva ${state.formData.whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp`,
       },
     });
 
-    // Fechar modal e limpar campos
-    setShowWhatsAppModal(false);
-    setSelectedContract(null);
-    setWhatsAppType(null);
-    setSelectedPerson('');
-    setAssinanteSelecionado('');
-  };
+    actions.closeModal('whatsapp');
+    actions.selectContract(null);
+    actions.resetFormData();
+  }, [state, actions, navigate]);
 
-  const handleCancelWhatsApp = () => {
-    setShowWhatsAppModal(false);
-    setSelectedContract(null);
-    setWhatsAppType(null);
-    setSelectedPerson('');
-    setAssinanteSelecionado('');
-  };
-
-  const handleGenerateWithAssinante = () => {
-    if (!pendingDocumentData || !assinanteSelecionado) {
+  const handleGenerateWithAssinante = useCallback(() => {
+    if (!state.pendingDocument || !state.formData.assinanteSelecionado) {
       toast.error('Por favor, selecione um assinante');
       return;
     }
 
-    // Se for distrato, gerar diretamente (fiadores são puxados automaticamente do contrato)
-    if (pendingDocumentData.documentType === 'Distrato') {
-      generateDocumentWithAssinante(
-        pendingDocumentData.contract,
-        pendingDocumentData.template,
-        pendingDocumentData.documentType,
-        assinanteSelecionado
-      );
-      setShowAssinanteModal(false);
-      setPendingDocumentData(null);
-      setAssinanteSelecionado('');
-      return;
-    }
-
     generateDocumentWithAssinante(
-      pendingDocumentData.contract,
-      pendingDocumentData.template,
-      pendingDocumentData.documentType,
-      assinanteSelecionado
+      state.pendingDocument.contract!,
+      state.pendingDocument.template,
+      state.pendingDocument.documentType,
+      state.formData.assinanteSelecionado
     );
 
-    // Fechar modal e limpar campos
-    setShowAssinanteModal(false);
-    setPendingDocumentData(null);
-    setAssinanteSelecionado('');
-  };
+    actions.closeModal('assinante');
+    actions.setPendingDocument(null);
+    actions.resetFormData();
+  }, [state, actions, generateDocumentWithAssinante]);
 
-  const handleCancelAssinante = () => {
-    setShowAssinanteModal(false);
-    setPendingDocumentData(null);
-    setAssinanteSelecionado('');
-  };
-
-  // Função para detectar múltiplos locatários
-  const isMultipleLocatarios = (nomeLocatario: string) => {
-    if (!nomeLocatario) return false;
-    return (
-      nomeLocatario.includes(',') ||
-      nomeLocatario.includes(' e ') ||
-      nomeLocatario.includes(' E ')
-    );
-  };
-
-  // Função para detectar múltiplos proprietários
-  const isMultipleProprietarios = (nomeProprietario: string) => {
-    if (!nomeProprietario) return false;
-    return (
-      nomeProprietario.includes(',') ||
-      nomeProprietario.includes(' e ') ||
-      nomeProprietario.includes(' E ')
-    );
-  };
-
-  // Função auxiliar para renderizar ícone com loading
-  const _renderIconWithLoading = (
-    _icon: React.ReactNode,
-    contractId: string,
-    documentType: string,
-    icon: React.ReactNode
-  ) => {
-    const isGenerating = generatingDocument === `${contractId}-${documentType}`;
-    return isGenerating ? (
-      <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
-    ) : (
-      icon
-    );
-  };
+  const handleLoadMore = useCallback(async () => {
+    actions.setLoading('loadMore', true);
+    try {
+      await loadMore();
+      actions.setPage(state.currentPage + 1);
+    } finally {
+      actions.setLoading('loadMore', false);
+    }
+  }, [loadMore, actions, state.currentPage]);
 
   return (
     <TooltipProvider>
@@ -1402,675 +429,69 @@ const Contratos = () => {
         
         {/* Main Content */}
         <div className="p-6 relative z-10">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <h2 className="text-xl font-semibold text-white">
+                Contratos Cadastrados
+              </h2>
+              <Link to="/cadastrar-contrato">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Contrato
+                </Button>
+              </Link>
+            </div>
+
+            {/* Search */}
+            <div className="flex items-center space-x-4">
+              <OptimizedSearch
+                onSearch={performSearch}
+                placeholder="Digite número do contrato, nome do locatário ou endereço..."
+                showResultsCount={true}
+                resultsCount={totalResults}
+                isLoading={isSearching}
+                className="w-96"
+              />
+              {hasSearched && (
+                <Button variant="outline" size="sm" onClick={clearSearch}>
+                  Limpar Busca
+                </Button>
+              )}
+            </div>
+          </div>
+
           {/* Lista de Contratos */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-xl font-semibold text-white">
-                  Contratos Cadastrados
-                </h2>
-                <Link to="/cadastrar-contrato">
-                  <Button
-                    size="sm"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Contrato
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Sistema de Busca Otimizado */}
-              <div className="flex items-center space-x-4">
-                <OptimizedSearch
-                  onSearch={performSearch}
-                  placeholder="Digite número do contrato, nome do locatário ou endereço..."
-                  showResultsCount={true}
-                  resultsCount={totalResults}
-                  isLoading={isSearching}
-                  className="w-96"
-                />
-                {hasSearched && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearSearch}
-                  >
-                    Limpar Busca
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {loading ? (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="p-12">
-                  <div className="text-center">
-                    <div className="p-4 bg-blue-500/20 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-blue-400 animate-pulse" />
-                    </div>
-                    <p className="text-lg font-medium text-white">
-                      Carregando contratos...
-                    </p>
-                    <p className="text-sm text-blue-200 mt-1">
-                      Aguarde um momento
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : displayedContracts.length === 0 &&
-              filteredContracts.length === 0 ? (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="p-12">
-                  <div className="text-center">
-                    <div className="p-4 bg-blue-500/20 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-blue-300" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">
-                      Nenhum contrato cadastrado ainda
-                    </h3>
-                    <p className="text-blue-200 mb-6">
-                      Comece criando seu primeiro contrato no sistema
-                    </p>
-                    <Link to="/cadastrar-contrato">
-                      <Button className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Criar Primeiro Contrato
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {displayedContracts.map((contract) => (
-                  <Card
-                    key={contract.id}
-                    className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 hover:border-blue-400/40 transition-all duration-300 overflow-visible shadow-lg"
-                  >
-                    <CardContent className="p-6">
-                      {/* Header do Contrato */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <FileText className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-sm text-white">
-                              Contrato{' '}
-                              {contract.form_data.numeroContrato || '[NÚMERO]'}
-                            </h3>
-                            <p className="text-xs text-blue-200">
-                              ID: {contract.id.slice(0, 8)}...
-                            </p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          Ativo
-                        </Badge>
-                      </div>
-
-                      {/* Separador */}
-                      <div className="border-t border-border mb-4"></div>
-
-                      {/* PARTES ENVOLVIDAS */}
-                      <div className="mb-4">
-                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
-                          Partes Envolvidas
-                        </h4>
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-3">
-                            <div className="p-1.5 rounded-md bg-green-500/10">
-                              <User className="h-3 w-3 text-green-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-blue-200 uppercase tracking-wide">
-                                {isMultipleProprietarios(
-                                  contract.form_data.nomeProprietario
-                                )
-                                  ? 'Proprietários'
-                                  : 'Proprietário'}
-                              </p>
-                              <p className="text-xs font-bold text-white truncate">
-                                {contract.form_data.nomeProprietario}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="p-1.5 rounded-md bg-blue-500/10">
-                              <User2 className="h-3 w-3 text-blue-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-blue-200 uppercase tracking-wide">
-                                {isMultipleLocatarios(
-                                  contract.form_data.nomeLocatario
-                                )
-                                  ? 'Locatários'
-                                  : 'Locatário'}
-                              </p>
-                              <p className="text-xs font-bold text-white truncate">
-                                {contract.form_data.nomeLocatario}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* TERMOS DO CONTRATO */}
-                      <div className="mb-4">
-                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
-                          Termos do Contrato
-                        </h4>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1 rounded bg-yellow-500/10">
-                                <Timer className="h-3 w-3 text-yellow-600" />
-                              </div>
-                              <span className="text-xs font-medium text-blue-200">
-                                Prazo
-                              </span>
-                            </div>
-                            <span className="text-xs font-bold text-white">
-                              {contract.form_data.prazoDias} dias
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                              <div className="flex items-center gap-2">
-                                <div className="p-1 rounded bg-green-500/10">
-                                  <CalendarDays className="h-3 w-3 text-green-600" />
-                                </div>
-                                <span className="text-xs font-medium text-blue-200">
-                                  Início
-                                </span>
-                              </div>
-                              <span className="text-xs font-bold text-white">
-                                {contract.form_data.dataInicioRescisao ||
-                                  '01/09/2026'}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                              <div className="flex items-center gap-2">
-                                <div className="p-1 rounded bg-red-500/10">
-                                  <Clock className="h-3 w-3 text-red-600" />
-                                </div>
-                                <span className="text-xs font-medium text-blue-200">
-                                  Término
-                                </span>
-                              </div>
-                              <span className="text-xs font-bold text-white">
-                                {contract.form_data.dataTerminoRescisao ||
-                                  '01/10/2026'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* LOCALIZAÇÃO */}
-                      <div className="mb-4">
-                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
-                          Localização
-                        </h4>
-                        <div className="flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
-                          <div className="p-1 rounded bg-purple-500/10">
-                            <MapPin className="h-3 w-3 text-purple-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                              Endereço
-                            </p>
-                            <p 
-                              className="text-xs font-bold text-foreground line-clamp-2 cursor-pointer hover:text-primary hover:underline transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const endereco = contract.form_data.endereco || contract.form_data.enderecoImovel;
-                                if (endereco) {
-                                  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
-                                  window.open(mapsUrl, '_blank', 'noopener,noreferrer');
-                                }
-                              }}
-                              title="Clique para abrir no Google Maps"
-                            >
-                              {contract.form_data.endereco ||
-                                contract.form_data.enderecoImovel ||
-                                '460 - Rua Interna: Rua dos Sablas, Casa 421 - Condomínio Green Valley, Bairro Flores, Manaus - AM'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* AÇÕES RÁPIDAS */}
-                      <div className="border-t border-border pt-4 relative overflow-visible">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => {
-                                // Navegar para a página de edição específica
-                                navigate(`/editar-contrato/${contract.id}`);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          <QuickActionsDropdown
-                            contractId={contract.id}
-                            contractNumber={
-                              contract.form_data.numeroContrato || '[NÚMERO]'
-                            }
-                            onGenerateDocument={(
-                              contractId,
-                              template,
-                              title
-                            ) => {
-                              const contractData = contracts.find(
-                                (c) => c.id === contractId
-                              );
-                              if (contractData) {
-                                generateDocument(contractData, template, title);
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <ContractList
+              contracts={displayedContracts}
+              isLoading={loading}
+              hasMore={hasMore}
+              loadMore={handleLoadMore}
+              isLoadingMore={state.loading.loadMore}
+              totalCount={totalCount}
+              displayedCount={displayedContracts.length}
+              hasSearched={hasSearched}
+              onGenerateDocument={generateDocument}
+            />
           </div>
-
-          {/* Botão Ver Mais (oculto durante a busca) */}
-          {hasMoreContracts && !hasSearched && (
-            <div className="flex justify-center mt-8">
-              <Button
-                onClick={loadMoreContracts}
-                disabled={loadingMore}
-                variant="outline"
-                className="px-8 py-3 text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-              >
-                {loadingMore ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                    Carregando...
-                  </>
-                ) : (
-                  `Ver mais (${Math.max(0, totalCount - displayedContracts.length)} restantes)`
-                )}
-              </Button>
-            </div>
-          )}
         </div>
+
+        {/* Modals */}
+        <ContractModals
+          modals={state.modals}
+          selectedContract={state.selectedContract}
+          pendingDocument={state.pendingDocument}
+          formData={state.formData}
+          onFormDataChange={actions.setFormData}
+          onCloseModal={actions.closeModal}
+          onGenerateAgendamento={handleGenerateAgendamento}
+          onGenerateRecusaAssinatura={handleGenerateRecusaAssinatura}
+          onGenerateWhatsApp={handleGenerateWhatsApp}
+          onGenerateWithAssinante={handleGenerateWithAssinante}
+          onGenerateStatusVistoria={handleGenerateStatusVistoria}
+        />
       </div>
-
-      {/* Modal para Notificação de Agendamento */}
-      <Dialog
-        open={showAgendamentoModal}
-        onOpenChange={setShowAgendamentoModal}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Agendar Vistoria</DialogTitle>
-            <DialogDescription>
-              Preencha a data e hora da vistoria de saída para gerar a
-              notificação.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="tipoVistoria" className="text-right">
-                Tipo de Vistoria
-              </Label>
-              <Select value={tipoVistoria} onValueChange={(value) => setTipoVistoria(value as VistoriaType)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione o tipo de vistoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="final">Vistoria Final</SelectItem>
-                  <SelectItem value="revistoria">Revistoria</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="dataVistoria" className="text-right">
-                Data da Vistoria
-              </Label>
-              <Input
-                id="dataVistoria"
-                type="date"
-                value={dataVistoria}
-                onChange={(e) => setDataVistoria(e.target.value)}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="horaVistoria" className="text-right">
-                Hora da Vistoria
-              </Label>
-              <Input
-                id="horaVistoria"
-                type="time"
-                value={horaVistoria}
-                onChange={(e) => setHoraVistoria(e.target.value)}
-                className="col-span-3"
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelAgendamento}>
-              Cancelar
-            </Button>
-            <Button onClick={handleGenerateAgendamento}>
-              Gerar Notificação
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal para Termo de Recusa de Assinatura - E-mail */}
-      <Dialog
-        open={showRecusaAssinaturaModal}
-        onOpenChange={setShowRecusaAssinaturaModal}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Termo de Recusa de Assinatura - E-mail</DialogTitle>
-            <DialogDescription>
-              Preencha a data da vistoria/revistoria e selecione quem vai
-              assinar o documento.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="tipoVistoriaRecusa" className="text-right">
-                Tipo
-              </Label>
-              <Select
-                value={tipoVistoriaRecusa}
-                onValueChange={(value) => setTipoVistoriaRecusa(value as VistoriaType)}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vistoria">Vistoria</SelectItem>
-                  <SelectItem value="revistoria">Revistoria</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="dataRealizacaoVistoria" className="text-right">
-                Data da{' '}
-                {tipoVistoriaRecusa === 'revistoria'
-                  ? 'Revistoria'
-                  : 'Vistoria'}
-              </Label>
-              <Input
-                id="dataRealizacaoVistoria"
-                type="text"
-                value={dataRealizacaoVistoria}
-                onChange={(e) => setDataRealizacaoVistoria(e.target.value)}
-                className="col-span-3"
-                placeholder="Ex: 19 de setembro de 2025"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="assinanteSelecionado" className="text-right">
-                Assinante
-              </Label>
-              <Select
-                value={assinanteSelecionado}
-                onValueChange={setAssinanteSelecionado}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione quem irá assinar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VICTOR CAIN JORGE">
-                    Victor Cain Jorge
-                  </SelectItem>
-                  <SelectItem value="FABIANA SALOTTI MARTINS">
-                    Fabiana Salotti Martins
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelRecusaAssinatura}>
-              Cancelar
-            </Button>
-            <Button onClick={handleGenerateRecusaAssinatura}>
-              Gerar Documento
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal para Status Vistoria */}
-      <Dialog open={showStatusVistoriaModal} onOpenChange={setShowStatusVistoriaModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Status da Vistoria</DialogTitle>
-            <DialogDescription>
-              Informe o resultado da vistoria para o contrato: {selectedContract?.title}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="status-vistoria">Status da Vistoria</Label>
-              <Select
-                value={statusVistoria}
-                onValueChange={(value: 'APROVADA' | 'REPROVADA') => setStatusVistoria(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="APROVADA">
-                    Aprovada
-                  </SelectItem>
-                  <SelectItem value="REPROVADA">
-                    Reprovada
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="assinante-status">Assinante</Label>
-              <Select
-                value={assinanteSelecionado}
-                onValueChange={setAssinanteSelecionado}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o assinante" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Victor Cain Jorge">Victor Cain Jorge</SelectItem>
-                  <SelectItem value="Fabiana Salotti Martins">Fabiana Salotti Martins</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelStatusVistoria}>
-              Cancelar
-            </Button>
-            <Button onClick={handleGenerateStatusVistoria} disabled={!assinanteSelecionado}>
-              Gerar Mensagem
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal para Seleção de WhatsApp */}
-      <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Selecionar Pessoa para WhatsApp</DialogTitle>
-            <DialogDescription>
-              Selecione para qual{' '}
-              {whatsAppType === 'locador' ? 'locador' : 'locatário'} você deseja
-              enviar a mensagem do WhatsApp.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="selectedPerson" className="text-right">
-                {whatsAppType === 'locador' ? 'Locador' : 'Locatário'}
-              </Label>
-              <Select value={selectedPerson} onValueChange={setSelectedPerson}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue
-                    placeholder={`Selecione um ${whatsAppType === 'locador' ? 'locador' : 'locatário'}`}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {whatsAppType === 'locador'
-                    ? (() => {
-                        const nomesLocadores =
-                          selectedContract?.form_data.nomesResumidosLocadores ||
-                          selectedContract?.form_data.nomeProprietario;
-                        if (nomesLocadores) {
-                          const nomesArray = nomesLocadores
-                            .split(/ e | E /)
-                            .map((nome) => nome.trim())
-                            .filter((nome) => nome);
-                          return nomesArray.map((nome, index) => (
-                            <SelectItem key={index} value={nome}>
-                              {nome}
-                            </SelectItem>
-                          ));
-                        }
-                        return (
-                          <SelectItem
-                            value="Nenhum locador encontrado"
-                            disabled
-                          >
-                            Nenhum locador encontrado
-                          </SelectItem>
-                        );
-                      })()
-                    : (() => {
-                        const nomesLocatarios =
-                          selectedContract?.form_data.nomeLocatario ||
-                          selectedContract?.form_data.primeiroLocatario;
-                        if (nomesLocatarios) {
-                          const nomesArray = nomesLocatarios
-                            .split(/ e | E /)
-                            .map((nome) => nome.trim())
-                            .filter((nome) => nome);
-                          return nomesArray.map((nome, index) => (
-                            <SelectItem key={index} value={nome}>
-                              {nome}
-                            </SelectItem>
-                          ));
-                        }
-                        return (
-                          <SelectItem
-                            value="Nenhum locatário encontrado"
-                            disabled
-                          >
-                            Nenhum locatário encontrado
-                          </SelectItem>
-                        );
-                      })()}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="assinanteSelecionado" className="text-right">
-                Assinante
-              </Label>
-              <Select
-                value={assinanteSelecionado}
-                onValueChange={setAssinanteSelecionado}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione quem irá assinar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VICTOR CAIN JORGE">
-                    Victor Cain Jorge
-                  </SelectItem>
-                  <SelectItem value="FABIANA SALOTTI MARTINS">
-                    Fabiana Salotti Martins
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelWhatsApp}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleGenerateWhatsApp}
-              disabled={!selectedPerson || !assinanteSelecionado}
-            >
-              Gerar WhatsApp
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal para Seleção de Assinante */}
-      <Dialog open={showAssinanteModal} onOpenChange={setShowAssinanteModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Selecionar Assinante do Documento</DialogTitle>
-            <DialogDescription>
-              Selecione quem irá assinar o documento:{' '}
-              {pendingDocumentData?.documentType}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="assinanteSelecionado" className="text-right">
-                Assinante
-              </Label>
-              <Select
-                value={assinanteSelecionado}
-                onValueChange={setAssinanteSelecionado}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione quem irá assinar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VICTOR CAIN JORGE">
-                    Victor Cain Jorge
-                  </SelectItem>
-                  <SelectItem value="FABIANA SALOTTI MARTINS">
-                    Fabiana Salotti Martins
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelAssinante}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleGenerateWithAssinante}
-              disabled={!assinanteSelecionado}
-            >
-              Gerar Documento
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-
     </TooltipProvider>
   );
 };

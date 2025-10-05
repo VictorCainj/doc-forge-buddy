@@ -3,11 +3,11 @@
  * Extraído do componente Contratos para melhor reutilização
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, FileText, Edit, MapPin, MoreVertical, Trash2, User, User2 } from 'lucide-react';
+import { Calendar, FileText, Edit, MapPin, MoreVertical, Trash2, User, User2, SearchCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Contract, DocumentType } from '@/types/contract';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface ContractCardProps {
   contract: Contract;
@@ -42,9 +44,54 @@ export const ContractCard: React.FC<ContractCardProps> = ({
   generatingDocument,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [hasAnalise, setHasAnalise] = useState(false);
+  const [checkingAnalise, setCheckingAnalise] = useState(false);
 
   const handleEditContract = () => {
     navigate(`/editar-contrato/${contract.id}`);
+  };
+
+  // Verificar se existe análise para este contrato
+  useEffect(() => {
+    const checkAnalise = async () => {
+      if (!user || !contract.id) return;
+      
+      setCheckingAnalise(true);
+      try {
+        const { data, error } = await supabase
+          .from('vistoria_analises')
+          .select('id')
+          .eq('contract_id', contract.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!error && data) {
+          setHasAnalise(true);
+        } else {
+          setHasAnalise(false);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar análise:', error);
+        setHasAnalise(false);
+      } finally {
+        setCheckingAnalise(false);
+      }
+    };
+
+    checkAnalise();
+  }, [contract.id, user]);
+
+  const handleAnaliseClick = () => {
+    navigate('/analise-vistoria', {
+      state: {
+        contractId: contract.id,
+        contractData: {
+          locatario: contract.form_data.nomeLocatario || contract.form_data.primeiroLocatario || '',
+          endereco: contract.form_data.enderecoImovel || contract.form_data.endereco || '',
+        },
+      },
+    });
   };
 
   const isMultipleProprietarios = (nomeProprietario: string) => {
@@ -91,12 +138,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
                 Contrato {contract.form_data.numeroContrato || '[NÚMERO]'}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {formatDateBrazilian(createdDate)}
-                {isRecent && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    Novo
-                  </Badge>
-                )}
+                ID: {contract.id.slice(0, 8)}...
               </p>
             </div>
           </div>
@@ -120,7 +162,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         </div>
 
         {/* Separador */}
-        <div className="border-t border-border mb-4"></div>
+        <div className="border-t border-blue-500/20 mb-4"></div>
 
         {/* PARTES ENVOLVIDAS */}
         <div className="mb-4">
@@ -207,7 +249,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         </div>
 
         {/* BOTÃO EDITAR */}
-        <div className="flex items-center justify-between mb-4 pt-2 border-t border-border">
+        <div className="flex items-center justify-between mb-4 pt-2 border-t border-blue-500/20">
           <Button
             variant="ghost"
             size="sm"
@@ -220,11 +262,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         </div>
 
         {/* AÇÕES RÁPIDAS */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Ações Rápidas
-          </h4>
-          
+        <div className="space-y-2 pt-3 border-t border-blue-500/20">
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
@@ -268,6 +306,19 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               disabled={isGenerating}
             >
               WhatsApp Locatário
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8"
+              onClick={handleAnaliseClick}
+              disabled={checkingAnalise}
+            >
+              <SearchCheck className="h-3 w-3 mr-1" />
+              {checkingAnalise ? 'Verificando...' : hasAnalise ? 'Carregar Análise' : 'Criar Análise'}
             </Button>
           </div>
         </div>

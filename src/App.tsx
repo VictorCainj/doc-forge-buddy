@@ -9,10 +9,12 @@ import { AuthProvider } from '@/hooks/useAuth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Lazy load de páginas para code splitting
 // Páginas críticas (carregadas primeiro)
-const Index = lazy(() => import('./pages/Index'));
+const Index = lazy(() => import('./pages/Index')); // Agora aponta para Dashboard
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Contratos = lazy(() => import('./pages/Contratos'));
 
@@ -30,6 +32,7 @@ const TermoRecusaAssinaturaEmail = lazy(() => import('./pages/TermoRecusaAssinat
 const Chat = lazy(() => import('./pages/Chat'));
 const AnaliseVistoria = lazy(() => import('./pages/AnaliseVistoria'));
 const VistoriaAnalises = lazy(() => import('./pages/VistoriaAnalises'));
+const Prestadores = lazy(() => import('./pages/Prestadores'));
 
 const queryClient = new QueryClient();
 
@@ -41,8 +44,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
             {/* Rotas públicas */}
             <Route
               path="/login"
@@ -202,11 +206,22 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/prestadores"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Prestadores />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
             {/* Rota 404 */}
             <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
       </TooltipProvider>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   Select,
   SelectContent,
@@ -24,8 +25,6 @@ import {
   FileText,
   Edit,
   Trash2,
-  Eye,
-  Download,
   Calendar,
   User,
   MapPin,
@@ -40,6 +39,7 @@ import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
 import { VistoriaAnaliseWithImages } from '@/types/vistoria';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import VistoriaMigrationBanner from '@/components/VistoriaMigrationBanner';
+import { ActionButton } from '@/components/ui/action-button';
 
 const VistoriaAnalises = () => {
   const { toast } = useToast();
@@ -54,17 +54,20 @@ const VistoriaAnalises = () => {
     analise: VistoriaAnaliseWithImages | null;
   }>({ open: false, analise: null });
 
+  // Debounce do termo de busca para evitar filtros excessivos
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   // Filtrar análises baseado nos critérios
   const filteredAnalises = analises.filter((analise) => {
     const matchesSearch =
-      searchTerm === '' ||
-      analise.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      debouncedSearchTerm === '' ||
+      analise.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
       analise.dados_vistoria.locatario
         .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+        .includes(debouncedSearchTerm.toLowerCase()) ||
       analise.dados_vistoria.endereco
         .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+        .includes(debouncedSearchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'all' ||
@@ -101,25 +104,6 @@ const VistoriaAnalises = () => {
     });
   };
 
-  // Função para visualizar análise
-  const handleViewAnalise = (_analise: VistoriaAnaliseWithImages) => {
-    // Navegar para a página de análise em modo visualização
-    navigate('/analise-vistoria', {
-      state: {
-        viewMode: true,
-        analiseData: _analise,
-      },
-    });
-  };
-
-  // Função para gerar documento da análise
-  const handleGenerateDocument = (_analise: VistoriaAnaliseWithImages) => {
-    // Implementar geração de documento
-    toast({
-      title: 'Funcionalidade em desenvolvimento',
-      description: 'A geração de documento será implementada em breve.',
-    });
-  };
 
   // Função para contar apontamentos
   const getApontamentosCount = (analise: VistoriaAnaliseWithImages) => {
@@ -174,13 +158,13 @@ const VistoriaAnalises = () => {
               </p>
             </div>
           </div>
-          <Button
+          <ActionButton
+            icon={Plus}
+            label="Nova Análise"
+            variant="primary"
+            size="md"
             onClick={() => navigate('/analise-vistoria')}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Análise
-          </Button>
+          />
         </div>
 
         {/* Banner de Migração */}
@@ -295,13 +279,13 @@ const VistoriaAnalises = () => {
                     : 'Crie sua primeira análise de vistoria para começar.'}
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
-                  <Button
+                  <ActionButton
+                    icon={Plus}
+                    label="Nova Análise"
+                    variant="primary"
+                    size="md"
                     onClick={() => navigate('/analise-vistoria')}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Análise
-                  </Button>
+                  />
                 )}
               </div>
             ) : (
@@ -359,41 +343,22 @@ const VistoriaAnalises = () => {
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
-                        <Button
+                        <ActionButton
+                          icon={Edit}
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleViewAnalise(analise)}
-                          title="Visualizar análise"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                          iconOnly
                           onClick={() => handleEditAnalise(analise)}
                           title="Editar análise"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
+                        />
+                        <ActionButton
+                          icon={Trash2}
+                          variant="danger"
                           size="sm"
-                          onClick={() => handleGenerateDocument(analise)}
-                          title="Gerar documento"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setDeleteDialog({ open: true, analise })
-                          }
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          iconOnly
+                          onClick={() => setDeleteDialog({ open: true, analise })}
                           title="Deletar análise"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        />
                       </div>
                     </div>
                   </div>

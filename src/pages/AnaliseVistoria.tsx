@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { log } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ import {
   CheckCircle2,
   Wand2,
   RefreshCw,
+  Users,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOpenAI } from '@/hooks/useOpenAI';
@@ -48,6 +49,7 @@ import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
 import { useVistoriaImages } from '@/hooks/useVistoriaImages';
+import { usePrestadores } from '@/hooks/usePrestadores';
 import {
   ApontamentoVistoria,
   DadosVistoria,
@@ -55,6 +57,8 @@ import {
 } from '@/types/vistoria';
 import { BudgetItemType, DadosPrestador } from '@/types/orcamento';
 import { Package, Wrench } from 'lucide-react';
+import { ActionButton } from '@/components/ui/action-button';
+import { validateImages } from '@/utils/imageValidation';
 
 interface Contract {
   id: string;
@@ -69,6 +73,7 @@ const AnaliseVistoria = () => {
   const { correctText, isLoading: isAILoading } = useOpenAI();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
+  const { prestadores } = usePrestadores();
 
   const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
   const [currentApontamento, setCurrentApontamento] = useState<
@@ -97,9 +102,7 @@ const AnaliseVistoria = () => {
   const [editingApontamento, setEditingApontamento] = useState<string | null>(
     null
   );
-  const [searchTerm, setSearchTerm] = useState('');
   const [documentPreview, setDocumentPreview] = useState<string>('');
-  const [showDadosVistoria, setShowDadosVistoria] = useState(true);
   const [savedAnaliseId, setSavedAnaliseId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingAnaliseId, setEditingAnaliseId] = useState<string | null>(null);
@@ -110,13 +113,7 @@ const AnaliseVistoria = () => {
   const [loadingExistingAnalise, setLoadingExistingAnalise] = useState(false);
   const [saving, setSaving] = useState(false);
   const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>('analise');
-  const [dadosPrestador, setDadosPrestador] = useState<DadosPrestador>({
-    nome: '',
-    cnpj: '',
-    telefone: '',
-    email: '',
-  });
-  const [showDadosPrestador, setShowDadosPrestador] = useState(false);
+  const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -144,16 +141,12 @@ const AnaliseVistoria = () => {
             setDocumentMode(dados.documentMode as 'analise' | 'orcamento');
           }
           
-          // Carregar dados do prestador se existirem
+          // Carregar ID do prestador se existir
           if (dados.prestador) {
             const prestador = dados.prestador as Record<string, unknown>;
-            setDadosPrestador({
-              nome: (prestador.nome as string) || '',
-              cnpj: (prestador.cnpj as string) || '',
-              telefone: (prestador.telefone as string) || '',
-              email: (prestador.email as string) || '',
-            });
-            setShowDadosPrestador(true);
+            if (prestador.id) {
+              setSelectedPrestadorId(prestador.id as string);
+            }
           }
         }
 
@@ -320,6 +313,11 @@ const AnaliseVistoria = () => {
     const state = location.state as {
       editMode?: boolean;
       analiseData?: VistoriaAnaliseWithImages;
+      contractId?: string;
+      contractData?: {
+        locatario: string;
+        endereco: string;
+      };
       preserveAnalysisState?: {
         apontamentos: ApontamentoVistoria[];
         dadosVistoria: DadosVistoria;
@@ -356,6 +354,22 @@ const AnaliseVistoria = () => {
         description:
           'O estado da análise foi restaurado após a geração do documento.',
       });
+    } else if (state?.contractId && state?.contractData && contracts.length > 0) {
+      // Preencher dados do contrato selecionado
+      const contract = contracts.find(c => c.id === state.contractId);
+      if (contract) {
+        setSelectedContract(contract);
+        setDadosVistoria({
+          locatario: state.contractData.locatario,
+          endereco: state.contractData.endereco,
+          dataVistoria: formatDateBrazilian(new Date()),
+        });
+        
+        toast({
+          title: 'Contrato carregado',
+          description: 'Os dados do contrato foram preenchidos automaticamente.',
+        });
+      }
     }
   }, [location.state, contracts, loadAnalysisData, toast]);
 
@@ -426,9 +440,6 @@ const AnaliseVistoria = () => {
           }
           if (parsedState.dadosVistoria) {
             setDadosVistoria(parsedState.dadosVistoria);
-          }
-          if (parsedState.showDadosVistoria !== undefined) {
-            setShowDadosVistoria(parsedState.showDadosVistoria);
           }
         } catch (error) {
           log.error('Erro ao carregar estado salvo:', error);
@@ -511,7 +522,6 @@ const AnaliseVistoria = () => {
           apontamentos: apontamentosSerializaveis,
           selectedContractId: selectedContract?.id,
           dadosVistoria,
-          showDadosVistoria,
           savedAnaliseId,
         };
         localStorage.setItem(
@@ -528,7 +538,6 @@ const AnaliseVistoria = () => {
     apontamentos,
     selectedContract,
     dadosVistoria,
-    showDadosVistoria,
     savedAnaliseId,
     fileToBase64,
   ]);
@@ -657,23 +666,8 @@ const AnaliseVistoria = () => {
     updateDocumentPreview();
   }, [apontamentos, dadosVistoria, documentMode]);
 
-  // Filtrar contratos baseado no termo de busca
-  const filteredContracts = contracts.filter((contract) => {
-    if (!searchTerm) return true;
-
-    const searchLower = searchTerm.toLowerCase();
-    const numeroContrato =
-      contract.form_data.numeroContrato?.toLowerCase() || '';
-    const nomeLocatario = contract.form_data.nomeLocatario?.toLowerCase() || '';
-    const enderecoImovel =
-      contract.form_data.enderecoImovel?.toLowerCase() || '';
-
-    return (
-      numeroContrato.includes(searchLower) ||
-      nomeLocatario.includes(searchLower) ||
-      enderecoImovel.includes(searchLower)
-    );
-  });
+  // Filtrar contratos baseado no termo de busca (removido - não é mais necessário)
+  const filteredContracts = useMemo(() => contracts, [contracts]);
 
   // Função para verificar e carregar análise existente para o contrato selecionado
   // Função para forçar recarregamento das imagens
@@ -849,16 +843,11 @@ const AnaliseVistoria = () => {
       dadosVistoria.endereco &&
       dadosVistoria.dataVistoria
     ) {
-      // Aguardar um pequeno delay para dar tempo do usuário ver os dados sendo preenchidos
-      const timer = setTimeout(() => {
-        setShowDadosVistoria(false);
-      }, 2000);
-
-      return () => clearTimeout(timer);
+      // Dados agora são carregados automaticamente do contrato
     }
   }, [dadosVistoria]);
 
-  const handleAddApontamento = () => {
+  const handleAddApontamento = useCallback(() => {
     if (!currentApontamento.ambiente || !currentApontamento.descricao) {
       toast({
         title: 'Campos obrigatórios',
@@ -903,37 +892,83 @@ const AnaliseVistoria = () => {
       title: 'Apontamento adicionado',
       description: 'O apontamento foi adicionado com sucesso.',
     });
-  };
+  }, [currentApontamento, apontamentos, editingApontamento, toast]);
 
-  const handleRemoveApontamento = (id: string) => {
+  const handleRemoveApontamento = useCallback((id: string) => {
     setApontamentos(apontamentos.filter((ap) => ap.id !== id));
     toast({
       title: 'Apontamento removido',
       description: 'O apontamento foi removido com sucesso.',
     });
-  };
+  }, [apontamentos, toast]);
 
-  const _handleFileUpload = (
+  const _handleFileUpload = async (
     files: FileList | null,
     tipo: 'inicial' | 'final'
   ) => {
     if (!files) return;
 
     const fileArray = Array.from(files);
+    
+    // Validar imagens
+    const validationResults = await validateImages(fileArray, {
+      maxSize: 10 * 1024 * 1024, // 10MB
+      maxWidth: 4096,
+      maxHeight: 4096,
+    });
+
+    const validFiles: File[] = [];
+    let hasErrors = false;
+
+    validationResults.forEach((result, file) => {
+      if (result.valid) {
+        validFiles.push(file);
+        
+        // Mostrar avisos se houver
+        if (result.warnings) {
+          result.warnings.forEach(warning => {
+            toast({
+              title: 'Aviso',
+              description: `${file.name}: ${warning}`,
+              variant: 'default',
+            });
+          });
+        }
+      } else {
+        hasErrors = true;
+        toast({
+          title: 'Imagem inválida',
+          description: `${file.name}: ${result.error}`,
+          variant: 'destructive',
+        });
+      }
+    });
+
+    if (validFiles.length === 0 && hasErrors) {
+      return;
+    }
+
     setCurrentApontamento((prev) => ({
       ...prev,
       [`vistoria${tipo === 'inicial' ? 'Inicial' : 'Final'}`]: {
         fotos: [
           ...(prev[`vistoria${tipo === 'inicial' ? 'Inicial' : 'Final'}`]
             ?.fotos || []),
-          ...fileArray,
+          ...validFiles,
         ],
       },
     }));
+
+    if (validFiles.length > 0) {
+      toast({
+        title: 'Imagens adicionadas',
+        description: `${validFiles.length} imagem(ns) adicionada(s) com sucesso.`,
+      });
+    }
   };
 
   // Função para remover uma foto específica da vistoria inicial
-  const handleRemoveFotoInicial = (index: number) => {
+  const handleRemoveFotoInicial = useCallback((index: number) => {
     setCurrentApontamento((prev) => ({
       ...prev,
       vistoriaInicial: {
@@ -945,10 +980,10 @@ const AnaliseVistoria = () => {
       title: 'Foto removida',
       description: 'A foto foi removida da vistoria inicial.',
     });
-  };
+  }, [toast]);
 
   // Função para remover uma foto específica da vistoria final
-  const handleRemoveFotoFinal = (index: number) => {
+  const handleRemoveFotoFinal = useCallback((index: number) => {
     setCurrentApontamento((prev) => ({
       ...prev,
       vistoriaFinal: {
@@ -960,7 +995,7 @@ const AnaliseVistoria = () => {
       title: 'Foto removida',
       description: 'A foto foi removida da vistoria final.',
     });
-  };
+  }, [toast]);
 
   // Função para lidar com Ctrl+V (colar imagens)
   const handlePaste = (event: ClipboardEvent, tipo: 'inicial' | 'final') => {
@@ -1031,7 +1066,7 @@ const AnaliseVistoria = () => {
           dados_vistoria: {
             ...dadosVistoria,
             documentMode, // Salvar o modo do documento
-            prestador: documentMode === 'orcamento' ? dadosPrestador : undefined, // Salvar dados do prestador
+            prestador: documentMode === 'orcamento' && selectedPrestadorId ? prestadores.find(p => p.id === selectedPrestadorId) : undefined, // Salvar dados do prestador
           },
           apontamentos: apontamentos,
         });
@@ -1051,7 +1086,7 @@ const AnaliseVistoria = () => {
           dados_vistoria: {
             ...dadosVistoria,
             documentMode, // Salvar o modo do documento
-            prestador: documentMode === 'orcamento' ? dadosPrestador : undefined, // Salvar dados do prestador
+            prestador: documentMode === 'orcamento' && selectedPrestadorId ? prestadores.find(p => p.id === selectedPrestadorId) : undefined, // Salvar dados do prestador
           },
           apontamentos: apontamentos,
         });
@@ -1159,7 +1194,7 @@ const AnaliseVistoria = () => {
         endereco: dadosVistoria.endereco,
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
-        prestador: documentMode === 'orcamento' ? dadosPrestador : undefined,
+        prestador: documentMode === 'orcamento' && selectedPrestadorId ? prestadores.find(p => p.id === selectedPrestadorId) : undefined,
         apontamentos: apontamentosComFotos,
       });
 
@@ -1209,7 +1244,6 @@ const AnaliseVistoria = () => {
       observacao: '',
     });
     setEditingApontamento(null);
-    setShowDadosVistoria(true);
     setSavedAnaliseId(null);
     localStorage.removeItem('analise-vistoria-state');
     toast({
@@ -1218,7 +1252,7 @@ const AnaliseVistoria = () => {
     });
   };
 
-  const handleEditApontamento = (apontamento: ApontamentoVistoria) => {
+  const handleEditApontamento = useCallback((apontamento: ApontamentoVistoria) => {
     setEditingApontamento(apontamento.id);
     setCurrentApontamento({
       ambiente: apontamento.ambiente,
@@ -1239,9 +1273,9 @@ const AnaliseVistoria = () => {
       title: 'Editando apontamento',
       description: 'Modifique os dados e clique em "Salvar Alterações".',
     });
-  };
+  }, [toast]);
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
     if (!editingApontamento) return;
 
     const updatedApontamentos = apontamentos.map((apontamento) =>
@@ -1288,9 +1322,9 @@ const AnaliseVistoria = () => {
       title: 'Apontamento atualizado',
       description: 'As alterações foram salvas com sucesso.',
     });
-  };
+  }, [editingApontamento, currentApontamento, apontamentos, toast]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingApontamento(null);
     setCurrentApontamento({
       ambiente: '',
@@ -1303,7 +1337,7 @@ const AnaliseVistoria = () => {
       valor: 0,
       quantidade: 0,
     });
-  };
+  }, []);
 
   const handleCorrectText = async () => {
     const currentText = currentApontamento.observacao || '';
@@ -1381,170 +1415,75 @@ const AnaliseVistoria = () => {
               )}
             </div>
             {apontamentos.length > 0 && (
-              <Button
-                onClick={clearAllData}
-                variant="outline"
+              <ActionButton
+                icon={Trash2}
+                label="Limpar Tudo"
+                variant="danger"
                 size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Limpar Tudo
-              </Button>
+                onClick={clearAllData}
+              />
             )}
-            <Button
-              onClick={saveAnalysis}
-              disabled={
-                apontamentos.length === 0 || !selectedContract || saving
+            <ActionButton
+              icon={Save}
+              label={
+                saving
+                  ? 'Salvando...'
+                  : isEditMode
+                    ? 'Atualizar Análise'
+                    : hasExistingAnalise
+                      ? 'Atualizar Análise Existente'
+                      : 'Salvar Análise'
               }
-              variant="outline"
-              className="mr-2"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {saving
-                ? 'Salvando...'
-                : isEditMode
-                  ? 'Atualizar Análise'
-                  : hasExistingAnalise
-                    ? 'Atualizar Análise Existente'
-                    : 'Salvar Análise'}
-            </Button>
-            <Button
-              onClick={generateDocument}
+              variant="secondary"
+              size="md"
+              loading={saving}
               disabled={apontamentos.length === 0 || !selectedContract}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Gerar Documento
-            </Button>
+              onClick={saveAnalysis}
+            />
+            <ActionButton
+              icon={FileText}
+              label="Gerar Documento"
+              variant="primary"
+              size="md"
+              disabled={apontamentos.length === 0 || !selectedContract}
+              onClick={generateDocument}
+            />
           </div>
         </div>
 
-        {/* Botão para exibir dados da vistoria quando oculto */}
-        {!showDadosVistoria && (
-          <div className="flex justify-center mb-4">
-            <Button
-              onClick={() => setShowDadosVistoria(true)}
-              variant="outline"
-              size="sm"
-              className="text-xs text-muted-foreground hover:text-foreground border-dashed"
-            >
-              <Settings className="h-3 w-3 mr-1" />
-              Exibir Dados da Vistoria
-            </Button>
-          </div>
+        {/* Validação de Contrato Carregado */}
+        {!selectedContract && (
+          <Card className="mb-6 border-orange-500/50 bg-orange-50/10">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-3 text-orange-600">
+                <AlertTriangle className="h-5 w-5" />
+                <p className="font-medium">
+                  Nenhum contrato carregado. Selecione um contrato na página de Contratos para criar uma análise.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Dados da Vistoria */}
-        {showDadosVistoria && (
+        {/* Informações do Contrato Selecionado */}
+        {selectedContract && (
           <Card className="mb-6">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center space-x-2 text-xl">
-                  <Settings className="h-5 w-5 text-primary" />
-                  <span>Dados da Vistoria</span>
-                </CardTitle>
-                <Button
-                  onClick={() => setShowDadosVistoria(false)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
-                  title="Ocultar dados da vistoria"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <CardTitle className="flex items-center space-x-2 text-xl">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>Contrato Selecionado</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {/* Busca de Contrato */}
-                <div className="space-y-3">
-                  <Label
-                    htmlFor="buscar-contrato"
-                    className="text-sm font-medium flex items-center space-x-2"
-                  >
-                    <Search className="h-4 w-4" />
-                    <span>Buscar Contrato</span>
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="buscar-contrato"
-                      placeholder="Digite número do contrato, nome do locatário ou endereço..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {/* Seleção de Contrato */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="contrato"
-                      className="text-sm font-medium flex items-center space-x-2"
-                    >
-                      <FileText className="h-4 w-4" />
-                      <span>Selecionar Contrato *</span>
-                    </Label>
-                    {searchTerm && (
-                      <Badge variant="secondary" className="text-xs">
-                        {filteredContracts.length} de {contracts.length}{' '}
-                        contratos
-                      </Badge>
-                    )}
-                  </div>
-                  <Select
-                    value={selectedContract?.id || ''}
-                    onValueChange={(value) => {
-                      const contract = contracts.find((c) => c.id === value);
-                      setSelectedContract(contract || null);
-                      // Limpar busca após seleção
-                      setSearchTerm('');
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um contrato" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredContracts.length === 0 ? (
-                        <div className="p-4 text-sm text-muted-foreground text-center">
-                          <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>
-                            {searchTerm
-                              ? 'Nenhum contrato encontrado'
-                              : 'Nenhum contrato disponível'}
-                          </p>
-                        </div>
-                      ) : (
-                        filteredContracts.map((contract) => (
-                          <SelectItem key={contract.id} value={contract.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {contract.form_data.numeroContrato ||
-                                  'Sem número'}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                {contract.form_data.nomeLocatario || 'Sem nome'}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Informações do Contrato Selecionado */}
-                {selectedContract && (
-                  <div className="bg-gradient-to-r from-blue-500/10 to-indigo-600/10 border border-blue-400/30 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle2 className="h-5 w-5 text-blue-400" />
-                        <h3 className="font-semibold text-primary">
-                          Contrato Selecionado
-                        </h3>
-                      </div>
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-blue-500/10 to-indigo-600/10 border border-blue-400/30 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-blue-400" />
+                      <h3 className="font-semibold text-primary">
+                        Informações do Contrato
+                      </h3>
+                    </div>
                       {loadingExistingAnalise && (
                         <Badge
                           variant="default"
@@ -1635,83 +1574,92 @@ const AnaliseVistoria = () => {
                       </div>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Dados do Prestador - Apenas no modo orçamento */}
-        {documentMode === 'orcamento' && (
+        {/* Seleção de Prestador - Apenas no modo orçamento */}
+        {documentMode === 'orcamento' && selectedContract && (
           <Card className="mb-6">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center space-x-2 text-xl">
-                  <User className="h-5 w-5 text-primary" />
-                  <span>Dados do Prestador</span>
-                </CardTitle>
-                <Button
-                  onClick={() => setShowDadosPrestador(!showDadosPrestador)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
-                  title={showDadosPrestador ? "Ocultar dados do prestador" : "Exibir dados do prestador"}
-                >
-                  {showDadosPrestador ? <X className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
-                </Button>
-              </div>
+              <CardTitle className="flex items-center space-x-2 text-xl">
+                <Users className="h-5 w-5 text-primary" />
+                <span>Selecionar Prestador</span>
+              </CardTitle>
             </CardHeader>
-            {showDadosPrestador && (
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="prestador-nome" className="text-sm font-medium">
-                      Nome/Razão Social *
-                    </Label>
-                    <Input
-                      id="prestador-nome"
-                      placeholder="Nome do prestador"
-                      value={dadosPrestador.nome}
-                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, nome: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="prestador-cnpj" className="text-sm font-medium">
-                      CNPJ/CPF
-                    </Label>
-                    <Input
-                      id="prestador-cnpj"
-                      placeholder="00.000.000/0000-00"
-                      value={dadosPrestador.cnpj}
-                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, cnpj: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="prestador-telefone" className="text-sm font-medium">
-                      Telefone
-                    </Label>
-                    <Input
-                      id="prestador-telefone"
-                      placeholder="(00) 00000-0000"
-                      value={dadosPrestador.telefone}
-                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, telefone: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="prestador-email" className="text-sm font-medium">
-                      E-mail
-                    </Label>
-                    <Input
-                      id="prestador-email"
-                      type="email"
-                      placeholder="contato@prestador.com"
-                      value={dadosPrestador.email}
-                      onChange={(e) => setDadosPrestador(prev => ({ ...prev, email: e.target.value }))}
-                    />
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="prestador-select" className="text-sm font-medium">
+                  Prestador de Serviço *
+                </Label>
+                <Select
+                  value={selectedPrestadorId}
+                  onValueChange={setSelectedPrestadorId}
+                >
+                  <SelectTrigger id="prestador-select">
+                    <SelectValue placeholder="Selecione um prestador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {prestadores.length === 0 ? (
+                      <div className="p-4 text-sm text-muted-foreground text-center">
+                        <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>Nenhum prestador cadastrado</p>
+                      </div>
+                    ) : (
+                      prestadores.map((prestador) => (
+                        <SelectItem key={prestador.id} value={prestador.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{prestador.nome}</span>
+                            {prestador.especialidade && (
+                              <span className="text-xs text-muted-foreground">
+                                {prestador.especialidade}
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Informações do Prestador Selecionado */}
+              {selectedPrestadorId && prestadores.find(p => p.id === selectedPrestadorId) && (
+                <div className="bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-400/30 rounded-lg p-4 space-y-2">
+                  {(() => {
+                    const prestador = prestadores.find(p => p.id === selectedPrestadorId);
+                    if (!prestador) return null;
+                    return (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-semibold">{prestador.nome}</span>
+                        </div>
+                        {prestador.cnpj && (
+                          <p className="text-xs text-muted-foreground">CNPJ: {prestador.cnpj}</p>
+                        )}
+                        {prestador.telefone && (
+                          <p className="text-xs text-muted-foreground">Tel: {prestador.telefone}</p>
+                        )}
+                        {prestador.email && (
+                          <p className="text-xs text-muted-foreground">Email: {prestador.email}</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
-              </CardContent>
-            )}
+              )}
+
+              <ActionButton
+                icon={Plus}
+                label="Cadastrar Novo Prestador"
+                variant="secondary"
+                size="md"
+                className="w-full"
+                onClick={() => navigate('/prestadores')}
+              />
+            </CardContent>
           </Card>
         )}
 
