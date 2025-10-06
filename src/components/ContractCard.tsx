@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+// Badge component removed - not used
 import { Button } from '@/components/ui/button';
 import { Calendar, FileText, Edit, MapPin, MoreVertical, Trash2, User, User2, SearchCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Contract, DocumentType } from '@/types/contract';
-import { formatDateBrazilian } from '@/utils/dateFormatter';
+// formatDateBrazilian removed - not used
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -71,8 +71,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         } else {
           setHasAnalise(false);
         }
-      } catch (error) {
-        console.error('Erro ao verificar análise:', error);
+      } catch {
         setHasAnalise(false);
       } finally {
         setCheckingAnalise(false);
@@ -121,8 +120,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
     );
   };
 
-  const createdDate = new Date(contract.created_at);
-  const isRecent = Date.now() - createdDate.getTime() < 24 * 60 * 60 * 1000; // 24 horas
+  // Date calculations removed - not used
 
   return (
     <Card className="metric-card glass-card border-border hover:shadow-soft transition-all duration-300 overflow-visible">

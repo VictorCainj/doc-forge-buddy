@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { Contract } from '@/types/contract';
 import { useContractReducer } from '../useContractReducer';
 
 describe('useContractReducer', () => {
@@ -19,10 +20,10 @@ describe('useContractReducer', () => {
     it('deve adicionar contratos', () => {
       const { result } = renderHook(() => useContractReducer());
       
-      const mockContracts = [
-        { id: '1', title: 'Contrato 1', form_data: {}, content: '', document_type: 'test', created_at: '', updated_at: '' },
-        { id: '2', title: 'Contrato 2', form_data: {}, content: '', document_type: 'test', created_at: '', updated_at: '' },
-      ] as any[];
+      const mockContracts: Contract[] = [
+        { id: '1', title: 'Contrato 1', form_data: { numeroContrato: '1' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+        { id: '2', title: 'Contrato 2', form_data: { numeroContrato: '2' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+      ];
       
       act(() => {
         result.current.actions.setContracts(mockContracts);
@@ -36,13 +37,13 @@ describe('useContractReducer', () => {
     it('deve adicionar mais contratos aos existentes', () => {
       const { result } = renderHook(() => useContractReducer());
       
-      const initialContracts = [
-        { id: '1', title: 'Contrato 1', form_data: {} },
-      ] as any[];
+      const initialContracts: Contract[] = [
+        { id: '1', title: 'Contrato 1', form_data: { numeroContrato: '1' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+      ];
       
-      const newContracts = [
-        { id: '2', title: 'Contrato 2', form_data: {} },
-      ] as any[];
+      const newContracts: Contract[] = [
+        { id: '2', title: 'Contrato 2', form_data: { numeroContrato: '2' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+      ];
       
       act(() => {
         result.current.actions.setContracts(initialContracts);
@@ -58,19 +59,23 @@ describe('useContractReducer', () => {
     it('deve atualizar contrato existente', () => {
       const { result } = renderHook(() => useContractReducer());
       
-      const mockContracts = [
-        { id: '1', title: 'Contrato 1', form_data: {} },
-      ] as any[];
+      const mockContracts: Contract[] = [
+        { id: '1', title: 'Contrato 1', form_data: { numeroContrato: '1' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+      ];
       
       act(() => {
         result.current.actions.setContracts(mockContracts);
       });
       
-      const updatedContract = {
+      const updatedContract: Contract = {
         id: '1',
         title: 'Contrato Atualizado',
-        form_data: {},
-      } as any;
+        form_data: { numeroContrato: '1' },
+        content: '',
+        document_type: 'test',
+        created_at: '',
+        updated_at: '',
+      };
       
       act(() => {
         result.current.actions.updateContract(updatedContract);
@@ -82,10 +87,10 @@ describe('useContractReducer', () => {
     it('deve deletar contrato', () => {
       const { result } = renderHook(() => useContractReducer());
       
-      const mockContracts = [
-        { id: '1', title: 'Contrato 1', form_data: {} },
-        { id: '2', title: 'Contrato 2', form_data: {} },
-      ] as any[];
+      const mockContracts: Contract[] = [
+        { id: '1', title: 'Contrato 1', form_data: { numeroContrato: '1' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+        { id: '2', title: 'Contrato 2', form_data: { numeroContrato: '2' }, content: '', document_type: 'test', created_at: '', updated_at: '' },
+      ];
       
       act(() => {
         result.current.actions.setContracts(mockContracts);
@@ -102,11 +107,15 @@ describe('useContractReducer', () => {
     it('deve selecionar contrato', () => {
       const { result } = renderHook(() => useContractReducer());
       
-      const mockContract = {
+      const mockContract: Contract = {
         id: '1',
         title: 'Contrato 1',
-        form_data: {},
-      } as any;
+        form_data: { numeroContrato: '1' },
+        content: '',
+        document_type: 'test',
+        created_at: '',
+        updated_at: '',
+      };
       
       act(() => {
         result.current.actions.selectContract(mockContract);

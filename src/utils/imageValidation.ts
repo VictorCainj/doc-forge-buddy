@@ -87,7 +87,7 @@ export async function validateImage(
       valid: true,
       warnings: warnings.length > 0 ? warnings : undefined,
     };
-  } catch (error) {
+  } catch {
     return {
       valid: false,
       error: 'Não foi possível ler a imagem',

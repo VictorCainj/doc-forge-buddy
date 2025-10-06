@@ -28,7 +28,7 @@ export type ContractStatus = 'active' | 'expired' | 'pending' | 'cancelled';
 export interface ContractFormData {
   // Dados básicos do contrato
   numeroContrato: string;
-  enderecoImovel: string;
+  enderecoImovel?: string;
   dataFirmamentoContrato?: string;
   dataInicioRescisao?: string;
   dataTerminoRescisao?: string;

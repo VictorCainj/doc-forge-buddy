@@ -84,8 +84,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
         } else {
           setHasAnalise(false);
         }
-      } catch (error) {
-        console.error('Erro ao verificar análise:', error);
+      } catch {
         setHasAnalise(false);
       } finally {
         setCheckingAnalise(false);

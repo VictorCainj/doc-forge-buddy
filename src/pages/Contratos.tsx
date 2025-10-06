@@ -28,7 +28,7 @@ import OptimizedSearch from '@/components/ui/optimized-search';
 
 const Contratos = () => {
   const navigate = useNavigate();
-  const { showSuccess, showError } = useStandardToast();
+  const { showError } = useStandardToast();
   
   // Reducer state (substitui ~20 useState)
   const { state, actions } = useContractReducer();
@@ -54,7 +54,6 @@ const Contratos = () => {
     hasMore,
     loadMore,
     totalCount,
-    refetch,
   } = useOptimizedData({
     documentType: 'contrato',
     limit: 6,
@@ -395,12 +394,14 @@ const Contratos = () => {
       return;
     }
 
-    generateDocumentWithAssinante(
-      state.pendingDocument.contract!,
-      state.pendingDocument.template,
-      state.pendingDocument.documentType,
-      state.formData.assinanteSelecionado
-    );
+    if (state.pendingDocument.contract) {
+      generateDocumentWithAssinante(
+        state.pendingDocument.contract,
+        state.pendingDocument.template,
+        state.pendingDocument.documentType,
+        state.formData.assinanteSelecionado
+      );
+    }
 
     actions.closeModal('assinante');
     actions.setPendingDocument(null);

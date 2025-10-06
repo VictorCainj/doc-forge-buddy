@@ -42,7 +42,7 @@ import VistoriaMigrationBanner from '@/components/VistoriaMigrationBanner';
 import { ActionButton } from '@/components/ui/action-button';
 
 const VistoriaAnalises = () => {
-  const { toast } = useToast();
+  const { toast: _toast } = useToast();
   const navigate = useNavigate();
   const { analises, loading, deleteAnalise, fetchAnalises } =
     useVistoriaAnalises();

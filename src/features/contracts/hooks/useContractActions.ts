@@ -25,8 +25,7 @@ export function useContractActions() {
       
       toast.success('Contrato deletado com sucesso');
       return true;
-    } catch (error) {
-      console.error('Erro ao deletar contrato:', error);
+    } catch {
       toast.error('Erro ao deletar contrato');
       return false;
     }
@@ -55,8 +54,7 @@ export function useContractActions() {
       
       toast.success('Contrato duplicado com sucesso');
       return data as unknown as Contract;
-    } catch (error) {
-      console.error('Erro ao duplicar contrato:', error);
+    } catch {
       toast.error('Erro ao duplicar contrato');
       return null;
     }
@@ -74,7 +72,7 @@ export function useContractActions() {
         c.form_data?.nomeLocatario || 'N/A',
         c.form_data?.enderecoImovel || 'N/A',
         c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : 'N/A',
-        (c as any).status || 'Ativo',
+        (c as { status?: string }).status || 'Ativo',
       ]);
       
       const csvContent = [
@@ -96,8 +94,7 @@ export function useContractActions() {
       document.body.removeChild(link);
       
       toast.success(`${contracts.length} contratos exportados`);
-    } catch (error) {
-      console.error('Erro ao exportar contratos:', error);
+    } catch {
       toast.error('Erro ao exportar contratos');
     }
   }, []);
@@ -116,8 +113,7 @@ export function useContractActions() {
       
       toast.success(`${ids.length} contratos deletados com sucesso`);
       return true;
-    } catch (error) {
-      console.error('Erro ao deletar contratos:', error);
+    } catch {
       toast.error('Erro ao deletar contratos em lote');
       return false;
     }
@@ -127,12 +123,12 @@ export function useContractActions() {
    * Atualizar status de múltiplos contratos (funcionalidade removida - tabela contracts não tem campo status)
    */
   const bulkUpdateStatus = useCallback(async (
-    ids: string[], 
-    status: string
+    _ids: string[], 
+    _status: string
   ): Promise<boolean> => {
     toast.error('Funcionalidade de status não disponível');
     return false;
-  }, []);
+  }, [toast]);
   
   return {
     deleteContract,

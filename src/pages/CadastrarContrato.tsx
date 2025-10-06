@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ContractWizardModal } from '@/features/contracts/components';
 import { FormStep } from '@/hooks/use-form-wizard';
 import {
@@ -319,9 +319,8 @@ const CadastrarContrato = () => {
 
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
-    } catch (error) {
+    } catch {
       toast.error(isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato');
-      console.error('Erro ao salvar contrato:', error);
     } finally {
       setIsSubmitting(false);
     }

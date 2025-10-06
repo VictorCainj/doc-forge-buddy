@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+// Badge component removed - not used in this backup file
 import OptimizedSearch from '@/components/ui/optimized-search';
 // import { VirtualizedList, ContractItem } from '@/components/ui/virtualized-list';
 import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';

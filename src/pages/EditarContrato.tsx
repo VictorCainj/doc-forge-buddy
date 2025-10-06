@@ -331,9 +331,8 @@ const EditarContrato = () => {
       toast.success('Contrato atualizado com sucesso!');
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao atualizar contrato');
-      console.error('Erro ao atualizar contrato:', error);
     } finally {
       setIsSubmitting(false);
     }

@@ -56,7 +56,6 @@ export const usePrestadores = () => {
       if (data && isValidPrestadorArray(data)) {
         setPrestadores(data);
       } else {
-        console.error('Dados inválidos recebidos do Supabase');
         toast({
           title: 'Dados inválidos',
           description: 'Os dados dos prestadores estão em formato incorreto.',
@@ -64,8 +63,7 @@ export const usePrestadores = () => {
         });
         setPrestadores([]);
       }
-    } catch (error) {
-      console.error('Erro ao carregar prestadores:', error);
+    } catch {
       toast({
         title: 'Erro ao carregar prestadores',
         description: 'Não foi possível carregar a lista de prestadores.',
@@ -113,8 +111,7 @@ export const usePrestadores = () => {
       } else {
         throw new Error('Dados do prestador criado são inválidos');
       }
-    } catch (error) {
-      console.error('Erro ao criar prestador:', error);
+    } catch {
       toast({
         title: 'Erro ao criar',
         description: 'Não foi possível criar o prestador.',
@@ -157,8 +154,7 @@ export const usePrestadores = () => {
 
       await fetchPrestadores();
       return true;
-    } catch (error) {
-      console.error('Erro ao atualizar prestador:', error);
+    } catch {
       toast({
         title: 'Erro ao atualizar',
         description: 'Não foi possível atualizar o prestador.',
@@ -198,8 +194,7 @@ export const usePrestadores = () => {
 
       await fetchPrestadores();
       return true;
-    } catch (error) {
-      console.error('Erro ao deletar prestador:', error);
+    } catch {
       toast({
         title: 'Erro ao deletar',
         description: 'Não foi possível deletar o prestador.',

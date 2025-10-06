@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { log } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ import {
   CheckCircle,
   AlertTriangle,
   Eye,
-  Search,
   FileText,
   Edit,
   User,
@@ -57,7 +56,7 @@ import {
   DadosVistoria,
   VistoriaAnaliseWithImages,
 } from '@/types/vistoria';
-import { BudgetItemType, DadosPrestador } from '@/types/orcamento';
+import { BudgetItemType } from '@/types/orcamento';
 import { Package, Wrench } from 'lucide-react';
 import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
@@ -671,7 +670,6 @@ const AnaliseVistoria = () => {
   }, [apontamentos, dadosVistoria, documentMode]);
 
   // Filtrar contratos baseado no termo de busca (removido - não é mais necessário)
-  const filteredContracts = useMemo(() => contracts, [contracts]);
 
   // Função para verificar e carregar análise existente para o contrato selecionado
   // Função para forçar recarregamento das imagens

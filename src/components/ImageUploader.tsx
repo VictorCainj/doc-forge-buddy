@@ -85,8 +85,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       onUpload(finalFile);
       
       toast.success('Imagem carregada com sucesso');
-    } catch (error) {
-      console.error('Erro ao processar imagem:', error);
+    } catch {
       toast.error('Erro ao processar imagem');
     } finally {
       setIsProcessing(false);

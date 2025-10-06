@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { memo, useEffect, useState } from 'react';
 import { Clock, MessageSquare, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,8 @@ interface ChatSession {
   id: string;
   title: string;
   mode: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -30,7 +29,7 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
     const fetchSessions = async () => {
       setLoading(true);
       const loadedSessions = await loadSessions();
-      setSessions(loadedSessions);
+      setSessions(loadedSessions as ChatSession[]);
       setLoading(false);
     };
     
@@ -96,10 +95,10 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
                     <div className="flex items-center gap-2 text-xs text-blue-200/70">
                       <Clock className="h-3 w-3" />
                       <span>
-                        {formatDistanceToNow(new Date(session.updated_at), {
+                        {session.updated_at ? formatDistanceToNow(new Date(session.updated_at), {
                           addSuffix: true,
                           locale: ptBR,
-                        })}
+                        }) : 'Data desconhecida'}
                       </span>
                     </div>
                   </div>

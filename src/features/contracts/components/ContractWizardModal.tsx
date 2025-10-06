@@ -72,7 +72,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
     currentStep,
     formData,
     isStepValid,
-    canGoNext,
+    canGoNext: _canGoNext,
     canGoPrevious,
     progress,
     goToStep,
