@@ -40,6 +40,8 @@ import {
   Wand2,
   RefreshCw,
   Users,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOpenAI } from '@/hooks/useOpenAI';
@@ -115,6 +117,7 @@ const AnaliseVistoria = () => {
   const [saving, setSaving] = useState(false);
   const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>('analise');
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
+  const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -1406,9 +1409,9 @@ const AnaliseVistoria = () => {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-muted/50 px-3 py-2 rounded-lg">
-              <Archive className="h-4 w-4 text-muted-foreground" />
-              <Badge variant="outline" className="text-sm">
+            <div className="flex items-center space-x-2 bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-2 rounded-lg">
+              <Archive className="h-4 w-4 text-blue-300" />
+              <Badge variant="outline" className="text-sm border-blue-400/30 text-blue-200">
                 {apontamentos.length} apontamento
                 {apontamentos.length !== 1 ? 's' : ''}
               </Badge>
@@ -1461,9 +1464,9 @@ const AnaliseVistoria = () => {
 
         {/* Validação de Contrato Carregado */}
         {!selectedContract && (
-          <Card className="mb-6 border-orange-500/50 bg-orange-50/10">
+          <Card className="mb-6 border-orange-500/30 bg-orange-500/10 backdrop-blur-sm">
             <CardContent className="py-6">
-              <div className="flex items-center gap-3 text-orange-600">
+              <div className="flex items-center gap-3 text-orange-300">
                 <AlertTriangle className="h-5 w-5" />
                 <p className="font-medium">
                   Nenhum contrato carregado. Selecione um contrato na página de Contratos para criar uma análise.
@@ -1475,20 +1478,31 @@ const AnaliseVistoria = () => {
 
         {/* Informações do Contrato Selecionado */}
         {selectedContract && (
-          <Card className="mb-6">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2 text-xl">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
-                <span>Contrato Selecionado</span>
+          <Card className="mb-6 bg-white/5 backdrop-blur-sm border-white/10">
+            <CardHeader 
+              className="pb-4 border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
+              onClick={() => setIsContractInfoExpanded(!isContractInfoExpanded)}
+            >
+              <CardTitle className="flex items-center justify-between text-xl text-blue-100">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="h-5 w-5 text-blue-400" />
+                  <span>Contrato Selecionado</span>
+                </div>
+                {isContractInfoExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-blue-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-blue-400" />
+                )}
               </CardTitle>
             </CardHeader>
+            {isContractInfoExpanded && (
             <CardContent>
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-500/10 to-indigo-600/10 border border-blue-400/30 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/30 rounded-lg p-6 backdrop-blur-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <FileText className="h-5 w-5 text-blue-400" />
-                      <h3 className="font-semibold text-primary">
+                      <h3 className="font-semibold text-blue-100">
                         Informações do Contrato
                       </h3>
                     </div>
@@ -1535,34 +1549,34 @@ const AnaliseVistoria = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <Label className="text-sm font-medium">
+                          <User className="h-4 w-4 text-blue-300" />
+                          <Label className="text-sm font-medium text-blue-200">
                             Locatário
                           </Label>
                         </div>
-                        <p className="text-sm bg-background/50 p-2 rounded border">
+                        <p className="text-sm bg-white/5 backdrop-blur-sm p-2 rounded border border-white/10 text-slate-200">
                           {dadosVistoria.locatario}
                         </p>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <Label className="text-sm font-medium">
+                          <MapPin className="h-4 w-4 text-blue-300" />
+                          <Label className="text-sm font-medium text-blue-200">
                             Endereço
                           </Label>
                         </div>
-                        <p className="text-sm bg-background/50 p-2 rounded border">
+                        <p className="text-sm bg-white/5 backdrop-blur-sm p-2 rounded border border-white/10 text-slate-200">
                           {dadosVistoria.endereco}
                         </p>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <Label className="text-sm font-medium">
+                          <Calendar className="h-4 w-4 text-blue-300" />
+                          <Label className="text-sm font-medium text-blue-200">
                             Data da Vistoria
                           </Label>
                         </div>
-                        <p className="text-sm bg-background/50 p-2 rounded border">
+                        <p className="text-sm bg-white/5 backdrop-blur-sm p-2 rounded border border-white/10 text-slate-200">
                           {dadosVistoria.dataVistoria}
                         </p>
                       </div>
@@ -1584,28 +1598,29 @@ const AnaliseVistoria = () => {
                   </div>
                 </div>
             </CardContent>
+            )}
           </Card>
         )}
 
         {/* Seleção de Prestador - Apenas no modo orçamento */}
         {documentMode === 'orcamento' && selectedContract && (
-          <Card className="mb-6">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2 text-xl">
-                <Users className="h-5 w-5 text-primary" />
+          <Card className="mb-6 bg-white/5 backdrop-blur-sm border-white/10">
+            <CardHeader className="pb-4 border-b border-white/10">
+              <CardTitle className="flex items-center space-x-2 text-xl text-blue-100">
+                <Users className="h-5 w-5 text-blue-400" />
                 <span>Selecionar Prestador</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="prestador-select" className="text-sm font-medium">
+                <Label htmlFor="prestador-select" className="text-sm font-medium text-blue-200">
                   Prestador de Serviço *
                 </Label>
                 <Select
                   value={selectedPrestadorId}
                   onValueChange={setSelectedPrestadorId}
                 >
-                  <SelectTrigger id="prestador-select">
+                  <SelectTrigger id="prestador-select" className="!bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-blue-500/50">
                     <SelectValue placeholder="Selecione um prestador" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1634,7 +1649,7 @@ const AnaliseVistoria = () => {
 
               {/* Informações do Prestador Selecionado */}
               {selectedPrestadorId && prestadores.find(p => p.id === selectedPrestadorId) && (
-                <div className="bg-gradient-to-r from-green-500/10 to-emerald-600/10 border border-green-400/30 rounded-lg p-4 space-y-2">
+                <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-green-400/30 rounded-lg p-4 space-y-2 backdrop-blur-sm">
                   {(() => {
                     const prestador = prestadores.find(p => p.id === selectedPrestadorId);
                     if (!prestador) return null;
@@ -1673,15 +1688,15 @@ const AnaliseVistoria = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Formulário de Novo Apontamento */}
-          <Card className="xl:col-span-1">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center justify-between">
+          <Card className="xl:col-span-1 bg-white/5 backdrop-blur-sm border-white/10">
+            <CardHeader className="pb-4 border-b border-white/10">
+              <CardTitle className="flex items-center justify-between text-blue-100">
                 <div className="flex items-center space-x-2">
-                  <Plus className="h-5 w-5 text-primary" />
+                  <Plus className="h-5 w-5 text-blue-400" />
                   <span>Novo Apontamento</span>
                 </div>
                 <Select value={documentMode} onValueChange={(value: 'analise' | 'orcamento') => setDocumentMode(value)}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 !bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-blue-500/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1697,9 +1712,9 @@ const AnaliseVistoria = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="ambiente"
-                    className="text-sm font-medium flex items-center space-x-2"
+                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
                   >
-                    <Home className="h-4 w-4 text-muted-foreground" />
+                    <Home className="h-4 w-4 text-blue-300" />
                     <span>Ambiente *</span>
                   </Label>
                   <Input
@@ -1712,15 +1727,15 @@ const AnaliseVistoria = () => {
                         ambiente: e.target.value,
                       }))
                     }
-                    className="h-9"
+                    className="h-9 !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="subtitulo"
-                    className="text-sm font-medium flex items-center space-x-2"
+                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
                   >
-                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <Settings className="h-4 w-4 text-blue-300" />
                     <span>Subtítulo</span>
                   </Label>
                   <Input
@@ -1733,7 +1748,7 @@ const AnaliseVistoria = () => {
                         subtitulo: e.target.value,
                       }))
                     }
-                    className="h-9"
+                    className="h-9 !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                   />
                 </div>
               </div>
@@ -1742,9 +1757,9 @@ const AnaliseVistoria = () => {
               <div className="space-y-2">
                 <Label
                   htmlFor="descricao"
-                  className="text-sm font-medium flex items-center space-x-2"
+                  className="text-sm font-medium flex items-center space-x-2 text-blue-200"
                 >
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <FileText className="h-4 w-4 text-blue-300" />
                   <span>{documentMode === 'orcamento' ? 'Descrição do Vistoriador *' : 'Descrição *'}</span>
                 </Label>
                 <Textarea
@@ -1758,7 +1773,7 @@ const AnaliseVistoria = () => {
                     }))
                   }
                   rows={2}
-                  className="text-sm"
+                  className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                 />
               </div>
 
@@ -1767,9 +1782,9 @@ const AnaliseVistoria = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="descricaoServico"
-                    className="text-sm font-medium flex items-center space-x-2"
+                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
                   >
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <FileText className="h-4 w-4 text-blue-300" />
                     <span>Descrição do Serviço *</span>
                   </Label>
                   <Textarea
@@ -1783,7 +1798,7 @@ const AnaliseVistoria = () => {
                       }))
                     }
                     rows={2}
-                    className="text-sm"
+                    className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                   />
                 </div>
               )}
@@ -1795,14 +1810,14 @@ const AnaliseVistoria = () => {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Tipo</Label>
+                      <Label className="text-xs font-medium text-blue-200">Tipo</Label>
                       <Select
                         value={currentApontamento.tipo || 'material'}
                         onValueChange={(value: BudgetItemType) =>
                           setCurrentApontamento(prev => ({ ...prev, tipo: value }))
                         }
                       >
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger className="h-8 !bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-blue-500/50">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1830,7 +1845,7 @@ const AnaliseVistoria = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Valor Unit.</Label>
+                      <Label className="text-xs font-medium text-blue-200">Valor Unit.</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -1838,13 +1853,13 @@ const AnaliseVistoria = () => {
                         onChange={(e) =>
                           setCurrentApontamento(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))
                         }
-                        className="h-8 text-sm"
+                        className="h-8 text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                         placeholder="0,00"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Quantidade</Label>
+                      <Label className="text-xs font-medium text-blue-200">Quantidade</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -1852,14 +1867,14 @@ const AnaliseVistoria = () => {
                         onChange={(e) =>
                           setCurrentApontamento(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))
                         }
-                        className="h-8 text-sm"
+                        className="h-8 text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                         placeholder="0"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium">Subtotal</Label>
-                      <div className="flex items-center space-x-1 h-8 px-2 bg-muted/50 rounded border text-sm font-medium">
+                      <Label className="text-xs font-medium text-blue-200">Subtotal</Label>
+                      <div className="flex items-center space-x-1 h-8 px-2 bg-slate-800/50 rounded border border-slate-700/50 text-sm font-medium text-slate-100">
                         <span>
                           {((currentApontamento.valor || 0) * (currentApontamento.quantidade || 0))
                             .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -1874,12 +1889,12 @@ const AnaliseVistoria = () => {
 
               {/* Vistoria Inicial */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium flex items-center space-x-2 text-foreground bg-card p-2 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-green-200 bg-green-500/10 p-2 rounded-lg border border-green-400/30">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span>Vistoria Inicial</span>
                 </h3>
                 <div
-                  className="border-2 border-dashed border-green-300 dark:border-green-700 rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
+                  className="border-2 border-dashed border-green-400/30 rounded-lg p-4 bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
                   onPaste={(e) => handlePaste(e.nativeEvent, 'inicial')}
                   tabIndex={0}
                 >
@@ -1888,10 +1903,10 @@ const AnaliseVistoria = () => {
                       <Upload className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-slate-200">
                         Cole imagens com Ctrl+V
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-slate-400 mt-1">
                         Estado inicial do ambiente
                       </p>
                     </div>
@@ -1934,9 +1949,9 @@ const AnaliseVistoria = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="descritivoLaudo"
-                    className="text-sm font-medium flex items-center space-x-2"
+                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
                   >
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <FileText className="h-4 w-4 text-blue-300" />
                     <span>Descritivo do Laudo de Entrada (Opcional)</span>
                   </Label>
                   <Textarea
@@ -1956,7 +1971,7 @@ const AnaliseVistoria = () => {
                       }))
                     }
                     rows={2}
-                    className="text-sm"
+                    className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                   />
                 </div>
               </div>
@@ -1965,12 +1980,12 @@ const AnaliseVistoria = () => {
 
               {/* Vistoria Final */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium flex items-center space-x-2 text-foreground bg-card p-2 rounded-lg border border-orange-200 dark:border-orange-800">
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-orange-200 bg-orange-500/10 p-2 rounded-lg border border-orange-400/30">
                   <AlertTriangle className="h-4 w-4 text-orange-600" />
                   <span>Vistoria Final</span>
                 </h3>
                 <div
-                  className="border-2 border-dashed border-orange-300 dark:border-orange-700 rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
+                  className="border-2 border-dashed border-orange-400/30 rounded-lg p-4 bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
                   onPaste={(e) => handlePaste(e.nativeEvent, 'final')}
                   tabIndex={0}
                 >
@@ -1979,10 +1994,10 @@ const AnaliseVistoria = () => {
                       <Upload className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-slate-200">
                         Cole imagens com Ctrl+V
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-slate-400 mt-1">
                         Estado atual do ambiente
                       </p>
                     </div>
@@ -2029,9 +2044,9 @@ const AnaliseVistoria = () => {
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="observacao"
-                    className="text-sm font-medium flex items-center space-x-2"
+                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
                   >
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                    <AlertCircle className="h-4 w-4 text-blue-300" />
                     <span>Análise Técnica</span>
                   </Label>
                   <Button
@@ -2059,7 +2074,7 @@ const AnaliseVistoria = () => {
                     }))
                   }
                   rows={3}
-                  className="text-sm"
+                  className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
                 />
               </div>
 
@@ -2101,20 +2116,20 @@ const AnaliseVistoria = () => {
           </Card>
 
           {/* Visualização do Documento em Tempo Real */}
-          <Card className="xl:col-span-2">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" />
+          <Card className="xl:col-span-2 bg-white/5 backdrop-blur-sm border-white/10">
+            <CardHeader className="pb-4 border-b border-white/10">
+              <CardTitle className="flex items-center space-x-2 text-lg text-blue-100">
+                <FileText className="h-5 w-5 text-blue-400" />
                 <span>Pré-visualização do Documento</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {apontamentos.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="h-8 w-8 opacity-50" />
+                <div className="text-center py-12 text-blue-300">
+                  <div className="w-16 h-16 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="h-8 w-8 text-blue-400 opacity-50" />
                   </div>
-                  <h3 className="font-medium text-foreground mb-2">
+                  <h3 className="font-medium text-blue-200 mb-2">
                     Nenhum apontamento
                   </h3>
                   <p className="text-sm">
@@ -2125,15 +2140,15 @@ const AnaliseVistoria = () => {
               ) : documentPreview ? (
                 <div className="space-y-4">
                   {/* Controles da Pré-visualização */}
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium">
+                      <CheckCircle2 className="h-4 w-4 text-green-400" />
+                      <span className="text-sm font-medium text-blue-200">
                         Documento Atualizado
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs border-blue-400/30 text-blue-200">
                         {apontamentos.length} apontamento
                         {apontamentos.length !== 1 ? 's' : ''}
                       </Badge>
@@ -2141,9 +2156,9 @@ const AnaliseVistoria = () => {
                   </div>
 
                   {/* Pré-visualização do Documento Real */}
-                  <div className="border border-border rounded-lg overflow-hidden">
-                    <div className="bg-muted/50 p-3 border-b border-border">
-                      <h4 className="text-sm font-medium text-foreground">
+                  <div className="border border-white/10 rounded-lg overflow-hidden">
+                    <div className="bg-white/5 backdrop-blur-sm p-3 border-b border-white/10">
+                      <h4 className="text-sm font-medium text-blue-200">
                         Pré-visualização do Documento Final
                       </h4>
                     </div>

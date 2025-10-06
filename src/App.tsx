@@ -13,8 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Lazy load de páginas para code splitting
 // Páginas críticas (carregadas primeiro)
-const Index = lazy(() => import('./pages/Index')); // Agora aponta para Dashboard
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Index = lazy(() => import('./pages/Index')); // Aponta para Contratos
 const Login = lazy(() => import('./pages/Login'));
 const Contratos = lazy(() => import('./pages/Contratos'));
 

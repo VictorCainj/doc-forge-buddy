@@ -1,4 +1,4 @@
-import Dashboard from './Dashboard';
+import Contratos from './Contratos';
 
-// Index agora aponta para o Dashboard real
-export default Dashboard;
+// Index redireciona para página de Contratos
+export default Contratos;
