@@ -314,5 +314,19 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   enhancedData.solicitarGas = formData.solicitarGas || 'nao';
   enhancedData.solicitarCND = formData.solicitarCND || 'nao';
 
+  // Definir título para notificação de agendamento baseado no gênero e quantidade de locatários
+  if (isMultipleLocatarios) {
+    enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
+  } else if (formData.primeiroLocatario) {
+    const genero = formData.generoLocatario;
+    if (genero === 'feminino') {
+      enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
+    } else {
+      enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
+    }
+  } else {
+    enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
+  }
+
   return enhancedData;
 }
