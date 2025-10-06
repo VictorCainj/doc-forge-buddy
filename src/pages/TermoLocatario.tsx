@@ -391,7 +391,7 @@ __________________________________________<br>
       // Mostrar modal para preenchimento dos campos de contato
       setPendingFormData(data);
       setShowContactModal(true);
-      return {}; // Retorna objeto vazio para evitar erro de tipo
+      throw new Error('VALIDATION_REQUIRED'); // Interromper o fluxo
     }
 
     // Detectar se há múltiplos locatários baseado na quantidade adicionada
@@ -677,8 +677,13 @@ __________________________________________<br>
         onEmailChange={(value) =>
           setContactData((prev) => ({ ...prev, emailLocatario: value }))
         }
-        onSave={() => {
-          handleSaveContactData((data) => handleGenerate(data));
+        onSave={async () => {
+          await handleSaveContactData(() => {
+            if (pendingFormData) {
+              // Força reexecução do wizard com os dados atualizados
+              window.location.reload();
+            }
+          });
         }}
         onCancel={() => {
           setShowContactModal(false);

@@ -98,7 +98,7 @@ export function useTermoLocatario(contractData: ContractData) {
   }, [contractData, toast]);
 
   // Salvar dados de contato e continuar
-  const handleSaveContactData = useCallback(async (onSuccess?: (data: Record<string, string>) => void) => {
+  const handleSaveContactData = useCallback(async (onSuccess?: () => void) => {
     if (!contactData.celularLocatario.trim() || !contactData.emailLocatario.trim()) {
       toast({
         title: 'Campos obrigatórios',
@@ -109,14 +109,14 @@ export function useTermoLocatario(contractData: ContractData) {
     }
 
     const success = await updateContractContactData(contactData);
-    if (success && pendingFormData) {
+    if (success) {
       setShowContactModal(false);
       if (onSuccess) {
-        onSuccess(pendingFormData);
+        onSuccess();
       }
       setPendingFormData(null);
     }
-  }, [contactData, pendingFormData, updateContractContactData, toast]);
+  }, [contactData, updateContractContactData, toast]);
 
   // Processar dados do formulário
   const processFormData = useCallback((data: Record<string, string>) => {

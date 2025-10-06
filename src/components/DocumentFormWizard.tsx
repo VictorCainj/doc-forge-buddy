@@ -151,6 +151,12 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (isFormValid && !isSubmitting) {
       try {
         const processedData = await onGenerate(formData);
+        
+        // Se processedData é undefined ou null, não prosseguir
+        if (!processedData) {
+          return;
+        }
+        
         const finalData = { ...formData, ...processedData };
         setProcessedFormData(finalData);
 
@@ -197,7 +203,11 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             }
           }
         }, 100);
-      } catch (error) {
+      } catch (error: any) {
+        // Se o erro for de validação, apenas silenciosamente retornar
+        if (error?.message === 'VALIDATION_REQUIRED') {
+          return;
+        }
         // Erro já tratado no onGenerate
         formLogger.error('Erro ao processar formulário:', error);
       }
