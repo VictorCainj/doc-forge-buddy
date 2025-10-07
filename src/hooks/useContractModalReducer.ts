@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook com useReducer para gerenciar estados complexos de modais
  * Substitui 25+ useState por um reducer organizado

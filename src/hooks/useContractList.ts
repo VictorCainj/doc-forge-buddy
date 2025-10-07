@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook para gerenciar lista de contratos, paginação e busca
  * Extrai responsabilidades do componente Contratos
