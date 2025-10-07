@@ -128,11 +128,7 @@ export const useVistoriaAnalises = () => {
 
         if (updateError) throw updateError;
 
-        // Remover imagens antigas
-        await supabase
-          .from('vistoria_images')
-          .delete()
-          .eq('vistoria_id', analiseId);
+        // NÃO remover imagens antigas - vamos preservá-las e adicionar apenas novas
       } else {
         // Criar nova análise
         const { data: analiseData, error: analiseError } = await supabase
@@ -222,8 +218,7 @@ export const useVistoriaAnalises = () => {
 
       if (analiseError) throw analiseError;
 
-      // Remover imagens antigas
-      await supabase.from('vistoria_images').delete().eq('vistoria_id', id);
+      // NÃO remover imagens antigas - vamos preservá-las e adicionar apenas novas
 
       // Processar e salvar novas imagens
       if (data.apontamentos) {
@@ -343,27 +338,47 @@ export const useVistoriaAnalises = () => {
   ) => {
     try {
       // eslint-disable-next-line no-console
-      console.log('Processando imagens para vistoria:', vistoriaId);
+      console.log('=== PROCESSANDO IMAGENS PARA VISTORIA:', vistoriaId, '===');
       // eslint-disable-next-line no-console
-      console.log('Apontamentos:', apontamentos.length);
+      console.log('Total de apontamentos:', apontamentos.length);
 
       const imagePromises: Promise<unknown>[] = [];
+      const existingImageRefs: Array<{
+        apontamento_id: string;
+        tipo_vistoria: 'inicial' | 'final';
+        image_url: string;
+        file_name: string;
+        file_size: number;
+        file_type: string;
+      }> = [];
 
-      for (const apontamento of apontamentos) {
+      for (let i = 0; i < apontamentos.length; i++) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const apontamentoData = apontamento as any;
+        const apontamentoData = apontamentos[i] as any;
+        
+        // eslint-disable-next-line no-console
+        console.log(`\n--- Apontamento ${i + 1}: ${apontamentoData.ambiente || 'Sem nome'} ---`);
 
         // Processar fotos da vistoria inicial
         if (apontamentoData.vistoriaInicial?.fotos) {
+          const fotosIniciais = apontamentoData.vistoriaInicial.fotos;
           // eslint-disable-next-line no-console
-          console.log(
-            'Fotos vistoria inicial:',
-            apontamentoData.vistoriaInicial.fotos.length
-          );
-          for (const foto of apontamentoData.vistoriaInicial.fotos) {
+          console.log('Fotos vistoria inicial:', fotosIniciais.length);
+          
+          for (let j = 0; j < fotosIniciais.length; j++) {
+            const foto = fotosIniciais[j];
+            // eslint-disable-next-line no-console
+            console.log(`  Foto inicial ${j + 1}:`, {
+              isFile: foto instanceof File,
+              isFromDatabase: foto?.isFromDatabase,
+              name: foto?.name,
+              url: foto?.url,
+            });
+
             if (foto instanceof File) {
+              // Nova imagem - fazer upload
               // eslint-disable-next-line no-console
-              console.log('Adicionando foto inicial ao upload:', foto.name);
+              console.log('  → Upload de nova imagem:', foto.name);
               imagePromises.push(
                 uploadImageToStorage(
                   foto,
@@ -372,21 +387,42 @@ export const useVistoriaAnalises = () => {
                   'inicial'
                 )
               );
+            } else if (foto?.isFromDatabase && foto?.url) {
+              // Imagem já existe no banco - preservar referência
+              // eslint-disable-next-line no-console
+              console.log('  → Preservando imagem do banco:', foto.url);
+              existingImageRefs.push({
+                apontamento_id: apontamentoData.id,
+                tipo_vistoria: 'inicial',
+                image_url: foto.url,
+                file_name: foto.name || 'unknown',
+                file_size: foto.size || 0,
+                file_type: foto.type || 'image/jpeg',
+              });
             }
           }
         }
 
         // Processar fotos da vistoria final
         if (apontamentoData.vistoriaFinal?.fotos) {
+          const fotosFinais = apontamentoData.vistoriaFinal.fotos;
           // eslint-disable-next-line no-console
-          console.log(
-            'Fotos vistoria final:',
-            apontamentoData.vistoriaFinal.fotos.length
-          );
-          for (const foto of apontamentoData.vistoriaFinal.fotos) {
+          console.log('Fotos vistoria final:', fotosFinais.length);
+          
+          for (let j = 0; j < fotosFinais.length; j++) {
+            const foto = fotosFinais[j];
+            // eslint-disable-next-line no-console
+            console.log(`  Foto final ${j + 1}:`, {
+              isFile: foto instanceof File,
+              isFromDatabase: foto?.isFromDatabase,
+              name: foto?.name,
+              url: foto?.url,
+            });
+
             if (foto instanceof File) {
+              // Nova imagem - fazer upload
               // eslint-disable-next-line no-console
-              console.log('Adicionando foto final ao upload:', foto.name);
+              console.log('  → Upload de nova imagem:', foto.name);
               imagePromises.push(
                 uploadImageToStorage(
                   foto,
@@ -395,26 +431,68 @@ export const useVistoriaAnalises = () => {
                   'final'
                 )
               );
+            } else if (foto?.isFromDatabase && foto?.url) {
+              // Imagem já existe no banco - preservar referência
+              // eslint-disable-next-line no-console
+              console.log('  → Preservando imagem do banco:', foto.url);
+              existingImageRefs.push({
+                apontamento_id: apontamentoData.id,
+                tipo_vistoria: 'final',
+                image_url: foto.url,
+                file_name: foto.name || 'unknown',
+                file_size: foto.size || 0,
+                file_type: foto.type || 'image/jpeg',
+              });
             }
           }
         }
       }
 
       // eslint-disable-next-line no-console
-      console.log('Total de imagens para upload:', imagePromises.length);
+      console.log('\n=== RESUMO DO PROCESSAMENTO ===');
+      // eslint-disable-next-line no-console
+      console.log('Novas imagens para upload:', imagePromises.length);
+      // eslint-disable-next-line no-console
+      console.log('Imagens existentes preservadas:', existingImageRefs.length);
 
-      // Aguardar upload de todas as imagens
+      // Aguardar upload de todas as novas imagens
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         // eslint-disable-next-line no-console
-        console.log('Todas as imagens foram enviadas com sucesso');
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('Nenhuma imagem para enviar');
+        console.log('✓ Todas as novas imagens foram enviadas com sucesso');
       }
+
+      // Re-inserir referências de imagens existentes
+      if (existingImageRefs.length > 0) {
+        const { error: insertError } = await supabase
+          .from('vistoria_images')
+          .insert(
+            existingImageRefs.map(ref => ({
+              vistoria_id: vistoriaId,
+              apontamento_id: ref.apontamento_id,
+              tipo_vistoria: ref.tipo_vistoria,
+              image_url: ref.image_url,
+              file_name: ref.file_name,
+              file_size: ref.file_size,
+              file_type: ref.file_type,
+              user_id: user?.id,
+            }))
+          );
+
+        if (insertError) {
+          // eslint-disable-next-line no-console
+          console.error('Erro ao re-inserir imagens existentes:', insertError);
+        } else {
+          // eslint-disable-next-line no-console
+          console.log('✓ Imagens existentes re-inseridas com sucesso');
+        }
+      }
+
+      // eslint-disable-next-line no-console
+      console.log('=== PROCESSAMENTO DE IMAGENS CONCLUÍDO ===\n');
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Erro ao processar imagens:', error);
+      console.error('❌ Erro ao processar imagens:', error);
       // Não re-lançar o erro para não quebrar o salvamento da análise principal
     }
   };
