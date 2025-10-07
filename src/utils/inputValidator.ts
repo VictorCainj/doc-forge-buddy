@@ -28,9 +28,9 @@ export interface ValidationOptions {
 }
 
 const DEFAULT_OPTIONS: Required<ValidationOptions> = {
-  maxLength: 2000,
+  maxLength: 5000,
   minLength: 1,
-  maxWords: 400,
+  maxWords: 1000,
   minWords: 1,
   allowedLanguages: ['pt-BR', 'pt', 'en'],
   blockHtml: true,
@@ -364,20 +364,20 @@ export const validateChatInput = (
 ): ValidationResult => {
   const modeOptions: Record<string, ValidationOptions> = {
     normal: {
-      maxLength: 1500,
-      maxWords: 300,
+      maxLength: 5000,
+      maxWords: 1000,
       minLength: 10,
       minWords: 3,
     },
     intelligent: {
-      maxLength: 2000,
-      maxWords: 400,
+      maxLength: 5000,
+      maxWords: 1000,
       minLength: 20,
       minWords: 5,
     },
     analysis: {
-      maxLength: 1000,
-      maxWords: 200,
+      maxLength: 5000,
+      maxWords: 1000,
       minLength: 5,
       minWords: 2,
       requireText: true,
