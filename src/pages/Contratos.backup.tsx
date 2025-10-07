@@ -1681,22 +1681,27 @@ const Contratos = () => {
             )}
           </div>
 
-          {/* Botão Ver Mais (oculto durante a busca) */}
+          {/* Botão Ver Mais - Design Google Minimalista */}
           {hasMoreContracts && !hasSearched && (
             <div className="flex justify-center mt-8">
               <Button
                 onClick={loadMoreContracts}
                 disabled={loadingMore}
-                variant="outline"
-                className="px-8 py-3 text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                variant="ghost"
+                className="group relative px-6 py-2.5 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingMore ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                    Carregando...
-                  </>
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 border-t-neutral-700"></div>
+                    <span>Carregando</span>
+                  </div>
                 ) : (
-                  `Ver mais (${Math.max(0, totalCount - displayedContracts.length)} restantes)`
+                  <div className="flex items-center gap-2">
+                    <span>Ver mais</span>
+                    <span className="text-xs text-neutral-500 group-hover:text-neutral-700 transition-colors">
+                      ({Math.max(0, totalCount - displayedContracts.length)} restantes)
+                    </span>
+                  </div>
                 )}
               </Button>
             </div>

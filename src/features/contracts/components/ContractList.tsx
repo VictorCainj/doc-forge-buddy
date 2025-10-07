@@ -306,21 +306,27 @@ export const ContractList = memo<ContractListProps>(({
         ))}
       </div>
 
-      {/* Botão Ver Mais */}
+      {/* Botão Ver Mais - Design Google Minimalista */}
       {hasMore && !hasSearched && loadMore && (
         <div className="flex justify-center mt-8">
           <Button
             onClick={loadMore}
             disabled={isLoadingMore}
-            className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white border border-blue-400/30 hover:border-blue-400/60 backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl"
+            variant="ghost"
+            className="group relative px-6 py-2.5 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoadingMore ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Carregando...
-              </>
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 border-t-neutral-700"></div>
+                <span>Carregando</span>
+              </div>
             ) : (
-              `Ver mais (${remainingCount} restantes)`
+              <div className="flex items-center gap-2">
+                <span>Ver mais</span>
+                <span className="text-xs text-neutral-500 group-hover:text-neutral-700 transition-colors">
+                  ({remainingCount} restantes)
+                </span>
+              </div>
             )}
           </Button>
         </div>
