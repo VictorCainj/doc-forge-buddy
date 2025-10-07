@@ -299,8 +299,10 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   // Gerar lista de documentos solicitados
   const configDocumentos: ConfiguracaoDocumentos = {
     solicitarCondominio: formData.solicitarCondominio || 'nao',
-    solicitarAgua: formData.statusAgua === 'SIM' ? 'sim' : 'nao',
-    solicitarEnergia: formData.cpfl === 'SIM' ? 'sim' : 'nao',
+    // Verificar tanto solicitarAgua quanto statusAgua para compatibilidade
+    solicitarAgua: (formData.solicitarAgua === 'sim' || formData.statusAgua?.toUpperCase() === 'SIM') ? 'sim' : 'nao',
+    // Energia elétrica sempre é solicitada (conforme comentário no formulário)
+    solicitarEnergia: 'sim',
     solicitarGas: formData.solicitarGas || 'nao',
     solicitarCND: formData.solicitarCND || 'nao',
   };
@@ -309,8 +311,8 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
 
   // Manter campos individuais
   enhancedData.solicitarCondominio = formData.solicitarCondominio || 'nao';
-  enhancedData.solicitarAgua = formData.statusAgua === 'SIM' ? 'sim' : 'nao';
-  enhancedData.solicitarEnergia = formData.cpfl === 'SIM' ? 'sim' : 'nao';
+  enhancedData.solicitarAgua = (formData.solicitarAgua === 'sim' || formData.statusAgua?.toUpperCase() === 'SIM') ? 'sim' : 'nao';
+  enhancedData.solicitarEnergia = 'sim'; // Energia elétrica sempre é solicitada
   enhancedData.solicitarGas = formData.solicitarGas || 'nao';
   enhancedData.solicitarCND = formData.solicitarCND || 'nao';
 

@@ -324,23 +324,15 @@ __________________________________________<br>
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
-      </div>
-      <div className="relative z-10">
+    <div className="min-h-screen bg-neutral-50">
       {/* Main Content */}
       <div className="p-6">
         {/* Back Button */}
         <div className="mb-6">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => navigate('/contratos')}
-            className="gap-2"
+            className="gap-2 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
@@ -348,7 +340,7 @@ __________________________________________<br>
         </div>
         <div className="max-w-6xl mx-auto">
           {/* Form Wizard */}
-          <Card className="glass-card">
+          <Card className="bg-white border-neutral-200 shadow-sm">
             <CardContent className="p-0">
               <DocumentFormWizard
                 title="Termo de Recebimento de Chaves - Locador"
@@ -365,7 +357,6 @@ __________________________________________<br>
             </CardContent>
           </Card>
         </div>
-      </div>
       </div>
     </div>
   );

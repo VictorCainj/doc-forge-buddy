@@ -211,27 +211,23 @@ const Prestadores = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+      <div className="flex items-center justify-center h-screen bg-neutral-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neutral-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-      </div>
+    <div className="min-h-screen bg-neutral-50">
 
       <div className="container mx-auto p-6 space-y-6 relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Prestadores</h1>
-            <p className="text-blue-200">Gerencie seus prestadores de serviço</p>
-          </div>
+        {/* Header Minimalista */}
+        <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-neutral-900">Prestadores</h1>
+              <p className="text-sm text-neutral-500 mt-1">Gerencie seus prestadores de serviço</p>
+            </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -242,7 +238,7 @@ const Prestadores = () => {
               size="md"
             />
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
             <DialogHeader>
               <DialogTitle>Criar Novo Prestador</DialogTitle>
               <DialogDescription>
@@ -258,14 +254,17 @@ const Prestadores = () => {
             />
           </DialogContent>
         </Dialog>
-      </div>
+          </div>
+        </div>
 
         {prestadores.length === 0 ? (
-          <Card className="bg-white/10 backdrop-blur-sm border-blue-400/30">
+          <Card className="bg-white border-neutral-200">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <User className="h-12 w-12 text-blue-300 mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-white">Nenhum prestador cadastrado</h3>
-              <p className="text-blue-200 text-center mb-4">
+              <div className="p-4 bg-neutral-100 rounded-lg mb-4">
+                <User className="h-8 w-8 text-neutral-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-neutral-900">Nenhum prestador cadastrado</h3>
+              <p className="text-neutral-600 text-center mb-4">
                 Comece criando seu primeiro prestador de serviço
               </p>
             <ActionButton
@@ -280,13 +279,13 @@ const Prestadores = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {prestadores.map((prestador) => (
-              <Card key={prestador.id} className="bg-white/10 backdrop-blur-sm border-blue-400/30 hover:bg-white/15 hover:border-blue-400/50 transition-all shadow-lg">
+              <Card key={prestador.id} className="bg-white border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg text-white">{prestador.nome}</CardTitle>
+                      <CardTitle className="text-lg text-neutral-900">{prestador.nome}</CardTitle>
                       {prestador.especialidade && (
-                        <Badge className="mt-2 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border-blue-400/30">
+                        <Badge className="mt-2 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border-neutral-200">
                           <Briefcase className="h-3 w-3 mr-1" />
                           {prestador.especialidade}
                         </Badge>
@@ -317,27 +316,27 @@ const Prestadores = () => {
               </CardHeader>
                 <CardContent className="space-y-2">
                   {prestador.cnpj && (
-                    <div className="flex items-center gap-2 text-sm text-blue-100">
-                      <Briefcase className="h-4 w-4 text-blue-300" />
+                    <div className="flex items-center gap-2 text-sm text-neutral-600">
+                      <Briefcase className="h-4 w-4 text-neutral-500" />
                       <span>{prestador.cnpj}</span>
                     </div>
                   )}
                   {prestador.telefone && (
-                    <div className="flex items-center gap-2 text-sm text-blue-100">
-                      <Phone className="h-4 w-4 text-blue-300" />
+                    <div className="flex items-center gap-2 text-sm text-neutral-600">
+                      <Phone className="h-4 w-4 text-neutral-500" />
                       <span>{prestador.telefone}</span>
                     </div>
                   )}
                   {prestador.email && (
-                    <div className="flex items-center gap-2 text-sm text-blue-100">
-                      <Mail className="h-4 w-4 text-blue-300" />
+                    <div className="flex items-center gap-2 text-sm text-neutral-600">
+                      <Mail className="h-4 w-4 text-neutral-500" />
                       <span className="truncate">{prestador.email}</span>
                     </div>
                   )}
                   {prestador.endereco && (
                     <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-blue-300" />
-                      <span className="text-blue-200 line-clamp-2">{prestador.endereco}</span>
+                      <MapPin className="h-4 w-4 text-neutral-500" />
+                      <span className="text-neutral-600 line-clamp-2">{prestador.endereco}</span>
                     </div>
                   )}
                 </CardContent>
@@ -379,7 +378,7 @@ const Prestadores = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-neutral-900 text-white hover:bg-neutral-800">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -9,9 +9,11 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   timestamp: Date;
   imageData?: string | null;
+  audioData?: string | null;
   metadata?: {
     model?: string;
     tokens?: number;
+    transcription?: string;
   };
 }
 

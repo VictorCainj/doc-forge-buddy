@@ -159,7 +159,7 @@ const Contratos = () => {
 
     const documentosSemAssinatura = [
       'Notificação de Desocupação e Agendamento de Vistoria',
-      'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734',
+      'Devolutiva Locatário',
       'Devolutiva Cobrança de Consumo',
       'Devolutiva Caderninho',
       'Caderninho',
@@ -420,62 +420,60 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-          <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-          <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+      <div className="min-h-screen bg-neutral-50">
+        {/* Header Minimalista */}
+        <div className="bg-white border-b border-neutral-200">
+          <div className="px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-neutral-900">
+                  Contratos
+                </h1>
+                <p className="text-sm text-neutral-500 mt-1">
+                  Gerencie todos os contratos de locação
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <OptimizedSearch
+                  onSearch={performSearch}
+                  placeholder="Buscar contratos..."
+                  showResultsCount={true}
+                  resultsCount={totalResults}
+                  isLoading={isSearching}
+                  className="w-80"
+                />
+                {hasSearched && (
+                  <Button variant="outline" size="sm" onClick={clearSearch}>
+                    Limpar
+                  </Button>
+                )}
+                <Link to="/cadastrar-contrato">
+                  <Button variant="primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Contrato
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
         
         {/* Main Content */}
-        <div className="p-6 relative z-10">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-semibold text-white">
-                Contratos Cadastrados
-              </h2>
-              <Link to="/cadastrar-contrato">
-                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Contrato
-                </Button>
-              </Link>
-            </div>
-
-            {/* Search */}
-            <div className="flex items-center space-x-4">
-              <OptimizedSearch
-                onSearch={performSearch}
-                placeholder="Digite número do contrato, nome do locatário ou endereço..."
-                showResultsCount={true}
-                resultsCount={totalResults}
-                isLoading={isSearching}
-                className="w-96"
-              />
-              {hasSearched && (
-                <Button variant="outline" size="sm" onClick={clearSearch}>
-                  Limpar Busca
-                </Button>
-              )}
-            </div>
-          </div>
+        <div className="px-8 py-6">
 
           {/* Lista de Contratos */}
-          <div className="mb-8">
-            <ContractList
-              contracts={displayedContracts}
-              isLoading={loading}
-              hasMore={hasMore}
-              loadMore={handleLoadMore}
-              isLoadingMore={state.loading.loadMore}
-              totalCount={totalCount}
-              displayedCount={displayedContracts.length}
-              hasSearched={hasSearched}
-              onGenerateDocument={generateDocument}
-            />
-          </div>
+          <ContractList
+            contracts={displayedContracts}
+            isLoading={loading}
+            hasMore={hasMore}
+            loadMore={handleLoadMore}
+            isLoadingMore={state.loading.loadMore}
+            totalCount={totalCount}
+            displayedCount={displayedContracts.length}
+            hasSearched={hasSearched}
+            onGenerateDocument={generateDocument}
+          />
         </div>
 
         {/* Modals */}

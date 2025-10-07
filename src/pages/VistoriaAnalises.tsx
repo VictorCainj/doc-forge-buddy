@@ -119,7 +119,7 @@ const VistoriaAnalises = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 p-6">
+      <div className="min-h-screen bg-neutral-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -133,12 +133,12 @@ const VistoriaAnalises = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden p-6">
+    <div className="min-h-screen bg-neutral-50 relative overflow-hidden p-6">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
+        <div className="absolute top-20 left-20 w-32 h-32 border border-neutral-200 rounded-lg rotate-12"></div>
         <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-32 left-32 w-28 h-28 border border-neutral-200 rounded-lg rotate-45"></div>
       </div>
       
       <div className="max-w-7xl mx-auto space-y-6 relative z-10">
@@ -184,7 +184,7 @@ const VistoriaAnalises = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-neutral-600" />
                 <span className="text-sm font-medium">Com Imagens</span>
               </div>
               <p className="text-2xl font-bold mt-2">
@@ -195,7 +195,7 @@ const VistoriaAnalises = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <AlertTriangle className="h-4 w-4 text-neutral-600" />
                 <span className="text-sm font-medium">Sem Imagens</span>
               </div>
               <p className="text-2xl font-bold mt-2">
@@ -206,7 +206,7 @@ const VistoriaAnalises = () => {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-blue-600" />
+                <Calendar className="h-4 w-4 text-neutral-600" />
                 <span className="text-sm font-medium">Este Mês</span>
               </div>
               <p className="text-2xl font-bold mt-2">
@@ -308,7 +308,7 @@ const VistoriaAnalises = () => {
                           {getImagesCount(analise) > 0 && (
                             <Badge
                               variant="default"
-                              className="text-xs bg-green-600"
+                              className="text-xs"
                             >
                               {getImagesCount(analise)} imagem
                               {getImagesCount(analise) !== 1 ? 's' : ''}

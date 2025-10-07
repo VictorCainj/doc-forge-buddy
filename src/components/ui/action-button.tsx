@@ -15,12 +15,12 @@ interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
 const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
   ({ icon: Icon, label, variant = 'ghost', size = 'md', loading, iconOnly, className, ...props }, ref) => {
     const variantStyles = {
-      primary: 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0',
-      secondary: 'bg-slate-700 hover:bg-slate-600 text-white border-slate-600',
-      success: 'bg-green-600 hover:bg-green-700 text-white border-green-600',
-      danger: 'bg-red-600 hover:bg-red-700 text-white border-red-600',
-      warning: 'bg-orange-600 hover:bg-orange-700 text-white border-orange-600',
-      ghost: 'bg-transparent hover:bg-white/10 text-slate-300 hover:text-white border border-slate-600/50 hover:border-slate-500',
+      primary: 'bg-neutral-900 hover:bg-neutral-800 text-white',
+      secondary: 'bg-neutral-600 hover:bg-neutral-700 text-white',
+      success: 'bg-neutral-600 hover:bg-neutral-700 text-white',
+      danger: 'bg-neutral-700 hover:bg-neutral-800 text-white',
+      warning: 'bg-neutral-600 hover:bg-neutral-700 text-white',
+      ghost: 'bg-transparent hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 border border-neutral-200',
     };
 
     const sizeStyles = {

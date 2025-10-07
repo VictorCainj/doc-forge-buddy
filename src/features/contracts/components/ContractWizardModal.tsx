@@ -45,8 +45,8 @@ interface ContractWizardModalProps {
 }
 
 /**
- * Modal de wizard de contratos com design tecnológico/gaming
- * Navegação por setas laterais e visual futurista
+ * Modal de wizard de contratos com design Google Material
+ * Navegação por setas laterais e visual minimalista
  */
 export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   open,
@@ -67,6 +67,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [hasScroll, setHasScroll] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showFooterShadow, setShowFooterShadow] = useState(false);
 
   const {
     currentStep,
@@ -177,8 +178,13 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
     const checkScroll = () => {
       if (scrollRef.current) {
         const { scrollHeight, clientHeight, scrollTop } = scrollRef.current;
-        setHasScroll(scrollHeight > clientHeight);
-        setIsScrolledToBottom(scrollHeight - scrollTop - clientHeight < 10);
+        const hasScrollContent = scrollHeight > clientHeight;
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 10;
+        
+        setHasScroll(hasScrollContent);
+        setIsScrolledToBottom(isAtBottom);
+        // Mostrar sombra no footer se há scroll e não está no final
+        setShowFooterShadow(hasScrollContent && !isAtBottom);
       }
     };
 
@@ -202,8 +208,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
     const value = formData[field.name] || '';
 
     const fieldClasses = cn(
-      'bg-slate-800/50 border-blue-500/30 text-white placeholder:text-slate-400',
-      'focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20',
+      'bg-white border-neutral-200 text-neutral-900 placeholder:text-neutral-400',
+      'focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400/20',
       'transition-all duration-300'
     );
 
@@ -229,12 +235,12 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             <SelectTrigger className={fieldClasses}>
               <SelectValue placeholder={field.placeholder || 'Selecione...'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-blue-500/30">
+            <SelectContent className="bg-white border-neutral-200">
               {field.options?.map((option) => (
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className="text-white hover:bg-blue-500/20 focus:bg-blue-500/30"
+                  className="text-neutral-900 hover:bg-neutral-100 focus:bg-neutral-200"
                 >
                   {option.label}
                 </SelectItem>
@@ -297,24 +303,24 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl p-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 border border-blue-500/20 shadow-xl overflow-visible">
+      <DialogContent className="max-w-4xl p-0 bg-white border border-neutral-200 shadow-sm overflow-visible">
         {/* Header profissional */}
-        <DialogHeader className="relative p-6 border-b border-blue-500/20 bg-slate-900/80">
-          <DialogTitle className="text-2xl font-bold text-white text-center relative z-10">
+        <DialogHeader className="relative p-6 border-b border-neutral-200 bg-white">
+          <DialogTitle className="text-2xl font-semibold text-neutral-900 text-center relative z-10">
             {title}
           </DialogTitle>
           
           {/* Progress bar */}
           <div className="mt-4 relative">
-            <div className="h-1.5 bg-slate-800/50 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-600 to-blue-400"
+                className="h-full bg-neutral-900"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
               />
             </div>
-            <div className="flex justify-between mt-2 text-xs text-slate-400">
+            <div className="flex justify-between mt-2 text-xs text-neutral-500">
               <span>Etapa {currentStep + 1} de {steps.length}</span>
               <span>{Math.round(progress)}%</span>
             </div>
@@ -322,7 +328,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         </DialogHeader>
 
         {/* Stage indicators */}
-        <div className="flex items-center justify-center gap-2 p-4 bg-slate-900/50 border-b border-blue-500/20">
+        <div className="flex items-center justify-center gap-2 p-4 bg-neutral-50 border-b border-neutral-200">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
@@ -335,8 +341,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 className={cn(
                   'relative group transition-all duration-300',
                   'flex flex-col items-center gap-1 p-3 rounded-lg',
-                  isActive && 'bg-blue-500/10 border border-blue-400/50',
-                  !isActive && 'border border-transparent hover:border-blue-500/20',
+                  isActive && 'bg-neutral-100 border border-neutral-300',
+                  !isActive && 'border border-transparent hover:border-neutral-200',
                   isCompleted && 'opacity-60'
                 )}
               >
@@ -344,18 +350,18 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 <div
                   className={cn(
                     'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300',
-                    isActive && 'bg-blue-600 border border-blue-400',
-                    !isActive && isCompleted && 'bg-slate-700 border border-slate-600',
-                    !isActive && !isCompleted && 'bg-slate-800 border border-slate-700'
+                    isActive && 'bg-neutral-900 border border-neutral-900',
+                    !isActive && isCompleted && 'bg-neutral-700 border border-neutral-600',
+                    !isActive && !isCompleted && 'bg-neutral-100 border border-neutral-200'
                   )}
                 >
                   {isCompleted ? (
-                    <Check className="h-5 w-5 text-blue-300" />
+                    <Check className="h-5 w-5 text-white" />
                   ) : (
                     Icon && <Icon className={cn(
                       'h-5 w-5',
                       isActive && 'text-white',
-                      !isActive && 'text-slate-400'
+                      !isActive && 'text-neutral-600'
                     )} />
                   )}
                 </div>
@@ -364,8 +370,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 <span
                   className={cn(
                     'text-xs font-medium transition-colors duration-300',
-                    isActive && 'text-blue-300',
-                    !isActive && 'text-slate-400'
+                    isActive && 'text-neutral-900',
+                    !isActive && 'text-neutral-600'
                   )}
                 >
                   {step.title.split(' ')[0]}
@@ -376,7 +382,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   <div
                     className={cn(
                       'absolute top-8 left-full w-8 h-0.5 transition-all duration-300',
-                      isCompleted ? 'bg-blue-500/50' : 'bg-slate-700/50'
+                      isCompleted ? 'bg-neutral-400' : 'bg-neutral-200'
                     )}
                   />
                 )}
@@ -403,10 +409,10 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             >
               {/* Step info */}
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl font-semibold text-neutral-900">
                   {currentStepData.title}
                 </h3>
-                <p className="text-sm text-slate-400 mt-2">
+                <p className="text-sm text-neutral-600 mt-2">
                   {currentStepData.description}
                 </p>
               </div>
@@ -480,16 +486,16 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                     >
                       <Label
                         htmlFor={field.name}
-                        className="text-slate-300 font-medium flex items-center gap-1"
+                        className="text-neutral-700 font-medium flex items-center gap-1"
                       >
                         {field.label}
                         {field.required && (
-                          <span className="text-blue-400 text-xs">*</span>
+                          <span className="text-neutral-700 text-xs">*</span>
                         )}
                       </Label>
                       {renderField(field)}
                       {field.tooltip && (
-                        <p className="text-xs text-slate-500 italic">
+                        <p className="text-xs text-neutral-500 italic">
                           {field.tooltip}
                         </p>
                       )}
@@ -501,8 +507,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 
                 {/* Indicador de mais conteúdo abaixo */}
                 {hasScroll && !isScrolledToBottom && (
-                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-950/90 to-transparent pointer-events-none flex items-end justify-center pb-2">
-                    <div className="flex items-center gap-1 text-blue-400 text-xs animate-bounce">
+                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-2">
+                    <div className="flex items-center gap-1 text-neutral-600 text-xs animate-bounce">
                       <ChevronDown className="h-4 w-4" />
                       <span>Role para ver mais</span>
                       <ChevronDown className="h-4 w-4" />
@@ -514,56 +520,45 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Botões de navegação lateral - Fora do modal */}
-        {/* Botão Anterior - Esquerda */}
-        {canGoPrevious && (
-          <button
+        {/* Footer Inteligente - Sempre visível */}
+        <div 
+          className={cn(
+            'flex items-center justify-between p-4 border-t border-neutral-200 bg-white',
+            'transition-shadow duration-300',
+            showFooterShadow && 'shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]'
+          )}
+        >
+          {/* Botão Anterior */}
+          <Button
             onClick={handlePrevious}
+            disabled={!canGoPrevious}
+            variant="ghost"
             className={cn(
-              'absolute -left-20 top-1/2 -translate-y-1/2 z-20',
-              'w-14 h-14 rounded-full',
-              'bg-slate-800/90 backdrop-blur-sm border-2 border-blue-500/40',
-              'flex items-center justify-center',
-              'hover:bg-slate-700 hover:border-blue-400/60 hover:scale-110',
-              'transition-all duration-300',
-              'shadow-xl shadow-black/50'
+              'gap-2 text-neutral-700',
+              'hover:bg-neutral-100',
+              'disabled:opacity-0 disabled:pointer-events-none',
+              'transition-all duration-300'
             )}
-            aria-label="Etapa anterior"
           >
-            <ChevronLeft className="h-7 w-7 text-blue-400" />
-          </button>
-        )}
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </Button>
 
-        {/* Botão Próximo - Direita */}
-        {currentStep < steps.length - 1 && (
-          <button
-            onClick={handleNext}
-            disabled={!isStepValid}
-            className={cn(
-              'absolute -right-20 top-1/2 -translate-y-1/2 z-20',
-              'w-14 h-14 rounded-full',
-              'bg-blue-600/90 backdrop-blur-sm border-2 border-blue-400/60',
-              'flex items-center justify-center',
-              'hover:bg-blue-500 hover:border-blue-300 hover:scale-110',
-              'disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100',
-              'transition-all duration-300',
-              'shadow-xl shadow-blue-900/50'
-            )}
-            aria-label="Próxima etapa"
-          >
-            <ChevronRight className="h-7 w-7 text-white" />
-          </button>
-        )}
+          {/* Indicador de progresso no centro */}
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
+            <span className="font-medium">
+              {currentStep + 1} / {steps.length}
+            </span>
+          </div>
 
-        {/* Footer apenas com botão Finalizar */}
-        {currentStep === steps.length - 1 && (
-          <div className="flex items-center justify-center p-6 border-t border-blue-500/20 bg-slate-900/80">
+          {/* Botão Próximo ou Finalizar */}
+          {currentStep === steps.length - 1 ? (
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid || isSubmitting}
               className={cn(
-                'gap-2 bg-blue-600 text-white px-8',
-                'hover:bg-blue-700',
+                'gap-2 bg-neutral-900 text-white px-6',
+                'hover:bg-neutral-800',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'transition-all duration-300'
               )}
@@ -580,8 +575,22 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 </>
               )}
             </Button>
-          </div>
-        )}
+          ) : (
+            <Button
+              onClick={handleNext}
+              disabled={!isStepValid}
+              className={cn(
+                'gap-2 bg-neutral-900 text-white px-6',
+                'hover:bg-neutral-800',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'transition-all duration-300'
+              )}
+            >
+              Próximo
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

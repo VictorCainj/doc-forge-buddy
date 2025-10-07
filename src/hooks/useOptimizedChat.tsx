@@ -18,11 +18,15 @@ interface Message {
   error?: string;
   imageUrl?: string;
   imageData?: string;
+  audioUrl?: string;
+  audioData?: string;
   metadata?: {
     model?: string;
     tokens?: number;
     imageCount?: number;
     imageUrls?: string[];
+    audioDuration?: number;
+    transcription?: string;
   };
 }
 
@@ -62,6 +66,7 @@ interface UseOptimizedChatReturn {
   clearChat: () => void;
   uploadImage: (file: File) => Promise<void>;
   uploadMultipleImages: (files: File[]) => Promise<void>;
+  uploadAudio: (file: File) => Promise<void>;
   generateImage: (prompt: string) => Promise<void>;
   saveCurrentSession: () => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
@@ -69,7 +74,7 @@ interface UseOptimizedChatReturn {
 }
 
 export const useOptimizedChat = (): UseOptimizedChatReturn => {
-  // Estados principais
+  // Estados principais do chat
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -80,6 +85,7 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
     chatCompletion,
     generateImageFromPrompt,
     analyzeImage,
+    transcribeAudio,
     isLoading: aiLoading,
     error: aiError,
   } = useOpenAI();
@@ -177,7 +183,7 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
       // Validar entrada do usuário
       const { input: sanitizedInput, validation } = prepareInputForProcessing(
         messageText,
-        'conversational'
+        'intelligent' // Modo inteligente para chat conversacional
       );
 
       if (!validation.isValid) {
@@ -489,6 +495,112 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
     [aiLoading, createMessage, analyzeImage, toast]
   );
 
+  // Função para fazer upload e transcrever áudio
+  const uploadAudio = useCallback(
+    async (file: File) => {
+      if (aiLoading) return;
+
+      try {
+        // Validar tipo de arquivo
+        const validAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/m4a'];
+        if (!validAudioTypes.includes(file.type)) {
+          toast({
+            title: 'Formato inválido',
+            description: 'Por favor, envie um arquivo de áudio válido (MP3, WAV, OGG, WebM, M4A).',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Validar tamanho (max 25MB - limite da API Whisper)
+        if (file.size > 25 * 1024 * 1024) {
+          toast({
+            title: 'Arquivo muito grande',
+            description: 'O arquivo de áudio deve ter no máximo 25MB.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Criar URL local para reprodução
+        const audioData = URL.createObjectURL(file);
+
+        // Criar mensagem do usuário com o áudio
+        const userMessage = createMessage(
+          `Enviou áudio: ${file.name}`,
+          'user',
+          {
+            audioData,
+            audioUrl: audioData,
+          }
+        );
+        
+        setMessages((prev) => [...prev, userMessage]);
+
+        // Criar resposta do assistente
+        const assistantMessage = createMessage(
+          'Transcrevendo áudio...',
+          'assistant',
+          { status: 'sending' }
+        );
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        // Transcrever o áudio
+        const transcription = await transcribeAudio(file);
+
+        // Processar a transcrição como uma mensagem normal
+        const response = await processConversationalMessage(
+          `Transcrição do áudio: "${transcription}"`,
+          [...messages, userMessage]
+        );
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessage.id
+              ? {
+                  ...msg,
+                  content: `**Transcrição:**\n${transcription}\n\n**Resposta:**\n${response}`,
+                  status: 'sent',
+                  metadata: { 
+                    model: 'whisper-1', 
+                    transcription 
+                  },
+                }
+              : msg
+          )
+        );
+
+        toast({
+          title: 'Áudio transcrito',
+          description: 'O áudio foi transcrito com sucesso!',
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro ao processar áudio';
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === prev[prev.length - 1].id
+              ? {
+                  ...msg,
+                  content: 'Desculpe, não consegui processar o áudio.',
+                  status: 'error',
+                  error: errorMessage,
+                }
+              : msg
+          )
+        );
+
+        toast({
+          title: 'Erro ao processar áudio',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+    },
+    [aiLoading, createMessage, transcribeAudio, processConversationalMessage, messages, toast]
+  );
+
   // Função para gerar imagem
   const generateImage = useCallback(
     async (prompt: string) => {
@@ -672,12 +784,19 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
     try {
       const loadedMessages = await loadSessionMessages(sessionId);
       
-      setMessages(loadedMessages);
+      // Converter tipos do banco para o formato interno
+      const convertedMessages = loadedMessages.map(msg => ({
+        ...msg,
+        imageData: msg.imageData || undefined,
+        audioData: (msg as any).audioData || undefined,
+      })) as Message[];
+      
+      setMessages(convertedMessages);
       setCurrentSessionId(sessionId);
 
       toast({
         title: 'Conversa carregada',
-        description: `${loadedMessages.length} mensagens carregadas.`,
+        description: `${convertedMessages.length} mensagens carregadas.`,
       });
     } catch (error) {
       log.error('Erro ao carregar sessão:', error);
@@ -710,6 +829,7 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
     clearChat,
     uploadImage,
     uploadMultipleImages,
+    uploadAudio,
     generateImage,
     saveCurrentSession,
     loadSession,

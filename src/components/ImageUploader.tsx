@@ -128,7 +128,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           className={`
             relative border-2 border-dashed rounded-lg p-6
             transition-colors duration-200
-            ${disabled ? 'border-gray-200 bg-gray-50 cursor-not-allowed' : 'border-blue-300 hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer'}
+            ${disabled ? 'border-neutral-200 bg-neutral-50 cursor-not-allowed' : 'border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 cursor-pointer'}
             ${isProcessing ? 'animate-pulse' : ''}
           `}
         >
@@ -143,19 +143,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           <div className="flex flex-col items-center justify-center text-center">
             <div className={`
               w-16 h-16 rounded-full flex items-center justify-center mb-4
-              ${isProcessing ? 'bg-blue-100' : 'bg-blue-50'}
+              ${isProcessing ? 'bg-neutral-200' : 'bg-neutral-100'}
             `}>
               {isProcessing ? (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-700"></div>
               ) : (
-                <Upload className="h-8 w-8 text-blue-600" />
+                <Upload className="h-8 w-8 text-neutral-700" />
               )}
             </div>
             
-            <p className="text-sm font-medium text-slate-700 mb-1">
+            <p className="text-sm font-medium text-neutral-700 mb-1">
               {isProcessing ? 'Processando...' : 'Arraste uma imagem ou clique para selecionar'}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-neutral-500">
               PNG, JPG ou WEBP até {formatFileSize(maxSize)}
             </p>
             
@@ -173,7 +173,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </div>
         </div>
       ) : (
-        <div className="relative border-2 border-green-200 rounded-lg p-4 bg-green-50/50">
+        <div className="relative border-2 border-neutral-200 rounded-lg p-4 bg-neutral-50">
           <div className="flex items-start gap-4">
             <div className="relative w-24 h-24 flex-shrink-0">
               <img
@@ -181,7 +181,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 alt="Preview"
                 className="w-full h-full object-cover rounded-lg"
               />
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-neutral-900 rounded-full flex items-center justify-center">
                 <CheckCircle2 className="h-4 w-4 text-white" />
               </div>
             </div>
@@ -189,11 +189,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-green-600" />
+                  <p className="text-sm font-medium text-neutral-900 flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-neutral-700" />
                     Imagem carregada
                   </p>
-                  <p className="text-xs text-slate-600 mt-1">
+                  <p className="text-xs text-neutral-600 mt-1">
                     Imagem otimizada e pronta para uso
                   </p>
                 </div>
@@ -216,9 +216,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       )}
       
       {/* Info Card */}
-      <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-        <div className="text-xs text-blue-700">
+      <div className="flex items-start gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+        <AlertCircle className="h-4 w-4 text-neutral-600 mt-0.5 flex-shrink-0" />
+        <div className="text-xs text-neutral-700">
           <p className="font-medium mb-1">Otimização Automática</p>
           <p>Imagens maiores que 1MB serão automaticamente comprimidas mantendo a qualidade visual.</p>
         </div>

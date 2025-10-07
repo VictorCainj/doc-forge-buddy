@@ -279,26 +279,26 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-neutral-50">
       {/* Barra de progresso compacta com botão voltar */}
-      <div className="glass-card border-border px-6 py-1.5">
-        <div className="flex items-center justify-between text-foreground text-xs">
-          <span>Etapa 1 de 1</span>
+      <div className="bg-white border-b border-neutral-200 px-6 py-3 shadow-sm">
+        <div className="flex items-center justify-between text-neutral-700 text-xs">
+          <span className="font-medium">Etapa 1 de 1</span>
           <div className="flex-1 mx-4">
-            <div className="w-full bg-muted rounded-full h-1.5">
+            <div className="w-full bg-neutral-200 rounded-full h-1.5">
               <div
-                className="bg-primary h-1.5 rounded-full"
+                className="bg-neutral-900 h-1.5 rounded-full transition-all duration-300"
                 style={{ width: '100%' }}
               ></div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span>100% concluído</span>
+            <span className="font-medium">100% concluído</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/')}
-              className="text-foreground hover:bg-accent gap-1 h-6 px-2 text-xs"
+              className="text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 gap-1 h-7 px-2 text-xs"
             >
               <ArrowLeft className="h-3 w-3" />
               Voltar
@@ -308,15 +308,15 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       </div>
 
       {/* Card principal mais compacto */}
-      <main className="bg-background min-h-screen">
+      <main className="bg-neutral-50 min-h-screen">
         <div className="max-w-3xl mx-auto p-6">
-          <div className="glass-card border-border">
+          <div className="bg-white border border-neutral-200 rounded-xl shadow-sm">
             <div className="p-6">
               <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                <h1 className="text-2xl font-semibold mb-2 text-neutral-900">
                   Vistoria e Entrega
                 </h1>
-                <p className="text-sm text-blue-200 font-medium">
+                <p className="text-sm text-neutral-600 font-normal">
                   Detalhes da vistoria e entrega das chaves
                 </p>
               </div>

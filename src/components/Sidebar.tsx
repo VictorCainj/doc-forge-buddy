@@ -3,10 +3,11 @@ import {
   FileText,
   MessageSquare,
   LogOut,
-  Building2,
-  SearchCheck,
-  FolderArchive,
+  Home,
+  Search,
+  FolderOpen,
   Users,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-// import { useSearchContext } from '@/hooks/useSearchContext';
+import { cn } from '@/lib/utils';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -48,62 +49,57 @@ const Sidebar = () => {
       icon: FileText,
       path: '/contratos',
       active: location.pathname === '/contratos',
-      badge: null,
     },
     {
       name: 'Criar Análise',
-      icon: SearchCheck,
+      icon: Search,
       path: '/analise-vistoria',
       active: location.pathname === '/analise-vistoria',
-      badge: null,
     },
     {
       name: 'Análises Salvas',
-      icon: FolderArchive,
+      icon: FolderOpen,
       path: '/vistoria-analises',
       active: location.pathname === '/vistoria-analises',
-      badge: null,
     },
     {
       name: 'Prestadores',
       icon: Users,
       path: '/prestadores',
       active: location.pathname === '/prestadores',
-      badge: null,
     },
     {
       name: 'Chat IA',
       icon: MessageSquare,
       path: '/chat',
       active: location.pathname === '/chat',
-      badge: null,
     },
   ];
 
   if (!user) return null;
 
   return (
-    <aside className="w-72 min-h-screen flex flex-col bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-white/10">
-      {/* Professional Header */}
-      <div className="p-6 border-b border-white/10">
+    <aside className="w-64 min-h-screen flex flex-col bg-white border-r border-neutral-200">
+      {/* Minimalista Header */}
+      <div className="p-6 border-b border-neutral-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Building2 className="h-6 w-6 text-white" />
+          <div className="w-9 h-9 bg-neutral-900 rounded-lg flex items-center justify-center">
+            <Home className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-lg font-semibold text-neutral-900">
               DocForge
             </h1>
-            <p className="text-sm text-blue-200">Gestão Imobiliária</p>
+            <p className="text-xs text-neutral-500">Gestão Imobiliária</p>
           </div>
         </div>
       </div>
 
-      {/* Navigation Menu */}
-      <nav className="flex-1 p-6">
+      {/* Navigation Menu - Minimalista */}
+      <nav className="flex-1 px-4 py-6">
         <div className="space-y-1">
-          <h3 className="text-xs font-semibold text-blue-300 uppercase tracking-wider mb-4">
-            Principal
+          <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3 px-3">
+            Menu
           </h3>
           <ul className="space-y-1">
             {menuItems.map((item) => {
@@ -112,27 +108,22 @@ const Sidebar = () => {
                 <li key={item.name}>
                   <Link
                     to={item.path}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
+                    className={cn(
+                      'flex items-center px-3 py-2 rounded-md transition-all duration-200 group',
                       item.active
-                        ? 'bg-gradient-to-r from-blue-500/20 to-indigo-600/20 text-white border border-blue-400/30 shadow-lg'
-                        : 'text-blue-100 hover:bg-white/10'
-                    }`}
+                        ? 'bg-neutral-100 text-neutral-900'
+                        : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                    )}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Icon
-                        className={`h-5 w-5 ${item.active ? 'text-blue-400' : 'text-blue-300 group-hover:text-white'}`}
-                      />
-                      <span className="font-medium">{item.name}</span>
-                    </div>
-                    {item.badge && (
-                      <Badge
-                        variant={
-                          item.badge === 'Pro' ? 'secondary' : 'destructive'
-                        }
-                        className="text-xs px-2 py-0.5"
-                      >
-                        {item.badge}
-                      </Badge>
+                    <Icon
+                      className={cn(
+                        'h-4 w-4 mr-3',
+                        item.active ? 'text-neutral-700' : 'text-neutral-400 group-hover:text-neutral-600'
+                      )}
+                    />
+                    <span className="text-sm font-medium">{item.name}</span>
+                    {item.active && (
+                      <ChevronRight className="h-3 w-3 ml-auto text-neutral-400" />
                     )}
                   </Link>
                 </li>
@@ -142,34 +133,34 @@ const Sidebar = () => {
         </div>
       </nav>
 
-      {/* Professional Profile Section */}
-      <div className="p-6 border-t border-white/10">
+      {/* Profile Section - Minimalista */}
+      <div className="p-4 border-t border-neutral-200">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start h-auto p-3 hover:bg-white/10 rounded-xl transition-all duration-200"
+              className="w-full justify-start h-auto p-2 hover:bg-neutral-50 rounded-md transition-all duration-200"
             >
-              <Avatar className="h-10 w-10 mr-3 ring-2 ring-blue-400/30">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-sm font-semibold">
+              <Avatar className="h-8 w-8 mr-3">
+                <AvatarFallback className="bg-neutral-200 text-neutral-600 text-xs font-medium">
                   {getUserInitials(user.email || '')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-medium text-neutral-900">
                   {user.email?.split('@')[0] || 'Usuário'}
                 </span>
-                <span className="text-xs text-blue-200">
+                <span className="text-xs text-neutral-500">
                   Administrador
                 </span>
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64" align="end" forceMount>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user.email}</p>
-                <p className="text-xs leading-none text-muted-foreground">
+                <p className="text-xs leading-none text-neutral-500">
                   Administrador do Sistema
                 </p>
               </div>
@@ -177,10 +168,10 @@ const Sidebar = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+              className="cursor-pointer text-neutral-700 hover:text-neutral-900"
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Sair da Sessão</span>
+              <span>Sair</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

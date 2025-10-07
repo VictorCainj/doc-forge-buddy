@@ -6,6 +6,7 @@ import {
   chatCompletionWithAI,
   generateImageWithAI,
   analyzeImageWithAI,
+  transcribeAudioWithAI,
 } from '@/utils/openai';
 import { Contract } from './useContractAnalysis';
 import { CompleteContractData } from './useCompleteContractData';
@@ -23,6 +24,7 @@ interface UseOpenAIReturn {
   chatCompletion: (prompt: string) => Promise<string>;
   generateImageFromPrompt: (prompt: string) => Promise<string>;
   analyzeImage: (imageBase64: string, userPrompt?: string) => Promise<string>;
+  transcribeAudio: (audioFile: File) => Promise<string>;
   isLoading: boolean;
   error: string | null;
 }
@@ -212,6 +214,25 @@ export const useOpenAI = (): UseOpenAIReturn => {
     }
   };
 
+  const transcribeAudio = async (audioFile: File): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const transcription = await transcribeAudioWithAI(audioFile);
+      
+      log.debug('Áudio transcrito com sucesso');
+      return transcription;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro ao transcrever áudio';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     correctText,
     improveText,
@@ -219,6 +240,7 @@ export const useOpenAI = (): UseOpenAIReturn => {
     chatCompletion,
     generateImageFromPrompt,
     analyzeImage,
+    transcribeAudio,
     isLoading,
     error,
   };

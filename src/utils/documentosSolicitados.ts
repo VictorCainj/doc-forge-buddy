@@ -6,14 +6,19 @@ export interface ConfiguracaoDocumentos {
   solicitarEnergia?: string;
   solicitarGas?: string;
   solicitarCND?: string;
+  // Nomes específicos das concessionárias
+  tipoAgua?: string;  // Ex: 'DAEV', 'SABESP', etc.
+  tipoEnergia?: string;  // Ex: 'CPFL', 'ENEL', etc.
 }
 
 /**
  * Gera a lista de documentos solicitados baseada na configuração do contrato
+ * Sempre especifica os documentos cadastrados com nomes das concessionárias quando disponíveis
  */
 export function gerarDocumentosSolicitados(config: ConfiguracaoDocumentos): string {
   const documentos: string[] = [];
 
+  // Adiciona os documentos na ordem: condomínio, água, energia, gás
   if (config.solicitarCondominio === 'sim') {
     documentos.push('condomínio');
   }
@@ -22,19 +27,22 @@ export function gerarDocumentosSolicitados(config: ConfiguracaoDocumentos): stri
     documentos.push('água');
   }
 
-  // Energia elétrica sempre deve ser solicitada
-  documentos.push('energia elétrica');
+  if (config.solicitarEnergia === 'sim') {
+    documentos.push('energia elétrica');
+  }
 
   if (config.solicitarGas === 'sim') {
     documentos.push('gás');
   }
 
-  // Se não há documentos, retorna uma mensagem padrão
-  if (documentos.length === 0) {
-    return 'conforme estabelecido em contrato';
-  }
+  // CND não é incluída aqui pois tem tratamento separado no template
 
   // Formata a lista com vírgulas e "e" antes do último item
+  if (documentos.length === 0) {
+    // Se nenhum documento foi configurado, retorna apenas energia elétrica como padrão
+    return 'energia elétrica';
+  }
+
   if (documentos.length === 1) {
     return documentos[0];
   }

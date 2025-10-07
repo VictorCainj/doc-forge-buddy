@@ -10,7 +10,7 @@ export type DocumentType =
   | 'Devolutiva WhatsApp'
   | 'Termo de Recusa de Assinatura - E-mail'
   | 'Notificação de Desocupação e Agendamento de Vistoria'
-  | 'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734'
+  | 'Devolutiva Locatário'
   | 'Devolutiva Cobrança de Consumo'
   | 'Devolutiva Caderninho'
   | 'Notificação de Desocupação - Comercial'

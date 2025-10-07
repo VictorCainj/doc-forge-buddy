@@ -1379,51 +1379,41 @@ const AnaliseVistoria = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden p-6">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-      </div>
+    <div className="min-h-screen bg-neutral-50">
       
-      <div className="max-w-6xl mx-auto space-y-6 relative z-10">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-              <ClipboardList className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+      {/* Header Minimalista */}
+      <div className="bg-white border-b border-neutral-200">
+        <div className="max-w-6xl mx-auto px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center">
+                <ClipboardList className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold text-neutral-900">
                 {isEditMode
                   ? 'Editar Análise de Vistoria'
                   : 'Análise de Vistoria'}
               </h1>
-              <p className="text-blue-200 mt-2 flex items-center space-x-2">
-                <Camera className="h-4 w-4" />
-                <span>Sistema de análise comparativa de vistoria de saída</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-2 rounded-lg">
-              <Archive className="h-4 w-4 text-blue-300" />
-              <Badge variant="outline" className="text-sm border-blue-400/30 text-blue-200">
+                <p className="text-sm text-neutral-500 mt-1">
+                  Sistema de análise comparativa de vistoria de saída
+                </p>
+              <Badge variant="outline" className="text-sm border-neutral-200 text-neutral-900">
                 {apontamentos.length} apontamento
                 {apontamentos.length !== 1 ? 's' : ''}
               </Badge>
               {savedAnaliseId && (
                 <Badge
                   variant="default"
-                  className="text-sm bg-green-600 hover:bg-green-700"
+                  className="text-sm bg-neutral-600 hover:bg-neutral-700"
                 >
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Salva
                 </Badge>
               )}
             </div>
-            {apontamentos.length > 0 && (
+            <div className="flex items-center space-x-2">
+              {apontamentos.length > 0 && (
               <ActionButton
                 icon={Trash2}
                 label="Limpar Tudo"
@@ -1457,14 +1447,16 @@ const AnaliseVistoria = () => {
               disabled={apontamentos.length === 0 || !selectedContract}
               onClick={generateDocument}
             />
+            </div>
           </div>
         </div>
+      </div>
 
         {/* Validação de Contrato Carregado */}
         {!selectedContract && (
-          <Card className="mb-6 border-orange-500/30 bg-orange-500/10 backdrop-blur-sm">
+          <Card className="mb-6 border-neutral-200 bg-neutral-50">
             <CardContent className="py-6">
-              <div className="flex items-center gap-3 text-orange-300">
+              <div className="flex items-center gap-3 text-neutral-900">
                 <AlertTriangle className="h-5 w-5" />
                 <p className="font-medium">
                   Nenhum contrato carregado. Selecione um contrato na página de Contratos para criar uma análise.
@@ -1476,38 +1468,38 @@ const AnaliseVistoria = () => {
 
         {/* Informações do Contrato Selecionado */}
         {selectedContract && (
-          <Card className="mb-6 bg-white/5 backdrop-blur-sm border-white/10">
+          <Card className="mb-6 bg-white border-neutral-200">
             <CardHeader 
-              className="pb-4 border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
+              className="pb-4 border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
               onClick={() => setIsContractInfoExpanded(!isContractInfoExpanded)}
             >
-              <CardTitle className="flex items-center justify-between text-xl text-blue-100">
+              <CardTitle className="flex items-center justify-between text-lg text-neutral-900">
                 <div className="flex items-center space-x-2">
-                  <CheckCircle2 className="h-5 w-5 text-blue-400" />
+                  <CheckCircle2 className="h-5 w-5 text-neutral-600" />
                   <span>Contrato Selecionado</span>
                 </div>
                 {isContractInfoExpanded ? (
-                  <ChevronUp className="h-5 w-5 text-blue-400" />
+                  <ChevronUp className="h-5 w-5 text-neutral-400" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-blue-400" />
+                  <ChevronDown className="h-5 w-5 text-neutral-400" />
                 )}
               </CardTitle>
             </CardHeader>
             {isContractInfoExpanded && (
             <CardContent>
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/30 rounded-lg p-6 backdrop-blur-sm">
+                <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-blue-400" />
-                      <h3 className="font-semibold text-blue-100">
+                      <FileText className="h-5 w-5 text-neutral-600" />
+                      <h3 className="font-semibold text-neutral-900">
                         Informações do Contrato
                       </h3>
                     </div>
                       {loadingExistingAnalise && (
                         <Badge
                           variant="default"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-primary-600 hover:bg-primary-700 text-white"
                         >
                           <div className="h-3 w-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Carregando...
@@ -1517,7 +1509,7 @@ const AnaliseVistoria = () => {
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="default"
-                            className="bg-orange-600 hover:bg-orange-700 text-white"
+                            className="bg-neutral-600 hover:bg-neutral-700 text-white"
                           >
                             <AlertTriangle className="h-3 w-3 mr-1" />
                             Análise Existente
@@ -1544,37 +1536,37 @@ const AnaliseVistoria = () => {
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-blue-300" />
-                          <Label className="text-sm font-medium text-blue-200">
+                          <User className="h-4 w-4 text-neutral-600" />
+                          <Label className="text-sm font-medium text-neutral-900">
                             Locatário
                           </Label>
                         </div>
-                        <p className="text-sm bg-white/5 backdrop-blur-sm p-2 rounded border border-white/10 text-slate-200">
+                        <p className="text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
                           {dadosVistoria.locatario}
                         </p>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-blue-300" />
-                          <Label className="text-sm font-medium text-blue-200">
+                          <MapPin className="h-4 w-4 text-neutral-600" />
+                          <Label className="text-sm font-medium text-neutral-900">
                             Endereço
                           </Label>
                         </div>
-                        <p className="text-sm bg-white/5 backdrop-blur-sm p-2 rounded border border-white/10 text-slate-200">
+                        <p className="text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
                           {dadosVistoria.endereco}
                         </p>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-blue-300" />
-                          <Label className="text-sm font-medium text-blue-200">
+                          <Calendar className="h-4 w-4 text-neutral-600" />
+                          <Label className="text-sm font-medium text-neutral-900">
                             Data da Vistoria
                           </Label>
                         </div>
-                        <p className="text-sm bg-white/5 backdrop-blur-sm p-2 rounded border border-white/10 text-slate-200">
+                        <p className="text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
                           {dadosVistoria.dataVistoria}
                         </p>
                       </div>
@@ -1582,10 +1574,10 @@ const AnaliseVistoria = () => {
 
                     {/* Aviso sobre análise existente */}
                     {hasExistingAnalise && (
-                      <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                      <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-100 border border-neutral-200 dark:border-neutral-200 rounded-lg">
                         <div className="flex items-center space-x-2">
-                          <AlertTriangle className="h-4 w-4 text-orange-600" />
-                          <p className="text-sm text-orange-800 dark:text-orange-200">
+                          <AlertTriangle className="h-4 w-4 text-neutral-600" />
+                          <p className="text-sm text-neutral-800 dark:text-neutral-900">
                             <strong>Atenção:</strong> Já existe uma análise de
                             vistoria para este contrato. Ao salvar, a análise
                             existente será atualizada em vez de criar uma nova.
@@ -1602,28 +1594,28 @@ const AnaliseVistoria = () => {
 
         {/* Seleção de Prestador - Apenas no modo orçamento */}
         {documentMode === 'orcamento' && selectedContract && (
-          <Card className="mb-6 bg-white/5 backdrop-blur-sm border-white/10">
-            <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="flex items-center space-x-2 text-xl text-blue-100">
-                <Users className="h-5 w-5 text-blue-400" />
+          <Card className="mb-6 bg-white border-neutral-200">
+            <CardHeader className="pb-4 border-b border-neutral-200">
+              <CardTitle className="flex items-center space-x-2 text-lg text-neutral-900">
+                <Users className="h-5 w-5 text-neutral-600" />
                 <span>Selecionar Prestador</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="prestador-select" className="text-sm font-medium text-blue-200">
+                <Label htmlFor="prestador-select" className="text-sm font-medium text-neutral-900">
                   Prestador de Serviço *
                 </Label>
                 <Select
                   value={selectedPrestadorId}
                   onValueChange={setSelectedPrestadorId}
                 >
-                  <SelectTrigger id="prestador-select" className="!bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-blue-500/50">
+                  <SelectTrigger id="prestador-select" className="bg-white border-neutral-300 text-neutral-900 focus:border-primary-500">
                     <SelectValue placeholder="Selecione um prestador" />
                   </SelectTrigger>
                   <SelectContent>
                     {prestadores.length === 0 ? (
-                      <div className="p-4 text-sm text-muted-foreground text-center">
+                      <div className="p-4 text-sm text-neutral-500 text-center">
                         <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p>Nenhum prestador cadastrado</p>
                       </div>
@@ -1633,7 +1625,7 @@ const AnaliseVistoria = () => {
                           <div className="flex flex-col">
                             <span className="font-medium">{prestador.nome}</span>
                             {prestador.especialidade && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-neutral-500">
                                 {prestador.especialidade}
                               </span>
                             )}
@@ -1647,24 +1639,24 @@ const AnaliseVistoria = () => {
 
               {/* Informações do Prestador Selecionado */}
               {selectedPrestadorId && prestadores.find(p => p.id === selectedPrestadorId) && (
-                <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-green-400/30 rounded-lg p-4 space-y-2 backdrop-blur-sm">
+                <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
                   {(() => {
                     const prestador = prestadores.find(p => p.id === selectedPrestadorId);
                     if (!prestador) return null;
                     return (
                       <>
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-green-600" />
+                          <User className="h-4 w-4 text-neutral-600" />
                           <span className="text-sm font-semibold">{prestador.nome}</span>
                         </div>
                         {prestador.cnpj && (
-                          <p className="text-xs text-muted-foreground">CNPJ: {prestador.cnpj}</p>
+                          <p className="text-xs text-neutral-500">CNPJ: {prestador.cnpj}</p>
                         )}
                         {prestador.telefone && (
-                          <p className="text-xs text-muted-foreground">Tel: {prestador.telefone}</p>
+                          <p className="text-xs text-neutral-500">Tel: {prestador.telefone}</p>
                         )}
                         {prestador.email && (
-                          <p className="text-xs text-muted-foreground">Email: {prestador.email}</p>
+                          <p className="text-xs text-neutral-500">Email: {prestador.email}</p>
                         )}
                       </>
                     );
@@ -1686,15 +1678,15 @@ const AnaliseVistoria = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Formulário de Novo Apontamento */}
-          <Card className="xl:col-span-1 bg-white/5 backdrop-blur-sm border-white/10">
+          <Card className="xl:col-span-1 bg-white border-neutral-200">
             <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="flex items-center justify-between text-blue-100">
+              <CardTitle className="flex items-center justify-between text-neutral-900">
                 <div className="flex items-center space-x-2">
-                  <Plus className="h-5 w-5 text-blue-400" />
+                  <Plus className="h-5 w-5 text-neutral-600" />
                   <span>Novo Apontamento</span>
                 </div>
                 <Select value={documentMode} onValueChange={(value: 'analise' | 'orcamento') => setDocumentMode(value)}>
-                  <SelectTrigger className="w-32 !bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-blue-500/50">
+                  <SelectTrigger className="w-32 bg-white border-neutral-300 text-neutral-900">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1710,9 +1702,9 @@ const AnaliseVistoria = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="ambiente"
-                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                   >
-                    <Home className="h-4 w-4 text-blue-300" />
+                    <Home className="h-4 w-4 text-neutral-600" />
                     <span>Ambiente *</span>
                   </Label>
                   <Input
@@ -1725,15 +1717,15 @@ const AnaliseVistoria = () => {
                         ambiente: e.target.value,
                       }))
                     }
-                    className="h-9 !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                    className="h-9 bg-white border-neutral-300"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="subtitulo"
-                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                   >
-                    <Settings className="h-4 w-4 text-blue-300" />
+                    <Settings className="h-4 w-4 text-neutral-600" />
                     <span>Subtítulo</span>
                   </Label>
                   <Input
@@ -1746,7 +1738,7 @@ const AnaliseVistoria = () => {
                         subtitulo: e.target.value,
                       }))
                     }
-                    className="h-9 !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                    className="h-9 bg-white border-neutral-300"
                   />
                 </div>
               </div>
@@ -1755,9 +1747,9 @@ const AnaliseVistoria = () => {
               <div className="space-y-2">
                 <Label
                   htmlFor="descricao"
-                  className="text-sm font-medium flex items-center space-x-2 text-blue-200"
+                  className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                 >
-                  <FileText className="h-4 w-4 text-blue-300" />
+                  <FileText className="h-4 w-4 text-neutral-600" />
                   <span>{documentMode === 'orcamento' ? 'Descrição do Vistoriador *' : 'Descrição *'}</span>
                 </Label>
                 <Textarea
@@ -1771,7 +1763,7 @@ const AnaliseVistoria = () => {
                     }))
                   }
                   rows={2}
-                  className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                  className="text-sm bg-white border-neutral-300"
                 />
               </div>
 
@@ -1780,9 +1772,9 @@ const AnaliseVistoria = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="descricaoServico"
-                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                   >
-                    <FileText className="h-4 w-4 text-blue-300" />
+                    <FileText className="h-4 w-4 text-neutral-600" />
                     <span>Descrição do Serviço *</span>
                   </Label>
                   <Textarea
@@ -1796,7 +1788,7 @@ const AnaliseVistoria = () => {
                       }))
                     }
                     rows={2}
-                    className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                    className="text-sm bg-white border-neutral-300"
                   />
                 </div>
               )}
@@ -1804,18 +1796,18 @@ const AnaliseVistoria = () => {
               {/* Campos de Orçamento - Apenas no modo orçamento */}
               {documentMode === 'orcamento' && (
                 <>
-                  <Separator />
+                  <Separator className="bg-neutral-200" />
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-blue-200">Tipo</Label>
+                      <Label className="text-xs font-medium text-neutral-900">Tipo</Label>
                       <Select
                         value={currentApontamento.tipo || 'material'}
                         onValueChange={(value: BudgetItemType) =>
                           setCurrentApontamento(prev => ({ ...prev, tipo: value }))
                         }
                       >
-                        <SelectTrigger className="h-8 !bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-blue-500/50">
+                        <SelectTrigger className="h-8 bg-white border-neutral-300 text-neutral-900">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1843,7 +1835,7 @@ const AnaliseVistoria = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-blue-200">Valor Unit.</Label>
+                      <Label className="text-xs font-medium text-neutral-900">Valor Unit.</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -1851,13 +1843,13 @@ const AnaliseVistoria = () => {
                         onChange={(e) =>
                           setCurrentApontamento(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))
                         }
-                        className="h-8 text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                        className="h-8 text-sm bg-white border-neutral-300"
                         placeholder="0,00"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-blue-200">Quantidade</Label>
+                      <Label className="text-xs font-medium text-neutral-900">Quantidade</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -1865,14 +1857,14 @@ const AnaliseVistoria = () => {
                         onChange={(e) =>
                           setCurrentApontamento(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))
                         }
-                        className="h-8 text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                        className="h-8 text-sm bg-white border-neutral-300"
                         placeholder="0"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-blue-200">Subtotal</Label>
-                      <div className="flex items-center space-x-1 h-8 px-2 bg-slate-800/50 rounded border border-slate-700/50 text-sm font-medium text-slate-100">
+                      <Label className="text-xs font-medium text-neutral-900">Subtotal</Label>
+                      <div className="flex items-center space-x-1 h-8 px-2 bg-white rounded border border-neutral-300 text-sm font-medium text-neutral-900">
                         <span>
                           {((currentApontamento.valor || 0) * (currentApontamento.quantidade || 0))
                             .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -1883,28 +1875,28 @@ const AnaliseVistoria = () => {
                 </>
               )}
 
-              <Separator />
+              <Separator className="bg-neutral-200" />
 
               {/* Vistoria Inicial */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium flex items-center space-x-2 text-green-200 bg-green-500/10 p-2 rounded-lg border border-green-400/30">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
+                  <CheckCircle className="h-4 w-4 text-neutral-600" />
                   <span>Vistoria Inicial</span>
                 </h3>
                 <div
-                  className="border-2 border-dashed border-green-400/30 rounded-lg p-4 bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
+                  className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
                   onPaste={(e) => handlePaste(e.nativeEvent, 'inicial')}
                   tabIndex={0}
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center">
-                      <Upload className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-neutral-600 dark:text-neutral-600" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-slate-200">
+                      <p className="text-sm font-medium text-neutral-900">
                         Cole imagens com Ctrl+V
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-neutral-500 mt-1">
                         Estado inicial do ambiente
                       </p>
                     </div>
@@ -1917,7 +1909,7 @@ const AnaliseVistoria = () => {
                             <div key={index} className="relative group">
                               <Badge
                                 variant="secondary"
-                                className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700 pr-6"
+                                className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-600 border-neutral-200 dark:border-neutral-200 pr-6"
                               >
                                 <FileImage className="h-3 w-3 mr-1" />
                                 {foto.name}
@@ -1947,9 +1939,9 @@ const AnaliseVistoria = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="descritivoLaudo"
-                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                   >
-                    <FileText className="h-4 w-4 text-blue-300" />
+                    <FileText className="h-4 w-4 text-neutral-600" />
                     <span>Descritivo do Laudo de Entrada (Opcional)</span>
                   </Label>
                   <Textarea
@@ -1969,33 +1961,33 @@ const AnaliseVistoria = () => {
                       }))
                     }
                     rows={2}
-                    className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                    className="text-sm bg-white border-neutral-300"
                   />
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-neutral-200" />
 
               {/* Vistoria Final */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium flex items-center space-x-2 text-orange-200 bg-orange-500/10 p-2 rounded-lg border border-orange-400/30">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
+                  <AlertTriangle className="h-4 w-4 text-neutral-600" />
                   <span>Vistoria Final</span>
                 </h3>
                 <div
-                  className="border-2 border-dashed border-orange-400/30 rounded-lg p-4 bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
+                  className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
                   onPaste={(e) => handlePaste(e.nativeEvent, 'final')}
                   tabIndex={0}
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center">
-                      <Upload className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-neutral-600 dark:text-neutral-600" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-slate-200">
+                      <p className="text-sm font-medium text-neutral-900">
                         Cole imagens com Ctrl+V
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-neutral-500 mt-1">
                         Estado atual do ambiente
                       </p>
                     </div>
@@ -2008,7 +2000,7 @@ const AnaliseVistoria = () => {
                             <div key={index} className="relative group">
                               <Badge
                                 variant="secondary"
-                                className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700 pr-6"
+                                className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-900 border-neutral-200 pr-6"
                               >
                                 <FileImage className="h-3 w-3 mr-1" />
                                 {foto.name}
@@ -2035,16 +2027,16 @@ const AnaliseVistoria = () => {
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-neutral-200" />
 
               {/* Observação */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="observacao"
-                    className="text-sm font-medium flex items-center space-x-2 text-blue-200"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                   >
-                    <AlertCircle className="h-4 w-4 text-blue-300" />
+                    <AlertCircle className="h-4 w-4 text-neutral-600" />
                     <span>Análise Técnica</span>
                   </Label>
                   <Button
@@ -2054,7 +2046,7 @@ const AnaliseVistoria = () => {
                     }
                     variant="ghost"
                     size="sm"
-                    className="text-muted-foreground hover:text-foreground h-6 px-2 text-xs"
+                    className="text-neutral-500 hover:text-foreground h-6 px-2 text-xs"
                     title="Corrigir ortografia com IA"
                   >
                     <Wand2 className="h-3 w-3 mr-1" />
@@ -2072,7 +2064,7 @@ const AnaliseVistoria = () => {
                     }))
                   }
                   rows={3}
-                  className="text-sm !bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:border-blue-500/50"
+                  className="text-sm bg-white border-neutral-300"
                 />
               </div>
 
@@ -2114,20 +2106,20 @@ const AnaliseVistoria = () => {
           </Card>
 
           {/* Visualização do Documento em Tempo Real */}
-          <Card className="xl:col-span-2 bg-white/5 backdrop-blur-sm border-white/10">
+          <Card className="xl:col-span-2 bg-white border-neutral-200">
             <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="flex items-center space-x-2 text-lg text-blue-100">
-                <FileText className="h-5 w-5 text-blue-400" />
+              <CardTitle className="flex items-center space-x-2 text-lg text-neutral-900">
+                <FileText className="h-5 w-5 text-neutral-600" />
                 <span>Pré-visualização do Documento</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {apontamentos.length === 0 ? (
-                <div className="text-center py-12 text-blue-300">
+                <div className="text-center py-12 text-neutral-600">
                   <div className="w-16 h-16 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="h-8 w-8 text-blue-400 opacity-50" />
+                    <FileText className="h-8 w-8 text-neutral-600 opacity-50" />
                   </div>
-                  <h3 className="font-medium text-blue-200 mb-2">
+                  <h3 className="font-medium text-neutral-900 mb-2">
                     Nenhum apontamento
                   </h3>
                   <p className="text-sm">
@@ -2140,13 +2132,13 @@ const AnaliseVistoria = () => {
                   {/* Controles da Pré-visualização */}
                   <div className="flex items-center justify-between p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-400" />
-                      <span className="text-sm font-medium text-blue-200">
+                      <CheckCircle2 className="h-4 w-4 text-neutral-600" />
+                      <span className="text-sm font-medium text-neutral-900">
                         Documento Atualizado
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs border-blue-400/30 text-blue-200">
+                      <Badge variant="outline" className="text-xs border-neutral-200 text-neutral-900">
                         {apontamentos.length} apontamento
                         {apontamentos.length !== 1 ? 's' : ''}
                       </Badge>
@@ -2156,7 +2148,7 @@ const AnaliseVistoria = () => {
                   {/* Pré-visualização do Documento Real */}
                   <div className="border border-white/10 rounded-lg overflow-hidden">
                     <div className="bg-white/5 backdrop-blur-sm p-3 border-b border-white/10">
-                      <h4 className="text-sm font-medium text-blue-200">
+                      <h4 className="text-sm font-medium text-neutral-900">
                         Pré-visualização do Documento Final
                       </h4>
                     </div>
@@ -2183,7 +2175,7 @@ const AnaliseVistoria = () => {
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center space-x-3">
-                              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 bg-neutral-900 rounded-full flex items-center justify-center">
                                 <span className="text-xs font-bold text-white">
                                   {index + 1}
                                 </span>
@@ -2192,12 +2184,12 @@ const AnaliseVistoria = () => {
                                 <h4 className="font-semibold text-sm text-foreground">
                                   {apontamento.ambiente}
                                   {apontamento.subtitulo && (
-                                    <span className="text-muted-foreground ml-2">
+                                    <span className="text-neutral-500 ml-2">
                                       - {apontamento.subtitulo}
                                     </span>
                                   )}
                                 </h4>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="text-xs text-neutral-500 mt-1">
                                   {apontamento.descricao}
                                 </p>
                                 {/* Exibir valores de orçamento se existirem */}
@@ -2208,10 +2200,10 @@ const AnaliseVistoria = () => {
                                        apontamento.tipo === 'mao_de_obra' ? 'Mão de Obra' : 
                                        'Material + M.O.'}
                                     </Badge>
-                                    <span className="text-muted-foreground">
+                                    <span className="text-neutral-500">
                                       {apontamento.quantidade}x R$ {(apontamento.valor || 0).toFixed(2)}
                                     </span>
-                                    <span className="font-semibold text-green-600">
+                                    <span className="font-semibold text-neutral-600">
                                       = {((apontamento.valor || 0) * (apontamento.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                     </span>
                                   </div>
@@ -2225,7 +2217,7 @@ const AnaliseVistoria = () => {
                                 onClick={() =>
                                   handleEditApontamento(apontamento)
                                 }
-                                className="text-muted-foreground hover:text-primary h-6 w-6 p-0"
+                                className="text-neutral-500 hover:text-primary h-6 w-6 p-0"
                                 title="Editar apontamento"
                               >
                                 <Edit className="h-3 w-3" />
@@ -2236,7 +2228,7 @@ const AnaliseVistoria = () => {
                                 onClick={() =>
                                   handleRemoveApontamento(apontamento.id)
                                 }
-                                className="text-muted-foreground hover:text-destructive h-6 w-6 p-0"
+                                className="text-neutral-500 hover:text-destructive h-6 w-6 p-0"
                                 title="Remover apontamento"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -2249,7 +2241,7 @@ const AnaliseVistoria = () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-neutral-500">
                   <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="h-6 w-6 opacity-50" />
                   </div>

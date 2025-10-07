@@ -64,16 +64,16 @@ export const ContractList = memo<ContractListProps>(({
   // Loading state
   if (isLoading) {
     return (
-      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+      <Card className="bg-white border-neutral-200 shadow-sm">
         <CardContent className="p-12">
           <div className="text-center">
-            <div className="p-4 bg-blue-500/20 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-              <FileText className="h-8 w-8 text-blue-400 animate-pulse" />
+            <div className="p-4 bg-neutral-100 rounded-lg mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+              <FileText className="h-8 w-8 text-neutral-400 animate-pulse" />
             </div>
-            <p className="text-lg font-medium text-white">
+            <p className="text-lg font-medium text-neutral-900">
               Carregando contratos...
             </p>
-            <p className="text-sm text-blue-200 mt-1">
+            <p className="text-sm text-neutral-500 mt-1">
               Aguarde um momento
             </p>
           </div>
@@ -85,16 +85,16 @@ export const ContractList = memo<ContractListProps>(({
   // Empty state
   if (contracts.length === 0) {
     return (
-      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+      <Card className="bg-white border-neutral-200 shadow-sm">
         <CardContent className="p-12">
           <div className="text-center">
-            <div className="p-4 bg-blue-500/20 rounded-xl mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-              <FileText className="h-8 w-8 text-blue-300" />
+            <div className="p-4 bg-neutral-100 rounded-lg mx-auto mb-6 w-16 h-16 flex items-center justify-center">
+              <FileText className="h-8 w-8 text-neutral-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
               Nenhum contrato cadastrado ainda
             </h3>
-            <p className="text-blue-200 mb-6">
+            <p className="text-neutral-600 mb-6">
               Comece criando seu primeiro contrato no sistema
             </p>
             <Link to="/cadastrar-contrato">
@@ -120,21 +120,20 @@ export const ContractList = memo<ContractListProps>(({
         {contracts.map((contract) => (
           <Card
             key={contract.id}
-            className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 hover:border-blue-400/40 transition-all duration-300 overflow-visible shadow-lg"
-          >
-            <CardContent className="p-6">
+            className="bg-white border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all duration-200 overflow-visible">
+            <CardContent className="p-5">
               {/* Header do Contrato */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <FileText className="h-4 w-4 text-primary" />
+                  <div className="p-2 rounded-lg bg-neutral-100">
+                    <FileText className="h-4 w-4 text-neutral-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white">
+                    <h3 className="font-semibold text-sm text-neutral-900">
                       Contrato{' '}
                       {contract.form_data.numeroContrato || '[NÚMERO]'}
                     </h3>
-                    <p className="text-xs text-blue-200">
+                    <p className="text-xs text-neutral-500">
                       ID: {contract.id.slice(0, 8)}...
                     </p>
                   </div>
@@ -142,44 +141,44 @@ export const ContractList = memo<ContractListProps>(({
               </div>
 
               {/* Separador */}
-              <div className="border-t border-blue-500/20 mb-4"></div>
+              <div className="border-t border-neutral-200 mb-4"></div>
 
               {/* PARTES ENVOLVIDAS */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
+                <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">
                   Partes Envolvidas
                 </h4>
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-1.5 rounded-md bg-green-500/10">
-                      <User className="h-3 w-3 text-green-600" />
+                  <div className="flex items-start gap-2">
+                    <div className="p-1.5 rounded-md bg-neutral-100">
+                      <User className="h-3 w-3 text-neutral-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-blue-200 uppercase tracking-wide">
+                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
                         {isMultipleProprietarios(
                           contract.form_data.nomeProprietario
                         )
                           ? 'Proprietários'
                           : 'Proprietário'}
                       </p>
-                      <p className="text-xs font-bold text-white truncate">
+                      <p className="text-xs font-semibold text-neutral-900 truncate">
                         {contract.form_data.nomeProprietario}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="p-1.5 rounded-md bg-blue-500/10">
-                      <User2 className="h-3 w-3 text-blue-600" />
+                  <div className="flex items-start gap-2">
+                    <div className="p-1.5 rounded-md bg-neutral-100">
+                      <User2 className="h-3 w-3 text-neutral-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-blue-200 uppercase tracking-wide">
+                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
                         {isMultipleLocatarios(
                           contract.form_data.nomeLocatario
                         )
                           ? 'Locatários'
                           : 'Locatário'}
                       </p>
-                      <p className="text-xs font-bold text-white truncate">
+                      <p className="text-xs font-semibold text-neutral-900 truncate">
                         {contract.form_data.nomeLocatario}
                       </p>
                     </div>
@@ -189,48 +188,48 @@ export const ContractList = memo<ContractListProps>(({
 
               {/* TERMOS DO CONTRATO */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
+                <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">
                   Termos do Contrato
                 </h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <div className="p-1 rounded bg-yellow-500/10">
-                        <Timer className="h-3 w-3 text-yellow-600" />
+                      <div className="p-1 rounded bg-neutral-100">
+                        <Timer className="h-3 w-3 text-neutral-600" />
                       </div>
-                      <span className="text-xs font-medium text-blue-200">
+                      <span className="text-xs font-medium text-neutral-600">
                         Prazo
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-white">
+                    <span className="text-xs font-semibold text-neutral-900">
                       {contract.form_data.prazoDias} dias
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
                       <div className="flex items-center gap-2">
-                        <div className="p-1 rounded bg-green-500/10">
-                          <CalendarDays className="h-3 w-3 text-green-600" />
+                        <div className="p-1 rounded bg-neutral-100">
+                          <CalendarDays className="h-3 w-3 text-neutral-600" />
                         </div>
-                        <span className="text-xs font-medium text-blue-200">
+                        <span className="text-xs font-medium text-neutral-600">
                           Início
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-semibold text-neutral-900">
                         {contract.form_data.dataInicioRescisao ||
                           '01/09/2026'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
                       <div className="flex items-center gap-2">
-                        <div className="p-1 rounded bg-red-500/10">
-                          <Clock className="h-3 w-3 text-red-600" />
+                        <div className="p-1 rounded bg-neutral-100">
+                          <Clock className="h-3 w-3 text-neutral-600" />
                         </div>
-                        <span className="text-xs font-medium text-blue-200">
+                        <span className="text-xs font-medium text-neutral-600">
                           Término
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-semibold text-neutral-900">
                         {contract.form_data.dataTerminoRescisao ||
                           '01/10/2026'}
                       </span>
@@ -241,19 +240,19 @@ export const ContractList = memo<ContractListProps>(({
 
               {/* LOCALIZAÇÃO */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-3">
+                <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">
                   Localização
                 </h4>
-                <div className="flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
-                  <div className="p-1 rounded bg-purple-500/10">
-                    <MapPin className="h-3 w-3 text-purple-600" />
+                <div className="flex items-start gap-2 p-2 bg-neutral-50 rounded-lg">
+                  <div className="p-1 rounded bg-neutral-100">
+                    <MapPin className="h-3 w-3 text-neutral-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
                       Endereço
                     </p>
                     <p 
-                      className="text-xs font-bold text-foreground line-clamp-2 cursor-pointer hover:text-primary hover:underline transition-colors"
+                      className="text-xs font-semibold text-neutral-900 line-clamp-2 cursor-pointer hover:text-primary-600 hover:underline transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         const endereco = contract.form_data.endereco || contract.form_data.enderecoImovel;
@@ -273,7 +272,7 @@ export const ContractList = memo<ContractListProps>(({
               </div>
 
               {/* AÇÕES RÁPIDAS */}
-              <div className="border-t border-blue-500/20 pt-4 relative overflow-visible">
+              <div className="border-t border-neutral-200 pt-4 relative overflow-visible">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Button

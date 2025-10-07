@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useState } from 'react';
-import { Send, Loader2, Image as ImageIcon, Sparkles, X } from 'lucide-react';
+import { Send, Loader2, Image as ImageIcon, Sparkles, X, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,7 @@ interface ChatInputProps {
   onSubmit: () => Promise<void>;
   onUploadImage?: (file: File) => Promise<void>;
   onUploadMultipleImages?: (files: File[]) => Promise<void>;
+  onUploadAudio?: (file: File) => Promise<void>;
   onGenerateImage?: (prompt: string) => Promise<void>;
   isLoading: boolean;
   placeholder?: string;
@@ -21,12 +22,14 @@ const ChatInput = memo(
     onChange,
     onSubmit,
     onUploadMultipleImages,
+    onUploadAudio,
     onGenerateImage,
     isLoading,
     placeholder = 'Digite sua mensagem...',
   }: ChatInputProps) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const audioInputRef = useRef<HTMLInputElement>(null);
     const [previewImages, setPreviewImages] = useState<string[]>([]);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const { toast } = useToast();
@@ -162,6 +165,10 @@ const ChatInput = memo(
       fileInputRef.current?.click();
     }, []);
 
+    const handleAudioButtonClick = useCallback(() => {
+      audioInputRef.current?.click();
+    }, []);
+
     return (
       <div className="relative">
         {/* Image Previews */}
@@ -172,7 +179,7 @@ const ChatInput = memo(
                 <img
                   src={preview}
                   alt={`Preview ${index + 1}`}
-                  className="max-h-32 rounded-xl border-2 border-white/20"
+                  className="max-h-32 rounded-xl border-2 border-neutral-200"
                 />
                 <Button
                   variant="ghost"
@@ -199,14 +206,14 @@ const ChatInput = memo(
 
         {/* Form de input */}
         <form onSubmit={handleSubmit} className="relative">
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-3 focus-within:border-blue-400 transition-all">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-3 focus-within:border-neutral-400 transition-all shadow-sm">
             <Textarea
               ref={textareaRef}
               value={value}
               onChange={(e) => onChange(e.target.value)}
               onPaste={handlePaste}
               placeholder={placeholder}
-              className="min-h-[60px] max-h-[200px] resize-none bg-transparent border-0 text-white placeholder:text-blue-200 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-[60px] max-h-[200px] resize-none bg-transparent border-0 text-neutral-900 placeholder:text-neutral-400 focus-visible:ring-0 focus-visible:ring-offset-0"
               disabled={isLoading}
               onKeyDown={handleKeyDown}
               autoFocus
@@ -268,6 +275,21 @@ const ChatInput = memo(
                   className="hidden"
                 />
 
+                {/* Hidden audio input */}
+                <input
+                  ref={audioInputRef}
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file && onUploadAudio) {
+                      onUploadAudio(file);
+                      e.target.value = ''; // Reset input
+                    }
+                  }}
+                  className="hidden"
+                />
+
                 {/* Image Upload Button */}
                 <Button
                   type="button"
@@ -275,15 +297,30 @@ const ChatInput = memo(
                   size="sm"
                   onClick={handleImageButtonClick}
                   disabled={isLoading}
-                  className="h-9 w-9 p-0 text-blue-300 hover:text-white hover:bg-white/10"
+                  className="h-9 w-9 p-0 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                   title="Enviar imagem"
                 >
                   <ImageIcon className="h-5 w-5" />
                 </Button>
 
+                {/* Audio Upload Button */}
+                {onUploadAudio && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAudioButtonClick}
+                    disabled={isLoading}
+                    className="h-9 w-9 p-0 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+                    title="Enviar áudio"
+                  >
+                    <Mic className="h-5 w-5" />
+                  </Button>
+                )}
+
                 {/* Sparkles indicator - visual only */}
                 {value.trim() && (
-                  <div className="flex items-center gap-1 text-indigo-300/50 text-xs">
+                  <div className="flex items-center gap-1 text-neutral-400 text-xs">
                     <Sparkles className="h-3 w-3" />
                   </div>
                 )}
@@ -293,7 +330,7 @@ const ChatInput = memo(
               <Button
                 type="submit"
                 disabled={(!value.trim() && selectedFiles.length === 0) || isLoading}
-                className="h-9 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                className="h-9 px-4 bg-neutral-900 hover:bg-neutral-800 text-white shadow-sm"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -305,7 +342,7 @@ const ChatInput = memo(
           </div>
 
           {/* Hint */}
-          <div className="mt-2 text-xs text-blue-200/70 text-center">
+          <div className="mt-2 text-xs text-neutral-500 text-center">
             <span className="font-medium">Enter</span> para enviar • <span className="font-medium">Shift+Enter</span> para nova linha • <span className="font-medium">Ctrl+V</span> para colar imagem
           </div>
         </form>

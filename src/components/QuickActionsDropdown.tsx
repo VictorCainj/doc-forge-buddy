@@ -203,7 +203,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
         onGenerateDocument(
           contractId,
           DEVOLUTIVA_LOCATARIO_TEMPLATE,
-          'Confirmação de Notificação de Desocupação e Procedimentos Finais - Contrato 13734'
+          'Devolutiva Locatário'
         );
         setIsOpen(false);
       },
@@ -365,42 +365,42 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+          'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 border',
           isOpen 
-            ? 'bg-gradient-to-r from-blue-500/20 to-indigo-600/20 text-white border border-blue-400/40 shadow-lg'
-            : 'text-blue-100 border border-blue-400/30 hover:bg-white/10 hover:border-blue-400/50 hover:text-white'
+            ? 'bg-neutral-100 text-neutral-900 border-neutral-300 shadow-md'
+            : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 hover:shadow-sm'
         )}
       >
-        <span>AÇÕES RÁPIDAS</span>
+        <span className="text-xs font-semibold">Ações Rápidas</span>
         <ChevronRight
           className={cn(
-            'h-4 w-4 transition-transform',
+            'h-4 w-4 transition-transform text-neutral-500',
             isOpen && 'rotate-90'
           )}
         />
       </button>
 
-      {/* Modal centralizado com blur */}
+      {/* Modal centralizado */}
       {isOpen && (
         <>
-          {/* Backdrop com blur */}
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-md z-[9998]"
+            className="fixed inset-0 bg-black/40 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Modal em tela cheia */}
-          <div className="fixed inset-4 z-[9999] bg-gradient-to-br from-slate-900/98 via-blue-900/98 to-slate-800/98 backdrop-blur-xl border border-blue-400/30 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+          {/* Modal */}
+          <div className="fixed inset-4 md:inset-8 z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             {/* Header do modal */}
-            <div className="relative p-4 border-b border-blue-400/30 bg-gradient-to-r from-slate-800/80 to-blue-900/80">
+            <div className="relative px-6 py-5 border-b border-neutral-200 bg-white">
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-xl font-semibold text-neutral-900">
                   Ações Rápidas
                 </h3>
                 {contractNumber && (
-                  <p className="text-sm text-blue-200 mt-1">
+                  <p className="text-sm text-neutral-600 mt-1">
                     Contrato:{' '}
-                    <span className="font-medium text-blue-400">
+                    <span className="font-medium text-neutral-900">
                       {contractNumber}
                     </span>
                   </p>
@@ -408,7 +408,7 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 transition-colors p-2 rounded-full hover:bg-neutral-100"
               >
                 <svg
                   className="w-5 h-5"
@@ -427,14 +427,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
             </div>
 
             {/* Conteúdo do menu organizado */}
-            <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-slate-900/50 to-blue-900/50">
-              <div className="max-w-5xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="flex-1 p-6 overflow-y-auto bg-neutral-50">
+              <div className="max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Coluna 1: TERMOS */}
-                  <div className="space-y-2">
-                    <div className="space-y-1">
-                      <div className="px-2 py-1">
-                        <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide">
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="px-1 pb-2">
+                        <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                           Chaves
                         </h4>
                       </div>
@@ -443,14 +443,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                           key={action.id}
                           onClick={() => handleActionClick(action)}
                           disabled={action.disabled}
-                          className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                          className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                         >
                           {action.loading ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                           ) : (
-                            <action.icon className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                            <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                           )}
-                          <span className="text-xs text-white font-medium">
+                          <span className="text-sm text-neutral-700 font-medium text-left">
                             {action.id === 'termo-locador'
                               ? 'Chaves (Locador)'
                               : action.id === 'termo-locatario'
@@ -463,16 +463,16 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                   </div>
 
                   {/* Coluna 2: WHATSAPP */}
-                  <div className="space-y-2">
-                    <div className="space-y-2">
+                  <div className="space-y-3">
+                    <div className="space-y-4">
                       {/* E-mail */}
                       <div>
-                        <div className="px-2 py-1">
-                          <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide">
+                        <div className="px-1 pb-2">
+                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             E-mail
                           </h4>
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {communicationActionsWithLoading
                             .filter(
                               (action) =>
@@ -484,14 +484,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                                 key={action.id}
                                 onClick={() => handleActionClick(action)}
                                 disabled={action.disabled}
-                                className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                                className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                               >
                                 {action.loading ? (
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                                 ) : (
-                                  <action.icon className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                                  <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                                 )}
-                                <span className="text-xs text-white font-medium">
+                                <span className="text-sm text-neutral-700 font-medium text-left">
                                   {action.id === 'devolutiva-email-locador'
                                     ? 'E-mail (Locador)'
                                     : action.id === 'devolutiva-email-locatario'
@@ -507,12 +507,12 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
 
                       {/* WhatsApp */}
                       <div>
-                        <div className="px-2 py-1">
-                          <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide">
+                        <div className="px-1 pb-2">
+                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             WhatsApp
                           </h4>
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {communicationActionsWithLoading
                             .filter((action) => action.id.includes('whatsapp') || action.id === 'status-vistoria')
                             .map((action) => (
@@ -520,14 +520,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                                 key={action.id}
                                 onClick={() => handleActionClick(action)}
                                 disabled={action.disabled}
-                                className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                                className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                               >
                                 {action.loading ? (
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                                 ) : (
-                                  <action.icon className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                                  <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                                 )}
-                                <span className="text-xs text-white font-medium">
+                                <span className="text-sm text-neutral-700 font-medium text-left">
                                   {action.id === 'whatsapp-proprietaria'
                                     ? 'Proprietária'
                                     : action.id === 'whatsapp-comercial'
@@ -545,12 +545,12 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
 
                       {/* Outros */}
                       <div>
-                        <div className="px-2 py-1">
-                          <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide">
+                        <div className="px-1 pb-2">
+                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             Outros
                           </h4>
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {communicationActionsWithLoading
                             .filter(
                               (action) =>
@@ -564,14 +564,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                                 key={action.id}
                                 onClick={() => handleActionClick(action)}
                                 disabled={action.disabled}
-                                className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                                className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                               >
                                 {action.loading ? (
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                                 ) : (
-                                  <action.icon className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                                  <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                                 )}
-                                <span className="text-xs text-white font-medium">
+                                <span className="text-sm text-neutral-700 font-medium text-left">
                                   {action.id === 'cobranca-consumo'
                                     ? 'Cobrança'
                                     : action.label}
@@ -603,14 +603,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                               setIsOpen(false);
                             }}
                             disabled={checkingAnalise}
-                            className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                           >
                             {checkingAnalise ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                             ) : (
-                              <SearchCheck className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                              <SearchCheck className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                             )}
-                            <span className="text-xs text-white font-medium">
+                            <span className="text-sm text-neutral-700 font-medium text-left">
                               {checkingAnalise ? 'Verificando...' : hasAnalise ? 'Carregar Análise' : 'Criar Análise'}
                             </span>
                           </button>
@@ -620,12 +620,12 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                   </div>
 
                   {/* Coluna 3: DOCUMENTOS E OUTROS */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {/* DOCUMENTOS */}
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <div className="px-2 py-1">
-                          <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="px-1 pb-2">
+                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             Contratos
                           </h4>
                         </div>
@@ -634,14 +634,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                             key={action.id}
                             onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
-                            className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                           >
                             {action.loading ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                             ) : (
-                              <action.icon className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                              <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                             )}
-                            <span className="text-xs text-white font-medium">
+                            <span className="text-sm text-neutral-700 font-medium text-left">
                               {action.id === 'caderninho'
                                 ? 'Caderninho'
                                 : action.id === 'distrato'
@@ -654,10 +654,10 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                     </div>
 
                     {/* TERMO DE RECUSA */}
-                    <div className="space-y-2">
-                      <div className="space-y-1">
-                        <div className="px-2 py-1">
-                          <h4 className="text-xs font-medium text-blue-300 uppercase tracking-wide">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="px-1 pb-2">
+                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             Assinatura
                           </h4>
                         </div>
@@ -666,14 +666,14 @@ const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
                             key={action.id}
                             onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
-                            className="w-full flex items-center gap-1.5 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-200 disabled:opacity-50 border border-blue-400/30 hover:border-blue-400/60 hover:shadow-md backdrop-blur-sm"
+                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
                           >
                             {action.loading ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
                             ) : (
-                              <action.icon className="h-4 w-4 text-blue-300 flex-shrink-0" />
+                              <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                             )}
-                            <span className="text-xs text-white font-medium">
+                            <span className="text-sm text-neutral-700 font-medium text-left">
                               {action.id === 'termo-recusa-email'
                                 ? 'Recusa E-mail'
                                 : action.id === 'termo-recusa-pdf'

@@ -42,28 +42,28 @@ function Step({
           type: 'tween',
           ease: 'circOut',
         }}
-        className="absolute inset-0 rounded-full bg-primary/20"
+        className="absolute inset-0 rounded-full bg-neutral-200"
       />
 
       <motion.div
         initial={false}
         variants={{
           inactive: {
-            backgroundColor: 'hsl(var(--muted))',
-            borderColor: 'hsl(var(--border))',
-            color: 'hsl(var(--muted-foreground))',
+            backgroundColor: 'rgb(245, 245, 245)',
+            borderColor: 'rgb(229, 229, 229)',
+            color: 'rgb(115, 115, 115)',
           },
           active: {
-            backgroundColor: 'hsl(var(--primary))',
-            borderColor: 'hsl(var(--primary))',
-            color: 'hsl(var(--primary-foreground))',
-            boxShadow: '0 0 0 4px hsl(var(--primary) / 0.2)',
+            backgroundColor: 'rgb(23, 23, 23)',
+            borderColor: 'rgb(23, 23, 23)',
+            color: 'rgb(255, 255, 255)',
+            boxShadow: '0 0 0 4px rgba(23, 23, 23, 0.1)',
           },
           complete: {
-            backgroundColor: 'hsl(var(--primary))',
-            borderColor: 'hsl(var(--primary))',
-            color: 'hsl(var(--primary-foreground))',
-            boxShadow: '0 0 0 4px hsl(var(--primary) / 0.3)',
+            backgroundColor: 'rgb(23, 23, 23)',
+            borderColor: 'rgb(23, 23, 23)',
+            color: 'rgb(255, 255, 255)',
+            boxShadow: '0 0 0 4px rgba(23, 23, 23, 0.15)',
           },
         }}
         transition={{ duration: 0.2 }}
@@ -198,16 +198,16 @@ export const FormWizard: React.FC<FormWizardProps> = ({
         <div className="text-center mb-6">
           <div className="flex items-center justify-center mb-3">
             {currentStepData.icon && (
-              <div className="bg-primary/10 p-3 rounded-full mr-3">
-                <currentStepData.icon className="h-6 w-6 text-primary" />
+              <div className="bg-neutral-100 p-3 rounded-full mr-3">
+                <currentStepData.icon className="h-6 w-6 text-neutral-700" />
               </div>
             )}
-            <h2 className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            <h2 className="text-2xl font-semibold text-neutral-900">
               {currentStepData.title}
             </h2>
           </div>
           {currentStepData.description && (
-            <p className="text-foreground/80 font-medium">
+            <p className="text-neutral-600 font-normal">
               {currentStepData.description}
             </p>
           )}
@@ -216,20 +216,20 @@ export const FormWizard: React.FC<FormWizardProps> = ({
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between items-center pt-8 mt-8 border-t border-border">
+      <div className="flex justify-between items-center pt-8 mt-8 border-t border-neutral-200">
         <button
           onClick={handlePrevious}
           disabled={currentStep === 0}
           className={`${
             currentStep === 0 ? 'pointer-events-none opacity-50' : ''
-          } duration-350 rounded px-2 py-1 text-muted-foreground transition hover:text-foreground flex items-center gap-2`}
+          } duration-350 rounded px-2 py-1 text-neutral-600 transition hover:text-neutral-900 flex items-center gap-2`}
         >
           <ArrowLeft className="h-4 w-4" />
           Anterior
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground font-medium">
+          <span className="text-sm text-neutral-600 font-medium">
             {currentStep + 1} / {steps.length}
           </span>
         </div>
@@ -241,11 +241,11 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             currentStepData.isValid === false || isSubmitting
               ? 'pointer-events-none opacity-50'
               : ''
-          } bg duration-350 flex items-center justify-center rounded-full bg-primary py-1.5 px-3.5 font-medium tracking-tight text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80 gap-2`}
+          } bg duration-350 flex items-center justify-center rounded-lg bg-neutral-900 py-2 px-4 font-medium tracking-tight text-white transition hover:bg-neutral-800 active:bg-neutral-700 gap-2 shadow-sm`}
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               {submitButtonText}
             </>
           ) : (

@@ -328,3 +328,26 @@ export const generateImageWithAI = async (prompt: string): Promise<string> => {
     throw new Error('Erro ao gerar imagem. Tente novamente.');
   }
 };
+
+export const transcribeAudioWithAI = async (audioFile: File): Promise<string> => {
+  try {
+    log.info('Iniciando transcrição de áudio:', audioFile.name);
+    
+    const response = await openai.audio.transcriptions.create({
+      file: audioFile,
+      model: 'whisper-1',
+      language: 'pt', // Português
+      response_format: 'text',
+    });
+
+    if (!response) {
+      throw new Error('Resposta vazia da API de transcrição');
+    }
+
+    log.info('Transcrição concluída com sucesso');
+    return response as string;
+  } catch (error) {
+    log.error('Erro ao transcrever áudio:', error);
+    throw new Error('Erro ao transcrever o áudio. Tente novamente.');
+  }
+};

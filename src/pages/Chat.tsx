@@ -20,7 +20,12 @@ import ChatHistory from '@/components/ChatHistory';
 import ImageGalleryModal from '@/components/ImageGalleryModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * Componente principal do Chat com IA
+ * Suporta mensagens de texto, imagens e áudios
+ */
 const Chat = () => {
+  // Refs e estados locais
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
@@ -41,6 +46,7 @@ const Chat = () => {
     clearChat,
     uploadImage,
     uploadMultipleImages,
+    uploadAudio,
     generateImage,
     saveCurrentSession,
     loadSession,
@@ -87,14 +93,7 @@ const Chat = () => {
   }, [messages, uploadImage]);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/30 rounded-lg -rotate-45"></div>
-      </div>
+    <div className="h-screen bg-neutral-50 flex relative overflow-hidden">
 
       {/* Sidebar - Chat History */}
       <AnimatePresence>
@@ -104,15 +103,15 @@ const Chat = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="w-72 bg-slate-900/95 backdrop-blur-xl border-r border-blue-400/30 flex flex-col relative z-20 shadow-lg"
+            className="w-72 bg-white border-r border-neutral-200 flex flex-col relative z-20 shadow-sm"
           >
-            <div className="p-4 border-b border-blue-400/30">
+            <div className="p-4 border-b border-neutral-200">
               <Button
                 onClick={() => {
                   clearChat();
                   setShowSidebar(false);
                 }}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                className="w-full bg-neutral-900 hover:bg-neutral-800 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Conversa
@@ -133,25 +132,25 @@ const Chat = () => {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative z-10">
-        {/* Header */}
-        <div className="bg-slate-900/80 backdrop-blur-xl border-b border-blue-400/30 shadow-sm">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        {/* Header Minimalista */}
+        <div className="bg-white border-b border-neutral-200">
+          <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSidebar(!showSidebar)}
-                className="text-white hover:bg-white/10"
+                className="text-neutral-600 hover:bg-neutral-100"
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-white" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">
+                  <MessageSquare className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-white font-semibold">DocForge AI</h1>
-                  <p className="text-xs text-blue-200">Assistente Universal</p>
+                  <h1 className="text-neutral-900 font-semibold">DocForge AI</h1>
+                  <p className="text-xs text-neutral-500">Assistente Universal</p>
                 </div>
               </div>
             </div>
@@ -167,11 +166,11 @@ const Chat = () => {
                   }
                 }}
                 disabled={chatImages.length === 0}
-                className="text-slate-700 hover:bg-blue-100/50"
+                className="text-neutral-600 hover:bg-neutral-100"
                 title={`Ver ${chatImages.length} imagem(ns)`}
               >
                 <Images className="h-4 w-4 mr-2" />
-                Ver Imagens ({chatImages.length})
+                Imagens ({chatImages.length})
               </Button>
 
               <Button
@@ -179,7 +178,7 @@ const Chat = () => {
                 size="sm"
                 onClick={saveCurrentSession}
                 disabled={messages.length === 0}
-                className="text-slate-700 hover:bg-blue-100/50"
+                className="text-neutral-600 hover:bg-neutral-100"
                 title="Salvar conversa"
               >
                 <Save className="h-4 w-4 mr-2" />
@@ -190,7 +189,7 @@ const Chat = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/contratos')}
-                className="text-slate-700 hover:bg-blue-100/50"
+                className="text-neutral-600 hover:bg-neutral-100"
               >
                 Voltar
               </Button>
@@ -207,37 +206,15 @@ const Chat = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                <div className="w-16 h-16 bg-neutral-900 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                   <Bot className="h-8 w-8 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-3">
+                <h2 className="text-3xl font-semibold text-neutral-900 mb-3">
                   Como posso ajudar você hoje?
                 </h2>
-                <p className="text-blue-200 mb-8 max-w-md">
+                <p className="text-neutral-600 max-w-md">
                   Converse sobre qualquer assunto, analise imagens ou crie visualizações.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setInputText('Me ajude com uma análise detalhada')}
-                    className="bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 text-left hover:bg-white/20 hover:border-blue-400/60 transition-all shadow-sm"
-                  >
-                    <MessageSquare className="h-5 w-5 text-blue-400 mb-2" />
-                    <p className="text-white font-medium mb-1">Conversação Inteligente</p>
-                    <p className="text-sm text-blue-200">Tire dúvidas e converse sobre qualquer tema</p>
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setInputText('Gere uma imagem de um contrato moderno')}
-                    className="bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 text-left hover:bg-white/20 hover:border-blue-400/60 transition-all shadow-sm"
-                  >
-                    <ImageIcon className="h-5 w-5 text-blue-300 mb-2" />
-                    <p className="text-white font-medium mb-1">Geração de Imagens</p>
-                    <p className="text-sm text-blue-200">Crie visualizações e diagramas</p>
-                  </motion.button>
-                </div>
               </motion.div>
             ) : (
               <div className="space-y-6">
@@ -258,14 +235,14 @@ const Chat = () => {
                     className="flex gap-3 justify-start"
                   >
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center">
                         <Bot className="h-5 w-5 text-white" />
                       </div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-2xl px-4 py-3 shadow-sm">
+                    <div className="bg-white border border-neutral-200 rounded-2xl px-4 py-3 shadow-sm">
                       <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-                        <span className="text-sm text-white">Pensando...</span>
+                        <Loader2 className="h-4 w-4 animate-spin text-neutral-700" />
+                        <span className="text-sm text-neutral-900">Pensando...</span>
                       </div>
                     </div>
                   </motion.div>
@@ -278,7 +255,7 @@ const Chat = () => {
         </div>
 
         {/* Input Area */}
-        <div className="bg-slate-900/80 backdrop-blur-xl border-t border-blue-400/30 shadow-sm">
+        <div className="bg-white border-t border-neutral-200 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <ChatInput
               value={inputText}
@@ -286,6 +263,7 @@ const Chat = () => {
               onSubmit={sendMessage}
               onUploadImage={uploadImage}
               onUploadMultipleImages={uploadMultipleImages}
+              onUploadAudio={uploadAudio}
               onGenerateImage={generateImage}
               isLoading={isLoading}
             />

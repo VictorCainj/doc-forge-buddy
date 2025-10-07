@@ -201,124 +201,116 @@ const GerarDocumento = () => {
   const isWhatsAppMessage = documentType?.includes('WhatsApp');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+    <div className="min-h-screen bg-neutral-50">
+      {/* Header Minimalista */}
+      <div className="bg-white border-b border-neutral-200">
+        <div className="max-w-6xl mx-auto px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  // Se for análise de vistoria, voltar para a página de análise
+                  if (documentType === 'Análise de Vistoria') {
+                    navigate('/analise-vistoria');
+                  } else {
+                    navigate('/contratos');
+                  }
+                }}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Button>
+              <div className="h-6 w-px bg-neutral-200" />
+              <div>
+                <h1 className="text-lg font-semibold text-neutral-900">
+                  {getDocumentTitle()}
+                </h1>
+                <p className="text-sm text-neutral-500">
+                  {isWhatsAppMessage
+                    ? 'Mensagem para WhatsApp'
+                    : 'Visualização do documento gerado'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {documentType === 'Análise de Vistoria' && (
+                <Button
+                  onClick={() => navigate('/analise-vistoria')}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  title="Continuar editando a análise"
+                >
+                  <FileText className="h-4 w-4" />
+                  Continuar Editando
+                </Button>
+              )}
+              <Button
+                onClick={handleDecreaseFont}
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                title="Diminuir tamanho da fonte"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={handleIncreaseFont}
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                title="Aumentar tamanho da fonte"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+              <CopyButton content={template} size="sm" className="gap-2" />
+              <Button
+                onClick={handlePrint}
+                variant="primary"
+                size="sm"
+                className="gap-2"
+                disabled={isPrinting}
+              >
+                {isPrinting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <Printer className="h-4 w-4" />
+                )}
+                {isPrinting ? 'Preparando...' : 'Imprimir'}
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          {/* Back Button */}
-          <div className="mb-6">
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Se for análise de vistoria, voltar para a página de análise
-                if (documentType === 'Análise de Vistoria') {
-                  navigate('/analise-vistoria');
-                } else {
-                  navigate('/contratos');
-                }
-              }}
-              className="gap-2"
+      <div className="max-w-6xl mx-auto px-8 py-6">
+        {/* Document Preview - Minimalista */}
+        <Card className="shadow-sm">
+          <CardContent className="p-0">
+            <div
+              className={`p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto ${
+                isWhatsAppMessage
+                  ? 'bg-white border border-green-200'
+                  : 'bg-white'
+              }`}
+              style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
+              id="document-content"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-          </div>
-
-          {/* Document Preview */}
-          <Card className="glass-card">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold text-foreground">
-                    {getDocumentTitle()}
-                  </CardTitle>
-                  <p className="text-muted-foreground">
-                    {isWhatsAppMessage
-                      ? 'Mensagem para WhatsApp'
-                      : 'Visualização do documento gerado'}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {documentType === 'Análise de Vistoria' && (
-                    <Button
-                      onClick={() => navigate('/analise-vistoria')}
-                      variant="default"
-                      size="sm"
-                      className="gap-2"
-                      title="Continuar editando a análise"
-                    >
-                      <FileText className="h-4 w-4" />
-                      Continuar Editando
-                    </Button>
-                  )}
-                  <Button
-                    onClick={handleDecreaseFont}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    title="Diminuir tamanho da fonte"
-                  >
-                    <Minimize2 className="h-4 w-4" />
-                    Diminuir
-                  </Button>
-                  <Button
-                    onClick={handleIncreaseFont}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    title="Aumentar tamanho da fonte"
-                  >
-                    <Maximize2 className="h-4 w-4" />
-                    Aumentar
-                  </Button>
-                  <CopyButton content={template} size="sm" className="gap-2" />
-                  <Button
-                    onClick={handlePrint}
-                    variant="default"
-                    size="sm"
-                    className="gap-2"
-                    disabled={isPrinting}
-                  >
-                    {isPrinting ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    ) : (
-                      <Printer className="h-4 w-4" />
-                    )}
-                    {isPrinting ? 'Preparando...' : 'Imprimir'}
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Exportar
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
               <div
-                className={`p-6 rounded-lg border max-h-[600px] overflow-auto ${
-                  isWhatsAppMessage
-                    ? 'bg-white border-green-200/50'
-                    : 'bg-white border-gray-300'
-                }`}
-                style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
-                id="document-content"
-              >
-                <div
-                  dangerouslySetInnerHTML={{ __html: template }}
-                  style={{ backgroundColor: 'white', color: 'black' }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                dangerouslySetInnerHTML={{ __html: template }}
+                style={{ backgroundColor: 'white', color: 'black' }}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

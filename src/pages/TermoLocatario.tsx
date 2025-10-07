@@ -35,6 +35,7 @@ const TermoLocatario: React.FC = () => {
     setShowContactModal,
     contactData,
     setContactData,
+    pendingFormData,
     setPendingFormData,
     validateContactFields,
     handleSaveContactData,
@@ -595,59 +596,33 @@ __________________________________________<br>
       // Data da vistoria processada (baseada no tipo selecionado)
       dataVistoria,
 
-      // Dados dos fiadores
-      temFiadores,
-      fiadores,
+      // Dados dos fiadores (convertidos para string)
+      temFiadores: temFiadores ? 'true' : 'false',
+      fiadores: JSON.stringify(fiadores),
     };
 
     return enhancedData;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
-        <div className="absolute top-1/2 left-1/4 w-36 h-36 border border-white/10 rounded-lg rotate-6"></div>
-        <div className="absolute top-1/3 right-1/4 w-28 h-28 border border-white/15 rounded-lg -rotate-12"></div>
-      </div>
-
+    <div className="min-h-screen bg-neutral-50">
       {/* Main Content */}
-      <div className="p-6 relative z-10">
-        {/* Header Section */}
-        <div className="max-w-6xl mx-auto mb-8">
-          {/* Back Button */}
-          <div className="mb-8">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/contratos')}
-              className="gap-2 text-white hover:bg-white/10 hover:text-white transition-all duration-200 backdrop-blur-sm border border-white/20"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para Contratos
-            </Button>
-          </div>
-
-          {/* Title Section */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg">
-              <Search className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-              Termo de Recebimento de Chaves
-            </h1>
-            <p className="text-blue-100 text-lg">
-              Documento de entrega das chaves - <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 font-semibold">Locatário</span>
-            </p>
-          </div>
+      <div className="p-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/contratos')}
+            className="gap-2 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para Contratos
+          </Button>
         </div>
 
         {/* Form Card */}
         <div className="max-w-6xl mx-auto">
-          <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl">
+          <Card className="bg-white border-neutral-200 shadow-sm">
             <CardContent className="p-0">
               <DocumentFormWizard
                 title="Termo de Recebimento de Chaves - Locatário"

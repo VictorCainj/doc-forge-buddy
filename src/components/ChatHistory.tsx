@@ -48,7 +48,7 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-neutral-600" />
       </div>
     );
   }
@@ -56,11 +56,11 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
   if (sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
-        <MessageSquare className="h-12 w-12 text-blue-300/50 mb-4" />
-        <p className="text-sm text-white">
+        <MessageSquare className="h-12 w-12 text-neutral-400 mb-4" />
+        <p className="text-sm text-neutral-700">
           Nenhuma conversa salva ainda
         </p>
-        <p className="text-xs text-blue-200/70 mt-2">
+        <p className="text-xs text-neutral-500 mt-2">
           Suas conversas salvas aparecerão aqui
         </p>
       </div>
@@ -83,16 +83,16 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
                 onClick={() => onSelectSession(session.id)}
                 className={`w-full text-left p-3 rounded-xl transition-all duration-200 group ${
                   currentSessionId === session.id
-                    ? 'bg-gradient-to-r from-blue-500/20 to-indigo-600/20 border border-blue-400/30'
-                    : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                    ? 'bg-neutral-100 border border-neutral-300'
+                    : 'bg-white hover:bg-neutral-50 border border-transparent'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-white truncate mb-1">
+                    <h4 className="text-sm font-medium text-neutral-900 truncate mb-1">
                       {session.title}
                     </h4>
-                    <div className="flex items-center gap-2 text-xs text-blue-200/70">
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
                       <Clock className="h-3 w-3" />
                       <span>
                         {session.updated_at ? formatDistanceToNow(new Date(session.updated_at), {
@@ -106,7 +106,7 @@ const ChatHistory = memo(({ onSelectSession, currentSessionId }: ChatHistoryProp
                     variant="ghost"
                     size="sm"
                     onClick={(e) => handleDelete(session.id, e)}
-                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-400"
+                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-neutral-200 text-neutral-600 hover:text-neutral-900"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
