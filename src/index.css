@@ -433,4 +433,28 @@ All colors MUST be HSL.
   [class*="bg-gradient-to-br from-slate-900"] .person-manager-card .text-muted-foreground {
     color: rgb(148, 163, 184) !important;
   }
+
+  /* HD Image Rendering - Otimização global para todas as imagens */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Exceção para fotos que precisam de suavização */
+  img[data-smooth="true"],
+  .photo-smooth img {
+    image-rendering: auto;
+  }
+
+  /* Otimização para impressão */
+  @media print {
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      max-width: 100%;
+      height: auto;
+    }
+  }
 }

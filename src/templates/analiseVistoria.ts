@@ -1,3 +1,5 @@
+import { fileToBase64HD, urlToBase64HD } from '@/utils/imageHD';
+
 export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   locatario: string;
   endereco: string;
@@ -32,17 +34,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
     quantidade?: number;
   }>;
 }) => {
-  // Função para converter File para base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  // Função para processar fotos e converter para base64
+  // Função para processar fotos e converter para base64 HD
   const processarFotos = async (
     fotos: Array<{
       name?: string;
@@ -52,50 +44,51 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       isFromDatabase?: boolean;
     }>
   ) => {
-    // console.log('=== PROCESSAR FOTOS ===');
-    // console.log('Fotos recebidas:', fotos);
-    // console.log('Quantidade:', fotos?.length || 0);
-
     if (!fotos || fotos.length === 0) {
-      // Nenhuma foto para processar
       return [];
     }
 
     const fotosBase64 = await Promise.all(
       fotos.map(async (foto, _index) => {
-        // console.log(`\n--- Processando foto ${index + 1} ---`);
-        // console.log('Foto:', foto);
-        // console.log('- isFromDatabase:', foto?.isFromDatabase);
-        // console.log('- URL:', foto?.url);
-        // console.log('- É File?:', foto instanceof File);
-
         try {
-          // Se é uma imagem do banco de dados, usar a URL diretamente
+          // Se é uma imagem do banco de dados
           if (foto.isFromDatabase && foto.url) {
-            // console.log('✅ Usando URL do banco:', foto.url);
-            return { nome: foto.name, base64: foto.url };
+            try {
+              // Tentar converter URL para base64 HD
+              const base64HD = await urlToBase64HD(foto.url, {
+                maxWidth: 2560,
+                maxHeight: 1440,
+                quality: 0.95,
+                format: 'jpeg',
+              });
+              return { nome: foto.name, base64: base64HD };
+            } catch {
+              // Se falhar, usar URL diretamente
+              return { nome: foto.name, base64: foto.url };
+            }
           }
 
           // Verificar se o arquivo é válido
           if (!foto || !(foto instanceof File) || foto.size === 0) {
-            // console.log('❌ Foto inválida');
             return null;
           }
 
-          const base64 = await fileToBase64(foto);
-          // console.log('✅ Foto File convertida para base64');
-          return { nome: foto.name, base64 };
+          // Converter File para base64 HD
+          const base64HD = await fileToBase64HD(foto, {
+            maxWidth: 2560,
+            maxHeight: 1440,
+            quality: 0.95,
+            format: 'jpeg',
+          });
+          return { nome: foto.name, base64: base64HD };
         } catch {
-          // console.error('❌ Erro ao processar foto:', error);
           return null;
         }
       })
     );
 
-    // console.log('Fotos processadas:', fotosBase64);
     // Filtrar fotos que falharam no processamento
     const fotosValidas = fotosBase64.filter((foto) => foto !== null);
-    // console.log('✅ Fotos válidas finais:', fotosValidas.length);
     return fotosValidas;
   };
 

@@ -307,7 +307,7 @@ const TermoLocatario: React.FC = () => {
     return `
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
   <div style="flex: 0 0 auto;">
-    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+    <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
   </div>
   <div style="flex: 1; text-align: right; font-size: ${fontSize}px; margin-left: 20px;">
     Valinhos, ${getCurrentDate()}.
@@ -367,19 +367,11 @@ Foi entregue {{tipoQuantidadeChaves}}
       {{/if}}
     </div>
 
-    {{#if temFiadores}}
-    {{#each fiadores}}
-    <div style="margin-bottom: 40px;">
+    <div>
       __________________________________________<br>
-      <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{this}}</span>
+      <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{assinanteSelecionado}}</span>
     </div>
-    {{/each}}
-    {{/if}}
-
-<div>
-__________________________________________<br>
-<span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{assinanteSelecionado}}</span>
-</div>
+  </div>
 </div>
 `;
   };

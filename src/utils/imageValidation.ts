@@ -14,10 +14,10 @@ export interface ImageValidationOptions {
 }
 
 const DEFAULT_OPTIONS: Required<ImageValidationOptions> = {
-  maxSize: 10 * 1024 * 1024, // 10MB
+  maxSize: 20 * 1024 * 1024, // 20MB para suportar imagens HD
   allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
-  maxWidth: 4096,
-  maxHeight: 4096,
+  maxWidth: 7680, // 8K
+  maxHeight: 4320, // 8K
   minWidth: 100,
   minHeight: 100,
 };
@@ -75,12 +75,12 @@ export async function validateImage(
     }
 
     // Avisos
-    if (file.size > 5 * 1024 * 1024) {
-      warnings.push('Imagem grande. Considere comprimir para melhor performance.');
+    if (file.size > 10 * 1024 * 1024) {
+      warnings.push('Imagem muito grande. Considere comprimir para melhor performance.');
     }
 
-    if (dimensions.width > 2048 || dimensions.height > 2048) {
-      warnings.push('Imagem de alta resolução. Pode demorar para carregar.');
+    if (dimensions.width > 3840 || dimensions.height > 2160) {
+      warnings.push('Imagem 4K ou superior. Otimização automática será aplicada.');
     }
 
     return {
@@ -121,11 +121,11 @@ export function getImageDimensions(file: File): Promise<{ width: number; height:
 }
 
 /**
- * Comprime uma imagem se necessário
+ * Comprime uma imagem se necessário mantendo qualidade HD
  */
 export async function compressImage(
   file: File,
-  maxSizeKB: number = 1024
+  maxSizeKB: number = 2048
 ): Promise<File> {
   const currentSizeKB = file.size / 1024;
 
@@ -155,6 +155,9 @@ export async function compressImage(
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
 
+      // Usar alta qualidade para renderização
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(
@@ -172,7 +175,7 @@ export async function compressImage(
           resolve(compressedFile);
         },
         file.type,
-        0.9 // qualidade
+        0.95 // qualidade HD
       );
     };
 

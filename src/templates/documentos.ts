@@ -4,7 +4,7 @@ export const TERMO_RECEBIMENTO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -64,7 +64,7 @@ export const DEVOLUTIVA_PROPRIETARIO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -99,7 +99,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -148,7 +148,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -208,7 +208,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -253,7 +253,7 @@ export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -286,7 +286,7 @@ export const DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -319,7 +319,7 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -350,7 +350,7 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -378,7 +378,7 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 30px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -416,7 +416,7 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
   </div>
 
   <div style="margin-bottom: 35px; text-align: justify; font-size: 15px;">
-    <p style="margin-bottom: 20px;">Por estarem assim justos e acordados, assinam o presente Instrumento em <strong>03 (três) vias de idêntico teor e para o mesmo fim</strong>, perante as testemunhas abaixo.</p>
+    <p style="margin-bottom: 20px;">Por estarem assim justos e acordados, assinam o presente Instrumento em <strong>03 (três) vias de idêntico teor e para o mesmo fim</strong>.</p>
   </div>
 
   <div style="margin-bottom: 35px; text-align: center; font-size: 15px;">
@@ -426,93 +426,22 @@ export const DISTRATO_CONTRATO_LOCACAO_TEMPLATE = `
   <div style="margin-top: 60px;">
     <div style="display: flex; justify-content: space-between; margin-bottom: 50px;">
       <div style="text-align: center; width: 45%;">
+        <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+        <p style="font-size: 15px; margin: 0;">Victor Cain Jorge</p>
+        <p style="font-size: 11px; margin: 8px 0 0 0;">Administrador</p>
+      </div>
+      
+      <div style="text-align: center; width: 45%;">
         {{#if nomeProprietario}}
         <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
         <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"{{locadorTerm}}"</p>
         <p style="font-size: 15px; margin: 8px 0 0 0;">{{nomeProprietario}}</p>
         {{/if}}
-      </div>
-      
-      <div style="text-align: center; width: 45%;">
         {{#if primeiroLocatario}}
-        <div style="margin-bottom: 20px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
-          <p style="font-size: 11px; margin: 5px 0 0 0;">{{primeiroLocatario}}</p>
-        </div>
+        <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
+        <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
+        <p style="font-size: 15px; margin: 8px 0 0 0;">{{primeiroLocatario}}</p>
         {{/if}}
-        {{#if segundoLocatario}}
-        <div style="margin-bottom: 20px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
-          <p style="font-size: 11px; margin: 5px 0 0 0;">{{segundoLocatario}}</p>
-        </div>
-        {{/if}}
-        {{#if terceiroLocatario}}
-        <div style="margin-bottom: 20px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
-          <p style="font-size: 11px; margin: 5px 0 0 0;">{{terceiroLocatario}}</p>
-        </div>
-        {{/if}}
-        {{#if quartoLocatario}}
-        <div>
-          <div style="border-bottom: 1px solid #000; margin-bottom: 12px; height: 35px;"></div>
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">"{{locatarioTerm}}"</p>
-          <p style="font-size: 11px; margin: 5px 0 0 0;">{{quartoLocatario}}</p>
-        </div>
-        {{/if}}
-      </div>
-    </div>
-
-    {{#if fiador1}}
-    <div style="margin-top: 50px;">
-      <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
-          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador1}}</p>
-        </div>
-        {{#if fiador2}}
-        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
-          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador2}}</p>
-        </div>
-        {{/if}}
-        {{#if fiador3}}
-        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
-          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador3}}</p>
-        </div>
-        {{/if}}
-        {{#if fiador4}}
-        <div style="text-align: center; width: 45%; margin-bottom: 30px;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-          <p style="font-size: 15px; text-transform: uppercase; margin: 0;">"FIADOR"</p>
-          <p style="font-size: 15px; margin: 8px 0 0 0;">{{fiador4}}</p>
-        </div>
-        {{/if}}
-      </div>
-    </div>
-    {{/if}}
-
-    <div style="margin-top: 50px;">
-      <p style="font-size: 15px; font-weight: bold; margin-bottom: 25px; text-align: center;">Testemunhas:</p>
-      
-      <div style="display: flex; justify-content: space-between;">
-        <div style="text-align: center; width: 45%;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-          <p style="font-size: 15px; margin: 0;">CINTIA PEREIRA ALMEIDA GOMES</p>
-          <p style="font-size: 11px; margin: 8px 0 0 0;">CPF: 289.212.608-89</p>
-        </div>
-        
-        <div style="text-align: center; width: 45%;">
-          <div style="border-bottom: 1px solid #000; margin-bottom: 15px; height: 40px;"></div>
-          <p style="font-size: 15px; margin: 0;">FABIANA SALOTTI MARTINS</p>
-          <p style="font-size: 11px; margin: 8px 0 0 0;">CPF: 357.106.138-19</p>
-        </div>
       </div>
     </div>
   </div>
@@ -524,7 +453,7 @@ export const TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -553,7 +482,7 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.
@@ -590,7 +519,7 @@ export const STATUS_VISTORIA_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto;" />
+      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
     <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
       Valinhos, {{dataAtual}}.

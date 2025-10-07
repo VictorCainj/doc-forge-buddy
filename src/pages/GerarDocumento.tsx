@@ -114,6 +114,8 @@ const GerarDocumento = () => {
             img { 
               max-width: 100%; 
               height: auto; 
+              image-rendering: -webkit-optimize-contrast;
+              image-rendering: crisp-edges;
               -webkit-print-color-adjust: exact;
               color-adjust: exact;
             }

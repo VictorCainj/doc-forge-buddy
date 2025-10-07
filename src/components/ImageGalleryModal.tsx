@@ -130,7 +130,10 @@ const ImageGalleryModal = memo(({
               src={currentImage.url}
               alt={`Imagem ${currentIndex + 1}`}
               className="max-w-full max-h-full object-contain"
-              style={{ transform: `scale(${zoom})` }}
+              style={{ 
+                transform: `scale(${zoom})`,
+                imageRendering: zoom > 1 ? 'crisp-edges' : 'auto'
+              }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: zoom }}
               exit={{ opacity: 0, scale: 0.9 }}
@@ -183,6 +186,7 @@ const ImageGalleryModal = memo(({
                     src={img.url}
                     alt={`Miniatura ${idx + 1}`}
                     className="w-full h-full object-cover"
+                    style={{ imageRendering: 'crisp-edges' }}
                   />
                 </button>
               ))}

@@ -26,9 +26,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onUpload,
   onRemove,
   accept = 'image/*',
-  maxSize = 5 * 1024 * 1024, // 5MB padrão
-  maxWidth = 2048,
-  maxHeight = 2048,
+  maxSize = 20 * 1024 * 1024, // 20MB para HD
+  maxWidth = 7680, // 8K
+  maxHeight = 4320, // 8K
   currentImage,
   disabled = false,
 }) => {
@@ -61,10 +61,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       let finalFile = file;
 
-      // Comprimir se necessário (maior que 1MB)
-      if (file.size > 1024 * 1024) {
-        toast.info('Comprimindo imagem...');
-        const compressed = await compressImage(file, 1024 * 1024); // 1MB
+      // Comprimir se necessário (maior que 2MB)
+      if (file.size > 2048 * 1024) {
+        toast.info('Otimizando imagem HD...');
+        const compressed = await compressImage(file, 2048); // 2MB HD
         if (compressed) {
           finalFile = compressed;
           const savedSize = file.size - compressed.size;
@@ -219,8 +219,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div className="flex items-start gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
         <AlertCircle className="h-4 w-4 text-neutral-600 mt-0.5 flex-shrink-0" />
         <div className="text-xs text-neutral-700">
-          <p className="font-medium mb-1">Otimização Automática</p>
-          <p>Imagens maiores que 1MB serão automaticamente comprimidas mantendo a qualidade visual.</p>
+          <p className="font-medium mb-1">Otimização HD Automática</p>
+          <p>Imagens maiores que 2MB serão automaticamente otimizadas mantendo qualidade HD (2560x1440, 95%).</p>
         </div>
       </div>
     </div>

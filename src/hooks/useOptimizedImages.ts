@@ -40,11 +40,11 @@ export const useOptimizedImages = (
   options: ImageOptimizationOptions = {}
 ): UseOptimizedImagesReturn => {
   const {
-    maxWidth = 1920,
-    maxHeight = 1080,
-    quality = 0.8,
+    maxWidth = 2560,
+    maxHeight = 1440,
+    quality = 0.95,
     format = 'jpeg',
-    maxSizeKB = 500,
+    maxSizeKB = 2048,
   } = options;
 
   const [optimizedImages, setOptimizedImages] = useState<OptimizedImage[]>([]);
