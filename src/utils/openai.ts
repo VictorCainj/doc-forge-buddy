@@ -32,7 +32,7 @@ export const correctTextWithAI = async (text: string): Promise<string> => {
           content: `Por favor, corrija o seguinte texto em português brasileiro:\n\n${text}`,
         },
       ],
-      max_tokens: 2000,
+      max_tokens: 5000,
       temperature: 0.3,
     });
 
@@ -74,7 +74,7 @@ export const improveTextWithAI = async (text: string): Promise<string> => {
           content: `Por favor, melhore o seguinte texto para que o destinatário entenda perfeitamente a mensagem:\n\n${text}`,
         },
       ],
-      max_tokens: 2000,
+      max_tokens: 5000,
       temperature: 0.4,
     });
 
