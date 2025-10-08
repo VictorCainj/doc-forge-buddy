@@ -51,6 +51,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
 import { useVistoriaImages } from '@/hooks/useVistoriaImages';
 import { usePrestadores } from '@/hooks/usePrestadores';
+import { useAuth } from '@/hooks/useAuth';
 import {
   ApontamentoVistoria,
   DadosVistoria,
@@ -60,6 +61,7 @@ import { BudgetItemType } from '@/types/orcamento';
 import { Package, Wrench } from 'lucide-react';
 import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
+import { DocumentViewer } from '@/components/DocumentViewer';
 
 interface Contract {
   id: string;
@@ -71,6 +73,7 @@ const AnaliseVistoria = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const { correctText, isLoading: isAILoading } = useOpenAI();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
@@ -107,6 +110,7 @@ const AnaliseVistoria = () => {
   const [documentPreview, setDocumentPreview] = useState<string>('');
   const [savedAnaliseId, setSavedAnaliseId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [previewImageModal, setPreviewImageModal] = useState<string | null>(null);
   const [editingAnaliseId, setEditingAnaliseId] = useState<string | null>(null);
   const [existingAnaliseId, setExistingAnaliseId] = useState<string | null>(
     null
@@ -117,6 +121,8 @@ const AnaliseVistoria = () => {
   const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>('analise');
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
   const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
+  const [viewerMode, setViewerMode] = useState(false);
+  const [viewerHtml, setViewerHtml] = useState('');
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -170,16 +176,22 @@ const AnaliseVistoria = () => {
               const apontamentoWithImages = { ...apontamento };
               if (hasDatabaseImages) {
                 // Carregar imagens do banco de dados
+                log.debug(`Processando apontamento: ${apontamento.ambiente} (ID: ${apontamento.id})`);
+                
                 const apontamentoImages = analiseData.images.filter(
                   (img: Record<string, unknown>) =>
                     img.apontamento_id === apontamento.id
                 );
+                
+                log.debug(`  - Imagens encontradas para este apontamento: ${apontamentoImages.length}`);
+                
                 const fotosInicial = apontamentoImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'inicial'
                   )
                   .map((img: Record<string, unknown>) => {
+                    log.debug(`    ✓ Foto Inicial: ${img.file_name} (${img.image_url})`);
                     return {
                       name: img.file_name,
                       size: img.file_size,
@@ -188,12 +200,14 @@ const AnaliseVistoria = () => {
                       isFromDatabase: true,
                     };
                   });
+                  
                 const fotosFinal = apontamentoImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'final'
                   )
                   .map((img: Record<string, unknown>) => {
+                    log.debug(`    ✓ Foto Final: ${img.file_name} (${img.image_url})`);
                     return {
                       name: img.file_name,
                       size: img.file_size,
@@ -202,6 +216,10 @@ const AnaliseVistoria = () => {
                       isFromDatabase: true,
                     };
                   });
+                  
+                log.debug(`  - Total fotos inicial: ${fotosInicial.length}`);
+                log.debug(`  - Total fotos final: ${fotosFinal.length}`);
+                
                 apontamentoWithImages.vistoriaInicial = {
                   ...apontamento.vistoriaInicial,
                   fotos: fotosInicial,
@@ -867,6 +885,7 @@ const AnaliseVistoria = () => {
       descricaoServico: currentApontamento.descricaoServico || '',
       vistoriaInicial: {
         fotos: currentApontamento.vistoriaInicial?.fotos || [],
+        descritivoLaudo: currentApontamento.vistoriaInicial?.descritivoLaudo || '',
       },
       vistoriaFinal: { fotos: currentApontamento.vistoriaFinal?.fotos || [] },
       observacao: currentApontamento.observacao || '',
@@ -878,7 +897,8 @@ const AnaliseVistoria = () => {
       }),
     };
 
-    setApontamentos([...apontamentos, newApontamento]);
+    const updatedApontamentos = [...apontamentos, newApontamento];
+    setApontamentos(updatedApontamentos);
     setCurrentApontamento({
       ambiente: '',
       subtitulo: '',
@@ -1036,23 +1056,27 @@ const AnaliseVistoria = () => {
     }
   };
 
-  // Salvar análise no Supabase
-  const saveAnalysis = async () => {
+  // Salvar análise no Supabase (silencioso = sem toast de sucesso)
+  const saveAnalysis = useCallback(async (silencioso = false) => {
     if (apontamentos.length === 0) {
-      toast({
-        title: 'Nenhum apontamento',
-        description: 'Adicione pelo menos um apontamento antes de salvar.',
-        variant: 'destructive',
-      });
+      if (!silencioso) {
+        toast({
+          title: 'Nenhum apontamento',
+          description: 'Adicione pelo menos um apontamento antes de salvar.',
+          variant: 'destructive',
+        });
+      }
       return;
     }
 
     if (!selectedContract) {
-      toast({
-        title: 'Contrato não selecionado',
-        description: 'Selecione um contrato antes de salvar.',
-        variant: 'destructive',
-      });
+      if (!silencioso) {
+        toast({
+          title: 'Contrato não selecionado',
+          description: 'Selecione um contrato antes de salvar.',
+          variant: 'destructive',
+        });
+      }
       return;
     }
 
@@ -1077,10 +1101,12 @@ const AnaliseVistoria = () => {
 
         if (success) {
           analiseId = editingAnaliseId;
-          toast({
-            title: 'Análise atualizada',
-            description: 'A análise foi atualizada com sucesso.',
-          });
+          if (!silencioso) {
+            toast({
+              title: 'Análise atualizada',
+              description: 'A análise foi atualizada com sucesso.',
+            });
+          }
         }
       } else {
         // Modo de criação - salvar nova análise
@@ -1096,10 +1122,16 @@ const AnaliseVistoria = () => {
         });
 
         if (analiseId) {
-          toast({
-            title: 'Análise salva',
-            description: 'A análise foi salva no banco de dados com sucesso.',
-          });
+          // Após criar pela primeira vez, entrar em modo de edição
+          setIsEditMode(true);
+          setEditingAnaliseId(analiseId);
+          
+          if (!silencioso) {
+            toast({
+              title: 'Análise salva',
+              description: 'A análise foi salva no banco de dados com sucesso.',
+            });
+          }
         }
       }
 
@@ -1108,13 +1140,152 @@ const AnaliseVistoria = () => {
       }
     } catch {
       // console.error('Erro ao salvar análise:', error);
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar a análise.',
-        variant: 'destructive',
-      });
+      if (!silencioso) {
+        toast({
+          title: 'Erro ao salvar',
+          description: 'Não foi possível salvar a análise.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setSaving(false);
+    }
+  }, [apontamentos, selectedContract, dadosVistoria, documentMode, selectedPrestadorId, prestadores, isEditMode, editingAnaliseId, updateAnalise, saveAnalise, toast]);
+
+  // Auto-salvar quando os apontamentos mudarem (com debounce)
+  const [lastSavedApontamentos, setLastSavedApontamentos] = useState<string>('');
+  
+  useEffect(() => {
+    if (apontamentos.length === 0 || !selectedContract) return;
+    
+    // Verificar se houve mudança real nos apontamentos
+    const currentApontamentosString = JSON.stringify(apontamentos);
+    if (currentApontamentosString === lastSavedApontamentos) return;
+    
+    const timeoutId = setTimeout(async () => {
+      await saveAnalysis(true); // true = silencioso (sem toast)
+      setLastSavedApontamentos(currentApontamentosString);
+    }, 2000); // Aguarda 2 segundos após a última mudança
+
+    return () => clearTimeout(timeoutId);
+  }, [apontamentos, selectedContract, saveAnalysis, lastSavedApontamentos]);
+
+  // Adicionar event listeners para clique nas imagens da pré-visualização
+  useEffect(() => {
+    const handleImageClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IMG' && target.closest('.document-preview-container')) {
+        const imgSrc = (target as HTMLImageElement).src;
+        setPreviewImageModal(imgSrc);
+      }
+    };
+
+    document.addEventListener('click', handleImageClick);
+    return () => document.removeEventListener('click', handleImageClick);
+  }, []);
+
+  // Gerar link público de visualização
+  const openViewerMode = async () => {
+    if (apontamentos.length === 0) {
+      toast({
+        title: 'Nenhum apontamento',
+        description: 'Adicione pelo menos um apontamento antes de gerar o link.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedContract) {
+      toast({
+        title: 'Contrato não selecionado',
+        description: 'Selecione um contrato antes de gerar o link.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: 'Gerando link público...',
+        description: 'Aguarde enquanto criamos o link de visualização.',
+      });
+
+      // Gerar o HTML do documento
+      const template = await ANALISE_VISTORIA_TEMPLATE({
+        locatario: dadosVistoria.locatario,
+        endereco: dadosVistoria.endereco,
+        dataVistoria: dadosVistoria.dataVistoria,
+        documentMode,
+        prestador: documentMode === 'orcamento' && selectedPrestadorId 
+          ? prestadores.find(p => p.id === selectedPrestadorId) 
+          : undefined,
+        apontamentos: apontamentos,
+      });
+
+      // Salvar documento público no Supabase
+      const { data, error } = await supabase
+        .from('public_documents')
+        .insert({
+          html_content: template,
+          title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
+          contract_id: selectedContract?.id || null,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao salvar documento:', error);
+        throw error;
+      }
+
+      // Gerar URL pública
+      const publicUrl = `${window.location.origin}/documento-publico/${data.id}`;
+
+      // Copiar para clipboard (com fallback)
+      let copiado = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(publicUrl);
+          copiado = true;
+        } else {
+          // Fallback: criar elemento temporário para copiar
+          const textArea = document.createElement('textarea');
+          textArea.value = publicUrl;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          copiado = true;
+        }
+      } catch (clipboardError) {
+        console.warn('Erro ao copiar para clipboard:', clipboardError);
+      }
+
+      // Exibir link em alert
+      const mensagem = copiado 
+        ? `✅ Link copiado para a área de transferência!\n\n📋 Link público:\n${publicUrl}\n\n🔗 O documento será aberto em uma nova aba.`
+        : `📋 Link público gerado:\n${publicUrl}\n\n⚠️ Copie o link acima.\n\n🔗 O documento será aberto em uma nova aba.`;
+      
+      alert(mensagem);
+
+      // Abrir em nova aba
+      window.open(publicUrl, '_blank', 'noopener,noreferrer');
+
+      // Toast de confirmação
+      toast({
+        title: 'Link gerado com sucesso! 🎉',
+        description: copiado ? 'O link foi copiado para a área de transferência.' : 'Copie o link exibido.',
+      });
+    } catch (error) {
+      console.error('Erro ao gerar link público:', error);
+      toast({
+        title: 'Erro ao gerar link',
+        description: 'Não foi possível gerar o link de visualização.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -1438,6 +1609,14 @@ const AnaliseVistoria = () => {
               loading={saving}
               disabled={apontamentos.length === 0 || !selectedContract}
               onClick={saveAnalysis}
+            />
+            <ActionButton
+              icon={Eye}
+              label="Modo Exibição"
+              variant="secondary"
+              size="md"
+              disabled={apontamentos.length === 0 || !selectedContract}
+              onClick={openViewerMode}
             />
             <ActionButton
               icon={FileText}
@@ -2153,10 +2332,21 @@ const AnaliseVistoria = () => {
                       </h4>
                     </div>
                     <div
-                      className="max-h-96 overflow-y-auto bg-white"
+                      className="max-h-96 overflow-y-auto bg-white document-preview-container"
                       dangerouslySetInnerHTML={{ __html: documentPreview }}
                     />
                   </div>
+                  
+                  {/* CSS para zoom nas imagens da pré-visualização */}
+                  <style>{`
+                    .document-preview-container img {
+                      cursor: zoom-in;
+                      transition: opacity 0.2s ease;
+                    }
+                    .document-preview-container img:hover {
+                      opacity: 0.8;
+                    }
+                  `}</style>
 
                   {/* Lista de Apontamentos */}
                   <div className="space-y-4">
@@ -2257,6 +2447,37 @@ const AnaliseVistoria = () => {
           </Card>
         </div>
       </div>
+
+      {/* Modo de Exibição em Tela Cheia */}
+      {viewerMode && (
+        <DocumentViewer
+          htmlContent={viewerHtml}
+          onClose={() => setViewerMode(false)}
+        />
+      )}
+
+      {/* Modal de Imagem da Pré-visualização */}
+      {previewImageModal && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black bg-opacity-90 flex items-center justify-center p-4"
+          onClick={() => setPreviewImageModal(null)}
+        >
+          <div className="relative max-w-[95vw] max-h-[95vh]">
+            <button
+              onClick={() => setPreviewImageModal(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl font-bold"
+            >
+              ✕
+            </button>
+            <img
+              src={previewImageModal}
+              alt="Visualização"
+              className="max-w-full max-h-[95vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

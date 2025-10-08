@@ -32,6 +32,8 @@ const Chat = lazy(() => import('./pages/Chat'));
 const AnaliseVistoria = lazy(() => import('./pages/AnaliseVistoria'));
 const VistoriaAnalises = lazy(() => import('./pages/VistoriaAnalises'));
 const Prestadores = lazy(() => import('./pages/Prestadores'));
+const DebugImages = lazy(() => import('./pages/DebugImages'));
+const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,10 @@ const App = () => (
                   <ForgotPassword />
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/documento-publico/:id"
+              element={<DocumentoPublico />}
             />
 
             {/* Rotas protegidas */}
@@ -211,6 +217,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <Prestadores />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/debug-images"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <DebugImages />
                   </Layout>
                 </ProtectedRoute>
               }

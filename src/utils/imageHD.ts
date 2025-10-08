@@ -101,7 +101,14 @@ export async function urlToBase64HD(
 
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    
+    // Configurar CORS apenas se não for uma URL do mesmo domínio
+    const isSameDomain = url.startsWith(window.location.origin);
+    const isDataUrl = url.startsWith('data:');
+    
+    if (!isSameDomain && !isDataUrl) {
+      img.crossOrigin = 'anonymous';
+    }
 
     img.onload = () => {
       try {
@@ -146,12 +153,16 @@ export async function urlToBase64HD(
 
         resolve(base64);
       } catch (error) {
-        reject(error);
+        // Se falhar ao processar, retornar a URL original
+        console.warn('Erro ao processar imagem, usando URL original:', error);
+        resolve(url);
       }
     };
 
-    img.onerror = () => {
-      reject(new Error('Erro ao carregar imagem da URL'));
+    img.onerror = (error) => {
+      // Se falhar ao carregar, retornar a URL original
+      console.warn('Erro ao carregar imagem da URL, usando URL original:', error);
+      resolve(url);
     };
 
     img.src = url;

@@ -42,17 +42,29 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       type?: string;
       url?: string;
       isFromDatabase?: boolean;
-    }>
+    }>,
+    tipoVistoria: string = 'desconhecido'
   ) => {
     if (!fotos || fotos.length === 0) {
+      console.log(`[${tipoVistoria}] Nenhuma foto para processar`);
       return [];
     }
 
+    console.log(`[${tipoVistoria}] Processando ${fotos.length} foto(s)`);
+
     const fotosBase64 = await Promise.all(
-      fotos.map(async (foto, _index) => {
+      fotos.map(async (foto, index) => {
         try {
+          console.log(`[${tipoVistoria}] Foto ${index + 1}:`, {
+            isFromDatabase: foto.isFromDatabase,
+            hasUrl: !!foto.url,
+            isFile: foto instanceof File,
+            name: foto.name,
+          });
+
           // Se é uma imagem do banco de dados
           if (foto.isFromDatabase && foto.url) {
+            console.log(`[${tipoVistoria}] Processando imagem do banco:`, foto.url);
             try {
               // Tentar converter URL para base64 HD
               const base64HD = await urlToBase64HD(foto.url, {
@@ -61,27 +73,33 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                 quality: 0.95,
                 format: 'jpeg',
               });
-              return { nome: foto.name, base64: base64HD };
-            } catch {
+              console.log(`[${tipoVistoria}] ✓ Imagem do banco convertida com sucesso`);
+              return { nome: foto.name || 'imagem', base64: base64HD };
+            } catch (error) {
               // Se falhar, usar URL diretamente
-              return { nome: foto.name, base64: foto.url };
+              console.warn(`[${tipoVistoria}] ⚠ Erro ao converter, usando URL original:`, error);
+              return { nome: foto.name || 'imagem', base64: foto.url };
             }
           }
 
           // Verificar se o arquivo é válido
           if (!foto || !(foto instanceof File) || foto.size === 0) {
+            console.warn(`[${tipoVistoria}] ⚠ Foto ${index + 1} inválida ou vazia`);
             return null;
           }
 
           // Converter File para base64 HD
+          console.log(`[${tipoVistoria}] Processando File:`, foto.name);
           const base64HD = await fileToBase64HD(foto, {
             maxWidth: 2560,
             maxHeight: 1440,
             quality: 0.95,
             format: 'jpeg',
           });
+          console.log(`[${tipoVistoria}] ✓ File convertido com sucesso`);
           return { nome: foto.name, base64: base64HD };
-        } catch {
+        } catch (error) {
+          console.error(`[${tipoVistoria}] ✗ Erro ao processar foto ${index + 1}:`, error);
           return null;
         }
       })
@@ -89,6 +107,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
     // Filtrar fotos que falharam no processamento
     const fotosValidas = fotosBase64.filter((foto) => foto !== null);
+    console.log(`[${tipoVistoria}] Resultado: ${fotosValidas.length} foto(s) válida(s) de ${fotos.length} total`);
     return fotosValidas;
   };
 
@@ -158,12 +177,14 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
       // Processar fotos da vistoria inicial
       const fotosInicial = await processarFotos(
-        apontamento.vistoriaInicial?.fotos || []
+        apontamento.vistoriaInicial?.fotos || [],
+        `Apontamento ${index + 1} - ${apontamento.ambiente} - Inicial`
       );
 
       // Processar fotos da vistoria final
       const fotosFinal = await processarFotos(
-        apontamento.vistoriaFinal?.fotos || []
+        apontamento.vistoriaFinal?.fotos || [],
+        `Apontamento ${index + 1} - ${apontamento.ambiente} - Final`
       );
 
       // console.log(`\n--- RESULTADO APONTAMENTO ${index + 1} ---`);
@@ -402,6 +423,12 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   }
 
   template += `
+      <!-- Nota sobre Fotos Completas -->
+      <div style="margin-top: 32px; padding: 12px 20px; background: #F9FAFB; border-radius: 6px; border-left: 3px solid #6B7280; text-align: center;">
+        <p style="margin: 0; font-size: 10px; color: #6B7280; font-style: italic;">
+          As fotos completas em alta resolução estão disponíveis nos laudos de vistoria de entrada e saída.
+        </p>
+      </div>
     </div>
   `;
 

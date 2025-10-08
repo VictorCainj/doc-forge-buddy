@@ -18,12 +18,22 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
     formData.qualificacaoCompletaLocadores || '[TEXTOLIVRE]';
 
   // Aplicar conjunções para locatários
-  const isMultipleLocatarios = !!(
+  // Verifica se há múltiplos locatários de duas formas:
+  // 1. Se existem campos separados (segundoLocatario, terceiroLocatario, etc)
+  // 2. Se o nomeLocatario contém vírgulas ou " e " indicando múltiplos nomes
+  const hasMultipleLocatarioFields = !!(
     formData.primeiroLocatario &&
     (formData.segundoLocatario ||
       formData.terceiroLocatario ||
       formData.quartoLocatario)
   );
+  
+  const nomeLocatarioCheck = formData.nomeLocatario || formData.primeiroLocatario || '';
+  const hasMultipleNamesInField = nomeLocatarioCheck.includes(',') || 
+                                   nomeLocatarioCheck.includes(' e ') ||
+                                   nomeLocatarioCheck.includes(' E ');
+  
+  const isMultipleLocatarios = hasMultipleLocatarioFields || hasMultipleNamesInField;
   enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
 
   if (isMultipleLocatarios) {
@@ -44,19 +54,34 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
       enhancedData.locatarioTermNoArtigo = 'a locatária';
       enhancedData.locatarioDocumentacao = 'da locatária';
       enhancedData.locatarioResponsabilidade = 'da locatária';
+      enhancedData.locatarioComunicou = 'informou';
+      enhancedData.locatarioIra = 'irá';
     } else if (generoLocatario === 'masculino') {
       enhancedData.locatarioTerm = 'LOCATÁRIO';
       enhancedData.locatarioTermComercial = 'LOCATÁRIO';
       enhancedData.locatarioTermNoArtigo = 'o locatário';
       enhancedData.locatarioDocumentacao = 'do locatário';
       enhancedData.locatarioResponsabilidade = 'do locatário';
+      enhancedData.locatarioComunicou = 'informou';
+      enhancedData.locatarioIra = 'irá';
     } else {
       enhancedData.locatarioTerm = 'LOCATÁRIO';
       enhancedData.locatarioTermComercial = 'LOCATÁRIO';
       enhancedData.locatarioTermNoArtigo = 'o locatário';
       enhancedData.locatarioDocumentacao = 'do locatário';
       enhancedData.locatarioResponsabilidade = 'do locatário';
+      enhancedData.locatarioComunicou = 'informou';
+      enhancedData.locatarioIra = 'irá';
     }
+    enhancedData.locatarioTermo = 'do locatário';
+    enhancedData.locatarioPrezado = 'Prezado';
+  } else {
+    // Fallback caso não haja locatário definido
+    enhancedData.locatarioTerm = 'LOCATÁRIO';
+    enhancedData.locatarioTermComercial = 'LOCATÁRIO';
+    enhancedData.locatarioTermNoArtigo = 'o locatário';
+    enhancedData.locatarioDocumentacao = 'do locatário';
+    enhancedData.locatarioResponsabilidade = 'do locatário';
     enhancedData.locatarioComunicou = 'informou';
     enhancedData.locatarioIra = 'irá';
     enhancedData.locatarioTermo = 'do locatário';

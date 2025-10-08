@@ -43,6 +43,9 @@ export const useVistoriaAnalises = () => {
       // Buscar imagens para cada análise
       const analisesWithImages = await Promise.all(
         (analisesData || []).map(async (analise) => {
+          // eslint-disable-next-line no-console
+          console.log(`🔍 Buscando imagens para vistoria_id: ${analise.id}`);
+          
           const { data: imagesData, error: imagesError } = await supabase
             .from('vistoria_images')
             .select('*')
@@ -51,8 +54,20 @@ export const useVistoriaAnalises = () => {
 
           if (imagesError) {
             // eslint-disable-next-line no-console
-            console.error('Erro ao carregar imagens:', imagesError);
+            console.error('❌ Erro ao carregar imagens:', imagesError);
             return { ...analise, images: [] };
+          }
+
+          // eslint-disable-next-line no-console
+          console.log(`✅ Imagens encontradas: ${imagesData?.length || 0}`);
+          if (imagesData && imagesData.length > 0) {
+            // eslint-disable-next-line no-console
+            console.log('📸 Detalhes das imagens:', imagesData.map(img => ({
+              apontamento_id: img.apontamento_id,
+              tipo: img.tipo_vistoria,
+              file_name: img.file_name,
+              url: img.image_url
+            })));
           }
 
           return {
@@ -128,7 +143,12 @@ export const useVistoriaAnalises = () => {
 
         if (updateError) throw updateError;
 
-        // NÃO remover imagens antigas - vamos preservá-las e adicionar apenas novas
+        // Remover TODAS as imagens antigas antes de processar
+        // (serão re-inseridas com as novas no processAndSaveImages)
+        await supabase
+          .from('vistoria_images')
+          .delete()
+          .eq('vistoria_id', analiseId);
       } else {
         // Criar nova análise
         const { data: analiseData, error: analiseError } = await supabase
@@ -218,7 +238,9 @@ export const useVistoriaAnalises = () => {
 
       if (analiseError) throw analiseError;
 
-      // NÃO remover imagens antigas - vamos preservá-las e adicionar apenas novas
+      // Remover TODAS as imagens antigas antes de processar
+      // (serão re-inseridas com as novas no processAndSaveImages)
+      await supabase.from('vistoria_images').delete().eq('vistoria_id', id);
 
       // Processar e salvar novas imagens
       if (data.apontamentos) {

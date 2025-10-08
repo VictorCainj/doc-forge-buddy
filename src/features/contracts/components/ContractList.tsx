@@ -206,28 +206,18 @@ export const ContractList = memo<ContractListProps>(({
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1 rounded bg-neutral-100">
-                          <CalendarDays className="h-3 w-3 text-neutral-600" />
-                        </div>
-                        <span className="text-xs font-medium text-neutral-600">
-                          Início
-                        </span>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+                      <div className="p-1 rounded bg-neutral-100">
+                        <CalendarDays className="h-3 w-3 text-neutral-600" />
                       </div>
                       <span className="text-xs font-semibold text-neutral-900">
                         {contract.form_data.dataInicioRescisao ||
                           '01/09/2026'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1 rounded bg-neutral-100">
-                          <Clock className="h-3 w-3 text-neutral-600" />
-                        </div>
-                        <span className="text-xs font-medium text-neutral-600">
-                          Término
-                        </span>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+                      <div className="p-1 rounded bg-neutral-100">
+                        <Clock className="h-3 w-3 text-neutral-600" />
                       </div>
                       <span className="text-xs font-semibold text-neutral-900">
                         {contract.form_data.dataTerminoRescisao ||
