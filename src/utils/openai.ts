@@ -351,3 +351,154 @@ export const transcribeAudioWithAI = async (audioFile: File): Promise<string> =>
     throw new Error('Erro ao transcrever o áudio. Tente novamente.');
   }
 };
+
+export interface ExtractedApontamento {
+  ambiente: string;
+  subtitulo: string;
+  descricao: string;
+}
+
+export const extractApontamentosFromText = async (text: string): Promise<ExtractedApontamento[]> => {
+  try {
+    log.info('Iniciando extração de apontamentos do texto');
+    
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente especializado em análise de vistorias imobiliárias. Sua tarefa é extrair apontamentos estruturados de textos de vistoria.
+
+FORMATO DO TEXTO DE ENTRADA:
+- O texto começa com o nome do AMBIENTE em MAIÚSCULAS (ex: SALA, COZINHA, DORMITÓRIO E., WC SUÍTE)
+- Após o ambiente, vem o SUBTÍTULO (linha completa da ação, ex: "Pintar as paredes", "Reparar e remover manchas do sofá")
+- Após o subtítulo, vem a DESCRIÇÃO detalhada do problema
+- Os apontamentos são separados por "---------"
+- Quando aparece um novo AMBIENTE em MAIÚSCULAS, todos os apontamentos seguintes pertencem a esse ambiente até aparecer outro
+
+EXEMPLO DE ENTRADA:
+SALA
+Pintar as paredes
+estão excessivamente sujas. Na vistoria de entrada estavam em bom estado.
+---------
+Reparar e remover manchas do sofá
+os encostos retráteis não estão travando. E remover as manchas diversas no sofá.
+---------
+COZINHA
+Limpar a Air fryer
+está suja
+---------
+
+REGRAS DE EXTRAÇÃO:
+1. Identifique o AMBIENTE (palavras em MAIÚSCULAS que indicam cômodo)
+2. O SUBTÍTULO é a primeira linha após o ambiente ou após o separador "---------"
+3. A DESCRIÇÃO é todo o texto após o subtítulo até o próximo separador "---------" ou próximo ambiente
+4. Mantenha o ambiente atual para todos os apontamentos até aparecer um novo ambiente
+
+FORMATO DE SAÍDA:
+Retorne um objeto JSON com a chave "apontamentos" contendo um array:
+{
+  "apontamentos": [
+    {
+      "ambiente": "SALA",
+      "subtitulo": "Pintar as paredes",
+      "descricao": "estão excessivamente sujas. Na vistoria de entrada estavam em bom estado."
+    },
+    {
+      "ambiente": "SALA",
+      "subtitulo": "Reparar e remover manchas do sofá",
+      "descricao": "os encostos retráteis não estão travando. E remover as manchas diversas no sofá."
+    },
+    {
+      "ambiente": "COZINHA",
+      "subtitulo": "Limpar a Air fryer",
+      "descricao": "está suja"
+    }
+  ]
+}
+
+IMPORTANTE:
+- Retorne APENAS o JSON válido, sem markdown, sem explicações
+- Use o nome do ambiente EXATAMENTE como aparece no texto (em MAIÚSCULAS)
+- O subtítulo deve ser a linha completa da ação (ex: "Pintar as paredes", não apenas "Pintar")
+- A descrição é todo o texto após o subtítulo
+- Mantenha o ambiente para apontamentos consecutivos até aparecer novo ambiente`,
+        },
+        {
+          role: 'user',
+          content: `Extraia os apontamentos do seguinte texto de vistoria:\n\n${text}`,
+        },
+      ],
+      max_tokens: 4000,
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+    });
+
+    const response = completion.choices[0]?.message?.content;
+
+    if (!response) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    log.debug('Resposta da API:', response);
+
+    // Tentar parsear a resposta JSON
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(response);
+    } catch (parseError) {
+      log.error('Erro ao parsear JSON:', parseError);
+      log.error('Resposta recebida:', response);
+      throw new Error('Erro ao processar resposta da IA. Resposta inválida.');
+    }
+
+    // A resposta pode vir em diferentes formatos, verificar estrutura
+    let apontamentos: ExtractedApontamento[] = [];
+    
+    if (Array.isArray(parsedResponse)) {
+      apontamentos = parsedResponse;
+    } else if (parsedResponse.apontamentos && Array.isArray(parsedResponse.apontamentos)) {
+      apontamentos = parsedResponse.apontamentos;
+    } else if (parsedResponse.items && Array.isArray(parsedResponse.items)) {
+      apontamentos = parsedResponse.items;
+    } else if (parsedResponse.data && Array.isArray(parsedResponse.data)) {
+      apontamentos = parsedResponse.data;
+    } else {
+      // Tentar encontrar qualquer array no objeto
+      const keys = Object.keys(parsedResponse);
+      for (const key of keys) {
+        if (Array.isArray(parsedResponse[key])) {
+          apontamentos = parsedResponse[key];
+          break;
+        }
+      }
+      
+      if (apontamentos.length === 0) {
+        log.error('Formato de resposta inesperado:', parsedResponse);
+        throw new Error('Não foi possível encontrar apontamentos na resposta da IA. Tente reformular o texto.');
+      }
+    }
+
+    // Validar estrutura dos apontamentos
+    const validApontamentos = apontamentos.filter((item: any) => 
+      item && 
+      typeof item === 'object' && 
+      item.ambiente && 
+      item.subtitulo && 
+      item.descricao
+    );
+
+    if (validApontamentos.length === 0) {
+      throw new Error('Nenhum apontamento válido foi encontrado. Verifique o formato do texto.');
+    }
+
+    log.info(`Extraídos ${validApontamentos.length} apontamentos com sucesso`);
+    return validApontamentos;
+  } catch (error) {
+    log.error('Erro ao extrair apontamentos:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Erro ao extrair apontamentos do texto. Tente novamente.');
+  }
+};

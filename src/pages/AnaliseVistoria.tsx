@@ -74,7 +74,7 @@ const AnaliseVistoria = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { correctText, isLoading: isAILoading } = useOpenAI();
+  const { correctText, extractApontamentos, isLoading: isAILoading } = useOpenAI();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
   const { prestadores } = usePrestadores();
@@ -123,6 +123,8 @@ const AnaliseVistoria = () => {
   const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
   const [viewerHtml, setViewerHtml] = useState('');
+  const [extractionText, setExtractionText] = useState('');
+  const [showExtractionPanel, setShowExtractionPanel] = useState(false);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -1549,6 +1551,76 @@ const AnaliseVistoria = () => {
     }
   };
 
+  const handleExtractApontamentos = async () => {
+    if (!extractionText.trim()) {
+      toast({
+        title: 'Texto vazio',
+        description: 'Digite ou cole o texto da vistoria para extrair os apontamentos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: 'Processando...',
+        description: 'Extraindo apontamentos do texto com IA. Aguarde...',
+      });
+
+      const extractedApontamentos = await extractApontamentos(extractionText);
+
+      if (extractedApontamentos.length === 0) {
+        toast({
+          title: 'Nenhum apontamento encontrado',
+          description: 'Não foi possível extrair apontamentos do texto fornecido. Verifique o formato.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Converter apontamentos extraídos para o formato correto
+      const newApontamentos = extractedApontamentos.map((item, index) => ({
+        id: Date.now().toString() + index.toString() + Math.random().toString(36).substr(2, 9),
+        ambiente: item.ambiente,
+        subtitulo: item.subtitulo,
+        descricao: item.descricao,
+        descricaoServico: '',
+        vistoriaInicial: { fotos: [], descritivoLaudo: '' },
+        vistoriaFinal: { fotos: [] },
+        observacao: '',
+        ...(documentMode === 'orcamento' && {
+          tipo: 'material' as const,
+          valor: 0,
+          quantidade: 0,
+        }),
+      }));
+
+      // Adicionar aos apontamentos existentes
+      setApontamentos((prev) => [...prev, ...newApontamentos]);
+
+      toast({
+        title: 'Apontamentos criados! 🎉',
+        description: `${extractedApontamentos.length} apontamento(s) foram criados automaticamente.`,
+      });
+
+      // Limpar o texto e fechar o painel
+      setExtractionText('');
+      setShowExtractionPanel(false);
+    } catch (error) {
+      log.error('Erro ao extrair apontamentos:', error);
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Não foi possível extrair os apontamentos. Tente novamente.';
+      
+      toast({
+        title: 'Erro ao processar',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50">
       
@@ -1876,6 +1948,87 @@ const AnaliseVistoria = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+              {/* Painel de Extração Automática com IA */}
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-neutral-300 text-neutral-900 hover:bg-neutral-100"
+                  onClick={() => setShowExtractionPanel(!showExtractionPanel)}
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  {showExtractionPanel ? 'Ocultar' : 'Criar Apontamentos com IA'}
+                </Button>
+
+                {showExtractionPanel && (
+                  <div className="space-y-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <Wand2 className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-neutral-900 mb-1">
+                          Extração Automática de Apontamentos
+                        </h4>
+                        <p className="text-xs text-neutral-600 mb-3">
+                          Cole o texto da vistoria abaixo. A IA irá identificar automaticamente cada ambiente, subtítulo e descrição.
+                        </p>
+                        <Textarea
+                          placeholder={`Exemplo de formato:
+SALA
+Pintar as paredes
+estão excessivamente sujas
+---------
+Reparar e remover manchas do sofá
+os encostos não estão travando
+---------
+COZINHA
+Limpar a Air fryer
+está suja
+---------`}
+                          value={extractionText}
+                          onChange={(e) => setExtractionText(e.target.value)}
+                          rows={10}
+                          className="text-sm bg-white border-blue-300 focus:border-blue-500 mb-3 font-mono"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleExtractApontamentos}
+                            disabled={!extractionText.trim() || isAILoading}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                            size="sm"
+                          >
+                            {isAILoading ? (
+                              <>
+                                <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Processando...
+                              </>
+                            ) : (
+                              <>
+                                <Wand2 className="h-4 w-4 mr-2" />
+                                Extrair Apontamentos
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setExtractionText('');
+                              setShowExtractionPanel(false);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="border-neutral-300"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-neutral-200" />
+
               {/* Ambiente e Subtítulo */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

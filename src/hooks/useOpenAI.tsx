@@ -7,6 +7,8 @@ import {
   generateImageWithAI,
   analyzeImageWithAI,
   transcribeAudioWithAI,
+  extractApontamentosFromText,
+  ExtractedApontamento,
 } from '@/utils/openai';
 import { Contract } from './useContractAnalysis';
 import { CompleteContractData } from './useCompleteContractData';
@@ -25,6 +27,7 @@ interface UseOpenAIReturn {
   generateImageFromPrompt: (prompt: string) => Promise<string>;
   analyzeImage: (imageBase64: string, userPrompt?: string) => Promise<string>;
   transcribeAudio: (audioFile: File) => Promise<string>;
+  extractApontamentos: (text: string) => Promise<ExtractedApontamento[]>;
   isLoading: boolean;
   error: string | null;
 }
@@ -233,6 +236,25 @@ export const useOpenAI = (): UseOpenAIReturn => {
     }
   };
 
+  const extractApontamentos = async (text: string): Promise<ExtractedApontamento[]> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const apontamentos = await extractApontamentosFromText(text);
+      
+      log.debug(`Extraídos ${apontamentos.length} apontamentos com sucesso`);
+      return apontamentos;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro ao extrair apontamentos';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     correctText,
     improveText,
@@ -241,6 +263,7 @@ export const useOpenAI = (): UseOpenAIReturn => {
     generateImageFromPrompt,
     analyzeImage,
     transcribeAudio,
+    extractApontamentos,
     isLoading,
     error,
   };
