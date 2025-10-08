@@ -30,13 +30,16 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  server:
-    mode === 'development'
+  server: {
+    // @ts-ignore
+    allowedHosts: process.env.TEMPO === "true" ? true : undefined,
+    ...(mode === 'development'
       ? {
           host: '::',
           port: 8080,
         }
-      : undefined,
+      : {}),
+  },
   optimizeDeps: {
     include: [
       'react',
