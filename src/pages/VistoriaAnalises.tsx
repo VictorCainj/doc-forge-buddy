@@ -23,7 +23,6 @@ import {
   Plus,
   Search,
   FileText,
-  Edit,
   Trash2,
   Calendar,
   User,
@@ -93,17 +92,6 @@ const VistoriaAnalises = () => {
     }
   };
 
-  // Função para abrir análise para edição
-  const handleEditAnalise = (analise: VistoriaAnaliseWithImages) => {
-    // Navegar para a página de análise com dados pré-carregados
-    navigate('/analise-vistoria', {
-      state: {
-        editMode: true,
-        analiseData: analise,
-      },
-    });
-  };
-
 
   // Função para contar apontamentos
   const getApontamentosCount = (analise: VistoriaAnaliseWithImages) => {
@@ -154,7 +142,7 @@ const VistoriaAnalises = () => {
               </h1>
               <p className="text-muted-foreground mt-2 flex items-center space-x-2">
                 <FileText className="h-4 w-4" />
-                <span>Gerencie suas análises de vistoria salvas</span>
+                <span>Visualize e exclua suas análises de vistoria salvas</span>
               </p>
             </div>
           </div>
@@ -210,16 +198,15 @@ const VistoriaAnalises = () => {
                 <span className="text-sm font-medium">Este Mês</span>
               </div>
               <p className="text-2xl font-bold mt-2">
-                {
-                  analises.filter((a) => {
-                    const createdAt = new Date(a.created_at);
-                    const now = new Date();
-                    return (
-                      createdAt.getMonth() === now.getMonth() &&
-                      createdAt.getFullYear() === now.getFullYear()
-                    );
-                  }).length
-                }
+                {analises.filter((a) => {
+                  if (!a.created_at) return false;
+                  const createdAt = new Date(a.created_at);
+                  const now = new Date();
+                  return (
+                    createdAt.getMonth() === now.getMonth() &&
+                    createdAt.getFullYear() === now.getFullYear()
+                  );
+                }).length}
               </p>
             </CardContent>
           </Card>
@@ -330,7 +317,7 @@ const VistoriaAnalises = () => {
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <Calendar className="h-4 w-4" />
                             <span>
-                              {formatDateBrazilian(analise.created_at)}
+                              {analise.created_at ? formatDateBrazilian(analise.created_at) : 'Data não disponível'}
                             </span>
                           </div>
                         </div>
@@ -343,14 +330,6 @@ const VistoriaAnalises = () => {
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
-                        <ActionButton
-                          icon={Edit}
-                          variant="ghost"
-                          size="sm"
-                          iconOnly
-                          onClick={() => handleEditAnalise(analise)}
-                          title="Editar análise"
-                        />
                         <ActionButton
                           icon={Trash2}
                           variant="danger"

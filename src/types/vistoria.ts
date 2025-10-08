@@ -36,6 +36,7 @@ export interface VistoriaAnalise {
   id?: string;
   title: string;
   contract_id?: string | null;
+  public_document_id?: string | null;
   dados_vistoria: DadosVistoria;
   apontamentos: ApontamentoVistoria[];
   created_at?: string;

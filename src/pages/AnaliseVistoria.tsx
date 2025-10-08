@@ -125,6 +125,8 @@ const AnaliseVistoria = () => {
   const [viewerHtml, setViewerHtml] = useState('');
   const [extractionText, setExtractionText] = useState('');
   const [showExtractionPanel, setShowExtractionPanel] = useState(false);
+  const [publicDocumentId, setPublicDocumentId] = useState<string | null>(null);
+  const [publicDocumentUrl, setPublicDocumentUrl] = useState<string | null>(null);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -137,15 +139,28 @@ const AnaliseVistoria = () => {
         log.debug('Análise ID:', analiseData.id);
         log.debug('Imagens disponíveis:', analiseData.images?.length || 0);
         log.debug('Dados das imagens:', analiseData.images);
+        log.debug('Dados completos da análise:', analiseData);
+
+        // Carregar public_document_id se existir
+        if (analiseData.public_document_id) {
+          setPublicDocumentId(analiseData.public_document_id);
+          setPublicDocumentUrl(`${window.location.origin}/documento-publico/${analiseData.public_document_id}`);
+        }
 
         // Carregar dados da vistoria
         if (analiseData.dados_vistoria) {
-          const dados = analiseData.dados_vistoria as Record<string, unknown>;
-          setDadosVistoria({
-            locatario: dados.locatario || '',
-            endereco: dados.endereco || '',
-            dataVistoria: dados.dataVistoria || '',
-          });
+          const dados = analiseData.dados_vistoria as DadosVistoria & Record<string, unknown>;
+          
+          const dadosCarregados = {
+            locatario: (dados.locatario as string) || '',
+            endereco: (dados.endereco as string) || '',
+            dataVistoria: (dados.dataVistoria as string) || '',
+          };
+          
+          // Se os dados estiverem vazios, NÃO definir ainda - deixar o useEffect do contrato preencher
+          if (dadosCarregados.locatario || dadosCarregados.endereco || dadosCarregados.dataVistoria) {
+            setDadosVistoria(dadosCarregados);
+          }
           
           // Carregar o modo do documento se existir
           if (dados.documentMode) {
@@ -285,6 +300,56 @@ const AnaliseVistoria = () => {
           );
           if (contract) {
             setSelectedContract(contract);
+            
+            // Se os dados da vistoria estiverem vazios, preencher com dados do contrato
+            const dados = analiseData.dados_vistoria as DadosVistoria & Record<string, unknown>;
+            if (!dados?.locatario || !dados?.endereco) {
+              try {
+                const parsedTerms = (contract as any).terms ? JSON.parse((contract as any).terms) : {};
+                
+                // Buscar dados do locatário
+                const locatario = parsedTerms.locatario || 
+                                 parsedTerms.nome_locatario || 
+                                 parsedTerms.nomeLocatario ||
+                                 parsedTerms.inquilino ||
+                                 parsedTerms.nome_inquilino ||
+                                 parsedTerms.nome ||
+                                 '';
+                
+                // Buscar dados do endereço
+                const endereco = parsedTerms.endereco || 
+                                parsedTerms.endereco_imovel || 
+                                parsedTerms.enderecoImovel ||
+                                parsedTerms.endereco_completo ||
+                                parsedTerms.logradouro ||
+                                parsedTerms.rua ||
+                                '';
+                
+                // Se ainda não tiver dados e o título do contrato tiver informações
+                let locatarioFinal = locatario;
+                let enderecoFinal = endereco;
+                
+                if (!locatarioFinal && contract.title) {
+                  // Tentar extrair do título (ex: "Contrato - João Silva")
+                  const match = contract.title.match(/[-–]\s*(.+?)(?:\s*[-–]|$)/);
+                  if (match) locatarioFinal = match[1].trim();
+                }
+                
+                // Preencher com dados do contrato
+                setDadosVistoria(prev => ({
+                  locatario: locatarioFinal || prev.locatario || 'Não informado',
+                  endereco: enderecoFinal || prev.endereco || 'Não informado',
+                  dataVistoria: prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
+                }));
+                
+                console.log('📋 Dados do contrato preenchidos ao carregar análise:', {
+                  locatario: locatarioFinal,
+                  endereco: enderecoFinal
+                });
+              } catch (error) {
+                console.error('Erro ao processar dados do contrato:', error);
+              }
+            }
           }
         }
         if (showToast) {
@@ -379,15 +444,14 @@ const AnaliseVistoria = () => {
       });
     } else if (state?.contractId && state?.contractData && contracts.length > 0) {
       // Preencher dados do contrato selecionado
-      const contract = contracts.find(c => c.id === state.contractId);
+      const contract = contracts.find((c) => c.id === state.contractId);
       if (contract) {
         setSelectedContract(contract);
         setDadosVistoria({
           locatario: state.contractData.locatario,
           endereco: state.contractData.endereco,
-          dataVistoria: formatDateBrazilian(new Date()),
+          dataVistoria: new Date().toLocaleDateString('pt-BR'),
         });
-        
         toast({
           title: 'Contrato carregado',
           description: 'Os dados do contrato foram preenchidos automaticamente.',
@@ -1058,6 +1122,23 @@ const AnaliseVistoria = () => {
     }
   };
 
+  // Função para selecionar contrato
+  const handleContractSelect = (contractId: string) => {
+    const contract = contracts.find((c) => c.id === contractId);
+    if (contract) {
+      console.log('🔍 Contrato selecionado:', contract);
+      console.log('🔍 Terms do contrato:', (contract as any).terms);
+      try {
+        const parsed = JSON.parse((contract as any).terms || '{}');
+        console.log('🔍 Terms parseados:', parsed);
+        console.log('🔍 Campos disponíveis:', Object.keys(parsed));
+      } catch (e) {
+        console.error('Erro ao parsear terms:', e);
+      }
+      setSelectedContract(contract);
+    }
+  };
+
   // Salvar análise no Supabase (silencioso = sem toast de sucesso)
   const saveAnalysis = useCallback(async (silencioso = false) => {
     if (apontamentos.length === 0) {
@@ -1186,7 +1267,108 @@ const AnaliseVistoria = () => {
     return () => document.removeEventListener('click', handleImageClick);
   }, []);
 
-  // Gerar link público de visualização
+  // Atualizar documento público existente
+  const updatePublicDocument = useCallback(async () => {
+    if (!publicDocumentId) return;
+
+    try {
+      const template = await ANALISE_VISTORIA_TEMPLATE({
+        locatario: dadosVistoria.locatario,
+        endereco: dadosVistoria.endereco,
+        dataVistoria: dadosVistoria.dataVistoria,
+        documentMode,
+        prestador: documentMode === 'orcamento' && selectedPrestadorId 
+          ? prestadores.find(p => p.id === selectedPrestadorId) 
+          : undefined,
+        apontamentos: apontamentos,
+      });
+
+      const { error } = await supabase
+        .from('public_documents')
+        .update({
+          html_content: template,
+          title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
+        })
+        .eq('id', publicDocumentId);
+
+      if (error) {
+        console.error('Erro ao atualizar documento público:', error);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar documento público:', error);
+    }
+  }, [publicDocumentId, dadosVistoria, documentMode, selectedPrestadorId, prestadores, apontamentos]);
+
+  // Preencher dados da vistoria automaticamente do contrato SEMPRE
+  useEffect(() => {
+    if (selectedContract) {
+      try {
+        const parsedTerms = (selectedContract as any).terms ? JSON.parse((selectedContract as any).terms) : {};
+        
+        // Buscar dados do locatário
+        const locatario = parsedTerms.locatario || 
+                         parsedTerms.nome_locatario || 
+                         parsedTerms.nomeLocatario ||
+                         parsedTerms.inquilino ||
+                         parsedTerms.nome_inquilino ||
+                         parsedTerms.nome ||
+                         '';
+        
+        // Buscar dados do endereço
+        const endereco = parsedTerms.endereco || 
+                        parsedTerms.endereco_imovel || 
+                        parsedTerms.enderecoImovel ||
+                        parsedTerms.endereco_completo ||
+                        parsedTerms.logradouro ||
+                        parsedTerms.rua ||
+                        '';
+        
+        // Se ainda não tiver dados e o título do contrato tiver informações
+        let locatarioFinal = locatario;
+        let enderecoFinal = endereco;
+        
+        if (!locatarioFinal && selectedContract.title) {
+          // Tentar extrair do título (ex: "Contrato - João Silva")
+          const match = selectedContract.title.match(/[-–]\s*(.+?)(?:\s*[-–]|$)/);
+          if (match) locatarioFinal = match[1].trim();
+        }
+        
+        // Sempre atualizar se houver dados novos
+        setDadosVistoria(prev => ({
+          locatario: locatarioFinal || prev.locatario || 'Não informado',
+          endereco: enderecoFinal || prev.endereco || 'Não informado',
+          dataVistoria: prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
+        }));
+        
+        console.log('📋 Dados do contrato carregados:', {
+          locatario: locatarioFinal,
+          endereco: enderecoFinal,
+          termos: parsedTerms
+        });
+      } catch (error) {
+        console.error('Erro ao processar dados do contrato:', error);
+        // Definir valores padrão em caso de erro
+        setDadosVistoria(prev => ({
+          locatario: prev.locatario || 'Não informado',
+          endereco: prev.endereco || 'Não informado',
+          dataVistoria: prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
+        }));
+      }
+    }
+  }, [selectedContract]);
+
+  // Atualizar documento público quando houver mudanças
+  useEffect(() => {
+    if (publicDocumentId && apontamentos.length > 0) {
+      const timeoutId = setTimeout(() => {
+        updatePublicDocument();
+      }, 2000); // Debounce de 2 segundos
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [apontamentos, dadosVistoria, documentMode, selectedPrestadorId, publicDocumentId, updatePublicDocument]);
+
+  // Gerar ou visualizar link público
   const openViewerMode = async () => {
     if (apontamentos.length === 0) {
       toast({
@@ -1206,13 +1388,51 @@ const AnaliseVistoria = () => {
       return;
     }
 
+    // Se já existe um documento público, apenas copiar link e abrir
+    if (publicDocumentId && publicDocumentUrl) {
+      try {
+        // Copiar para clipboard
+        let copiado = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(publicDocumentUrl);
+            copiado = true;
+          } else {
+            const textArea = document.createElement('textarea');
+            textArea.value = publicDocumentUrl;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            copiado = true;
+          }
+        } catch (clipboardError) {
+          console.warn('Erro ao copiar para clipboard:', clipboardError);
+        }
+
+        // Abrir em nova aba
+        window.open(publicDocumentUrl, '_blank', 'noopener,noreferrer');
+
+        // Toast de confirmação
+        toast({
+          title: copiado ? 'Link copiado! 📋' : 'Abrindo visualização...',
+          description: copiado ? 'O link foi copiado para a área de transferência.' : 'Documento aberto em nova aba.',
+        });
+      } catch (error) {
+        console.error('Erro ao abrir visualização:', error);
+      }
+      return;
+    }
+
+    // Gerar novo documento público (primeira vez)
     try {
       toast({
         title: 'Gerando link público...',
         description: 'Aguarde enquanto criamos o link de visualização.',
       });
 
-      // Gerar o HTML do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
         locatario: dadosVistoria.locatario,
         endereco: dadosVistoria.endereco,
@@ -1224,7 +1444,6 @@ const AnaliseVistoria = () => {
         apontamentos: apontamentos,
       });
 
-      // Salvar documento público no Supabase
       const { data, error } = await supabase
         .from('public_documents')
         .insert({
@@ -1241,17 +1460,27 @@ const AnaliseVistoria = () => {
         throw error;
       }
 
-      // Gerar URL pública
       const publicUrl = `${window.location.origin}/documento-publico/${data.id}`;
+      
+      // Salvar ID e URL no estado
+      setPublicDocumentId(data.id);
+      setPublicDocumentUrl(publicUrl);
 
-      // Copiar para clipboard (com fallback)
+      // Atualizar vistoria_analises com o public_document_id
+      if (savedAnaliseId) {
+        await supabase
+          .from('vistoria_analises')
+          .update({ public_document_id: data.id })
+          .eq('id', savedAnaliseId);
+      }
+
+      // Copiar para clipboard
       let copiado = false;
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(publicUrl);
           copiado = true;
         } else {
-          // Fallback: criar elemento temporário para copiar
           const textArea = document.createElement('textarea');
           textArea.value = publicUrl;
           textArea.style.position = 'fixed';
@@ -1266,20 +1495,12 @@ const AnaliseVistoria = () => {
         console.warn('Erro ao copiar para clipboard:', clipboardError);
       }
 
-      // Exibir link em alert
-      const mensagem = copiado 
-        ? `✅ Link copiado para a área de transferência!\n\n📋 Link público:\n${publicUrl}\n\n🔗 O documento será aberto em uma nova aba.`
-        : `📋 Link público gerado:\n${publicUrl}\n\n⚠️ Copie o link acima.\n\n🔗 O documento será aberto em uma nova aba.`;
-      
-      alert(mensagem);
-
       // Abrir em nova aba
       window.open(publicUrl, '_blank', 'noopener,noreferrer');
 
-      // Toast de confirmação
       toast({
         title: 'Link gerado com sucesso! 🎉',
-        description: copiado ? 'O link foi copiado para a área de transferência.' : 'Copie o link exibido.',
+        description: copiado ? 'Link copiado para a área de transferência.' : 'Documento aberto em nova aba.',
       });
     } catch (error) {
       console.error('Erro ao gerar link público:', error);
@@ -1684,7 +1905,7 @@ const AnaliseVistoria = () => {
             />
             <ActionButton
               icon={Eye}
-              label="Modo Exibição"
+              label={publicDocumentId ? "Visualizar Exibição" : "Gerar Link de Exibição"}
               variant="secondary"
               size="md"
               disabled={apontamentos.length === 0 || !selectedContract}
