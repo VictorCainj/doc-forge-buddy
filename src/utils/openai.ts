@@ -269,7 +269,10 @@ export const chatCompletionWithAI = async (prompt: string): Promise<string> => {
   }
 };
 
-export const analyzeImageWithAI = async (imageBase64: string, userPrompt?: string): Promise<string> => {
+export const analyzeImageWithAI = async (
+  imageBase64: string,
+  userPrompt?: string
+): Promise<string> => {
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -279,7 +282,9 @@ export const analyzeImageWithAI = async (imageBase64: string, userPrompt?: strin
           content: [
             {
               type: 'text',
-              text: userPrompt || 'Analise esta imagem em detalhes. Se for um documento, extraia todas as informações relevantes. Se for uma foto, descreva o que você vê.',
+              text:
+                userPrompt ||
+                'Analise esta imagem em detalhes. Se for um documento, extraia todas as informações relevantes. Se for uma foto, descreva o que você vê.',
             },
             {
               type: 'image_url',
@@ -329,10 +334,12 @@ export const generateImageWithAI = async (prompt: string): Promise<string> => {
   }
 };
 
-export const transcribeAudioWithAI = async (audioFile: File): Promise<string> => {
+export const transcribeAudioWithAI = async (
+  audioFile: File
+): Promise<string> => {
   try {
     log.info('Iniciando transcrição de áudio:', audioFile.name);
-    
+
     const response = await openai.audio.transcriptions.create({
       file: audioFile,
       model: 'whisper-1',
@@ -358,16 +365,26 @@ export interface ExtractedApontamento {
   descricao: string;
 }
 
-export const extractApontamentosFromText = async (text: string): Promise<ExtractedApontamento[]> => {
+export const extractApontamentosFromText = async (
+  text: string
+): Promise<ExtractedApontamento[]> => {
   try {
     log.info('Iniciando extração de apontamentos do texto');
-    
+    log.info(`Tamanho do texto de entrada: ${text.length} caracteres`);
+
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
           content: `Você é um assistente especializado em análise de vistorias imobiliárias. Sua tarefa é extrair apontamentos estruturados de textos de vistoria.
+
+⚠️ EXTREMAMENTE IMPORTANTE: PROCESSE TODO O TEXTO FORNECIDO INTEGRALMENTE ⚠️
+- Você DEVE processar TODOS os apontamentos presentes no texto, do início ao fim
+- NUNCA omita, resuma ou pule nenhum apontamento
+- NUNCA truncar a lista de apontamentos
+- Cada apontamento encontrado DEVE estar presente na resposta final
+- Se houver 50 apontamentos no texto, você DEVE retornar os 50 apontamentos
 
 FORMATO DO TEXTO DE ENTRADA:
 - O texto começa com o nome do AMBIENTE em MAIÚSCULAS (ex: SALA, COZINHA, DORMITÓRIO E., WC SUÍTE)
@@ -394,6 +411,7 @@ REGRAS DE EXTRAÇÃO:
 2. O SUBTÍTULO é a primeira linha após o ambiente ou após o separador "---------"
 3. A DESCRIÇÃO é todo o texto após o subtítulo até o próximo separador "---------" ou próximo ambiente
 4. Mantenha o ambiente atual para todos os apontamentos até aparecer um novo ambiente
+5. PROCESSE TODOS OS APONTAMENTOS - não omita nenhum, mesmo que o texto seja longo
 
 FORMATO DE SAÍDA:
 Retorne um objeto JSON com a chave "apontamentos" contendo um array:
@@ -421,26 +439,46 @@ IMPORTANTE:
 - Retorne APENAS o JSON válido, sem markdown, sem explicações
 - Use o nome do ambiente EXATAMENTE como aparece no texto (em MAIÚSCULAS)
 - O subtítulo deve ser a linha completa da ação (ex: "Pintar as paredes", não apenas "Pintar")
-- A descrição é todo o texto após o subtítulo
-- Mantenha o ambiente para apontamentos consecutivos até aparecer novo ambiente`,
+- A descrição é todo o texto após o subtítulo COMPLETO e sem omissões
+- Mantenha o ambiente para apontamentos consecutivos até aparecer novo ambiente
+- PROCESSE TODO O TEXTO - Não omita nenhum apontamento por razões de tamanho`,
         },
         {
           role: 'user',
-          content: `Extraia os apontamentos do seguinte texto de vistoria:\n\n${text}`,
+          content: `Extraia os apontamentos do seguinte texto de vistoria. IMPORTANTE: Processe TODO o texto e retorne TODOS os apontamentos encontrados:\n\n${text}`,
         },
       ],
-      max_tokens: 4000,
+      max_tokens: 16000,
       temperature: 0.3,
       response_format: { type: 'json_object' },
     });
 
     const response = completion.choices[0]?.message?.content;
+    const finishReason = completion.choices[0]?.finish_reason;
 
     if (!response) {
       throw new Error('Resposta vazia da API');
     }
 
-    log.debug('Resposta da API:', response);
+    // Verificar se a resposta foi truncada
+    if (finishReason === 'length') {
+      log.warn(
+        '⚠️ AVISO: A resposta da API foi truncada devido ao limite de tokens!'
+      );
+      log.warn(
+        'Isso pode significar que alguns apontamentos não foram processados.'
+      );
+      log.warn(
+        'Considere dividir o texto em partes menores ou entrar em contato com o suporte.'
+      );
+    }
+
+    log.debug(
+      'Resposta da API (primeiros 500 caracteres):',
+      response.substring(0, 500)
+    );
+    log.debug('Finish reason:', finishReason);
+    log.info(`Tamanho da resposta: ${response.length} caracteres`);
 
     // Tentar parsear a resposta JSON
     let parsedResponse;
@@ -454,10 +492,13 @@ IMPORTANTE:
 
     // A resposta pode vir em diferentes formatos, verificar estrutura
     let apontamentos: ExtractedApontamento[] = [];
-    
+
     if (Array.isArray(parsedResponse)) {
       apontamentos = parsedResponse;
-    } else if (parsedResponse.apontamentos && Array.isArray(parsedResponse.apontamentos)) {
+    } else if (
+      parsedResponse.apontamentos &&
+      Array.isArray(parsedResponse.apontamentos)
+    ) {
       apontamentos = parsedResponse.apontamentos;
     } else if (parsedResponse.items && Array.isArray(parsedResponse.items)) {
       apontamentos = parsedResponse.items;
@@ -472,27 +513,52 @@ IMPORTANTE:
           break;
         }
       }
-      
+
       if (apontamentos.length === 0) {
         log.error('Formato de resposta inesperado:', parsedResponse);
-        throw new Error('Não foi possível encontrar apontamentos na resposta da IA. Tente reformular o texto.');
+        throw new Error(
+          'Não foi possível encontrar apontamentos na resposta da IA. Tente reformular o texto.'
+        );
       }
     }
 
     // Validar estrutura dos apontamentos
-    const validApontamentos = apontamentos.filter((item: any) => 
-      item && 
-      typeof item === 'object' && 
-      item.ambiente && 
-      item.subtitulo && 
-      item.descricao
+    const validApontamentos = apontamentos.filter(
+      (item: any) =>
+        item &&
+        typeof item === 'object' &&
+        item.ambiente &&
+        item.subtitulo &&
+        item.descricao
     );
 
     if (validApontamentos.length === 0) {
-      throw new Error('Nenhum apontamento válido foi encontrado. Verifique o formato do texto.');
+      throw new Error(
+        'Nenhum apontamento válido foi encontrado. Verifique o formato do texto.'
+      );
     }
 
-    log.info(`Extraídos ${validApontamentos.length} apontamentos com sucesso`);
+    // Log detalhado dos apontamentos extraídos
+    log.info(
+      `✅ Extraídos ${validApontamentos.length} apontamentos com sucesso`
+    );
+    log.info('Resumo dos ambientes processados:');
+    const ambientesCounts = validApontamentos.reduce((acc: any, item: any) => {
+      acc[item.ambiente] = (acc[item.ambiente] || 0) + 1;
+      return acc;
+    }, {});
+    Object.entries(ambientesCounts).forEach(([ambiente, count]) => {
+      log.info(`  - ${ambiente}: ${count} apontamento(s)`);
+    });
+
+    // Verificar se houve apontamentos inválidos filtrados
+    const invalidCount = apontamentos.length - validApontamentos.length;
+    if (invalidCount > 0) {
+      log.warn(
+        `⚠️ ${invalidCount} apontamento(s) foram filtrados por não terem estrutura válida`
+      );
+    }
+
     return validApontamentos;
   } catch (error) {
     log.error('Erro ao extrair apontamentos:', error);

@@ -74,14 +74,24 @@ const AnaliseVistoria = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { correctText, extractApontamentos, isLoading: isAILoading } = useOpenAI();
+  const {
+    correctText,
+    extractApontamentos,
+    isLoading: isAILoading,
+  } = useOpenAI();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
   const { prestadores } = usePrestadores();
 
   const [apontamentos, setApontamentos] = useState<ApontamentoVistoria[]>([]);
   const [currentApontamento, setCurrentApontamento] = useState<
-    Partial<ApontamentoVistoria & { tipo?: BudgetItemType; valor?: number; quantidade?: number }>
+    Partial<
+      ApontamentoVistoria & {
+        tipo?: BudgetItemType;
+        valor?: number;
+        quantidade?: number;
+      }
+    >
   >({
     ambiente: '',
     subtitulo: '',
@@ -110,7 +120,9 @@ const AnaliseVistoria = () => {
   const [documentPreview, setDocumentPreview] = useState<string>('');
   const [savedAnaliseId, setSavedAnaliseId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [previewImageModal, setPreviewImageModal] = useState<string | null>(null);
+  const [previewImageModal, setPreviewImageModal] = useState<string | null>(
+    null
+  );
   const [editingAnaliseId, setEditingAnaliseId] = useState<string | null>(null);
   const [existingAnaliseId, setExistingAnaliseId] = useState<string | null>(
     null
@@ -118,7 +130,9 @@ const AnaliseVistoria = () => {
   const [hasExistingAnalise, setHasExistingAnalise] = useState(false);
   const [loadingExistingAnalise, setLoadingExistingAnalise] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>('analise');
+  const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>(
+    'analise'
+  );
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
   const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
@@ -126,7 +140,9 @@ const AnaliseVistoria = () => {
   const [extractionText, setExtractionText] = useState('');
   const [showExtractionPanel, setShowExtractionPanel] = useState(false);
   const [publicDocumentId, setPublicDocumentId] = useState<string | null>(null);
-  const [publicDocumentUrl, setPublicDocumentUrl] = useState<string | null>(null);
+  const [publicDocumentUrl, setPublicDocumentUrl] = useState<string | null>(
+    null
+  );
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -144,29 +160,36 @@ const AnaliseVistoria = () => {
         // Carregar public_document_id se existir
         if (analiseData.public_document_id) {
           setPublicDocumentId(analiseData.public_document_id);
-          setPublicDocumentUrl(`${window.location.origin}/documento-publico/${analiseData.public_document_id}`);
+          setPublicDocumentUrl(
+            `${window.location.origin}/documento-publico/${analiseData.public_document_id}`
+          );
         }
 
         // Carregar dados da vistoria
         if (analiseData.dados_vistoria) {
-          const dados = analiseData.dados_vistoria as DadosVistoria & Record<string, unknown>;
-          
+          const dados = analiseData.dados_vistoria as DadosVistoria &
+            Record<string, unknown>;
+
           const dadosCarregados = {
             locatario: (dados.locatario as string) || '',
             endereco: (dados.endereco as string) || '',
             dataVistoria: (dados.dataVistoria as string) || '',
           };
-          
+
           // Se os dados estiverem vazios, NÃO definir ainda - deixar o useEffect do contrato preencher
-          if (dadosCarregados.locatario || dadosCarregados.endereco || dadosCarregados.dataVistoria) {
+          if (
+            dadosCarregados.locatario ||
+            dadosCarregados.endereco ||
+            dadosCarregados.dataVistoria
+          ) {
             setDadosVistoria(dadosCarregados);
           }
-          
+
           // Carregar o modo do documento se existir
           if (dados.documentMode) {
             setDocumentMode(dados.documentMode as 'analise' | 'orcamento');
           }
-          
+
           // Carregar ID do prestador se existir
           if (dados.prestador) {
             const prestador = dados.prestador as Record<string, unknown>;
@@ -193,22 +216,28 @@ const AnaliseVistoria = () => {
               const apontamentoWithImages = { ...apontamento };
               if (hasDatabaseImages) {
                 // Carregar imagens do banco de dados
-                log.debug(`Processando apontamento: ${apontamento.ambiente} (ID: ${apontamento.id})`);
-                
+                log.debug(
+                  `Processando apontamento: ${apontamento.ambiente} (ID: ${apontamento.id})`
+                );
+
                 const apontamentoImages = analiseData.images.filter(
                   (img: Record<string, unknown>) =>
                     img.apontamento_id === apontamento.id
                 );
-                
-                log.debug(`  - Imagens encontradas para este apontamento: ${apontamentoImages.length}`);
-                
+
+                log.debug(
+                  `  - Imagens encontradas para este apontamento: ${apontamentoImages.length}`
+                );
+
                 const fotosInicial = apontamentoImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'inicial'
                   )
                   .map((img: Record<string, unknown>) => {
-                    log.debug(`    ✓ Foto Inicial: ${img.file_name} (${img.image_url})`);
+                    log.debug(
+                      `    ✓ Foto Inicial: ${img.file_name} (${img.image_url})`
+                    );
                     return {
                       name: img.file_name,
                       size: img.file_size,
@@ -217,14 +246,16 @@ const AnaliseVistoria = () => {
                       isFromDatabase: true,
                     };
                   });
-                  
+
                 const fotosFinal = apontamentoImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'final'
                   )
                   .map((img: Record<string, unknown>) => {
-                    log.debug(`    ✓ Foto Final: ${img.file_name} (${img.image_url})`);
+                    log.debug(
+                      `    ✓ Foto Final: ${img.file_name} (${img.image_url})`
+                    );
                     return {
                       name: img.file_name,
                       size: img.file_size,
@@ -233,10 +264,10 @@ const AnaliseVistoria = () => {
                       isFromDatabase: true,
                     };
                   });
-                  
+
                 log.debug(`  - Total fotos inicial: ${fotosInicial.length}`);
                 log.debug(`  - Total fotos final: ${fotosFinal.length}`);
-                
+
                 apontamentoWithImages.vistoriaInicial = {
                   ...apontamento.vistoriaInicial,
                   fotos: fotosInicial,
@@ -300,52 +331,64 @@ const AnaliseVistoria = () => {
           );
           if (contract) {
             setSelectedContract(contract);
-            
+
             // Se os dados da vistoria estiverem vazios, preencher com dados do contrato
-            const dados = analiseData.dados_vistoria as DadosVistoria & Record<string, unknown>;
+            const dados = analiseData.dados_vistoria as DadosVistoria &
+              Record<string, unknown>;
             if (!dados?.locatario || !dados?.endereco) {
               try {
-                const parsedTerms = (contract as any).terms ? JSON.parse((contract as any).terms) : {};
-                
+                const parsedTerms = (contract as any).terms
+                  ? JSON.parse((contract as any).terms)
+                  : {};
+
                 // Buscar dados do locatário
-                const locatario = parsedTerms.locatario || 
-                                 parsedTerms.nome_locatario || 
-                                 parsedTerms.nomeLocatario ||
-                                 parsedTerms.inquilino ||
-                                 parsedTerms.nome_inquilino ||
-                                 parsedTerms.nome ||
-                                 '';
-                
+                const locatario =
+                  parsedTerms.locatario ||
+                  parsedTerms.nome_locatario ||
+                  parsedTerms.nomeLocatario ||
+                  parsedTerms.inquilino ||
+                  parsedTerms.nome_inquilino ||
+                  parsedTerms.nome ||
+                  '';
+
                 // Buscar dados do endereço
-                const endereco = parsedTerms.endereco || 
-                                parsedTerms.endereco_imovel || 
-                                parsedTerms.enderecoImovel ||
-                                parsedTerms.endereco_completo ||
-                                parsedTerms.logradouro ||
-                                parsedTerms.rua ||
-                                '';
-                
+                const endereco =
+                  parsedTerms.endereco ||
+                  parsedTerms.endereco_imovel ||
+                  parsedTerms.enderecoImovel ||
+                  parsedTerms.endereco_completo ||
+                  parsedTerms.logradouro ||
+                  parsedTerms.rua ||
+                  '';
+
                 // Se ainda não tiver dados e o título do contrato tiver informações
                 let locatarioFinal = locatario;
                 let enderecoFinal = endereco;
-                
+
                 if (!locatarioFinal && contract.title) {
                   // Tentar extrair do título (ex: "Contrato - João Silva")
-                  const match = contract.title.match(/[-–]\s*(.+?)(?:\s*[-–]|$)/);
+                  const match = contract.title.match(
+                    /[-–]\s*(.+?)(?:\s*[-–]|$)/
+                  );
                   if (match) locatarioFinal = match[1].trim();
                 }
-                
+
                 // Preencher com dados do contrato
-                setDadosVistoria(prev => ({
-                  locatario: locatarioFinal || prev.locatario || 'Não informado',
+                setDadosVistoria((prev) => ({
+                  locatario:
+                    locatarioFinal || prev.locatario || 'Não informado',
                   endereco: enderecoFinal || prev.endereco || 'Não informado',
-                  dataVistoria: prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
+                  dataVistoria:
+                    prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
                 }));
-                
-                console.log('📋 Dados do contrato preenchidos ao carregar análise:', {
-                  locatario: locatarioFinal,
-                  endereco: enderecoFinal
-                });
+
+                console.log(
+                  '📋 Dados do contrato preenchidos ao carregar análise:',
+                  {
+                    locatario: locatarioFinal,
+                    endereco: enderecoFinal,
+                  }
+                );
               } catch (error) {
                 console.error('Erro ao processar dados do contrato:', error);
               }
@@ -442,7 +485,11 @@ const AnaliseVistoria = () => {
         description:
           'O estado da análise foi restaurado após a geração do documento.',
       });
-    } else if (state?.contractId && state?.contractData && contracts.length > 0) {
+    } else if (
+      state?.contractId &&
+      state?.contractData &&
+      contracts.length > 0
+    ) {
       // Preencher dados do contrato selecionado
       const contract = contracts.find((c) => c.id === state.contractId);
       if (contract) {
@@ -454,7 +501,8 @@ const AnaliseVistoria = () => {
         });
         toast({
           title: 'Contrato carregado',
-          description: 'Os dados do contrato foram preenchidos automaticamente.',
+          description:
+            'Os dados do contrato foram preenchidos automaticamente.',
         });
       }
     }
@@ -951,7 +999,8 @@ const AnaliseVistoria = () => {
       descricaoServico: currentApontamento.descricaoServico || '',
       vistoriaInicial: {
         fotos: currentApontamento.vistoriaInicial?.fotos || [],
-        descritivoLaudo: currentApontamento.vistoriaInicial?.descritivoLaudo || '',
+        descritivoLaudo:
+          currentApontamento.vistoriaInicial?.descritivoLaudo || '',
       },
       vistoriaFinal: { fotos: currentApontamento.vistoriaFinal?.fotos || [] },
       observacao: currentApontamento.observacao || '',
@@ -984,13 +1033,16 @@ const AnaliseVistoria = () => {
     });
   }, [currentApontamento, apontamentos, editingApontamento, toast]);
 
-  const handleRemoveApontamento = useCallback((id: string) => {
-    setApontamentos(apontamentos.filter((ap) => ap.id !== id));
-    toast({
-      title: 'Apontamento removido',
-      description: 'O apontamento foi removido com sucesso.',
-    });
-  }, [apontamentos, toast]);
+  const handleRemoveApontamento = useCallback(
+    (id: string) => {
+      setApontamentos(apontamentos.filter((ap) => ap.id !== id));
+      toast({
+        title: 'Apontamento removido',
+        description: 'O apontamento foi removido com sucesso.',
+      });
+    },
+    [apontamentos, toast]
+  );
 
   const _handleFileUpload = async (
     files: FileList | null,
@@ -999,7 +1051,7 @@ const AnaliseVistoria = () => {
     if (!files) return;
 
     const fileArray = Array.from(files);
-    
+
     // Validar imagens
     const validationResults = await validateImages(fileArray, {
       maxSize: 10 * 1024 * 1024, // 10MB
@@ -1013,10 +1065,10 @@ const AnaliseVistoria = () => {
     validationResults.forEach((result, file) => {
       if (result.valid) {
         validFiles.push(file);
-        
+
         // Mostrar avisos se houver
         if (result.warnings) {
-          result.warnings.forEach(warning => {
+          result.warnings.forEach((warning) => {
             toast({
               title: 'Aviso',
               description: `${file.name}: ${warning}`,
@@ -1058,34 +1110,41 @@ const AnaliseVistoria = () => {
   };
 
   // Função para remover uma foto específica da vistoria inicial
-  const handleRemoveFotoInicial = useCallback((index: number) => {
-    setCurrentApontamento((prev) => ({
-      ...prev,
-      vistoriaInicial: {
-        ...prev.vistoriaInicial,
-        fotos: prev.vistoriaInicial?.fotos?.filter((_, i) => i !== index) || [],
-      },
-    }));
-    toast({
-      title: 'Foto removida',
-      description: 'A foto foi removida da vistoria inicial.',
-    });
-  }, [toast]);
+  const handleRemoveFotoInicial = useCallback(
+    (index: number) => {
+      setCurrentApontamento((prev) => ({
+        ...prev,
+        vistoriaInicial: {
+          ...prev.vistoriaInicial,
+          fotos:
+            prev.vistoriaInicial?.fotos?.filter((_, i) => i !== index) || [],
+        },
+      }));
+      toast({
+        title: 'Foto removida',
+        description: 'A foto foi removida da vistoria inicial.',
+      });
+    },
+    [toast]
+  );
 
   // Função para remover uma foto específica da vistoria final
-  const handleRemoveFotoFinal = useCallback((index: number) => {
-    setCurrentApontamento((prev) => ({
-      ...prev,
-      vistoriaFinal: {
-        ...prev.vistoriaFinal,
-        fotos: prev.vistoriaFinal?.fotos?.filter((_, i) => i !== index) || [],
-      },
-    }));
-    toast({
-      title: 'Foto removida',
-      description: 'A foto foi removida da vistoria final.',
-    });
-  }, [toast]);
+  const handleRemoveFotoFinal = useCallback(
+    (index: number) => {
+      setCurrentApontamento((prev) => ({
+        ...prev,
+        vistoriaFinal: {
+          ...prev.vistoriaFinal,
+          fotos: prev.vistoriaFinal?.fotos?.filter((_, i) => i !== index) || [],
+        },
+      }));
+      toast({
+        title: 'Foto removida',
+        description: 'A foto foi removida da vistoria final.',
+      });
+    },
+    [toast]
+  );
 
   // Função para lidar com Ctrl+V (colar imagens)
   const handlePaste = (event: ClipboardEvent, tipo: 'inicial' | 'final') => {
@@ -1140,111 +1199,134 @@ const AnaliseVistoria = () => {
   };
 
   // Salvar análise no Supabase (silencioso = sem toast de sucesso)
-  const saveAnalysis = useCallback(async (silencioso = false) => {
-    if (apontamentos.length === 0) {
-      if (!silencioso) {
-        toast({
-          title: 'Nenhum apontamento',
-          description: 'Adicione pelo menos um apontamento antes de salvar.',
-          variant: 'destructive',
-        });
+  const saveAnalysis = useCallback(
+    async (silencioso = false) => {
+      if (apontamentos.length === 0) {
+        if (!silencioso) {
+          toast({
+            title: 'Nenhum apontamento',
+            description: 'Adicione pelo menos um apontamento antes de salvar.',
+            variant: 'destructive',
+          });
+        }
+        return;
       }
-      return;
-    }
 
-    if (!selectedContract) {
-      if (!silencioso) {
-        toast({
-          title: 'Contrato não selecionado',
-          description: 'Selecione um contrato antes de salvar.',
-          variant: 'destructive',
-        });
+      if (!selectedContract) {
+        if (!silencioso) {
+          toast({
+            title: 'Contrato não selecionado',
+            description: 'Selecione um contrato antes de salvar.',
+            variant: 'destructive',
+          });
+        }
+        return;
       }
-      return;
-    }
 
-    setSaving(true);
-    try {
-      const title = `Análise de Vistoria - ${dadosVistoria.locatario} - ${new Date().toLocaleDateString('pt-BR')}`;
+      setSaving(true);
+      try {
+        const title = `Análise de Vistoria - ${dadosVistoria.locatario} - ${new Date().toLocaleDateString('pt-BR')}`;
 
-      let analiseId: string | null = null;
+        let analiseId: string | null = null;
 
-      if (isEditMode && editingAnaliseId) {
-        // Modo de edição - atualizar análise existente
-        const success = await updateAnalise(editingAnaliseId, {
-          title,
-          contract_id: selectedContract.id,
-          dados_vistoria: {
-            ...dadosVistoria,
-            documentMode, // Salvar o modo do documento
-            prestador: documentMode === 'orcamento' && selectedPrestadorId ? prestadores.find(p => p.id === selectedPrestadorId) : undefined, // Salvar dados do prestador
-          },
-          apontamentos: apontamentos,
-        });
+        if (isEditMode && editingAnaliseId) {
+          // Modo de edição - atualizar análise existente
+          const success = await updateAnalise(editingAnaliseId, {
+            title,
+            contract_id: selectedContract.id,
+            dados_vistoria: {
+              ...dadosVistoria,
+              documentMode, // Salvar o modo do documento
+              prestador:
+                documentMode === 'orcamento' && selectedPrestadorId
+                  ? prestadores.find((p) => p.id === selectedPrestadorId)
+                  : undefined, // Salvar dados do prestador
+            },
+            apontamentos: apontamentos,
+          });
 
-        if (success) {
-          analiseId = editingAnaliseId;
-          if (!silencioso) {
-            toast({
-              title: 'Análise atualizada',
-              description: 'A análise foi atualizada com sucesso.',
-            });
+          if (success) {
+            analiseId = editingAnaliseId;
+            if (!silencioso) {
+              toast({
+                title: 'Análise atualizada',
+                description: 'A análise foi atualizada com sucesso.',
+              });
+            }
+          }
+        } else {
+          // Modo de criação - salvar nova análise
+          analiseId = await saveAnalise({
+            title,
+            contract_id: selectedContract.id,
+            dados_vistoria: {
+              ...dadosVistoria,
+              documentMode, // Salvar o modo do documento
+              prestador:
+                documentMode === 'orcamento' && selectedPrestadorId
+                  ? prestadores.find((p) => p.id === selectedPrestadorId)
+                  : undefined, // Salvar dados do prestador
+            },
+            apontamentos: apontamentos,
+          });
+
+          if (analiseId) {
+            // Após criar pela primeira vez, entrar em modo de edição
+            setIsEditMode(true);
+            setEditingAnaliseId(analiseId);
+
+            if (!silencioso) {
+              toast({
+                title: 'Análise salva',
+                description:
+                  'A análise foi salva no banco de dados com sucesso.',
+              });
+            }
           }
         }
-      } else {
-        // Modo de criação - salvar nova análise
-        analiseId = await saveAnalise({
-          title,
-          contract_id: selectedContract.id,
-          dados_vistoria: {
-            ...dadosVistoria,
-            documentMode, // Salvar o modo do documento
-            prestador: documentMode === 'orcamento' && selectedPrestadorId ? prestadores.find(p => p.id === selectedPrestadorId) : undefined, // Salvar dados do prestador
-          },
-          apontamentos: apontamentos,
-        });
 
         if (analiseId) {
-          // Após criar pela primeira vez, entrar em modo de edição
-          setIsEditMode(true);
-          setEditingAnaliseId(analiseId);
-          
-          if (!silencioso) {
-            toast({
-              title: 'Análise salva',
-              description: 'A análise foi salva no banco de dados com sucesso.',
-            });
-          }
+          setSavedAnaliseId(analiseId);
         }
+      } catch {
+        // console.error('Erro ao salvar análise:', error);
+        if (!silencioso) {
+          toast({
+            title: 'Erro ao salvar',
+            description: 'Não foi possível salvar a análise.',
+            variant: 'destructive',
+          });
+        }
+      } finally {
+        setSaving(false);
       }
-
-      if (analiseId) {
-        setSavedAnaliseId(analiseId);
-      }
-    } catch {
-      // console.error('Erro ao salvar análise:', error);
-      if (!silencioso) {
-        toast({
-          title: 'Erro ao salvar',
-          description: 'Não foi possível salvar a análise.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setSaving(false);
-    }
-  }, [apontamentos, selectedContract, dadosVistoria, documentMode, selectedPrestadorId, prestadores, isEditMode, editingAnaliseId, updateAnalise, saveAnalise, toast]);
+    },
+    [
+      apontamentos,
+      selectedContract,
+      dadosVistoria,
+      documentMode,
+      selectedPrestadorId,
+      prestadores,
+      isEditMode,
+      editingAnaliseId,
+      updateAnalise,
+      saveAnalise,
+      toast,
+    ]
+  );
 
   // Auto-salvar quando os apontamentos mudarem (com debounce)
-  const [lastSavedApontamentos, setLastSavedApontamentos] = useState<string>('');
-  
+  const [lastSavedApontamentos, setLastSavedApontamentos] =
+    useState<string>('');
+
   useEffect(() => {
     if (apontamentos.length === 0 || !selectedContract) return;
-    
+
     // Verificar se houve mudança real nos apontamentos
     const currentApontamentosString = JSON.stringify(apontamentos);
     if (currentApontamentosString === lastSavedApontamentos) return;
-    
+
     const timeoutId = setTimeout(async () => {
       await saveAnalysis(true); // true = silencioso (sem toast)
       setLastSavedApontamentos(currentApontamentosString);
@@ -1257,7 +1339,10 @@ const AnaliseVistoria = () => {
   useEffect(() => {
     const handleImageClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'IMG' && target.closest('.document-preview-container')) {
+      if (
+        target.tagName === 'IMG' &&
+        target.closest('.document-preview-container')
+      ) {
         const imgSrc = (target as HTMLImageElement).src;
         setPreviewImageModal(imgSrc);
       }
@@ -1277,9 +1362,10 @@ const AnaliseVistoria = () => {
         endereco: dadosVistoria.endereco,
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
-        prestador: documentMode === 'orcamento' && selectedPrestadorId 
-          ? prestadores.find(p => p.id === selectedPrestadorId) 
-          : undefined,
+        prestador:
+          documentMode === 'orcamento' && selectedPrestadorId
+            ? prestadores.find((p) => p.id === selectedPrestadorId)
+            : undefined,
         apontamentos: apontamentos,
       });
 
@@ -1297,61 +1383,76 @@ const AnaliseVistoria = () => {
     } catch (error) {
       console.error('Erro ao atualizar documento público:', error);
     }
-  }, [publicDocumentId, dadosVistoria, documentMode, selectedPrestadorId, prestadores, apontamentos]);
+  }, [
+    publicDocumentId,
+    dadosVistoria,
+    documentMode,
+    selectedPrestadorId,
+    prestadores,
+    apontamentos,
+  ]);
 
   // Preencher dados da vistoria automaticamente do contrato SEMPRE
   useEffect(() => {
     if (selectedContract) {
       try {
-        const parsedTerms = (selectedContract as any).terms ? JSON.parse((selectedContract as any).terms) : {};
-        
+        const parsedTerms = (selectedContract as any).terms
+          ? JSON.parse((selectedContract as any).terms)
+          : {};
+
         // Buscar dados do locatário
-        const locatario = parsedTerms.locatario || 
-                         parsedTerms.nome_locatario || 
-                         parsedTerms.nomeLocatario ||
-                         parsedTerms.inquilino ||
-                         parsedTerms.nome_inquilino ||
-                         parsedTerms.nome ||
-                         '';
-        
+        const locatario =
+          parsedTerms.locatario ||
+          parsedTerms.nome_locatario ||
+          parsedTerms.nomeLocatario ||
+          parsedTerms.inquilino ||
+          parsedTerms.nome_inquilino ||
+          parsedTerms.nome ||
+          '';
+
         // Buscar dados do endereço
-        const endereco = parsedTerms.endereco || 
-                        parsedTerms.endereco_imovel || 
-                        parsedTerms.enderecoImovel ||
-                        parsedTerms.endereco_completo ||
-                        parsedTerms.logradouro ||
-                        parsedTerms.rua ||
-                        '';
-        
+        const endereco =
+          parsedTerms.endereco ||
+          parsedTerms.endereco_imovel ||
+          parsedTerms.enderecoImovel ||
+          parsedTerms.endereco_completo ||
+          parsedTerms.logradouro ||
+          parsedTerms.rua ||
+          '';
+
         // Se ainda não tiver dados e o título do contrato tiver informações
         let locatarioFinal = locatario;
         let enderecoFinal = endereco;
-        
+
         if (!locatarioFinal && selectedContract.title) {
           // Tentar extrair do título (ex: "Contrato - João Silva")
-          const match = selectedContract.title.match(/[-–]\s*(.+?)(?:\s*[-–]|$)/);
+          const match = selectedContract.title.match(
+            /[-–]\s*(.+?)(?:\s*[-–]|$)/
+          );
           if (match) locatarioFinal = match[1].trim();
         }
-        
+
         // Sempre atualizar se houver dados novos
-        setDadosVistoria(prev => ({
+        setDadosVistoria((prev) => ({
           locatario: locatarioFinal || prev.locatario || 'Não informado',
           endereco: enderecoFinal || prev.endereco || 'Não informado',
-          dataVistoria: prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
+          dataVistoria:
+            prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
         }));
-        
+
         console.log('📋 Dados do contrato carregados:', {
           locatario: locatarioFinal,
           endereco: enderecoFinal,
-          termos: parsedTerms
+          termos: parsedTerms,
         });
       } catch (error) {
         console.error('Erro ao processar dados do contrato:', error);
         // Definir valores padrão em caso de erro
-        setDadosVistoria(prev => ({
+        setDadosVistoria((prev) => ({
           locatario: prev.locatario || 'Não informado',
           endereco: prev.endereco || 'Não informado',
-          dataVistoria: prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
+          dataVistoria:
+            prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
         }));
       }
     }
@@ -1366,14 +1467,22 @@ const AnaliseVistoria = () => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [apontamentos, dadosVistoria, documentMode, selectedPrestadorId, publicDocumentId, updatePublicDocument]);
+  }, [
+    apontamentos,
+    dadosVistoria,
+    documentMode,
+    selectedPrestadorId,
+    publicDocumentId,
+    updatePublicDocument,
+  ]);
 
   // Gerar ou visualizar link público
   const openViewerMode = async () => {
     if (apontamentos.length === 0) {
       toast({
         title: 'Nenhum apontamento',
-        description: 'Adicione pelo menos um apontamento antes de gerar o link.',
+        description:
+          'Adicione pelo menos um apontamento antes de gerar o link.',
         variant: 'destructive',
       });
       return;
@@ -1418,7 +1527,9 @@ const AnaliseVistoria = () => {
         // Toast de confirmação
         toast({
           title: copiado ? 'Link copiado! 📋' : 'Abrindo visualização...',
-          description: copiado ? 'O link foi copiado para a área de transferência.' : 'Documento aberto em nova aba.',
+          description: copiado
+            ? 'O link foi copiado para a área de transferência.'
+            : 'Documento aberto em nova aba.',
         });
       } catch (error) {
         console.error('Erro ao abrir visualização:', error);
@@ -1438,9 +1549,10 @@ const AnaliseVistoria = () => {
         endereco: dadosVistoria.endereco,
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
-        prestador: documentMode === 'orcamento' && selectedPrestadorId 
-          ? prestadores.find(p => p.id === selectedPrestadorId) 
-          : undefined,
+        prestador:
+          documentMode === 'orcamento' && selectedPrestadorId
+            ? prestadores.find((p) => p.id === selectedPrestadorId)
+            : undefined,
         apontamentos: apontamentos,
       });
 
@@ -1461,7 +1573,7 @@ const AnaliseVistoria = () => {
       }
 
       const publicUrl = `${window.location.origin}/documento-publico/${data.id}`;
-      
+
       // Salvar ID e URL no estado
       setPublicDocumentId(data.id);
       setPublicDocumentUrl(publicUrl);
@@ -1500,7 +1612,9 @@ const AnaliseVistoria = () => {
 
       toast({
         title: 'Link gerado com sucesso! 🎉',
-        description: copiado ? 'Link copiado para a área de transferência.' : 'Documento aberto em nova aba.',
+        description: copiado
+          ? 'Link copiado para a área de transferência.'
+          : 'Documento aberto em nova aba.',
       });
     } catch (error) {
       console.error('Erro ao gerar link público:', error);
@@ -1592,7 +1706,10 @@ const AnaliseVistoria = () => {
         endereco: dadosVistoria.endereco,
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
-        prestador: documentMode === 'orcamento' && selectedPrestadorId ? prestadores.find(p => p.id === selectedPrestadorId) : undefined,
+        prestador:
+          documentMode === 'orcamento' && selectedPrestadorId
+            ? prestadores.find((p) => p.id === selectedPrestadorId)
+            : undefined,
         apontamentos: apontamentosComFotos,
       });
 
@@ -1602,7 +1719,10 @@ const AnaliseVistoria = () => {
           title: `${documentMode === 'orcamento' ? 'Orçamento de Reparos' : 'Análise Comparativa de Vistoria'} - ${dadosVistoria.locatario}`,
           template: template,
           formData: selectedContract.form_data,
-          documentType: documentMode === 'orcamento' ? 'Orçamento de Reparos' : 'Análise de Vistoria',
+          documentType:
+            documentMode === 'orcamento'
+              ? 'Orçamento de Reparos'
+              : 'Análise de Vistoria',
           // Preservar estado da análise para retorno
           preserveAnalysisState: {
             apontamentos,
@@ -1651,29 +1771,32 @@ const AnaliseVistoria = () => {
     });
   };
 
-  const handleEditApontamento = useCallback((apontamento: ApontamentoVistoria) => {
-    setEditingApontamento(apontamento.id);
-    setCurrentApontamento({
-      ambiente: apontamento.ambiente,
-      subtitulo: apontamento.subtitulo,
-      descricao: apontamento.descricao,
-      descricaoServico: apontamento.descricaoServico || '',
-      vistoriaInicial: {
-        fotos: apontamento.vistoriaInicial.fotos,
-        descritivoLaudo: apontamento.vistoriaInicial.descritivoLaudo || '',
-      },
-      vistoriaFinal: { fotos: apontamento.vistoriaFinal.fotos },
-      observacao: apontamento.observacao,
-      // Carregar valores de orçamento se existirem
-      tipo: apontamento.tipo || 'material',
-      valor: apontamento.valor || 0,
-      quantidade: apontamento.quantidade || 0,
-    });
-    toast({
-      title: 'Editando apontamento',
-      description: 'Modifique os dados e clique em "Salvar Alterações".',
-    });
-  }, [toast]);
+  const handleEditApontamento = useCallback(
+    (apontamento: ApontamentoVistoria) => {
+      setEditingApontamento(apontamento.id);
+      setCurrentApontamento({
+        ambiente: apontamento.ambiente,
+        subtitulo: apontamento.subtitulo,
+        descricao: apontamento.descricao,
+        descricaoServico: apontamento.descricaoServico || '',
+        vistoriaInicial: {
+          fotos: apontamento.vistoriaInicial.fotos,
+          descritivoLaudo: apontamento.vistoriaInicial.descritivoLaudo || '',
+        },
+        vistoriaFinal: { fotos: apontamento.vistoriaFinal.fotos },
+        observacao: apontamento.observacao,
+        // Carregar valores de orçamento se existirem
+        tipo: apontamento.tipo || 'material',
+        valor: apontamento.valor || 0,
+        quantidade: apontamento.quantidade || 0,
+      });
+      toast({
+        title: 'Editando apontamento',
+        description: 'Modifique os dados e clique em "Salvar Alterações".',
+      });
+    },
+    [toast]
+  );
 
   const handleSaveEdit = useCallback(() => {
     if (!editingApontamento) return;
@@ -1776,10 +1899,20 @@ const AnaliseVistoria = () => {
     if (!extractionText.trim()) {
       toast({
         title: 'Texto vazio',
-        description: 'Digite ou cole o texto da vistoria para extrair os apontamentos.',
+        description:
+          'Digite ou cole o texto da vistoria para extrair os apontamentos.',
         variant: 'destructive',
       });
       return;
+    }
+
+    // Avisar se o texto for muito grande
+    const textLength = extractionText.length;
+    if (textLength > 10000) {
+      toast({
+        title: 'Texto extenso detectado',
+        description: `O texto possui ${textLength} caracteres. O processamento pode levar alguns segundos...`,
+      });
     }
 
     try {
@@ -1793,7 +1926,8 @@ const AnaliseVistoria = () => {
       if (extractedApontamentos.length === 0) {
         toast({
           title: 'Nenhum apontamento encontrado',
-          description: 'Não foi possível extrair apontamentos do texto fornecido. Verifique o formato.',
+          description:
+            'Não foi possível extrair apontamentos do texto fornecido. Verifique o formato.',
           variant: 'destructive',
         });
         return;
@@ -1801,7 +1935,10 @@ const AnaliseVistoria = () => {
 
       // Converter apontamentos extraídos para o formato correto
       const newApontamentos = extractedApontamentos.map((item, index) => ({
-        id: Date.now().toString() + index.toString() + Math.random().toString(36).substr(2, 9),
+        id:
+          Date.now().toString() +
+          index.toString() +
+          Math.random().toString(36).substr(2, 9),
         ambiente: item.ambiente,
         subtitulo: item.subtitulo,
         descricao: item.descricao,
@@ -1819,9 +1956,14 @@ const AnaliseVistoria = () => {
       // Adicionar aos apontamentos existentes
       setApontamentos((prev) => [...prev, ...newApontamentos]);
 
+      // Contar ambientes processados
+      const ambientesUnicos = new Set(
+        extractedApontamentos.map((a) => a.ambiente)
+      );
+
       toast({
         title: 'Apontamentos criados! 🎉',
-        description: `${extractedApontamentos.length} apontamento(s) foram criados automaticamente.`,
+        description: `${extractedApontamentos.length} apontamento(s) em ${ambientesUnicos.size} ambiente(s) foram criados automaticamente.`,
       });
 
       // Limpar o texto e fechar o painel
@@ -1829,11 +1971,12 @@ const AnaliseVistoria = () => {
       setShowExtractionPanel(false);
     } catch (error) {
       log.error('Erro ao extrair apontamentos:', error);
-      
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Não foi possível extrair os apontamentos. Tente novamente.';
-      
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível extrair os apontamentos. Tente novamente.';
+
       toast({
         title: 'Erro ao processar',
         description: errorMessage,
@@ -1844,7 +1987,6 @@ const AnaliseVistoria = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      
       {/* Header Minimalista */}
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-8 py-6">
@@ -1855,74 +1997,81 @@ const AnaliseVistoria = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-semibold text-neutral-900">
-                {isEditMode
-                  ? 'Editar Análise de Vistoria'
-                  : 'Análise de Vistoria'}
-              </h1>
+                  {isEditMode
+                    ? 'Editar Análise de Vistoria'
+                    : 'Análise de Vistoria'}
+                </h1>
                 <p className="text-sm text-neutral-500 mt-1">
                   Sistema de análise comparativa de vistoria de saída
                 </p>
-              <Badge variant="outline" className="text-sm border-neutral-200 text-neutral-900">
-                {apontamentos.length} apontamento
-                {apontamentos.length !== 1 ? 's' : ''}
-              </Badge>
-              {savedAnaliseId && (
                 <Badge
-                  variant="default"
-                  className="text-sm bg-neutral-600 hover:bg-neutral-700"
+                  variant="outline"
+                  className="text-sm border-neutral-200 text-neutral-900"
                 >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Salva
+                  {apontamentos.length} apontamento
+                  {apontamentos.length !== 1 ? 's' : ''}
                 </Badge>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {apontamentos.length > 0 && (
-              <ActionButton
-                icon={Trash2}
-                label="Limpar Tudo"
-                variant="danger"
-                size="sm"
-                onClick={clearAllData}
-              />
-            )}
-            <ActionButton
-              icon={Save}
-              label={
-                saving
-                  ? 'Salvando...'
-                  : isEditMode
-                    ? 'Atualizar Análise'
-                    : hasExistingAnalise
-                      ? 'Atualizar Análise Existente'
-                      : 'Salvar Análise'
-              }
-              variant="secondary"
-              size="md"
-              loading={saving}
-              disabled={apontamentos.length === 0 || !selectedContract}
-              onClick={saveAnalysis}
-            />
-            <ActionButton
-              icon={Eye}
-              label={publicDocumentId ? "Visualizar Exibição" : "Gerar Link de Exibição"}
-              variant="secondary"
-              size="md"
-              disabled={apontamentos.length === 0 || !selectedContract}
-              onClick={openViewerMode}
-            />
-            <ActionButton
-              icon={FileText}
-              label="Gerar Documento"
-              variant="primary"
-              size="md"
-              disabled={apontamentos.length === 0 || !selectedContract}
-              onClick={generateDocument}
-            />
+                {savedAnaliseId && (
+                  <Badge
+                    variant="default"
+                    className="text-sm bg-neutral-600 hover:bg-neutral-700"
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Salva
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                {apontamentos.length > 0 && (
+                  <ActionButton
+                    icon={Trash2}
+                    label="Limpar Tudo"
+                    variant="danger"
+                    size="sm"
+                    onClick={clearAllData}
+                  />
+                )}
+                <ActionButton
+                  icon={Save}
+                  label={
+                    saving
+                      ? 'Salvando...'
+                      : isEditMode
+                        ? 'Atualizar Análise'
+                        : hasExistingAnalise
+                          ? 'Atualizar Análise Existente'
+                          : 'Salvar Análise'
+                  }
+                  variant="secondary"
+                  size="md"
+                  loading={saving}
+                  disabled={apontamentos.length === 0 || !selectedContract}
+                  onClick={saveAnalysis}
+                />
+                <ActionButton
+                  icon={Eye}
+                  label={
+                    publicDocumentId
+                      ? 'Visualizar Exibição'
+                      : 'Gerar Link de Exibição'
+                  }
+                  variant="secondary"
+                  size="md"
+                  disabled={apontamentos.length === 0 || !selectedContract}
+                  onClick={openViewerMode}
+                />
+                <ActionButton
+                  icon={FileText}
+                  label="Gerar Documento"
+                  variant="primary"
+                  size="md"
+                  disabled={apontamentos.length === 0 || !selectedContract}
+                  onClick={generateDocument}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
         {/* Validação de Contrato Carregado */}
         {!selectedContract && (
@@ -1931,7 +2080,8 @@ const AnaliseVistoria = () => {
               <div className="flex items-center gap-3 text-neutral-900">
                 <AlertTriangle className="h-5 w-5" />
                 <p className="font-medium">
-                  Nenhum contrato carregado. Selecione um contrato na página de Contratos para criar uma análise.
+                  Nenhum contrato carregado. Selecione um contrato na página de
+                  Contratos para criar uma análise.
                 </p>
               </div>
             </CardContent>
@@ -1941,7 +2091,7 @@ const AnaliseVistoria = () => {
         {/* Informações do Contrato Selecionado */}
         {selectedContract && (
           <Card className="mb-6 bg-white border-neutral-200">
-            <CardHeader 
+            <CardHeader
               className="pb-4 border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
               onClick={() => setIsContractInfoExpanded(!isContractInfoExpanded)}
             >
@@ -1958,16 +2108,16 @@ const AnaliseVistoria = () => {
               </CardTitle>
             </CardHeader>
             {isContractInfoExpanded && (
-            <CardContent>
-              <div className="space-y-4">
-                <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-neutral-600" />
-                      <h3 className="font-semibold text-neutral-900">
-                        Informações do Contrato
-                      </h3>
-                    </div>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-5 w-5 text-neutral-600" />
+                        <h3 className="font-semibold text-neutral-900">
+                          Informações do Contrato
+                        </h3>
+                      </div>
                       {loadingExistingAnalise && (
                         <Badge
                           variant="default"
@@ -2059,7 +2209,7 @@ const AnaliseVistoria = () => {
                     )}
                   </div>
                 </div>
-            </CardContent>
+              </CardContent>
             )}
           </Card>
         )}
@@ -2075,14 +2225,20 @@ const AnaliseVistoria = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="prestador-select" className="text-sm font-medium text-neutral-900">
+                <Label
+                  htmlFor="prestador-select"
+                  className="text-sm font-medium text-neutral-900"
+                >
                   Prestador de Serviço *
                 </Label>
                 <Select
                   value={selectedPrestadorId}
                   onValueChange={setSelectedPrestadorId}
                 >
-                  <SelectTrigger id="prestador-select" className="bg-white border-neutral-300 text-neutral-900 focus:border-primary-500">
+                  <SelectTrigger
+                    id="prestador-select"
+                    className="bg-white border-neutral-300 text-neutral-900 focus:border-primary-500"
+                  >
                     <SelectValue placeholder="Selecione um prestador" />
                   </SelectTrigger>
                   <SelectContent>
@@ -2095,7 +2251,9 @@ const AnaliseVistoria = () => {
                       prestadores.map((prestador) => (
                         <SelectItem key={prestador.id} value={prestador.id}>
                           <div className="flex flex-col">
-                            <span className="font-medium">{prestador.nome}</span>
+                            <span className="font-medium">
+                              {prestador.nome}
+                            </span>
                             {prestador.especialidade && (
                               <span className="text-xs text-neutral-500">
                                 {prestador.especialidade}
@@ -2110,31 +2268,42 @@ const AnaliseVistoria = () => {
               </div>
 
               {/* Informações do Prestador Selecionado */}
-              {selectedPrestadorId && prestadores.find(p => p.id === selectedPrestadorId) && (
-                <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
-                  {(() => {
-                    const prestador = prestadores.find(p => p.id === selectedPrestadorId);
-                    if (!prestador) return null;
-                    return (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-neutral-600" />
-                          <span className="text-sm font-semibold">{prestador.nome}</span>
-                        </div>
-                        {prestador.cnpj && (
-                          <p className="text-xs text-neutral-500">CNPJ: {prestador.cnpj}</p>
-                        )}
-                        {prestador.telefone && (
-                          <p className="text-xs text-neutral-500">Tel: {prestador.telefone}</p>
-                        )}
-                        {prestador.email && (
-                          <p className="text-xs text-neutral-500">Email: {prestador.email}</p>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
+              {selectedPrestadorId &&
+                prestadores.find((p) => p.id === selectedPrestadorId) && (
+                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
+                    {(() => {
+                      const prestador = prestadores.find(
+                        (p) => p.id === selectedPrestadorId
+                      );
+                      if (!prestador) return null;
+                      return (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-neutral-600" />
+                            <span className="text-sm font-semibold">
+                              {prestador.nome}
+                            </span>
+                          </div>
+                          {prestador.cnpj && (
+                            <p className="text-xs text-neutral-500">
+                              CNPJ: {prestador.cnpj}
+                            </p>
+                          )}
+                          {prestador.telefone && (
+                            <p className="text-xs text-neutral-500">
+                              Tel: {prestador.telefone}
+                            </p>
+                          )}
+                          {prestador.email && (
+                            <p className="text-xs text-neutral-500">
+                              Email: {prestador.email}
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
 
               <ActionButton
                 icon={Plus}
@@ -2157,7 +2326,12 @@ const AnaliseVistoria = () => {
                   <Plus className="h-5 w-5 text-neutral-600" />
                   <span>Novo Apontamento</span>
                 </div>
-                <Select value={documentMode} onValueChange={(value: 'analise' | 'orcamento') => setDocumentMode(value)}>
+                <Select
+                  value={documentMode}
+                  onValueChange={(value: 'analise' | 'orcamento') =>
+                    setDocumentMode(value)
+                  }
+                >
                   <SelectTrigger className="w-32 bg-white border-neutral-300 text-neutral-900">
                     <SelectValue />
                   </SelectTrigger>
@@ -2178,7 +2352,9 @@ const AnaliseVistoria = () => {
                   onClick={() => setShowExtractionPanel(!showExtractionPanel)}
                 >
                   <Wand2 className="h-4 w-4 mr-2" />
-                  {showExtractionPanel ? 'Ocultar' : 'Criar Apontamentos com IA'}
+                  {showExtractionPanel
+                    ? 'Ocultar'
+                    : 'Criar Apontamentos com IA'}
                 </Button>
 
                 {showExtractionPanel && (
@@ -2190,10 +2366,14 @@ const AnaliseVistoria = () => {
                           Extração Automática de Apontamentos
                         </h4>
                         <p className="text-xs text-neutral-600 mb-3">
-                          Cole o texto da vistoria abaixo. A IA irá identificar automaticamente cada ambiente, subtítulo e descrição.
+                          Cole o texto completo da vistoria abaixo. A IA
+                          processará <strong>TODO o texto integralmente</strong>{' '}
+                          e identificará automaticamente cada ambiente,
+                          subtítulo e descrição - sem omitir nenhuma informação.
                         </p>
                         <Textarea
-                          placeholder={`Exemplo de formato:
+                          placeholder={`Exemplo de formato (cole quantos apontamentos precisar):
+
 SALA
 Pintar as paredes
 estão excessivamente sujas
@@ -2204,7 +2384,10 @@ os encostos não estão travando
 COZINHA
 Limpar a Air fryer
 está suja
----------`}
+---------
+
+✓ Pode colar textos longos
+✓ Todos os apontamentos serão processados`}
                           value={extractionText}
                           onChange={(e) => setExtractionText(e.target.value)}
                           rows={10}
@@ -2303,11 +2486,19 @@ está suja
                   className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                 >
                   <FileText className="h-4 w-4 text-neutral-600" />
-                  <span>{documentMode === 'orcamento' ? 'Descrição do Vistoriador *' : 'Descrição *'}</span>
+                  <span>
+                    {documentMode === 'orcamento'
+                      ? 'Descrição do Vistoriador *'
+                      : 'Descrição *'}
+                  </span>
                 </Label>
                 <Textarea
                   id="descricao"
-                  placeholder={documentMode === 'orcamento' ? 'Apontamento realizado pelo vistoriador...' : 'Ex: Está com lascado nas portas'}
+                  placeholder={
+                    documentMode === 'orcamento'
+                      ? 'Apontamento realizado pelo vistoriador...'
+                      : 'Ex: Está com lascado nas portas'
+                  }
                   value={currentApontamento.descricao || ''}
                   onChange={(e) =>
                     setCurrentApontamento((prev) => ({
@@ -2350,14 +2541,19 @@ está suja
               {documentMode === 'orcamento' && (
                 <>
                   <Separator className="bg-neutral-200" />
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-neutral-900">Tipo</Label>
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Tipo
+                      </Label>
                       <Select
                         value={currentApontamento.tipo || 'material'}
                         onValueChange={(value: BudgetItemType) =>
-                          setCurrentApontamento(prev => ({ ...prev, tipo: value }))
+                          setCurrentApontamento((prev) => ({
+                            ...prev,
+                            tipo: value,
+                          }))
                         }
                       >
                         <SelectTrigger className="h-8 bg-white border-neutral-300 text-neutral-900">
@@ -2388,13 +2584,18 @@ está suja
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-neutral-900">Valor Unit.</Label>
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Valor Unit.
+                      </Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={currentApontamento.valor || ''}
                         onChange={(e) =>
-                          setCurrentApontamento(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))
+                          setCurrentApontamento((prev) => ({
+                            ...prev,
+                            valor: parseFloat(e.target.value) || 0,
+                          }))
                         }
                         className="h-8 text-sm bg-white border-neutral-300"
                         placeholder="0,00"
@@ -2402,13 +2603,18 @@ está suja
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-neutral-900">Quantidade</Label>
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Quantidade
+                      </Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={currentApontamento.quantidade || ''}
                         onChange={(e) =>
-                          setCurrentApontamento(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))
+                          setCurrentApontamento((prev) => ({
+                            ...prev,
+                            quantidade: parseFloat(e.target.value) || 0,
+                          }))
                         }
                         className="h-8 text-sm bg-white border-neutral-300"
                         placeholder="0"
@@ -2416,11 +2622,18 @@ está suja
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-neutral-900">Subtotal</Label>
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Subtotal
+                      </Label>
                       <div className="flex items-center space-x-1 h-8 px-2 bg-white rounded border border-neutral-300 text-sm font-medium text-neutral-900">
                         <span>
-                          {((currentApontamento.valor || 0) * (currentApontamento.quantidade || 0))
-                            .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          {(
+                            (currentApontamento.valor || 0) *
+                            (currentApontamento.quantidade || 0)
+                          ).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          })}
                         </span>
                       </div>
                     </div>
@@ -2691,7 +2904,10 @@ está suja
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs border-neutral-200 text-neutral-900">
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-neutral-200 text-neutral-900"
+                      >
                         {apontamentos.length} apontamento
                         {apontamentos.length !== 1 ? 's' : ''}
                       </Badge>
@@ -2710,7 +2926,7 @@ está suja
                       dangerouslySetInnerHTML={{ __html: documentPreview }}
                     />
                   </div>
-                  
+
                   {/* CSS para zoom nas imagens da pré-visualização */}
                   <style>{`
                     .document-preview-container img {
@@ -2757,21 +2973,36 @@ está suja
                                   {apontamento.descricao}
                                 </p>
                                 {/* Exibir valores de orçamento se existirem */}
-                                {documentMode === 'orcamento' && apontamento.valor !== undefined && apontamento.quantidade !== undefined && (
-                                  <div className="mt-2 flex items-center gap-2 text-xs">
-                                    <Badge variant="outline" className="text-xs">
-                                      {apontamento.tipo === 'material' ? 'Material' : 
-                                       apontamento.tipo === 'mao_de_obra' ? 'Mão de Obra' : 
-                                       'Material + M.O.'}
-                                    </Badge>
-                                    <span className="text-neutral-500">
-                                      {apontamento.quantidade}x R$ {(apontamento.valor || 0).toFixed(2)}
-                                    </span>
-                                    <span className="font-semibold text-neutral-600">
-                                      = {((apontamento.valor || 0) * (apontamento.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                    </span>
-                                  </div>
-                                )}
+                                {documentMode === 'orcamento' &&
+                                  apontamento.valor !== undefined &&
+                                  apontamento.quantidade !== undefined && (
+                                    <div className="mt-2 flex items-center gap-2 text-xs">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {apontamento.tipo === 'material'
+                                          ? 'Material'
+                                          : apontamento.tipo === 'mao_de_obra'
+                                            ? 'Mão de Obra'
+                                            : 'Material + M.O.'}
+                                      </Badge>
+                                      <span className="text-neutral-500">
+                                        {apontamento.quantidade}x R${' '}
+                                        {(apontamento.valor || 0).toFixed(2)}
+                                      </span>
+                                      <span className="font-semibold text-neutral-600">
+                                        ={' '}
+                                        {(
+                                          (apontamento.valor || 0) *
+                                          (apontamento.quantidade || 0)
+                                        ).toLocaleString('pt-BR', {
+                                          style: 'currency',
+                                          currency: 'BRL',
+                                        })}
+                                      </span>
+                                    </div>
+                                  )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-1">
