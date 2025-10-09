@@ -100,6 +100,7 @@ const AnaliseVistoria = () => {
     vistoriaInicial: { fotos: [], descritivoLaudo: '' },
     vistoriaFinal: { fotos: [] },
     observacao: '',
+    classificacao: undefined,
     tipo: 'material',
     valor: 0,
     quantidade: 0,
@@ -143,6 +144,8 @@ const AnaliseVistoria = () => {
   const [publicDocumentUrl, setPublicDocumentUrl] = useState<string | null>(
     null
   );
+  const [apontamentosSemClassificacao, setApontamentosSemClassificacao] =
+    useState(0);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -1004,6 +1007,7 @@ const AnaliseVistoria = () => {
       },
       vistoriaFinal: { fotos: currentApontamento.vistoriaFinal?.fotos || [] },
       observacao: currentApontamento.observacao || '',
+      classificacao: currentApontamento.classificacao, // Salvar classificação
       // Salvar valores de orçamento se estiver no modo orçamento
       ...(documentMode === 'orcamento' && {
         tipo: currentApontamento.tipo || 'material',
@@ -1022,6 +1026,7 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      classificacao: undefined,
       tipo: 'material',
       valor: 0,
       quantidade: 0,
@@ -1497,53 +1502,18 @@ const AnaliseVistoria = () => {
       return;
     }
 
-    // Se já existe um documento público, apenas copiar link e abrir
-    if (publicDocumentId && publicDocumentUrl) {
-      try {
-        // Copiar para clipboard
-        let copiado = false;
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(publicDocumentUrl);
-            copiado = true;
-          } else {
-            const textArea = document.createElement('textarea');
-            textArea.value = publicDocumentUrl;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            copiado = true;
-          }
-        } catch (clipboardError) {
-          console.warn('Erro ao copiar para clipboard:', clipboardError);
-        }
-
-        // Abrir em nova aba
-        window.open(publicDocumentUrl, '_blank', 'noopener,noreferrer');
-
-        // Toast de confirmação
-        toast({
-          title: copiado ? 'Link copiado! 📋' : 'Abrindo visualização...',
-          description: copiado
-            ? 'O link foi copiado para a área de transferência.'
-            : 'Documento aberto em nova aba.',
-        });
-      } catch (error) {
-        console.error('Erro ao abrir visualização:', error);
-      }
-      return;
-    }
-
-    // Gerar novo documento público (primeira vez)
+    // Sempre regenerar o documento com os dados mais recentes
     try {
       toast({
-        title: 'Gerando link público...',
-        description: 'Aguarde enquanto criamos o link de visualização.',
+        title: publicDocumentId
+          ? 'Atualizando visualização...'
+          : 'Gerando link público...',
+        description: publicDocumentId
+          ? 'Aguarde enquanto atualizamos o documento com as alterações mais recentes.'
+          : 'Aguarde enquanto criamos o link de visualização.',
       });
 
+      // Gerar template com dados atuais
       const template = await ANALISE_VISTORIA_TEMPLATE({
         locatario: dadosVistoria.locatario,
         endereco: dadosVistoria.endereco,
@@ -1556,34 +1526,59 @@ const AnaliseVistoria = () => {
         apontamentos: apontamentos,
       });
 
-      const { data, error } = await supabase
-        .from('public_documents')
-        .insert({
-          html_content: template,
-          title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
-          contract_id: selectedContract?.id || null,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
+      let docId: string;
+      let publicUrl: string;
 
-      if (error) {
-        console.error('Erro ao salvar documento:', error);
-        throw error;
-      }
+      // Se já existe documento público, atualizar; senão, criar novo
+      if (publicDocumentId) {
+        // Atualizar documento existente
+        const { error: updateError } = await supabase
+          .from('public_documents')
+          .update({
+            html_content: template,
+            title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
+          })
+          .eq('id', publicDocumentId);
 
-      const publicUrl = `${window.location.origin}/documento-publico/${data.id}`;
+        if (updateError) {
+          console.error('Erro ao atualizar documento:', updateError);
+          throw updateError;
+        }
 
-      // Salvar ID e URL no estado
-      setPublicDocumentId(data.id);
-      setPublicDocumentUrl(publicUrl);
+        docId = publicDocumentId;
+        publicUrl = publicDocumentUrl!;
+      } else {
+        // Criar novo documento
+        const { data, error } = await supabase
+          .from('public_documents')
+          .insert({
+            html_content: template,
+            title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
+            contract_id: selectedContract?.id || null,
+            created_by: user?.id,
+          })
+          .select()
+          .single();
 
-      // Atualizar vistoria_analises com o public_document_id
-      if (savedAnaliseId) {
-        await supabase
-          .from('vistoria_analises')
-          .update({ public_document_id: data.id })
-          .eq('id', savedAnaliseId);
+        if (error) {
+          console.error('Erro ao salvar documento:', error);
+          throw error;
+        }
+
+        docId = data.id;
+        publicUrl = `${window.location.origin}/documento-publico/${data.id}`;
+
+        // Salvar ID e URL no estado
+        setPublicDocumentId(docId);
+        setPublicDocumentUrl(publicUrl);
+
+        // Atualizar vistoria_analises com o public_document_id
+        if (savedAnaliseId) {
+          await supabase
+            .from('vistoria_analises')
+            .update({ public_document_id: docId })
+            .eq('id', savedAnaliseId);
+        }
       }
 
       // Copiar para clipboard
@@ -1611,16 +1606,18 @@ const AnaliseVistoria = () => {
       window.open(publicUrl, '_blank', 'noopener,noreferrer');
 
       toast({
-        title: 'Link gerado com sucesso! 🎉',
+        title: publicDocumentId
+          ? 'Visualização atualizada! ✅'
+          : 'Link gerado com sucesso! 🎉',
         description: copiado
           ? 'Link copiado para a área de transferência.'
           : 'Documento aberto em nova aba.',
       });
     } catch (error) {
-      console.error('Erro ao gerar link público:', error);
+      console.error('Erro ao processar documento público:', error);
       toast({
-        title: 'Erro ao gerar link',
-        description: 'Não foi possível gerar o link de visualização.',
+        title: 'Erro ao processar documento',
+        description: 'Não foi possível processar o documento de visualização.',
         variant: 'destructive',
       });
     }
@@ -1761,6 +1758,10 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      classificacao: undefined,
+      tipo: 'material',
+      valor: 0,
+      quantidade: 0,
     });
     setEditingApontamento(null);
     setSavedAnaliseId(null);
@@ -1785,6 +1786,7 @@ const AnaliseVistoria = () => {
         },
         vistoriaFinal: { fotos: apontamento.vistoriaFinal.fotos },
         observacao: apontamento.observacao,
+        classificacao: apontamento.classificacao,
         // Carregar valores de orçamento se existirem
         tipo: apontamento.tipo || 'material',
         valor: apontamento.valor || 0,
@@ -1818,6 +1820,7 @@ const AnaliseVistoria = () => {
               fotos: currentApontamento.vistoriaFinal?.fotos || [],
             },
             observacao: currentApontamento.observacao || '',
+            classificacao: currentApontamento.classificacao, // Salvar classificação
             // Preservar valores de orçamento se estiver no modo orçamento
             ...(documentMode === 'orcamento' && {
               tipo: currentApontamento.tipo || 'material',
@@ -1838,6 +1841,7 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      classificacao: undefined,
       tipo: 'material',
       valor: 0,
       quantidade: 0,
@@ -1859,6 +1863,7 @@ const AnaliseVistoria = () => {
       vistoriaInicial: { fotos: [], descritivoLaudo: '' },
       vistoriaFinal: { fotos: [] },
       observacao: '',
+      classificacao: undefined,
       tipo: 'material',
       valor: 0,
       quantidade: 0,
@@ -1894,6 +1899,48 @@ const AnaliseVistoria = () => {
       });
     }
   };
+
+  // Função para migrar/corrigir classificações de documentos antigos
+  const handleMigrarClassificacoes = useCallback(() => {
+    let apontamentosCorrigidos = 0;
+
+    const apontamentosAtualizados = apontamentos.map((apontamento) => {
+      // Se já tem classificação, não altera
+      if (apontamento.classificacao) {
+        return apontamento;
+      }
+
+      // TODOS os apontamentos sem classificação → Responsabilidade do Locatário
+      apontamentosCorrigidos++;
+      return {
+        ...apontamento,
+        classificacao: 'responsabilidade' as const,
+      };
+    });
+
+    setApontamentos(apontamentosAtualizados);
+
+    if (apontamentosCorrigidos > 0) {
+      toast({
+        title: 'Classificações atribuídas! ✅',
+        description: `${apontamentosCorrigidos} apontamento(s) ${apontamentosCorrigidos === 1 ? 'foi atribuído' : 'foram atribuídos'} como responsabilidade do locatário.`,
+      });
+    } else {
+      toast({
+        title: 'Nenhuma correção necessária',
+        description:
+          'Todos os apontamentos já estão classificados corretamente.',
+      });
+    }
+  }, [apontamentos, toast]);
+
+  // Detectar apontamentos sem classificação
+  useEffect(() => {
+    const semClassificacao = apontamentos.filter(
+      (ap) => !ap.classificacao
+    ).length;
+    setApontamentosSemClassificacao(semClassificacao);
+  }, [apontamentos]);
 
   const handleExtractApontamentos = async () => {
     if (!extractionText.trim()) {
@@ -1946,6 +1993,7 @@ const AnaliseVistoria = () => {
         vistoriaInicial: { fotos: [], descritivoLaudo: '' },
         vistoriaFinal: { fotos: [] },
         observacao: '',
+        classificacao: undefined,
         ...(documentMode === 'orcamento' && {
           tipo: 'material' as const,
           valor: 0,
@@ -2313,6 +2361,41 @@ const AnaliseVistoria = () => {
                 className="w-full"
                 onClick={() => navigate('/prestadores')}
               />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Banner de Alerta - Apontamentos Sem Classificação */}
+        {apontamentosSemClassificacao > 0 && documentMode === 'analise' && (
+          <Card className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300 shadow-md">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <AlertTriangle className="h-8 w-8 text-amber-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                      Apontamentos Sem Classificação Detectados
+                    </h4>
+                    <p className="text-xs text-amber-700">
+                      <strong>{apontamentosSemClassificacao}</strong>{' '}
+                      apontamento(s) não possuem classificação e{' '}
+                      <strong>não aparecerão no resumo visual</strong> do
+                      documento. Clique no botão ao lado para atribuir todos
+                      como responsabilidade do locatário.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleMigrarClassificacoes}
+                  className="bg-amber-600 hover:bg-amber-700 text-white shadow-md"
+                  size="sm"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Corrigir
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -2833,6 +2916,53 @@ está suja
                   className="text-sm bg-white border-neutral-300"
                 />
               </div>
+
+              {/* Classificação de Responsabilidade (apenas modo análise) */}
+              {documentMode === 'analise' && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="classificacao"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                  >
+                    <ClipboardList className="h-4 w-4 text-neutral-600" />
+                    <span>Classificação do Item *</span>
+                  </Label>
+                  <Select
+                    value={currentApontamento.classificacao}
+                    onValueChange={(value: 'responsabilidade' | 'revisao') =>
+                      setCurrentApontamento((prev) => ({
+                        ...prev,
+                        classificacao: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="bg-white border-neutral-300 text-neutral-900">
+                      <SelectValue placeholder="Selecione a classificação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="responsabilidade">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-neutral-700">■</span>
+                          <span>Responsabilidade do Locatário</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="revisao">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-yellow-700">■</span>
+                          <span>Passível de Revisão</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-neutral-500 italic">
+                    {currentApontamento.classificacao === 'responsabilidade'
+                      ? 'Este item será marcado como responsabilidade do locatário no documento'
+                      : currentApontamento.classificacao === 'revisao'
+                        ? 'Este item será marcado como passível de revisão no documento'
+                        : 'Escolha se este item é responsabilidade do locatário ou se necessita revisão'}
+                  </p>
+                </div>
+              )}
 
               <div className="flex space-x-2">
                 <Button

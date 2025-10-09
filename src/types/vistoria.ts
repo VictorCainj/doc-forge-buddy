@@ -1,10 +1,12 @@
-export type VistoriaFoto = File | {
-  name: string;
-  url: string;
-  isFromDatabase: boolean;
-  size: number;
-  type: string;
-};
+export type VistoriaFoto =
+  | File
+  | {
+      name: string;
+      url: string;
+      isFromDatabase: boolean;
+      size: number;
+      type: string;
+    };
 
 export interface ApontamentoVistoria {
   id: string;
@@ -20,6 +22,7 @@ export interface ApontamentoVistoria {
     fotos: VistoriaFoto[];
   };
   observacao: string;
+  classificacao?: 'responsabilidade' | 'revisao'; // Classificação manual
   tipo?: 'material' | 'servico';
   valor?: number;
   quantidade?: number;

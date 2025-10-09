@@ -28,6 +28,8 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       >;
     };
     observacao: string;
+    // Campo de classificação manual
+    classificacao?: 'responsabilidade' | 'revisao';
     // Campos de orçamento
     tipo?: 'material' | 'mao_de_obra' | 'ambos';
     valor?: number;
@@ -64,7 +66,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
           // Se é uma imagem do banco de dados
           if (foto.isFromDatabase && foto.url) {
-            console.log(`[${tipoVistoria}] Processando imagem do banco:`, foto.url);
+            console.log(
+              `[${tipoVistoria}] Processando imagem do banco:`,
+              foto.url
+            );
             try {
               // Tentar converter URL para base64 HD
               const base64HD = await urlToBase64HD(foto.url, {
@@ -73,18 +78,25 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                 quality: 0.95,
                 format: 'jpeg',
               });
-              console.log(`[${tipoVistoria}] ✓ Imagem do banco convertida com sucesso`);
+              console.log(
+                `[${tipoVistoria}] ✓ Imagem do banco convertida com sucesso`
+              );
               return { nome: foto.name || 'imagem', base64: base64HD };
             } catch (error) {
               // Se falhar, usar URL diretamente
-              console.warn(`[${tipoVistoria}] ⚠ Erro ao converter, usando URL original:`, error);
+              console.warn(
+                `[${tipoVistoria}] ⚠ Erro ao converter, usando URL original:`,
+                error
+              );
               return { nome: foto.name || 'imagem', base64: foto.url };
             }
           }
 
           // Verificar se o arquivo é válido
           if (!foto || !(foto instanceof File) || foto.size === 0) {
-            console.warn(`[${tipoVistoria}] ⚠ Foto ${index + 1} inválida ou vazia`);
+            console.warn(
+              `[${tipoVistoria}] ⚠ Foto ${index + 1} inválida ou vazia`
+            );
             return null;
           }
 
@@ -99,7 +111,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
           console.log(`[${tipoVistoria}] ✓ File convertido com sucesso`);
           return { nome: foto.name, base64: base64HD };
         } catch (error) {
-          console.error(`[${tipoVistoria}] ✗ Erro ao processar foto ${index + 1}:`, error);
+          console.error(
+            `[${tipoVistoria}] ✗ Erro ao processar foto ${index + 1}:`,
+            error
+          );
           return null;
         }
       })
@@ -107,7 +122,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
     // Filtrar fotos que falharam no processamento
     const fotosValidas = fotosBase64.filter((foto) => foto !== null);
-    console.log(`[${tipoVistoria}] Resultado: ${fotosValidas.length} foto(s) válida(s) de ${fotos.length} total`);
+    console.log(
+      `[${tipoVistoria}] Resultado: ${fotosValidas.length} foto(s) válida(s) de ${fotos.length} total`
+    );
     return fotosValidas;
   };
 
@@ -123,7 +140,11 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         </p>
       </div>
       
-      ${dados.documentMode === 'orcamento' && dados.prestador && dados.prestador.nome ? `
+      ${
+        dados.documentMode === 'orcamento' &&
+        dados.prestador &&
+        dados.prestador.nome
+          ? `
       <!-- Informações do Prestador -->
       <div style="margin-bottom: 32px; padding: 20px 24px; background: #FFFFFF; border-radius: 8px; border: 1px solid #E5E7EB;">
         <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: bold; color: #374151; text-transform: uppercase; border-bottom: 2px solid #374151; padding-bottom: 8px;">Dados do Prestador</h3>
@@ -132,27 +153,41 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
             <span style="color: #6B7280; font-weight: 600;">Nome/Razão Social:</span>
             <span style="color: #000000; margin-left: 8px;">${dados.prestador.nome}</span>
           </div>
-          ${dados.prestador.cnpj ? `
+          ${
+            dados.prestador.cnpj
+              ? `
           <div>
             <span style="color: #6B7280; font-weight: 600;">CNPJ/CPF:</span>
             <span style="color: #000000; margin-left: 8px;">${dados.prestador.cnpj}</span>
           </div>
-          ` : ''}
-          ${dados.prestador.telefone ? `
+          `
+              : ''
+          }
+          ${
+            dados.prestador.telefone
+              ? `
           <div>
             <span style="color: #6B7280; font-weight: 600;">Telefone:</span>
             <span style="color: #000000; margin-left: 8px;">${dados.prestador.telefone}</span>
           </div>
-          ` : ''}
-          ${dados.prestador.email ? `
+          `
+              : ''
+          }
+          ${
+            dados.prestador.email
+              ? `
           <div>
             <span style="color: #6B7280; font-weight: 600;">E-mail:</span>
             <span style="color: #000000; margin-left: 8px;">${dados.prestador.email}</span>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- Informações do Contrato - Design Limpo -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding: 20px 24px; background: #F9FAFB; border-radius: 8px; border: 1px solid #E5E7EB;">
@@ -165,6 +200,136 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         </div>
       </div>
   `;
+
+  // Classificar apontamentos por tipo - APENAS MANUAL (apenas para modo análise)
+  console.log('🔍 [DEBUG] documentMode:', dados.documentMode);
+  console.log('🔍 [DEBUG] Total apontamentos:', dados.apontamentos.length);
+
+  if (dados.documentMode !== 'orcamento') {
+    const responsabilidadesLocatario: Array<
+      (typeof dados.apontamentos)[0] & { index: number }
+    > = [];
+    const passiveisRevisao: Array<
+      (typeof dados.apontamentos)[0] & { index: number }
+    > = [];
+
+    dados.apontamentos.forEach((apontamento, index) => {
+      console.log(`🔍 [DEBUG] Apontamento ${index + 1}:`, {
+        ambiente: apontamento.ambiente,
+        classificacao: apontamento.classificacao,
+      });
+
+      // Classificação TOTALMENTE MANUAL - só adiciona se usuário escolheu
+      if (apontamento.classificacao === 'responsabilidade') {
+        responsabilidadesLocatario.push({ ...apontamento, index: index + 1 });
+      } else if (apontamento.classificacao === 'revisao') {
+        passiveisRevisao.push({ ...apontamento, index: index + 1 });
+      }
+      // Se for 'automatico' ou não tiver classificacao, não aparece no resumo
+    });
+
+    console.log(
+      '🔍 [DEBUG] Responsabilidades:',
+      responsabilidadesLocatario.length
+    );
+    console.log('🔍 [DEBUG] Revisões:', passiveisRevisao.length);
+
+    // Adicionar seções de resumo visual apenas se houver apontamentos
+    if (responsabilidadesLocatario.length > 0 || passiveisRevisao.length > 0) {
+      console.log('✅ [DEBUG] Gerando resumo visual...');
+    } else {
+      console.log(
+        '⚠️ [DEBUG] Nenhum apontamento classificado - resumo não será gerado'
+      );
+    }
+
+    if (responsabilidadesLocatario.length > 0 || passiveisRevisao.length > 0) {
+      // Determinar layout: centralizado se só tiver responsabilidades, grid se tiver ambos
+      const gridStyle =
+        responsabilidadesLocatario.length > 0 && passiveisRevisao.length > 0
+          ? 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px;'
+          : 'display: flex; justify-content: center;';
+
+      template += `
+      <!-- Resumo Visual de Classificação -->
+      <div style="margin-bottom: 40px;">
+        <h2 style="text-align: center; color: #374151; font-size: 20px; font-weight: bold; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Resumo de Apontamentos
+        </h2>
+        <div style="${gridStyle}">
+      `;
+
+      // Seção Responsabilidades do Locatário (design profissional simplificado)
+      if (responsabilidadesLocatario.length > 0) {
+        // Se não há revisões, adicionar largura máxima para centralizar melhor
+        const cardWidthStyle =
+          passiveisRevisao.length === 0 ? 'max-width: 600px; width: 100%;' : '';
+        template += `
+          <div style="background: #F8F9FA; border: 1px solid #6C757D; border-left: 4px solid #495057; border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); ${cardWidthStyle}">
+            <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #DEE2E6;">
+              <div style="display: inline-block; background: #495057; color: white; padding: 6px 14px; border-radius: 4px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.3px;">
+                Responsabilidades do Locatário
+              </div>
+            </div>
+            <div style="background: white; border-radius: 4px; padding: 16px; border: 1px solid #DEE2E6;">
+              <ul style="margin: 0; padding-left: 20px; color: #495057; font-size: 13px; line-height: 1.7;">
+                ${responsabilidadesLocatario
+                  .map(
+                    (ap) => `
+                  <li style="margin-bottom: 6px;">
+                    <strong style="color: #212529;">${ap.index}. ${ap.ambiente}</strong>${ap.subtitulo ? ` - ${ap.subtitulo}` : ''}
+                  </li>
+                `
+                  )
+                  .join('')}
+              </ul>
+            </div>
+            <div style="text-align: center; margin-top: 12px;">
+              <span style="background: #495057; color: white; padding: 5px 12px; border-radius: 4px; font-weight: 600; font-size: 12px;">
+                ${responsabilidadesLocatario.length} ${responsabilidadesLocatario.length === 1 ? 'item' : 'itens'}
+              </span>
+            </div>
+          </div>
+        `;
+      }
+
+      // Seção Passíveis de Revisão (design profissional simplificado)
+      if (passiveisRevisao.length > 0) {
+        template += `
+          <div style="background: #FFF9E6; border: 1px solid #B8860B; border-left: 4px solid #8B6914; border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);">
+            <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #E6D5A0;">
+              <div style="display: inline-block; background: #8B6914; color: white; padding: 6px 14px; border-radius: 4px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.3px;">
+                Passíveis de Revisão
+              </div>
+            </div>
+            <div style="background: white; border-radius: 4px; padding: 16px; border: 1px solid #E6D5A0;">
+              <ul style="margin: 0; padding-left: 20px; color: #6B5416; font-size: 13px; line-height: 1.7;">
+                ${passiveisRevisao
+                  .map(
+                    (ap) => `
+                  <li style="margin-bottom: 6px;">
+                    <strong style="color: #4A3A0F;">${ap.index}. ${ap.ambiente}</strong>${ap.subtitulo ? ` - ${ap.subtitulo}` : ''}
+                  </li>
+                `
+                  )
+                  .join('')}
+              </ul>
+            </div>
+            <div style="text-align: center; margin-top: 12px;">
+              <span style="background: #8B6914; color: white; padding: 5px 12px; border-radius: 4px; font-weight: 600; font-size: 12px;">
+                ${passiveisRevisao.length} ${passiveisRevisao.length === 1 ? 'item' : 'itens'}
+              </span>
+            </div>
+          </div>
+        `;
+      }
+
+      template += `
+        </div>
+      </div>
+      `;
+    }
+  }
 
   // Processar todos os apontamentos
   for (let index = 0; index < dados.apontamentos.length; index++) {
@@ -210,7 +375,11 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
             </p>
           </div>
           
-          ${apontamento.tipo && apontamento.valor !== undefined && apontamento.quantidade !== undefined ? `
+          ${
+            apontamento.tipo &&
+            apontamento.valor !== undefined &&
+            apontamento.quantidade !== undefined
+              ? `
           <!-- Valor do Orçamento (compacto) -->
           <div style="background: #F9FAFB; padding: 12px 20px; border-top: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; gap: 24px; align-items: center; flex: 1;">
@@ -227,7 +396,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
               </strong>
             </div>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       `;
       } else {
@@ -321,12 +492,16 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
             </div>
           </div>
           
-          ${apontamento.observacao ? `
+          ${
+            apontamento.observacao
+              ? `
           <div style="background: #374151; color: #FFFFFF; padding: 16px 20px; border-top: 1px solid #E5E7EB;">
             <h4 style="color: #FFFFFF; margin: 0 0 12px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">CONSIDERAÇÕES DEPARTAMENTO DE RESCISÃO</h4>
             <p style="margin: 0; color: #FFFFFF; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">${apontamento.observacao}</p>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       `;
       }
@@ -349,23 +524,34 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
   // Adicionar resumo do orçamento no final (se modo orçamento)
   if (dados.documentMode === 'orcamento') {
-    const itensComValor = dados.apontamentos.filter(ap => 
-      ap.valor !== undefined && ap.quantidade !== undefined && ap.valor > 0 && ap.quantidade > 0
+    const itensComValor = dados.apontamentos.filter(
+      (ap) =>
+        ap.valor !== undefined &&
+        ap.quantidade !== undefined &&
+        ap.valor > 0 &&
+        ap.quantidade > 0
     );
-    
+
     if (itensComValor.length > 0) {
-      const totalGeral = itensComValor.reduce((total, ap) => 
-        total + ((ap.valor || 0) * (ap.quantidade || 0)), 0
+      const totalGeral = itensComValor.reduce(
+        (total, ap) => total + (ap.valor || 0) * (ap.quantidade || 0),
+        0
       );
-      
+
       const totalMaterial = itensComValor
-        .filter(ap => ap.tipo === 'material' || ap.tipo === 'ambos')
-        .reduce((total, ap) => total + ((ap.valor || 0) * (ap.quantidade || 0)), 0);
-      
+        .filter((ap) => ap.tipo === 'material' || ap.tipo === 'ambos')
+        .reduce(
+          (total, ap) => total + (ap.valor || 0) * (ap.quantidade || 0),
+          0
+        );
+
       const totalMaoDeObra = itensComValor
-        .filter(ap => ap.tipo === 'mao_de_obra' || ap.tipo === 'ambos')
-        .reduce((total, ap) => total + ((ap.valor || 0) * (ap.quantidade || 0)), 0);
-      
+        .filter((ap) => ap.tipo === 'mao_de_obra' || ap.tipo === 'ambos')
+        .reduce(
+          (total, ap) => total + (ap.valor || 0) * (ap.quantidade || 0),
+          0
+        );
+
       template += `
         <!-- Resumo Total do Orçamento -->
         <div style="margin-top: 40px; margin-bottom: 32px; page-break-inside: avoid; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
@@ -377,28 +563,40 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
           </div>
           
           <!-- Totais Parciais -->
-          ${totalMaterial > 0 || totalMaoDeObra > 0 ? `
+          ${
+            totalMaterial > 0 || totalMaoDeObra > 0
+              ? `
           <div style="background: #FFFFFF; padding: 20px; border-bottom: 1px solid #E5E7EB;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-              ${totalMaterial > 0 ? `
+              ${
+                totalMaterial > 0
+                  ? `
               <div style="text-align: center; padding: 16px; background: #F9FAFB; border-radius: 6px; border: 1px solid #E5E7EB;">
                 <div style="font-size: 12px; color: #6B7280; margin-bottom: 6px; text-transform: uppercase;">Total Material</div>
                 <div style="font-size: 18px; font-weight: 700; color: #374151; font-family: 'Courier New', monospace;">
                   ${totalMaterial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
-              ` : ''}
-              ${totalMaoDeObra > 0 ? `
+              `
+                  : ''
+              }
+              ${
+                totalMaoDeObra > 0
+                  ? `
               <div style="text-align: center; padding: 16px; background: #F9FAFB; border-radius: 6px; border: 1px solid #E5E7EB;">
                 <div style="font-size: 12px; color: #6B7280; margin-bottom: 6px; text-transform: uppercase;">Total Mão de Obra</div>
                 <div style="font-size: 18px; font-weight: 700; color: #374151; font-family: 'Courier New', monospace;">
                   ${totalMaoDeObra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
           
           <!-- Total Geral -->
           <div style="background: #374151; color: #FFFFFF; padding: 24px 20px;">
