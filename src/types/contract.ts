@@ -3,9 +3,9 @@
  * Substitui o uso genérico de Record<string, string>
  */
 
-export type DocumentType = 
+export type DocumentType =
   | 'Termo do Locador'
-  | 'Termo do Locatário' 
+  | 'Termo do Locatário'
   | 'Notificação de Agendamento'
   | 'Devolutiva WhatsApp'
   | 'Termo de Recusa de Assinatura - E-mail'
@@ -16,9 +16,14 @@ export type DocumentType =
   | 'Notificação de Desocupação - Comercial'
   | 'Distrato de Contrato de Locação';
 
-export type VistoriaType = 'inicial' | 'final' | 'vistoria' | 'revistoria' | 'nao_realizada';
+export type VistoriaType =
+  | 'inicial'
+  | 'final'
+  | 'vistoria'
+  | 'revistoria'
+  | 'nao_realizada';
 export type PersonType = 'locador' | 'locatario';
-export type GenderType = 'masculino' | 'feminino';
+export type GenderType = 'masculino' | 'feminino' | 'masculinos' | 'femininos';
 export type ContractStatus = 'active' | 'expired' | 'pending' | 'cancelled';
 
 /**

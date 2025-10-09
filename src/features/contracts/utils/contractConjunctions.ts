@@ -1,12 +1,17 @@
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import { DateHelpers } from '@/utils/dateHelpers';
-import { gerarDocumentosSolicitados, ConfiguracaoDocumentos } from '@/utils/documentosSolicitados';
+import {
+  gerarDocumentosSolicitados,
+  ConfiguracaoDocumentos,
+} from '@/utils/documentosSolicitados';
 
 /**
  * Aplica conjunções verbais e formatações aos dados do contrato
  * Extrai lógica complexa de processamento de dados do componente principal
  */
-export function applyContractConjunctions(formData: Record<string, string>): Record<string, string> {
+export function applyContractConjunctions(
+  formData: Record<string, string>
+): Record<string, string> {
   const enhancedData = { ...formData };
 
   // Obter qualificação completa dos locatários
@@ -18,65 +23,93 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
     formData.qualificacaoCompletaLocadores || '[TEXTOLIVRE]';
 
   // Aplicar conjunções para locatários
-  // Verifica se há múltiplos locatários de duas formas:
-  // 1. Se existem campos separados (segundoLocatario, terceiroLocatario, etc)
-  // 2. Se o nomeLocatario contém vírgulas ou " e " indicando múltiplos nomes
+  // PRIORIDADE: Gênero selecionado manualmente > Detecção automática
+  const generoLocatario = formData.generoLocatario;
+
+  // Detecção automática (usado apenas como fallback)
   const hasMultipleLocatarioFields = !!(
     formData.primeiroLocatario &&
     (formData.segundoLocatario ||
       formData.terceiroLocatario ||
       formData.quartoLocatario)
   );
-  
-  const nomeLocatarioCheck = formData.nomeLocatario || formData.primeiroLocatario || '';
-  const hasMultipleNamesInField = nomeLocatarioCheck.includes(',') || 
-                                   nomeLocatarioCheck.includes(' e ') ||
-                                   nomeLocatarioCheck.includes(' E ');
-  
-  const isMultipleLocatarios = hasMultipleLocatarioFields || hasMultipleNamesInField;
+
+  const nomeLocatarioCheck =
+    formData.nomeLocatario || formData.primeiroLocatario || '';
+  const hasMultipleNamesInField =
+    nomeLocatarioCheck.includes(',') ||
+    nomeLocatarioCheck.includes(' e ') ||
+    nomeLocatarioCheck.includes(' E ');
+
+  const autoDetectedMultiple =
+    hasMultipleLocatarioFields || hasMultipleNamesInField;
+
+  // Determinar se é plural baseado no gênero selecionado OU detecção automática
+  const isMultipleLocatarios =
+    generoLocatario === 'masculinos' ||
+    generoLocatario === 'femininos' ||
+    (!generoLocatario && autoDetectedMultiple);
+
   enhancedData.isMultipleLocatarios = isMultipleLocatarios.toString();
 
-  if (isMultipleLocatarios) {
+  // Aplicar conjugações baseadas no gênero MANUAL
+  if (generoLocatario === 'femininos') {
+    // Plural feminino
+    enhancedData.locatarioTerm = 'LOCATÁRIAS';
+    enhancedData.locatarioTermComercial = 'LOCATÁRIAS';
+    enhancedData.locatarioTermNoArtigo = 'as locatárias';
+    enhancedData.locatarioComunicou = 'informaram';
+    enhancedData.locatarioIra = 'irão';
+    enhancedData.locatarioTermo = 'das locatárias';
+    enhancedData.locatarioPrezado = 'Prezadas';
+    enhancedData.locatarioDocumentacao = 'das locatárias';
+    enhancedData.locatarioResponsabilidade = 'das locatárias';
+  } else if (generoLocatario === 'masculinos') {
+    // Plural masculino
     enhancedData.locatarioTerm = 'LOCATÁRIOS';
     enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
     enhancedData.locatarioTermNoArtigo = 'os locatários';
     enhancedData.locatarioComunicou = 'informaram';
     enhancedData.locatarioIra = 'irão';
-    enhancedData.locatarioTermo = 'do locatário';
-    enhancedData.locatarioPrezado = 'Prezado';
+    enhancedData.locatarioTermo = 'dos locatários';
+    enhancedData.locatarioPrezado = 'Prezados';
     enhancedData.locatarioDocumentacao = 'dos locatários';
     enhancedData.locatarioResponsabilidade = 'dos locatários';
-  } else if (formData.primeiroLocatario) {
-    const generoLocatario = formData.generoLocatario;
-    if (generoLocatario === 'feminino') {
-      enhancedData.locatarioTerm = 'LOCATÁRIA';
-      enhancedData.locatarioTermComercial = 'LOCATÁRIA';
-      enhancedData.locatarioTermNoArtigo = 'a locatária';
-      enhancedData.locatarioDocumentacao = 'da locatária';
-      enhancedData.locatarioResponsabilidade = 'da locatária';
-      enhancedData.locatarioComunicou = 'informou';
-      enhancedData.locatarioIra = 'irá';
-    } else if (generoLocatario === 'masculino') {
-      enhancedData.locatarioTerm = 'LOCATÁRIO';
-      enhancedData.locatarioTermComercial = 'LOCATÁRIO';
-      enhancedData.locatarioTermNoArtigo = 'o locatário';
-      enhancedData.locatarioDocumentacao = 'do locatário';
-      enhancedData.locatarioResponsabilidade = 'do locatário';
-      enhancedData.locatarioComunicou = 'informou';
-      enhancedData.locatarioIra = 'irá';
-    } else {
-      enhancedData.locatarioTerm = 'LOCATÁRIO';
-      enhancedData.locatarioTermComercial = 'LOCATÁRIO';
-      enhancedData.locatarioTermNoArtigo = 'o locatário';
-      enhancedData.locatarioDocumentacao = 'do locatário';
-      enhancedData.locatarioResponsabilidade = 'do locatário';
-      enhancedData.locatarioComunicou = 'informou';
-      enhancedData.locatarioIra = 'irá';
-    }
+  } else if (generoLocatario === 'feminino') {
+    // Singular feminino
+    enhancedData.locatarioTerm = 'LOCATÁRIA';
+    enhancedData.locatarioTermComercial = 'LOCATÁRIA';
+    enhancedData.locatarioTermNoArtigo = 'a locatária';
+    enhancedData.locatarioDocumentacao = 'da locatária';
+    enhancedData.locatarioResponsabilidade = 'da locatária';
+    enhancedData.locatarioComunicou = 'informou';
+    enhancedData.locatarioIra = 'irá';
+    enhancedData.locatarioTermo = 'da locatária';
+    enhancedData.locatarioPrezado = 'Prezada';
+  } else if (generoLocatario === 'masculino') {
+    // Singular masculino
+    enhancedData.locatarioTerm = 'LOCATÁRIO';
+    enhancedData.locatarioTermComercial = 'LOCATÁRIO';
+    enhancedData.locatarioTermNoArtigo = 'o locatário';
+    enhancedData.locatarioDocumentacao = 'do locatário';
+    enhancedData.locatarioResponsabilidade = 'do locatário';
+    enhancedData.locatarioComunicou = 'informou';
+    enhancedData.locatarioIra = 'irá';
     enhancedData.locatarioTermo = 'do locatário';
     enhancedData.locatarioPrezado = 'Prezado';
+  } else if (autoDetectedMultiple) {
+    // Fallback: detecção automática indica plural (padrão masculino)
+    enhancedData.locatarioTerm = 'LOCATÁRIOS';
+    enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
+    enhancedData.locatarioTermNoArtigo = 'os locatários';
+    enhancedData.locatarioComunicou = 'informaram';
+    enhancedData.locatarioIra = 'irão';
+    enhancedData.locatarioTermo = 'dos locatários';
+    enhancedData.locatarioPrezado = 'Prezados';
+    enhancedData.locatarioDocumentacao = 'dos locatários';
+    enhancedData.locatarioResponsabilidade = 'dos locatários';
   } else {
-    // Fallback caso não haja locatário definido
+    // Fallback: singular masculino (padrão)
     enhancedData.locatarioTerm = 'LOCATÁRIO';
     enhancedData.locatarioTermComercial = 'LOCATÁRIO';
     enhancedData.locatarioTermNoArtigo = 'o locatário';
@@ -95,29 +128,56 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   enhancedData.quartoLocatario = formData.quartoLocatario || '';
 
   // Aplicar conjunções para proprietários
+  // PRIORIDADE: Gênero selecionado manualmente > Detecção automática
+  const generoProprietario = formData.generoProprietario;
+
+  // Detecção automática (usado apenas como fallback)
+  const nomeProprietarioCheck = formData.nomeProprietario || '';
+  const autoDetectedMultipleProprietarios =
+    nomeProprietarioCheck.includes(' e ') ||
+    nomeProprietarioCheck.includes(' E ');
+
   const isMultipleProprietarios =
-    formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
-  
-  if (isMultipleProprietarios) {
+    generoProprietario === 'masculinos' ||
+    generoProprietario === 'femininos' ||
+    (!generoProprietario && autoDetectedMultipleProprietarios);
+
+  // Aplicar conjugações baseadas no gênero MANUAL
+  if (generoProprietario === 'femininos') {
+    // Plural feminino
+    enhancedData.proprietarioTerm = 'as proprietárias';
+    enhancedData.locadorTerm = 'LOCADORAS';
+    enhancedData.locadorTermComercial = 'LOCADORAS';
+    enhancedData.proprietarioPrezado = 'Prezadas';
+  } else if (generoProprietario === 'masculinos') {
+    // Plural masculino
     enhancedData.proprietarioTerm = 'os proprietários';
     enhancedData.locadorTerm = 'LOCADORES';
     enhancedData.locadorTermComercial = 'LOCADORES';
+    enhancedData.proprietarioPrezado = 'Prezados';
+  } else if (generoProprietario === 'feminino') {
+    // Singular feminino
+    enhancedData.proprietarioTerm = 'a proprietária';
+    enhancedData.locadorTerm = 'LOCADORA';
+    enhancedData.locadorTermComercial = 'LOCADORA';
+    enhancedData.proprietarioPrezado = 'Prezada';
+  } else if (generoProprietario === 'masculino') {
+    // Singular masculino
+    enhancedData.proprietarioTerm = 'o proprietário';
+    enhancedData.locadorTerm = 'LOCADOR';
+    enhancedData.locadorTermComercial = 'LOCADOR';
     enhancedData.proprietarioPrezado = 'Prezado';
-  } else if (formData.nomeProprietario) {
-    const generoProprietario = formData.generoProprietario;
-    if (generoProprietario === 'feminino') {
-      enhancedData.proprietarioTerm = 'a proprietária';
-      enhancedData.locadorTerm = 'LOCADORA';
-      enhancedData.locadorTermComercial = 'LOCADORA';
-    } else if (generoProprietario === 'masculino') {
-      enhancedData.proprietarioTerm = 'o proprietário';
-      enhancedData.locadorTerm = 'LOCADOR';
-      enhancedData.locadorTermComercial = 'LOCADOR';
-    } else {
-      enhancedData.proprietarioTerm = 'o proprietário';
-      enhancedData.locadorTerm = 'LOCADOR';
-      enhancedData.locadorTermComercial = 'LOCADOR';
-    }
+  } else if (autoDetectedMultipleProprietarios) {
+    // Fallback: detecção automática indica plural (padrão masculino)
+    enhancedData.proprietarioTerm = 'os proprietários';
+    enhancedData.locadorTerm = 'LOCADORES';
+    enhancedData.locadorTermComercial = 'LOCADORES';
+    enhancedData.proprietarioPrezado = 'Prezados';
+  } else {
+    // Fallback: singular masculino (padrão)
+    enhancedData.proprietarioTerm = 'o proprietário';
+    enhancedData.locadorTerm = 'LOCADOR';
+    enhancedData.locadorTermComercial = 'LOCADOR';
     enhancedData.proprietarioPrezado = 'Prezado';
   }
 
@@ -125,8 +185,18 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   const hoje = new Date();
   const meses: string[] = [];
   const nomesMeses = [
-    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+    'janeiro',
+    'fevereiro',
+    'março',
+    'abril',
+    'maio',
+    'junho',
+    'julho',
+    'agosto',
+    'setembro',
+    'outubro',
+    'novembro',
+    'dezembro',
   ];
 
   for (let i = 2; i >= 0; i--) {
@@ -146,7 +216,9 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
 
   // Extrair primeiro nome do proprietário
   const nomeProprietarioCompleto =
-    formData.nomeProprietario || formData.nomesResumidosLocadores || '[PRIMEIRO NOME]';
+    formData.nomeProprietario ||
+    formData.nomesResumidosLocadores ||
+    '[PRIMEIRO NOME]';
   const primeiroNomeProprietario =
     nomeProprietarioCompleto?.split(' ')[0] || '[PRIMEIRO NOME]';
   enhancedData.primeiroNomeProprietario =
@@ -154,20 +226,31 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
     primeiroNomeProprietario.slice(1).toLowerCase();
 
   // Gerar saudação para devolutiva do proprietário
-  const generoProprietario = formData.generoProprietario;
   const nomeProprietarioSaudacao =
     formData.nomeProprietario || formData.nomesResumidosLocadores || '';
-  const isMultipleProprietariosSaudacao =
-    nomeProprietarioSaudacao.includes(' e ') || nomeProprietarioSaudacao.includes(' E ');
+  const hasMultipleProprietarioNames =
+    nomeProprietarioSaudacao.includes(' e ') ||
+    nomeProprietarioSaudacao.includes(' E ');
 
+  // Determinar tratamento baseado no gênero selecionado manualmente
   let tratamentoProprietario;
-  if (isMultipleProprietariosSaudacao) {
-    tratamentoProprietario = generoProprietario === 'feminino' ? 'Prezadas' : 'Prezados';
+  if (generoProprietario === 'femininos') {
+    tratamentoProprietario = 'Prezadas';
+  } else if (generoProprietario === 'masculinos') {
+    tratamentoProprietario = 'Prezados';
+  } else if (generoProprietario === 'feminino') {
+    tratamentoProprietario = 'Prezada';
+  } else if (generoProprietario === 'masculino') {
+    tratamentoProprietario = 'Prezado';
+  } else if (hasMultipleProprietarioNames) {
+    // Fallback: detecção automática (padrão masculino plural)
+    tratamentoProprietario = 'Prezados';
   } else {
-    tratamentoProprietario = generoProprietario === 'feminino' ? 'Prezada' : 'Prezado';
+    // Fallback: singular masculino
+    tratamentoProprietario = 'Prezado';
   }
 
-  if (isMultipleProprietariosSaudacao) {
+  if (hasMultipleProprietarioNames) {
     const nomesProprietarios = nomeProprietarioSaudacao
       .split(/ e | E /)
       .map((nome) => nome.trim());
@@ -190,20 +273,31 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   }
 
   // Gerar saudação para devolutiva do locatário
-  const generoLocatario = formData.generoLocatario;
   const nomeLocatarioSaudacao =
     formData.nomeLocatario || formData.primeiroLocatario || '';
-  const isMultipleLocatariosSaudacao =
-    nomeLocatarioSaudacao.includes(' e ') || nomeLocatarioSaudacao.includes(' E ');
+  const hasMultipleLocatarioNames =
+    nomeLocatarioSaudacao.includes(' e ') ||
+    nomeLocatarioSaudacao.includes(' E ');
 
+  // Determinar tratamento baseado no gênero selecionado manualmente
   let tratamentoLocatario;
-  if (isMultipleLocatariosSaudacao) {
-    tratamentoLocatario = generoLocatario === 'feminino' ? 'Prezadas' : 'Prezados';
+  if (generoLocatario === 'femininos') {
+    tratamentoLocatario = 'Prezadas';
+  } else if (generoLocatario === 'masculinos') {
+    tratamentoLocatario = 'Prezados';
+  } else if (generoLocatario === 'feminino') {
+    tratamentoLocatario = 'Prezada';
+  } else if (generoLocatario === 'masculino') {
+    tratamentoLocatario = 'Prezado';
+  } else if (hasMultipleLocatarioNames) {
+    // Fallback: detecção automática (padrão masculino plural)
+    tratamentoLocatario = 'Prezados';
   } else {
-    tratamentoLocatario = generoLocatario === 'feminino' ? 'Prezada' : 'Prezado';
+    // Fallback: singular masculino
+    tratamentoLocatario = 'Prezado';
   }
 
-  if (isMultipleLocatariosSaudacao) {
+  if (hasMultipleLocatarioNames) {
     const nomesLocatarios = nomeLocatarioSaudacao
       .split(/ e | E /)
       .map((nome) => nome.trim());
@@ -235,8 +329,13 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   enhancedData.saudacaoComercial = hora < 12 ? 'bom dia' : 'boa tarde';
 
   // Formatar nomes com negrito
-  const nomeLocatario = formData.nomeLocatario || formData.primeiroLocatario || '[NOME DO LOCATÁRIO]';
-  const nomesLocatarioArray = nomeLocatario.split(/ e | E /).map((nome) => nome.trim());
+  const nomeLocatario =
+    formData.nomeLocatario ||
+    formData.primeiroLocatario ||
+    '[NOME DO LOCATÁRIO]';
+  const nomesLocatarioArray = nomeLocatario
+    .split(/ e | E /)
+    .map((nome) => nome.trim());
   enhancedData.nomeLocatarioFormatado =
     nomesLocatarioArray.length > 1
       ? nomesLocatarioArray.slice(0, -1).join(', ') +
@@ -244,8 +343,13 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
         nomesLocatarioArray[nomesLocatarioArray.length - 1]
       : nomesLocatarioArray[0];
 
-  const nomeProprietario = formData.nomeProprietario || formData.nomesResumidosLocadores || '[NOME DO PROPRIETÁRIO]';
-  const nomesProprietarioArray = nomeProprietario.split(/ e | E /).map((nome) => nome.trim());
+  const nomeProprietario =
+    formData.nomeProprietario ||
+    formData.nomesResumidosLocadores ||
+    '[NOME DO PROPRIETÁRIO]';
+  const nomesProprietarioArray = nomeProprietario
+    .split(/ e | E /)
+    .map((nome) => nome.trim());
   enhancedData.nomeProprietarioFormatado =
     nomesProprietarioArray.length > 1
       ? nomesProprietarioArray
@@ -258,19 +362,29 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
 
   // Adicionar variáveis de data padrão
   enhancedData.dataAtual = DateHelpers.getCurrentDateBrazilian();
-  enhancedData.dataComunicacao = formData.dataComunicacao || DateHelpers.getCurrentDateBrazilian();
-  enhancedData.dataInicioRescisao = formData.dataInicioRescisao || DateHelpers.getCurrentDateBrazilian();
-  enhancedData.dataTerminoRescisao = formData.dataTerminoRescisao || DateHelpers.getCurrentDateBrazilian();
+  enhancedData.dataComunicacao =
+    formData.dataComunicacao || DateHelpers.getCurrentDateBrazilian();
+  enhancedData.dataInicioRescisao =
+    formData.dataInicioRescisao || DateHelpers.getCurrentDateBrazilian();
+  enhancedData.dataTerminoRescisao =
+    formData.dataTerminoRescisao || DateHelpers.getCurrentDateBrazilian();
   enhancedData.prazoDias = formData.prazoDias || '30';
 
   // Variáveis para Termo de Recusa de Assinatura
-  enhancedData.dataRealizacaoVistoria = formData.dataRealizacaoVistoria || DateHelpers.getCurrentDateBrazilian();
-  enhancedData.assinanteSelecionado = formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
+  enhancedData.dataRealizacaoVistoria =
+    formData.dataRealizacaoVistoria || DateHelpers.getCurrentDateBrazilian();
+  enhancedData.assinanteSelecionado =
+    formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
 
   // Variáveis de endereço e contrato
-  enhancedData.enderecoImovel = formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
-  enhancedData.numeroContrato = formData.numeroContrato || '[NÚMERO DO CONTRATO]';
-  enhancedData.nomeProprietario = formData.nomesResumidosLocadores || formData.nomeProprietario || '[NOME DO PROPRIETÁRIO]';
+  enhancedData.enderecoImovel =
+    formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
+  enhancedData.numeroContrato =
+    formData.numeroContrato || '[NÚMERO DO CONTRATO]';
+  enhancedData.nomeProprietario =
+    formData.nomesResumidosLocadores ||
+    formData.nomeProprietario ||
+    '[NOME DO PROPRIETÁRIO]';
   enhancedData.nomeLocatario = formData.nomeLocatario || '[NOME DO LOCATÁRIO]';
 
   // Campos de gênero
@@ -278,29 +392,55 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   enhancedData.generoLocatario = formData.generoLocatario;
 
   // Tratamento para pronomes de gênero
-  if (generoProprietario === 'feminino') {
+  // Proprietário
+  if (generoProprietario === 'femininos') {
+    enhancedData.tratamentoProprietarioGenero = 'as senhoras';
+  } else if (generoProprietario === 'masculinos') {
+    enhancedData.tratamentoProprietarioGenero = 'os senhores';
+  } else if (generoProprietario === 'feminino') {
     enhancedData.tratamentoProprietarioGenero = 'a senhora';
   } else {
+    // Padrão: masculino singular
     enhancedData.tratamentoProprietarioGenero = 'o senhor';
   }
 
-  if (generoLocatario === 'feminino') {
+  // Locatário - pronomes possessivos
+  if (generoLocatario === 'femininos') {
+    enhancedData.tratamentoLocatarioGenero = 'suas';
+    enhancedData.tratamentoLocatarioGeneroPlural = 'suas';
+  } else if (generoLocatario === 'masculinos') {
+    enhancedData.tratamentoLocatarioGenero = 'seus';
+    enhancedData.tratamentoLocatarioGeneroPlural = 'seus';
+  } else if (generoLocatario === 'feminino') {
     enhancedData.tratamentoLocatarioGenero = 'sua';
     enhancedData.tratamentoLocatarioGeneroPlural = 'suas';
   } else {
+    // Padrão: masculino singular
     enhancedData.tratamentoLocatarioGenero = 'seu';
     enhancedData.tratamentoLocatarioGeneroPlural = 'seus';
   }
 
-  if (generoProprietario === 'feminino') {
+  // Locador - tratamento com preposição
+  if (generoProprietario === 'femininos') {
+    enhancedData.tratamentoLocadorGenero = 'às locadoras';
+  } else if (generoProprietario === 'masculinos') {
+    enhancedData.tratamentoLocadorGenero = 'aos locadores';
+  } else if (generoProprietario === 'feminino') {
     enhancedData.tratamentoLocadorGenero = 'à locadora';
   } else {
+    // Padrão: masculino singular
     enhancedData.tratamentoLocadorGenero = 'ao locador';
   }
 
-  if (generoLocatario === 'feminino') {
+  // Notificação V.S / V.Sa
+  if (generoLocatario === 'femininos') {
+    enhancedData.tratamentoLocatarioNotificacao = 'V.Sas';
+  } else if (generoLocatario === 'masculinos') {
+    enhancedData.tratamentoLocatarioNotificacao = 'V.Ss';
+  } else if (generoLocatario === 'feminino') {
     enhancedData.tratamentoLocatarioNotificacao = 'V.Sa';
   } else {
+    // Padrão: masculino singular
     enhancedData.tratamentoLocatarioNotificacao = 'V.S';
   }
 
@@ -308,10 +448,13 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   enhancedData.nomesResumidosLocadores = formData.nomesResumidosLocadores;
 
   // Variáveis específicas dos termos
-  enhancedData.dataFirmamentoContrato = formData.dataFirmamentoContrato || formatDateBrazilian(new Date());
-  enhancedData.dataVistoria = formData.dataVistoria || formatDateBrazilian(new Date());
+  enhancedData.dataFirmamentoContrato =
+    formData.dataFirmamentoContrato || formatDateBrazilian(new Date());
+  enhancedData.dataVistoria =
+    formData.dataVistoria || formatDateBrazilian(new Date());
   enhancedData.cpflDaev = formData.cpflDaev || '[CPFL/DAEV]';
-  enhancedData.quantidadeChaves = formData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
+  enhancedData.quantidadeChaves =
+    formData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
 
   // Campos de energia e água
   enhancedData.cpfl = formData.cpfl || 'SIM';
@@ -319,39 +462,52 @@ export function applyContractConjunctions(formData: Record<string, string>): Rec
   enhancedData.tipoAgua = formData.tipoAgua || 'DAEV';
 
   // Variáveis do distrato
-  enhancedData.dataLiquidacao = formData.dataLiquidacao || formatDateBrazilian(new Date());
+  enhancedData.dataLiquidacao =
+    formData.dataLiquidacao || formatDateBrazilian(new Date());
 
   // Gerar lista de documentos solicitados
   const configDocumentos: ConfiguracaoDocumentos = {
     solicitarCondominio: formData.solicitarCondominio || 'nao',
     // Verificar tanto solicitarAgua quanto statusAgua para compatibilidade
-    solicitarAgua: (formData.solicitarAgua === 'sim' || formData.statusAgua?.toUpperCase() === 'SIM') ? 'sim' : 'nao',
+    solicitarAgua:
+      formData.solicitarAgua === 'sim' ||
+      formData.statusAgua?.toUpperCase() === 'SIM'
+        ? 'sim'
+        : 'nao',
     // Energia elétrica sempre é solicitada (conforme comentário no formulário)
     solicitarEnergia: 'sim',
     solicitarGas: formData.solicitarGas || 'nao',
     solicitarCND: formData.solicitarCND || 'nao',
   };
 
-  enhancedData.documentosSolicitados = gerarDocumentosSolicitados(configDocumentos);
+  enhancedData.documentosSolicitados =
+    gerarDocumentosSolicitados(configDocumentos);
 
   // Manter campos individuais
   enhancedData.solicitarCondominio = formData.solicitarCondominio || 'nao';
-  enhancedData.solicitarAgua = (formData.solicitarAgua === 'sim' || formData.statusAgua?.toUpperCase() === 'SIM') ? 'sim' : 'nao';
+  enhancedData.solicitarAgua =
+    formData.solicitarAgua === 'sim' ||
+    formData.statusAgua?.toUpperCase() === 'SIM'
+      ? 'sim'
+      : 'nao';
   enhancedData.solicitarEnergia = 'sim'; // Energia elétrica sempre é solicitada
   enhancedData.solicitarGas = formData.solicitarGas || 'nao';
   enhancedData.solicitarCND = formData.solicitarCND || 'nao';
 
   // Definir título para notificação de agendamento baseado no gênero e quantidade de locatários
-  if (isMultipleLocatarios) {
+  if (generoLocatario === 'femininos') {
+    enhancedData.notificadoLocatarioTitulo = 'Notificadas Locatárias';
+  } else if (generoLocatario === 'masculinos') {
     enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
-  } else if (formData.primeiroLocatario) {
-    const genero = formData.generoLocatario;
-    if (genero === 'feminino') {
-      enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
-    } else {
-      enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
-    }
+  } else if (generoLocatario === 'feminino') {
+    enhancedData.notificadoLocatarioTitulo = 'Notificada Locatária';
+  } else if (generoLocatario === 'masculino') {
+    enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
+  } else if (isMultipleLocatarios) {
+    // Fallback: detecção automática (padrão masculino plural)
+    enhancedData.notificadoLocatarioTitulo = 'Notificados Locatários';
   } else {
+    // Fallback: singular masculino
     enhancedData.notificadoLocatarioTitulo = 'Notificado Locatário';
   }
 

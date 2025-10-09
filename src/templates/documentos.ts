@@ -194,7 +194,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   
   <p style="margin-bottom: 20px;"><strong>Solicitamos que encaminhe esses documentos o mais breve possível</strong>, pois são essenciais para o agendamento da vistoria de saída.</p>
   
-  <p style="margin-bottom: 20px;"><strong>Conforme estabelecido no contrato de locação, o locatário é responsável pelo pagamento das contas de consumo durante todo o período de ocupação do imóvel</strong>.</p>
+  <p style="margin-bottom: 20px;"><strong>Conforme estabelecido no contrato de locação, {{locatarioTermNoArtigo}} é responsável pelo pagamento das contas de consumo durante todo o período de ocupação do imóvel</strong>.</p>
   
   <p style="margin-bottom: 20px;">Caso haja alguma dúvida sobre quais documentos são necessários, permanecemos à disposição para esclarecimentos.</p>
   
@@ -364,7 +364,7 @@ export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 30px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 15px;">Os locatários <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, comunicaram a rescisão do imóvel na <strong>{{enderecoImovel}}</strong>, em <strong>{{dataComunicacao}}</strong>, com prazo até <strong>{{dataTerminoRescisao}}</strong>. A informação foi repassada ao locador e ao setor comercial.</p>
+    <p style="margin: 10px 0; font-size: 15px;">{{locatarioTerm}} <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} a rescisão do imóvel na <strong>{{enderecoImovel}}</strong>, em <strong>{{dataComunicacao}}</strong>, com prazo até <strong>{{dataTerminoRescisao}}</strong>. A informação foi repassada {{tratamentoLocadorGenero}} e ao setor comercial.</p>
   </div>
   
   <div style="margin-top: 40px; text-align: center;">
@@ -462,7 +462,7 @@ export const TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE = `
   
   <p style="margin-bottom: 20px;">Prezados,</p>
   
-  <p style="margin-bottom: 20px; text-align: justify;">Nos termos do <strong>artigo 23, inciso III, da Lei nº 8.245/91 (Lei do Inquilinato)</strong>, o locatário é responsável por devolver o imóvel nas mesmas condições em que o recebeu, salvo deteriorações decorrentes do uso normal. A vistoria de saída tem como objetivo verificar o cumprimento dessa obrigação legal.</p>
+  <p style="margin-bottom: 20px; text-align: justify;">Nos termos do <strong>artigo 23, inciso III, da Lei nº 8.245/91 (Lei do Inquilinato)</strong>, {{locatarioTermNoArtigo}} é responsável por devolver o imóvel nas mesmas condições em que o recebeu, salvo deteriorações decorrentes do uso normal. A vistoria de saída tem como objetivo verificar o cumprimento dessa obrigação legal.</p>
   
   <p style="margin-bottom: 20px; text-align: justify;">A administradora Madia reafirma que todos os procedimentos foram conduzidos com imparcialidade, boa-fé e em estrita observância às normas contratuais e legais, resguardando os interesses de ambas as partes.</p>
   
@@ -499,7 +499,7 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
   
   <p style="margin-bottom: 20px; text-align: justify;">Informamos que a vistoria de saída do imóvel localizado em <strong>{{enderecoImovel}}</strong> foi realizada na data de <strong>{{dataVistoria}}</strong>, conforme previsto em contrato.</p>
   
-  <p style="margin-bottom: 20px; text-align: justify;">O laudo correspondente foi apresentado para ciência e assinatura do locatário, porém <strong>houve recusa formal em assiná-lo</strong>. Em razão das limitações do sistema de assinatura eletrônica, <strong>a recusa será registrada administrativamente pela Madia e arquivada como parte integrante do processo de desocupação</strong>, servindo como comprovação da condição do imóvel na data da vistoria.</p>
+  <p style="margin-bottom: 20px; text-align: justify;">O laudo correspondente foi apresentado para ciência e assinatura {{locatarioDocumentacao}}, porém <strong>houve recusa formal em assiná-lo</strong>. Em razão das limitações do sistema de assinatura eletrônica, <strong>a recusa será registrada administrativamente pela Madia e arquivada como parte integrante do processo de desocupação</strong>, servindo como comprovação da condição do imóvel na data da vistoria.</p>
   
   <p style="margin-bottom: 20px; text-align: justify;">Ressaltamos que <strong>o laudo está acompanhado de documentação fotográfica e demais evidências que comprovam o estado do imóvel no momento da devolução</strong>.</p>
   
