@@ -9,10 +9,13 @@ import {
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { authLogger } from '@/utils/logger';
+import { UserProfile } from '@/types/admin';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
+  isAdmin: boolean;
   loading: boolean;
   signIn: (
     email: string,
@@ -31,6 +34,8 @@ export const useAuth = () => {
     return {
       user: null,
       session: null,
+      profile: null,
+      isAdmin: false,
       loading: true,
       signIn: async () => ({ error: null }),
       signOut: async () => ({ error: null }),
@@ -47,7 +52,29 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Carregar profile do usuário
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        authLogger.error('Erro ao carregar profile:', error);
+        setProfile(null);
+      } else {
+        setProfile(data as UserProfile);
+      }
+    } catch (error) {
+      authLogger.error('Erro ao carregar profile:', error);
+      setProfile(null);
+    }
+  };
 
   useEffect(() => {
     // Obter sessão inicial
@@ -61,6 +88,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        }
       }
       setLoading(false);
     };
@@ -74,6 +104,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       authLogger.debug('Auth state changed:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+
       setLoading(false);
     });
 
@@ -115,6 +152,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     user,
     session,
+    profile,
+    isAdmin: profile?.role === 'admin',
     loading,
     signIn,
     signOut,

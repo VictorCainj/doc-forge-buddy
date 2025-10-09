@@ -222,7 +222,7 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
   </div>
   
   <div style="margin-bottom: 20px;">
-    <p style="margin: 5px 0; font-size: 15px;"><strong>Notificante:</strong> Madia Imóveis Ltda{{#if nomeProprietarioFormatado}}, no interesse e representante de <span style="font-weight: normal; font-size: 15px; text-transform: none;">{{nomeProprietarioFormatado}}</span> devidamente qualificada  através do contrato de prestação de serviço{{/if}}.</p>
+    <p style="margin: 5px 0; font-size: 15px;"><strong>Notificante:</strong> Madia Imóveis Ltda{{#if nomeProprietarioFormatado}}, no interesse e representante de <span style="font-weight: normal; font-size: 15px; text-transform: none;">{{nomeProprietarioFormatado}}</span> devidamente qualificada através do contrato de prestação de serviço{{/if}}.</p>
     {{#if nomeLocatarioFormatado}}
     <p style="margin: 5px 0; font-size: 15px;"><strong>{{notificadoLocatarioTitulo}}:</strong> <strong>{{nomeLocatarioFormatado}}</strong></p>
     {{/if}}

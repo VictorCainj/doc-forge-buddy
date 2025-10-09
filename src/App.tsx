@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/useAuth';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AdminRoute from '@/components/AdminRoute';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -27,13 +28,16 @@ const ProcessoRescisao = lazy(() => import('./pages/ProcessoRescisao'));
 const GerarDocumento = lazy(() => import('./pages/GerarDocumento'));
 const TermoLocador = lazy(() => import('./pages/TermoLocador'));
 const TermoLocatario = lazy(() => import('./pages/TermoLocatario'));
-const TermoRecusaAssinaturaEmail = lazy(() => import('./pages/TermoRecusaAssinaturaEmail'));
+const TermoRecusaAssinaturaEmail = lazy(
+  () => import('./pages/TermoRecusaAssinaturaEmail')
+);
 const Chat = lazy(() => import('./pages/Chat'));
 const AnaliseVistoria = lazy(() => import('./pages/AnaliseVistoria'));
 const VistoriaAnalises = lazy(() => import('./pages/VistoriaAnalises'));
 const Prestadores = lazy(() => import('./pages/Prestadores'));
 const DebugImages = lazy(() => import('./pages/DebugImages'));
 const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 const queryClient = new QueryClient();
 
@@ -42,203 +46,215 @@ const App = () => (
     <ToastProvider>
       <TooltipProvider delayDuration={0}>
         <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <ErrorBoundary>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-            {/* Rotas públicas */}
-            <Route
-              path="/login"
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <Login />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <ForgotPassword />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/documento-publico/:id"
-              element={<DocumentoPublico />}
-            />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Rotas públicas */}
+                  <Route
+                    path="/login"
+                    element={
+                      <ProtectedRoute requireAuth={false}>
+                        <Login />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/forgot-password"
+                    element={
+                      <ProtectedRoute requireAuth={false}>
+                        <ForgotPassword />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/documento-publico/:id"
+                    element={<DocumentoPublico />}
+                  />
 
-            {/* Rotas protegidas */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Index />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/contratos"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Contratos />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cadastrar-contrato"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CadastrarContrato />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/editar-contrato/:id"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <EditarContrato />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/gerar-documento"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <GerarDocumento />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/termo-locador"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <TermoLocador />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/termo-locatario"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <TermoLocatario />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/termo-recusa-assinatura-email"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <TermoRecusaAssinaturaEmail />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/processo/:contratoId"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProcessoRescisao />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/processo/:contratoId/termo-chaves"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <TermoLocatario />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/editar-termo/:id"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <EditTerm />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Chat />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analise-vistoria"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <AnaliseVistoria />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/vistoria-analises"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <VistoriaAnalises />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/prestadores"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Prestadores />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/debug-images"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DebugImages />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
+                  {/* Rotas protegidas */}
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Index />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/contratos"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Contratos />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/cadastrar-contrato"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <CadastrarContrato />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/editar-contrato/:id"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <EditarContrato />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/gerar-documento"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <GerarDocumento />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/termo-locador"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <TermoLocador />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/termo-locatario"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <TermoLocatario />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/termo-recusa-assinatura-email"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <TermoRecusaAssinaturaEmail />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/processo/:contratoId"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <ProcessoRescisao />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/processo/:contratoId/termo-chaves"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <TermoLocatario />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/editar-termo/:id"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <EditTerm />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/chat"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Chat />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/analise-vistoria"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <AnaliseVistoria />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/vistoria-analises"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <VistoriaAnalises />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/prestadores"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Prestadores />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/debug-images"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <DebugImages />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute>
+                        <AdminRoute>
+                          <Layout>
+                            <Admin />
+                          </Layout>
+                        </AdminRoute>
+                      </ProtectedRoute>
+                    }
+                  />
 
-            {/* Rota 404 */}
-            <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </AuthProvider>
-      </BrowserRouter>
+                  {/* Rota 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ToastProvider>
   </QueryClientProvider>

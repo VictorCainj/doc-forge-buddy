@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Users,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -26,7 +27,7 @@ import { cn } from '@/lib/utils';
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (!error) {
@@ -76,6 +77,16 @@ const Sidebar = () => {
     },
   ];
 
+  // Adicionar item Admin apenas para administradores
+  const adminMenuItem = {
+    name: 'Administrador',
+    icon: Settings,
+    path: '/admin',
+    active: location.pathname === '/admin',
+  };
+
+  const allMenuItems = isAdmin ? [...menuItems, adminMenuItem] : menuItems;
+
   if (!user) return null;
 
   return (
@@ -87,9 +98,7 @@ const Sidebar = () => {
             <Home className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-neutral-900">
-              DocForge
-            </h1>
+            <h1 className="text-lg font-semibold text-neutral-900">DocForge</h1>
             <p className="text-xs text-neutral-500">Gestão Imobiliária</p>
           </div>
         </div>
@@ -102,7 +111,7 @@ const Sidebar = () => {
             Menu
           </h3>
           <ul className="space-y-1">
-            {menuItems.map((item) => {
+            {allMenuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.name}>
@@ -118,7 +127,9 @@ const Sidebar = () => {
                     <Icon
                       className={cn(
                         'h-4 w-4 mr-3',
-                        item.active ? 'text-neutral-700' : 'text-neutral-400 group-hover:text-neutral-600'
+                        item.active
+                          ? 'text-neutral-700'
+                          : 'text-neutral-400 group-hover:text-neutral-600'
                       )}
                     />
                     <span className="text-sm font-medium">{item.name}</span>
@@ -148,10 +159,10 @@ const Sidebar = () => {
               </Avatar>
               <div className="flex flex-col items-start text-left">
                 <span className="text-sm font-medium text-neutral-900">
-                  {user.email?.split('@')[0] || 'Usuário'}
+                  {profile?.full_name || user.email?.split('@')[0] || 'Usuário'}
                 </span>
                 <span className="text-xs text-neutral-500">
-                  Administrador
+                  {profile?.role === 'admin' ? 'Administrador' : 'Usuário'}
                 </span>
               </div>
             </Button>
@@ -159,9 +170,13 @@ const Sidebar = () => {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.email}</p>
+                <p className="text-sm font-medium leading-none">
+                  {profile?.full_name || user.email}
+                </p>
                 <p className="text-xs leading-none text-neutral-500">
-                  Administrador do Sistema
+                  {profile?.role === 'admin'
+                    ? 'Administrador do Sistema'
+                    : 'Usuário'}
                 </p>
               </div>
             </DropdownMenuLabel>
