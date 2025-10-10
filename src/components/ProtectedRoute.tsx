@@ -23,7 +23,7 @@ const ProtectedRoute = ({
         console.warn('Timeout de verificação de autenticação - forçando renderização');
         setForceLoad(true);
       }
-    }, 8000); // 8 segundos de timeout
+    }, 4000); // 4 segundos de timeout (otimizado)
 
     return () => clearTimeout(timeoutId);
   }, [loading]);

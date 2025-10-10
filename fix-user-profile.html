@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Perfil do Usuário</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover {
+            background: #0b7dda;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Verificar e Corrigir Perfil do Usuário</h1>
+        <p>Use esta ferramenta para verificar e corrigir permissões de administrador.</p>
+        
+        <div>
+            <button onclick="checkProfile()">Verificar Perfil</button>
+            <button onclick="fixProfile()" class="secondary">Corrigir e Tornar Admin</button>
+            <button onclick="location.href='/'" class="secondary">Voltar ao App</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Configurar Supabase (você precisa usar suas credenciais)
+        const SUPABASE_URL = localStorage.getItem('supabase_url') || prompt('Digite a URL do Supabase:');
+        const SUPABASE_KEY = localStorage.getItem('supabase_key') || prompt('Digite a chave pública do Supabase:');
+        
+        if (SUPABASE_URL && SUPABASE_KEY) {
+            localStorage.setItem('supabase_url', SUPABASE_URL);
+            localStorage.setItem('supabase_key', SUPABASE_KEY);
+        }
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        window.checkProfile = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '⏳ Verificando perfil...';
+
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    throw new Error('Usuário não encontrado. Faça login primeiro.');
+                }
+
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+
+                let message = `✅ Usuário: ${user.email}\n`;
+                message += `📋 User ID: ${user.id}\n\n`;
+
+                if (profileError) {
+                    message += `❌ Profile não encontrado!\n`;
+                    message += `Erro: ${profileError.message}\n`;
+                    resultDiv.className = 'error';
+                } else {
+                    message += `✅ Profile encontrado:\n`;
+                    message += `👤 Nome: ${profile.full_name}\n`;
+                    message += `🔑 Role: ${profile.role}\n`;
+                    message += `📅 Criado em: ${new Date(profile.created_at).toLocaleString('pt-BR')}\n\n`;
+                    
+                    if (profile.role === 'admin') {
+                        message += `✅ Usuário já é administrador!`;
+                        resultDiv.className = 'success';
+                    } else {
+                        message += `⚠️ Usuário não é administrador. Use o botão "Corrigir" para torná-lo admin.`;
+                        resultDiv.className = 'info';
+                    }
+                }
+
+                resultDiv.innerHTML = message;
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        window.fixProfile = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '⏳ Corrigindo perfil...';
+
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    throw new Error('Usuário não encontrado. Faça login primeiro.');
+                }
+
+                // Tentar atualizar perfil existente
+                const { data: updatedProfile, error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ role: 'admin' })
+                    .eq('user_id', user.id)
+                    .select()
+                    .single();
+
+                if (updateError) {
+                    // Se não existe, criar
+                    const { data: newProfile, error: createError } = await supabase
+                        .from('profiles')
+                        .insert({
+                            user_id: user.id,
+                            role: 'admin',
+                            full_name: user.email?.split('@')[0] || 'Admin',
+                        })
+                        .select()
+                        .single();
+
+                    if (createError) {
+                        throw new Error(`Erro ao criar profile: ${createError.message}`);
+                    }
+
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ Profile criado com sucesso!\n` +
+                        `👤 Nome: ${newProfile.full_name}\n` +
+                        `🔑 Role: ${newProfile.role}\n\n` +
+                        `Recarregue a página para aplicar as alterações.`;
+                } else {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ Profile atualizado com sucesso!\n` +
+                        `👤 Nome: ${updatedProfile.full_name}\n` +
+                        `🔑 Role: ${updatedProfile.role}\n\n` +
+                        `Recarregue a página para aplicar as alterações.`;
+                }
+
+                // Recarregar após 2 segundos
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        // Verificar automaticamente ao carregar
+        window.addEventListener('load', () => {
+            checkProfile();
+        });
+    </script>
+</body>
+</html>

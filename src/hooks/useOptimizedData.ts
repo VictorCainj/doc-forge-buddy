@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { validateContractsList, type Contract } from '@/utils/dataValidator';
 import { dbLogger } from '@/utils/logger';
+import { cacheManager } from '@/utils/cacheManager';
 
 interface UseOptimizedDataOptions {
   documentType?: string;
@@ -46,7 +47,7 @@ export const useOptimizedData = (
     [documentType, limit, orderBy, ascending]
   );
 
-  // Função para buscar dados com paginação
+  // Função para buscar dados com paginação (otimizado com cache)
   const fetchData = useCallback(
     async (page: number = 0, reset: boolean = false) => {
       try {
@@ -55,33 +56,52 @@ export const useOptimizedData = (
           setError(null);
         }
 
+        // Verificar cache para primeira página
+        if (page === 0 && reset) {
+          const cachedData = cacheManager.get<{ data: Contract[]; count: number }>(`contracts-${cacheKey}`);
+          if (cachedData) {
+            dbLogger.debug('Usando dados do cache');
+            setData(cachedData.data);
+            setTotalCount(cachedData.count);
+            setCurrentPage(0);
+            setLoading(false);
+            return;
+          }
+        }
+
         const from = page * limit;
         const to = from + limit - 1;
 
-        // Buscar dados com contagem total
-        const [dataQuery, countQuery] = await Promise.all([
-          supabase
-            .from('saved_terms')
-            .select('*')
-            .eq('document_type', documentType)
-            .order(orderBy, { ascending })
-            .range(from, to),
-          supabase
-            .from('saved_terms')
-            .select('*', { count: 'exact', head: true })
-            .eq('document_type', documentType),
-        ]);
+        // Buscar apenas os dados necessários (sem count extra)
+        // O count é feito apenas na primeira página
+        const query = supabase
+          .from('saved_terms')
+          .select('id, title, document_type, form_data, created_at, updated_at', 
+            page === 0 ? { count: 'exact' } : {})
+          .eq('document_type', documentType)
+          .order(orderBy, { ascending })
+          .range(from, to);
 
-        if (dataQuery.error) throw dataQuery.error;
-        if (countQuery.error) throw countQuery.error;
+        const result = await query;
 
-        const validatedData = validateContractsList(dataQuery.data || []);
-        const total = countQuery.count || 0;
+        if (result.error) throw result.error;
+
+        const validatedData = validateContractsList(result.data || []);
 
         setData((prevData) =>
           reset ? validatedData : [...prevData, ...validatedData]
         );
-        setTotalCount(total);
+        
+        // Atualizar count apenas na primeira página
+        if (page === 0 && result.count !== null) {
+          setTotalCount(result.count);
+          // Cachear dados da primeira página
+          cacheManager.set(`contracts-${cacheKey}`, {
+            data: validatedData,
+            count: result.count,
+          }, 2 * 60 * 1000); // Cache de 2 minutos
+        }
+        
         setCurrentPage(page);
         setError(null);
       } catch (err) {
@@ -93,13 +113,14 @@ export const useOptimizedData = (
         setLoading(false);
       }
     },
-    [documentType, limit, orderBy, ascending]
+    [documentType, limit, orderBy, ascending, cacheKey]
   );
 
-  // Função para recarregar dados
+  // Função para recarregar dados (limpa cache)
   const refetch = useCallback(async () => {
+    cacheManager.delete(`contracts-${cacheKey}`);
     await fetchData(0, true);
-  }, [fetchData]);
+  }, [fetchData, cacheKey]);
 
   // Função para carregar mais dados
   const loadMore = useCallback(async () => {

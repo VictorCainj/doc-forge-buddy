@@ -55,23 +55,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Carregar profile do usuário
+  // Carregar profile do usuário (otimizado com timeout)
   const loadUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Timeout de 3 segundos para o carregamento do profile
+      const profilePromise = supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, role, full_name, created_at')
         .eq('user_id', userId)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout ao carregar profile')), 3000)
+      );
+
+      const { data, error } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any;
 
       if (error) {
         authLogger.error('Erro ao carregar profile:', error);
         setProfile(null);
       } else {
         setProfile(data as UserProfile);
+        authLogger.debug('Profile carregado:', data?.role);
       }
     } catch (error) {
-      authLogger.error('Erro ao carregar profile:', error);
+      authLogger.warn('Timeout ou erro ao carregar profile:', error);
       setProfile(null);
     }
   };
@@ -87,7 +98,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           authLogger.warn('Timeout na verificação de autenticação');
           setLoading(false);
         }
-      }, 10000); // 10 segundos de timeout máximo
+      }, 5000); // 5 segundos de timeout máximo (otimizado)
     };
 
     // Obter sessão inicial
