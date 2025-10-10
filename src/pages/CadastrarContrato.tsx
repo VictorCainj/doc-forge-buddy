@@ -308,24 +308,39 @@ const CadastrarContrato = () => {
         toast.success('Contrato atualizado com sucesso!');
       } else {
         // Modo de criação - inserir novo contrato
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          throw new Error('Usuário não autenticado');
+        }
+
         const contractData = {
           title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(/ e | E /)[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(/ e | E /)[0]?.trim() || '[LOCATÁRIO]'}`,
           content: JSON.stringify(enhancedData),
           form_data: enhancedData,
           document_type: 'contrato',
+          user_id: user.id,
         };
 
         const { error } = await supabase
           .from('saved_terms')
           .insert(contractData);
-        if (error) throw error;
+
+        if (error) {
+          console.error('Erro ao inserir contrato:', error);
+          console.error('Dados enviados:', contractData);
+          throw error;
+        }
 
         toast.success('Contrato cadastrado com sucesso!');
       }
 
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
-    } catch {
+    } catch (error) {
+      console.error('Erro completo ao cadastrar contrato:', error);
       toast.error(
         isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato'
       );

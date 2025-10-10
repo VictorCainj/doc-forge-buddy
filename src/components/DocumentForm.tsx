@@ -268,11 +268,20 @@ const DocumentForm = ({
         });
       } else {
         // Criar novo termo
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          throw new Error('Usuário não autenticado');
+        }
+
         const { error } = await supabase.from('saved_terms').insert({
           title: documentTitle,
           content: documentContent,
           form_data: formData,
           document_type: 'termo-inquilino',
+          user_id: user.id,
         });
 
         if (error) throw error;
