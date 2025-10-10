@@ -1,71 +1,71 @@
 /**
- * Sistema de Design Minimalista - Estilo Google Material
- * Cores neutras, sem ícones coloridos, design limpo e suave
+ * Sistema de Design Google Material Design 3
+ * Paleta Google com tons sutis, design limpo e moderno
  */
 
 // ============================================
-// CORES - Paleta Monocromática
+// CORES - Paleta Google Material Design 3
 // ============================================
 export const colors = {
-  // Escala de Cinza Principal
+  // Escala de Cinza Google
   neutral: {
-    50: '#FAFAFA',   // Backgrounds sutis
-    100: '#F5F5F5',  // Cards e containers
-    200: '#EEEEEE',  // Bordas suaves
-    300: '#E0E0E0',  // Divisores
-    400: '#BDBDBD',  // Texto desabilitado
-    500: '#9E9E9E',  // Ícones inativos
-    600: '#757575',  // Texto secundário
-    700: '#616161',  // Ícones ativos
-    800: '#424242',  // Texto principal
-    900: '#212121',  // Títulos
-    950: '#121212',  // Backgrounds dark mode
+    50: '#F8F9FA', // Surface mais clara
+    100: '#F1F3F4', // Surface clara
+    200: '#E8EAED', // Borders suaves
+    300: '#DADCE0', // Borders padrão
+    400: '#BDC1C6', // Texto desabilitado
+    500: '#9AA0A6', // Ícones inativos
+    600: '#80868B', // Texto secundário
+    700: '#5F6368', // Texto terciário
+    800: '#3C4043', // Texto secundário escuro
+    900: '#202124', // Texto principal
+    950: '#000000', // Preto puro
   },
-  
-  // Cor de Acento Única - Azul Suave
+
+  // Azul Google - Cor Primária
   primary: {
-    50: '#E3F2FD',   // Hover states light
-    100: '#BBDEFB',  // Selected states
-    200: '#90CAF9',  // Active states
-    300: '#64B5F6',  // Focus rings
-    400: '#42A5F5',  // Secondary actions
-    500: '#2196F3',  // Primary actions
-    600: '#1E88E5',  // Primary hover
-    700: '#1976D2',  // Primary pressed
-    800: '#1565C0',  // Primary dark
-    900: '#0D47A1',  // Primary darkest
+    50: '#E8F0FE', // Azul muito claro
+    100: '#D2E3FC', // Azul claro
+    200: '#AECBFA', // Azul claro médio
+    300: '#8AB4F8', // Azul médio
+    400: '#669DF6', // Azul médio escuro
+    500: '#4285F4', // Azul Google principal
+    600: '#1A73E8', // Azul escuro
+    700: '#1967D2', // Azul mais escuro
+    800: '#185ABC', // Azul muito escuro
+    900: '#174EA6', // Azul profundo
   },
-  
-  // Estados Semânticos - Tons Suaves
+
+  // Estados Semânticos - Cores Google
   semantic: {
-    success: '#66BB6A',     // Verde suave
-    successBg: '#E8F5E9',   // Verde background
-    warning: '#FFA726',     // Laranja suave
-    warningBg: '#FFF3E0',   // Laranja background
-    error: '#EF5350',       // Vermelho suave
-    errorBg: '#FFEBEE',     // Vermelho background
-    info: '#29B6F6',        // Azul informativo
-    infoBg: '#E1F5FE',      // Azul background
+    success: '#34A853', // Verde Google
+    successBg: '#E6F4EA', // Verde background
+    warning: '#FBBC04', // Amarelo Google
+    warningBg: '#FEF7E0', // Amarelo background
+    error: '#EA4335', // Vermelho Google
+    errorBg: '#FCE8E6', // Vermelho background
+    info: '#4285F4', // Azul informativo
+    infoBg: '#E8F0FE', // Azul background
   },
-  
+
   // Cores Funcionais
   background: {
     primary: '#FFFFFF',
-    secondary: '#FAFAFA',
-    tertiary: '#F5F5F5',
+    secondary: '#F8F9FA',
+    tertiary: '#F1F3F4',
   },
-  
+
   border: {
-    light: '#E0E0E0',
-    default: '#BDBDBD',
-    dark: '#9E9E9E',
+    light: '#E8EAED',
+    default: '#DADCE0',
+    dark: '#BDC1C6',
   },
-  
+
   text: {
-    primary: '#212121',
-    secondary: '#616161',
-    tertiary: '#9E9E9E',
-    disabled: '#BDBDBD',
+    primary: '#202124',
+    secondary: '#5F6368',
+    tertiary: '#80868B',
+    disabled: '#BDC1C6',
     inverse: '#FFFFFF',
   },
 };
@@ -75,21 +75,34 @@ export const colors = {
 // ============================================
 export const typography = {
   fontFamily: {
-    sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
-    mono: ['"JetBrains Mono"', 'Monaco', 'Consolas', '"Courier New"', 'monospace'],
+    sans: [
+      'Inter',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      'sans-serif',
+    ],
+    mono: [
+      '"JetBrains Mono"',
+      'Monaco',
+      'Consolas',
+      '"Courier New"',
+      'monospace',
+    ],
   },
-  
+
   fontSize: {
-    xs: '0.75rem',    // 12px - Captions
-    sm: '0.875rem',   // 14px - Body small
-    base: '1rem',     // 16px - Body default
-    lg: '1.125rem',   // 18px - Subtítulos
-    xl: '1.25rem',    // 20px - Títulos seção
-    '2xl': '1.5rem',  // 24px - Títulos página
-    '3xl': '2rem',    // 32px - Headlines
-    '4xl': '2.5rem',  // 40px - Display
+    xs: '0.75rem', // 12px - Captions
+    sm: '0.875rem', // 14px - Body small
+    base: '1rem', // 16px - Body default
+    lg: '1.125rem', // 18px - Subtítulos
+    xl: '1.25rem', // 20px - Títulos seção
+    '2xl': '1.5rem', // 24px - Títulos página
+    '3xl': '2rem', // 32px - Headlines
+    '4xl': '2.5rem', // 40px - Display
   },
-  
+
   fontWeight: {
     light: 300,
     normal: 400,
@@ -97,7 +110,7 @@ export const typography = {
     semibold: 600,
     bold: 700,
   },
-  
+
   lineHeight: {
     tight: 1.25,
     snug: 1.375,
@@ -105,7 +118,7 @@ export const typography = {
     relaxed: 1.625,
     loose: 1.75,
   },
-  
+
   letterSpacing: {
     tighter: '-0.05em',
     tight: '-0.025em',
@@ -158,7 +171,7 @@ export const borders = {
     '2xl': '24px',
     full: '9999px',
   },
-  
+
   width: {
     none: '0',
     thin: '1px',
@@ -180,7 +193,7 @@ export const shadows = {
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
   '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
   inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-  
+
   // Elevações Material Design
   elevation: {
     0: 'none',
@@ -207,7 +220,7 @@ export const transitions = {
     slow: '300ms',
     slower: '500ms',
   },
-  
+
   timing: {
     linear: 'linear',
     ease: 'ease',
@@ -220,10 +233,11 @@ export const transitions = {
     accelerate: 'cubic-bezier(0.4, 0.0, 1, 1)',
     sharp: 'cubic-bezier(0.4, 0.0, 0.6, 1)',
   },
-  
+
   // Transições pré-definidas
   all: 'all 200ms ease',
-  colors: 'background-color 200ms ease, border-color 200ms ease, color 200ms ease',
+  colors:
+    'background-color 200ms ease, border-color 200ms ease, color 200ms ease',
   opacity: 'opacity 200ms ease',
   shadow: 'box-shadow 200ms ease',
   transform: 'transform 200ms ease',
@@ -264,46 +278,50 @@ export const components = {
   button: {
     base: 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
     sizes: {
-      sm: 'h-8 px-3 text-sm rounded-md',
-      md: 'h-10 px-4 text-sm rounded-md',
-      lg: 'h-12 px-6 text-base rounded-md',
+      sm: 'h-9 px-3 text-sm rounded-lg',
+      md: 'h-10 px-4 text-sm rounded-lg',
+      lg: 'h-12 px-6 text-base rounded-xl',
     },
     variants: {
-      primary: 'bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-900',
-      secondary: 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus-visible:ring-neutral-500',
-      outline: 'border border-neutral-300 bg-transparent hover:bg-neutral-50 focus-visible:ring-neutral-500',
-      ghost: 'bg-transparent hover:bg-neutral-100 focus-visible:ring-neutral-500',
-      link: 'bg-transparent underline-offset-4 hover:underline text-neutral-900',
+      primary:
+        'bg-primary-500 text-white hover:bg-primary-600 shadow-elevation-1 hover:shadow-elevation-2 focus-visible:ring-primary-500',
+      secondary:
+        'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus-visible:ring-neutral-500',
+      outline:
+        'border border-neutral-300 bg-transparent hover:bg-neutral-50 focus-visible:ring-primary-500',
+      ghost:
+        'bg-transparent hover:bg-neutral-100 text-neutral-700 focus-visible:ring-neutral-500',
+      link: 'bg-transparent underline-offset-4 hover:underline text-primary-600',
     },
   },
-  
+
   card: {
-    base: 'bg-white rounded-lg border border-neutral-200 overflow-hidden',
-    hover: 'transition-shadow duration-200 hover:shadow-md',
+    base: 'bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-elevation-1',
+    hover: 'transition-shadow duration-200 hover:shadow-elevation-2',
     padding: {
       sm: 'p-4',
       md: 'p-6',
       lg: 'p-8',
     },
   },
-  
+
   input: {
-    base: 'w-full px-3 py-2 bg-white border border-neutral-300 rounded-md text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:bg-neutral-50 disabled:cursor-not-allowed transition-colors duration-200',
+    base: 'w-full px-3 py-2 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 disabled:bg-neutral-50 disabled:cursor-not-allowed transition-all duration-200',
     sizes: {
       sm: 'h-8 text-sm',
       md: 'h-10 text-sm',
       lg: 'h-12 text-base',
     },
   },
-  
+
   badge: {
-    base: 'inline-flex items-center px-2 py-1 rounded-md text-xs font-medium',
+    base: 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium',
     variants: {
       default: 'bg-neutral-100 text-neutral-700',
       primary: 'bg-primary-50 text-primary-700',
-      success: 'bg-green-50 text-green-700',
-      warning: 'bg-yellow-50 text-yellow-700',
-      error: 'bg-red-50 text-red-700',
+      success: 'bg-success-50 text-success-700',
+      warning: 'bg-warning-50 text-warning-700',
+      error: 'bg-error-50 text-error-700',
     },
   },
 };
@@ -316,10 +334,12 @@ export const utils = {
   cn: (...classes: (string | undefined | null | false)[]) => {
     return classes.filter(Boolean).join(' ');
   },
-  
+
   // Função para obter cor com opacidade
   withOpacity: (color: string, opacity: number) => {
-    return `${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`;
+    return `${color}${Math.round(opacity * 255)
+      .toString(16)
+      .padStart(2, '0')}`;
   },
 };
 

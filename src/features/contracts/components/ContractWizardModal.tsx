@@ -20,12 +20,7 @@ import {
 import { PersonManager } from '@/components/ui/person-manager';
 import { FormStep, FormField } from '@/hooks/use-form-wizard';
 import { useContractWizard } from '../hooks/useContractWizard';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  ChevronDown,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Person {
@@ -62,7 +57,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [locadores, setLocadores] = useState<Person[]>([]);
   const [locatarios, setLocatarios] = useState<Person[]>([]);
   const [fiadores, setFiadores] = useState<Person[]>([]);
-  
+
   // Estado e ref para detectar scroll
   const [hasScroll, setHasScroll] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
@@ -92,7 +87,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         const nomesLocadores = initialData.nomeProprietario
           .split(/ e | E /)
           .map((nome) => nome.trim())
-          .filter(nome => nome);
+          .filter((nome) => nome);
         const locadoresIniciais = nomesLocadores.map((nome, index) => ({
           id: `locador-${index}`,
           name: nome,
@@ -107,7 +102,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         const nomesLocatarios = initialData.nomeLocatario
           .split(/ e | E /)
           .map((nome) => nome.trim())
-          .filter(nome => nome);
+          .filter((nome) => nome);
         const locatariosIniciais = nomesLocatarios.map((nome, index) => ({
           id: `locatario-${index}`,
           name: nome,
@@ -122,7 +117,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         const nomesFiadores = initialData.nomeFiador
           .split(/ e | E /)
           .map((nome) => nome.trim())
-          .filter(nome => nome);
+          .filter((nome) => nome);
         const fiadoresIniciais = nomesFiadores.map((nome, index) => ({
           id: `fiador-${index}`,
           name: nome,
@@ -180,7 +175,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         const { scrollHeight, clientHeight, scrollTop } = scrollRef.current;
         const hasScrollContent = scrollHeight > clientHeight;
         const isAtBottom = scrollHeight - scrollTop - clientHeight < 10;
-        
+
         setHasScroll(hasScrollContent);
         setIsScrolledToBottom(isAtBottom);
         // Mostrar sombra no footer se há scroll e não está no final
@@ -203,14 +198,15 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
     }
   }, [currentStep]);
 
-  // Renderiza campo baseado no tipo
+  // Renderiza campo baseado no tipo - Google Material Design
   const renderField = (field: FormField) => {
     const value = formData[field.name] || '';
 
     const fieldClasses = cn(
-      'bg-white border-neutral-200 text-neutral-900 placeholder:text-neutral-400',
-      'focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400/20',
-      'transition-all duration-300'
+      'bg-white border-neutral-300 text-neutral-900 placeholder:text-neutral-500',
+      'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30',
+      'hover:border-neutral-400',
+      'transition-all duration-200 rounded-lg'
     );
 
     switch (field.type) {
@@ -303,86 +299,97 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl p-0 bg-white border border-neutral-200 shadow-sm overflow-visible">
-        {/* Header profissional */}
+      <DialogContent className="max-w-4xl p-0 bg-white border border-neutral-200 shadow-elevation-4 overflow-visible rounded-xl">
+        {/* Header Google Material Design 3 */}
         <DialogHeader className="relative p-6 border-b border-neutral-200 bg-white">
-          <DialogTitle className="text-2xl font-semibold text-neutral-900 text-center relative z-10">
+          <DialogTitle className="text-2xl font-medium text-[#202124] text-center relative z-10">
             {title}
           </DialogTitle>
-          
-          {/* Progress bar */}
+
+          {/* Progress bar - Azul Google */}
           <div className="mt-4 relative">
-            <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-neutral-900"
+                className="h-full bg-primary-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
               />
             </div>
-            <div className="flex justify-between mt-2 text-xs text-neutral-500">
-              <span>Etapa {currentStep + 1} de {steps.length}</span>
-              <span>{Math.round(progress)}%</span>
+            <div className="flex justify-between mt-2 text-xs text-neutral-700">
+              <span className="font-medium">
+                Etapa {currentStep + 1} de {steps.length}
+              </span>
+              <span className="font-medium">{Math.round(progress)}%</span>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Stage indicators */}
-        <div className="flex items-center justify-center gap-2 p-4 bg-neutral-50 border-b border-neutral-200">
+        {/* Stage indicators - Google Material Design */}
+        <div className="flex items-center justify-center gap-2 p-4 bg-[#F8F9FA] border-b border-neutral-200">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
             const isCompleted = index < currentStep;
-            
+
             return (
               <button
                 key={step.id}
                 onClick={() => handleStepClick(index)}
                 className={cn(
-                  'relative group transition-all duration-300',
-                  'flex flex-col items-center gap-1 p-3 rounded-lg',
-                  isActive && 'bg-neutral-100 border border-neutral-300',
-                  !isActive && 'border border-transparent hover:border-neutral-200',
-                  isCompleted && 'opacity-60'
+                  'relative group transition-all duration-200',
+                  'flex flex-col items-center gap-1 p-3 rounded-xl',
+                  isActive && 'bg-[#E8F0FE] border border-primary-300',
+                  !isActive &&
+                    'border border-transparent hover:border-neutral-300 hover:bg-white',
+                  isCompleted && 'opacity-70'
                 )}
               >
                 {/* Ícone */}
                 <div
                   className={cn(
-                    'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300',
-                    isActive && 'bg-neutral-900 border border-neutral-900',
-                    !isActive && isCompleted && 'bg-neutral-700 border border-neutral-600',
-                    !isActive && !isCompleted && 'bg-neutral-100 border border-neutral-200'
+                    'relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-elevation-1',
+                    isActive && 'bg-primary-500 border border-primary-500',
+                    !isActive &&
+                      isCompleted &&
+                      'bg-success-500 border border-success-500',
+                    !isActive &&
+                      !isCompleted &&
+                      'bg-white border border-neutral-300'
                   )}
                 >
                   {isCompleted ? (
                     <Check className="h-5 w-5 text-white" />
                   ) : (
-                    Icon && <Icon className={cn(
-                      'h-5 w-5',
-                      isActive && 'text-white',
-                      !isActive && 'text-neutral-600'
-                    )} />
+                    Icon && (
+                      <Icon
+                        className={cn(
+                          'h-5 w-5',
+                          isActive && 'text-white',
+                          !isActive && 'text-neutral-700'
+                        )}
+                      />
+                    )
                   )}
                 </div>
-                
+
                 {/* Label */}
                 <span
                   className={cn(
-                    'text-xs font-medium transition-colors duration-300',
-                    isActive && 'text-neutral-900',
-                    !isActive && 'text-neutral-600'
+                    'text-xs font-medium transition-colors duration-200',
+                    isActive && 'text-[#202124]',
+                    !isActive && 'text-[#5F6368]'
                   )}
                 >
                   {step.title.split(' ')[0]}
                 </span>
-                
+
                 {/* Connector line */}
                 {index < steps.length - 1 && (
                   <div
                     className={cn(
-                      'absolute top-8 left-full w-8 h-0.5 transition-all duration-300',
-                      isCompleted ? 'bg-neutral-400' : 'bg-neutral-200'
+                      'absolute top-8 left-full w-8 h-0.5 transition-all duration-200',
+                      isCompleted ? 'bg-success-400' : 'bg-neutral-300'
                     )}
                   />
                 )}
@@ -407,108 +414,116 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               }}
               className="p-6 space-y-6"
             >
-              {/* Step info */}
+              {/* Step info - Google Material Design */}
               <div className="text-center mb-6">
-                <h3 className="text-xl font-semibold text-neutral-900">
+                <h3 className="text-xl font-medium text-[#202124]">
                   {currentStepData.title}
                 </h3>
-                <p className="text-sm text-neutral-600 mt-2">
+                <p className="text-sm text-[#5F6368] mt-2">
                   {currentStepData.description}
                 </p>
               </div>
 
               {/* Content com scroll - maior para etapas com PersonManager */}
               <div className="relative">
-                <div 
+                <div
                   ref={scrollRef}
                   className={cn(
-                    "overflow-y-auto pr-2 custom-scrollbar",
-                    (currentStepData.id === 'locador' || currentStepData.id === 'locatario') 
-                      ? "max-h-[550px]" 
-                      : "max-h-[450px]"
+                    'overflow-y-auto pr-2 custom-scrollbar',
+                    currentStepData.id === 'locador' ||
+                      currentStepData.id === 'locatario'
+                      ? 'max-h-[550px]'
+                      : 'max-h-[450px]'
                   )}
                 >
                   {/* Person Managers */}
-                {currentStepData.id === 'locador' && (
-                  <div className="mb-6">
-                    <PersonManager
-                      title="Locador(es)"
-                      people={locadores}
-                      onPeopleChange={setLocadores}
-                      placeholder="Nome completo do locador"
-                      maxPeople={4}
-                    />
-                  </div>
-                )}
-
-                {currentStepData.id === 'locatario' && (
-                  <div className="mb-6">
-                    <PersonManager
-                      title="Locatário(s)"
-                      people={locatarios}
-                      onPeopleChange={setLocatarios}
-                      placeholder="Nome completo do locatário"
-                      maxPeople={4}
-                    />
-                  </div>
-                )}
-
-                {currentStepData.id === 'fiador' && formData.temFiador === 'sim' && (
-                  <div className="mb-6">
-                    <PersonManager
-                      title="Fiador(es)"
-                      people={fiadores}
-                      onPeopleChange={setFiadores}
-                      placeholder="Nome completo do fiador"
-                      maxPeople={4}
-                    />
-                  </div>
-                )}
-
-                {/* Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {currentStepData.fields.map((field) => {
-                  // Ocultar campos de nome quando PersonManager estiver sendo usado
-                  if (currentStepData.id === 'locador' && field.name === 'nomeProprietario') {
-                    return null;
-                  }
-                  if (currentStepData.id === 'locatario' && field.name === 'nomeLocatario') {
-                    return null;
-                  }
-
-                  return (
-                    <div
-                      key={field.name}
-                      className={cn(
-                        'space-y-2',
-                        field.type === 'textarea' && 'md:col-span-2'
-                      )}
-                    >
-                      <Label
-                        htmlFor={field.name}
-                        className="text-neutral-700 font-medium flex items-center gap-1"
-                      >
-                        {field.label}
-                        {field.required && (
-                          <span className="text-neutral-700 text-xs">*</span>
-                        )}
-                      </Label>
-                      {renderField(field)}
-                      {field.tooltip && (
-                        <p className="text-xs text-neutral-500 italic">
-                          {field.tooltip}
-                        </p>
-                      )}
+                  {currentStepData.id === 'locador' && (
+                    <div className="mb-6">
+                      <PersonManager
+                        title="Locador(es)"
+                        people={locadores}
+                        onPeopleChange={setLocadores}
+                        placeholder="Nome completo do locador"
+                        maxPeople={4}
+                      />
                     </div>
-                  );
-                })}
+                  )}
+
+                  {currentStepData.id === 'locatario' && (
+                    <div className="mb-6">
+                      <PersonManager
+                        title="Locatário(s)"
+                        people={locatarios}
+                        onPeopleChange={setLocatarios}
+                        placeholder="Nome completo do locatário"
+                        maxPeople={4}
+                      />
+                    </div>
+                  )}
+
+                  {currentStepData.id === 'fiador' &&
+                    formData.temFiador === 'sim' && (
+                      <div className="mb-6">
+                        <PersonManager
+                          title="Fiador(es)"
+                          people={fiadores}
+                          onPeopleChange={setFiadores}
+                          placeholder="Nome completo do fiador"
+                          maxPeople={4}
+                        />
+                      </div>
+                    )}
+
+                  {/* Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {currentStepData.fields.map((field) => {
+                      // Ocultar campos de nome quando PersonManager estiver sendo usado
+                      if (
+                        currentStepData.id === 'locador' &&
+                        field.name === 'nomeProprietario'
+                      ) {
+                        return null;
+                      }
+                      if (
+                        currentStepData.id === 'locatario' &&
+                        field.name === 'nomeLocatario'
+                      ) {
+                        return null;
+                      }
+
+                      return (
+                        <div
+                          key={field.name}
+                          className={cn(
+                            'space-y-2',
+                            field.type === 'textarea' && 'md:col-span-2'
+                          )}
+                        >
+                          <Label
+                            htmlFor={field.name}
+                            className="text-[#5F6368] font-medium flex items-center gap-1 text-sm"
+                          >
+                            {field.label}
+                            {field.required && (
+                              <span className="text-error-500 text-sm">*</span>
+                            )}
+                          </Label>
+                          {renderField(field)}
+                          {field.tooltip && (
+                            <p className="text-xs text-[#5F6368] italic">
+                              {field.tooltip}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                </div>
-                
-                {/* Indicador de mais conteúdo abaixo */}
+
+                {/* Indicador de mais conteúdo abaixo - Google Material */}
                 {hasScroll && !isScrolledToBottom && (
                   <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-2">
-                    <div className="flex items-center gap-1 text-neutral-600 text-xs animate-bounce">
+                    <div className="flex items-center gap-1 text-primary-600 text-xs animate-bounce font-medium">
                       <ChevronDown className="h-4 w-4" />
                       <span>Role para ver mais</span>
                       <ChevronDown className="h-4 w-4" />
@@ -520,12 +535,12 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Footer Inteligente - Sempre visível */}
-        <div 
+        {/* Footer Google Material Design - Sempre visível */}
+        <div
           className={cn(
-            'flex items-center justify-between p-4 border-t border-neutral-200 bg-white',
-            'transition-shadow duration-300',
-            showFooterShadow && 'shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]'
+            'flex items-center justify-between p-6 border-t border-neutral-200 bg-white',
+            'transition-shadow duration-200',
+            showFooterShadow && 'shadow-elevation-2'
           )}
         >
           {/* Botão Anterior */}
@@ -537,7 +552,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               'gap-2 text-neutral-700',
               'hover:bg-neutral-100',
               'disabled:opacity-0 disabled:pointer-events-none',
-              'transition-all duration-300'
+              'transition-all duration-200'
             )}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -545,22 +560,23 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           </Button>
 
           {/* Indicador de progresso no centro */}
-          <div className="flex items-center gap-2 text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-sm text-neutral-700">
             <span className="font-medium">
               {currentStep + 1} / {steps.length}
             </span>
           </div>
 
-          {/* Botão Próximo ou Finalizar */}
+          {/* Botão Próximo ou Finalizar - Azul Google */}
           {currentStep === steps.length - 1 ? (
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid || isSubmitting}
               className={cn(
-                'gap-2 bg-neutral-900 text-white px-6',
-                'hover:bg-neutral-800',
+                'gap-2 bg-primary-500 text-white px-6',
+                'hover:bg-primary-600',
+                'shadow-elevation-1 hover:shadow-elevation-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
-                'transition-all duration-300'
+                'transition-all duration-200'
               )}
             >
               {isSubmitting ? (
@@ -580,10 +596,11 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               onClick={handleNext}
               disabled={!isStepValid}
               className={cn(
-                'gap-2 bg-neutral-900 text-white px-6',
-                'hover:bg-neutral-800',
+                'gap-2 bg-primary-500 text-white px-6',
+                'hover:bg-primary-600',
+                'shadow-elevation-1 hover:shadow-elevation-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
-                'transition-all duration-300'
+                'transition-all duration-200'
               )}
             >
               Próximo

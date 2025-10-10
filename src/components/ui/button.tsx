@@ -9,32 +9,41 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Minimalista: fundo sólido neutro
-        default: 'bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-700 shadow-sm hover:shadow-md',
-        // Destrutivo suave
-        destructive: 'bg-error-500 text-white hover:bg-error-700 focus-visible:ring-error-500 shadow-sm hover:shadow-md',
-        // Outline minimalista
-        outline: 'border border-neutral-300 bg-white hover:bg-neutral-50 hover:border-neutral-400 focus-visible:ring-primary-500/20',
-        // Secundário com fundo suave
-        secondary: 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus-visible:ring-neutral-500',
-        // Ghost sem bordas
+        // Google Material: Azul primário
+        default:
+          'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500/50 shadow-elevation-1 hover:shadow-elevation-2',
+        // Destrutivo Google: Vermelho
+        destructive:
+          'bg-error-500 text-white hover:bg-error-600 focus-visible:ring-error-500/50 shadow-elevation-1 hover:shadow-elevation-2',
+        // Outline Material: Borda azul sutil
+        outline:
+          'border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-primary-500 focus-visible:ring-primary-500/30',
+        // Secundário: Cinza claro
+        secondary:
+          'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus-visible:ring-neutral-500/50',
+        // Ghost: Sem fundo, hover sutil
         ghost: 'hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900',
-        // Link simples
-        link: 'text-neutral-900 underline-offset-4 hover:underline hover:text-neutral-700',
-        // Novo: Primary com cor de acento
-        primary: 'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500 shadow-sm hover:shadow-md',
-        // Novo: Subtle para ações secundárias
-        subtle: 'bg-primary-50 text-primary-700 hover:bg-primary-100 focus-visible:ring-primary-500/20',
+        // Link: Azul Google
+        link: 'text-primary-600 underline-offset-4 hover:underline hover:text-primary-700',
+        // Primary explícito: Azul Google
+        primary:
+          'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500/50 shadow-elevation-1 hover:shadow-elevation-2',
+        // Subtle: Fundo azul muito claro
+        subtle:
+          'bg-primary-50 text-primary-700 hover:bg-primary-100 focus-visible:ring-primary-500/30',
+        // Success: Verde Google
+        success:
+          'bg-success-500 text-white hover:bg-success-600 focus-visible:ring-success-500/50 shadow-elevation-1 hover:shadow-elevation-2',
       },
       size: {
-        xs: 'h-8 px-3 text-xs rounded-md',
-        sm: 'h-9 px-3 text-sm rounded-md',
-        default: 'h-10 px-4 text-sm rounded-md',
-        lg: 'h-12 px-6 text-base rounded-lg',
-        xl: 'h-14 px-8 text-base rounded-lg',
-        icon: 'h-10 w-10 rounded-md',
-        'icon-sm': 'h-8 w-8 rounded-md',
-        'icon-lg': 'h-12 w-12 rounded-lg',
+        xs: 'h-8 px-3 text-xs rounded-lg',
+        sm: 'h-9 px-3 text-sm rounded-lg',
+        default: 'h-10 px-4 text-sm rounded-lg',
+        lg: 'h-12 px-6 text-base rounded-xl',
+        xl: 'h-14 px-8 text-base rounded-xl',
+        icon: 'h-10 w-10 rounded-lg',
+        'icon-sm': 'h-8 w-8 rounded-lg',
+        'icon-lg': 'h-12 w-12 rounded-xl',
       },
     },
     defaultVariants: {

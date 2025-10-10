@@ -54,9 +54,13 @@ const EditarContrato = () => {
 
         // Mapear campos para garantir compatibilidade
         const mappedData: Record<string, string> = {
-          ...contractData.form_data as ContractFormData,
+          ...(contractData.form_data as ContractFormData),
           // Garantir que nomeProprietario seja usado (pode vir como nomesResumidosLocadores)
-          nomeProprietario: (contractData.form_data as ContractFormData)?.nomeProprietario || (contractData.form_data as ContractFormData)?.nomesResumidosLocadores || '',
+          nomeProprietario:
+            (contractData.form_data as ContractFormData)?.nomeProprietario ||
+            (contractData.form_data as ContractFormData)
+              ?.nomesResumidosLocadores ||
+            '',
         };
 
         // console.log('Mapped data:', mappedData);
@@ -312,7 +316,8 @@ const EditarContrato = () => {
         prazoDias: '30', // Sempre 30 dias
         dataComunicacao: data.dataInicioRescisao, // Data de comunicação = data de início
         // Garantir compatibilidade com ambos os nomes de campo
-        nomesResumidosLocadores: data.nomeProprietario || data.nomesResumidosLocadores || '',
+        nomesResumidosLocadores:
+          data.nomeProprietario || data.nomesResumidosLocadores || '',
       };
 
       // Atualizar contrato existente
@@ -348,18 +353,18 @@ const EditarContrato = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-neutral-600">Carregando dados do contrato...</p>
+          <p className="text-[#5F6368]">Carregando dados do contrato...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Modal Wizard Minimalista */}
+    <div className="min-h-screen bg-[#F8F9FA]">
+      {/* Modal Wizard Google Material Design 3 */}
       <ContractWizardModal
         open={isModalOpen}
         onOpenChange={handleModalClose}

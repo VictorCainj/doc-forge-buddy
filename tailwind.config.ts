@@ -20,62 +20,71 @@ export default {
     },
     extend: {
       colors: {
-        // Sistema de cores neutras - Design Minimalista
+        // Sistema de cores Google Material Design 3 - Tons Sutis
         neutral: {
-          50: '#FAFAFA',
-          100: '#F5F5F5',
-          200: '#EEEEEE',
-          300: '#E0E0E0',
-          400: '#BDBDBD',
-          500: '#9E9E9E',
-          600: '#757575',
-          700: '#616161',
-          800: '#424242',
-          900: '#212121',
-          950: '#121212',
+          50: '#F8F9FA', // Surface mais clara
+          100: '#F1F3F4', // Surface clara
+          200: '#E8EAED', // Borders suaves
+          300: '#DADCE0', // Borders padrão
+          400: '#BDC1C6', // Texto desabilitado
+          500: '#9AA0A6', // Ícones inativos
+          600: '#80868B', // Texto secundário
+          700: '#5F6368', // Texto terciário
+          800: '#3C4043', // Texto secundário escuro
+          900: '#202124', // Texto principal
+          950: '#000000', // Preto puro
         },
-        // Cor de acento única - Azul suave
+        // Azul Google - Cor Primária
         primary: {
-          50: '#E3F2FD',
-          100: '#BBDEFB',
-          200: '#90CAF9',
-          300: '#64B5F6',
-          400: '#42A5F5',
-          500: '#2196F3',
-          600: '#1E88E5',
-          700: '#1976D2',
-          800: '#1565C0',
-          900: '#0D47A1',
-          DEFAULT: '#2196F3',
+          50: '#E8F0FE', // Azul muito claro
+          100: '#D2E3FC', // Azul claro
+          200: '#AECBFA', // Azul claro médio
+          300: '#8AB4F8', // Azul médio
+          400: '#669DF6', // Azul médio escuro
+          500: '#4285F4', // Azul Google principal
+          600: '#1A73E8', // Azul escuro
+          700: '#1967D2', // Azul mais escuro
+          800: '#185ABC', // Azul muito escuro
+          900: '#174EA6', // Azul profundo
+          DEFAULT: '#4285F4',
           foreground: '#FFFFFF',
         },
-        // Cores semânticas suaves
+        // Verde Google - Success
         success: {
-          50: '#E8F5E9',
-          500: '#66BB6A',
-          700: '#43A047',
+          50: '#E6F4EA', // Verde muito claro
+          100: '#CEEAD6',
+          500: '#34A853', // Verde Google
+          600: '#1E8E3E',
+          700: '#137333',
         },
+        // Amarelo Google - Warning
         warning: {
-          50: '#FFF3E0',
-          500: '#FFA726',
-          700: '#FB8C00',
+          50: '#FEF7E0', // Amarelo muito claro
+          100: '#FEEFC3',
+          500: '#FBBC04', // Amarelo Google
+          600: '#F9AB00',
+          700: '#F29900',
         },
+        // Vermelho Google - Error
         error: {
-          50: '#FFEBEE',
-          500: '#EF5350',
-          700: '#E53935',
+          50: '#FCE8E6', // Vermelho muito claro
+          100: '#FAD2CF',
+          500: '#EA4335', // Vermelho Google
+          600: '#D93025',
+          700: '#C5221F',
         },
+        // Azul Informativo
         info: {
-          50: '#E1F5FE',
-          500: '#29B6F6',
-          700: '#039BE5',
+          50: '#E8F0FE',
+          500: '#4285F4',
+          700: '#1967D2',
         },
         // Mapeamento para compatibilidade
-        border: '#E0E0E0',
-        input: '#E0E0E0',
-        ring: '#2196F3',
+        border: '#DADCE0',
+        input: '#DADCE0',
+        ring: '#4285F4',
         background: '#FFFFFF',
-        foreground: '#212121',
+        foreground: '#202124',
         secondary: {
           DEFAULT: '#F5F5F5',
           foreground: '#616161',
@@ -112,26 +121,31 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        none: '0',
+        sm: '4px', // Material Design - pequeno
+        DEFAULT: '8px', // Material Design - padrão
+        md: '8px', // Material Design - médio
+        lg: '12px', // Material Design - grande
+        xl: '16px', // Material Design - extra grande
+        '2xl': '20px', // Material Design - extra extra grande
+        full: '9999px', // Círculo/pílula
+      },
+      boxShadow: {
+        // Google Material Design 3 - Elevations
+        'elevation-1':
+          '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)',
+        'elevation-2':
+          '0 1px 2px 0 rgba(60,64,67,0.3), 0 2px 6px 2px rgba(60,64,67,0.15)',
+        'elevation-3':
+          '0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)',
+        'elevation-4':
+          '0 2px 3px 0 rgba(60,64,67,0.3), 0 6px 10px 4px rgba(60,64,67,0.15)',
+        'elevation-5':
+          '0 4px 4px 0 rgba(60,64,67,0.3), 0 8px 12px 6px rgba(60,64,67,0.15)',
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-secondary': 'var(--gradient-secondary)',
-      },
-      boxShadow: {
-        // Sombras Material Design
-        'elevation-0': 'none',
-        'elevation-1': '0 2px 1px -1px rgba(0,0,0,0.2), 0 1px 1px 0 rgba(0,0,0,0.14), 0 1px 3px 0 rgba(0,0,0,0.12)',
-        'elevation-2': '0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12)',
-        'elevation-3': '0 3px 3px -2px rgba(0,0,0,0.2), 0 3px 4px 0 rgba(0,0,0,0.14), 0 1px 8px 0 rgba(0,0,0,0.12)',
-        'elevation-4': '0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12)',
-        'elevation-6': '0 3px 5px -1px rgba(0,0,0,0.2), 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12)',
-        'elevation-8': '0 5px 5px -3px rgba(0,0,0,0.2), 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12)',
-        // Sombras simples
-        'soft': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        'card': '0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.03)',
       },
       transitionTimingFunction: {
         'material-standard': 'cubic-bezier(0.4, 0.0, 0.2, 1)',
@@ -140,8 +154,21 @@ export default {
         'material-sharp': 'cubic-bezier(0.4, 0.0, 0.6, 1)',
       },
       fontFamily: {
-        'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
-        'mono': ['"JetBrains Mono"', 'Monaco', 'Consolas', '"Courier New"', 'monospace'],
+        sans: [
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          'sans-serif',
+        ],
+        mono: [
+          '"JetBrains Mono"',
+          'Monaco',
+          'Consolas',
+          '"Courier New"',
+          'monospace',
+        ],
       },
       keyframes: {
         'accordion-down': {

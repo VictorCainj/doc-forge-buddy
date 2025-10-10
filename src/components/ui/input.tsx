@@ -8,12 +8,12 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
       <input
         type={type}
         className={cn(
-          // Design minimalista com bordas suaves e transições
-          'flex h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-2',
-          'text-sm text-neutral-900 placeholder:text-neutral-400',
+          // Google Material Design 3 - Input
+          'flex h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2',
+          'text-sm text-neutral-900 placeholder:text-neutral-500',
           'transition-all duration-200',
-          // Estados de foco com cor primária sutil
-          'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+          // Estados de foco com azul Google
+          'focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500',
           // Estados hover
           'hover:border-neutral-400',
           // Estados desabilitados

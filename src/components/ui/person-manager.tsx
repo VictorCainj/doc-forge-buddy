@@ -56,24 +56,24 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
   };
 
   return (
-    <Card className="person-manager-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 card-title">
-          <User className="h-5 w-5" />
+    <Card className="person-manager-card border-neutral-200 shadow-elevation-1 rounded-xl">
+      <CardHeader className="border-b border-neutral-200">
+        <CardTitle className="flex items-center gap-2 card-title text-neutral-900 font-medium">
+          <User className="h-5 w-5 text-primary-600" />
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         {/* Lista de pessoas adicionadas */}
         {people.map((person, index) => (
           <div
             key={person.id}
-            className="person-item flex items-center gap-2 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
+            className="person-item flex items-center gap-2 p-3 border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 transition-all"
           >
             <div className="flex-1">
               <Label
                 htmlFor={`person-${person.id}`}
-                className="text-sm font-medium"
+                className="text-sm font-medium text-neutral-700"
               >
                 {title} {index + 1}:
               </Label>
@@ -90,7 +90,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
               variant="outline"
               size="sm"
               onClick={() => removePerson(person.id)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 hover:border-error-300"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -99,9 +99,12 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
 
         {/* Campo para adicionar nova pessoa */}
         {people.length < maxPeople && (
-          <div className="person-add flex items-end gap-2 p-3 border-2 border-dashed border-border rounded-lg bg-card/50">
+          <div className="person-add flex items-end gap-2 p-3 border-2 border-dashed border-neutral-300 rounded-lg bg-neutral-50/50 hover:bg-neutral-50 hover:border-primary-300 transition-all">
             <div className="flex-1">
-              <Label htmlFor="new-person" className="text-sm font-medium">
+              <Label
+                htmlFor="new-person"
+                className="text-sm font-medium text-neutral-700"
+              >
                 Adicionar {title}:
               </Label>
               <Input
@@ -118,7 +121,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
               onClick={addPerson}
               disabled={!newPersonName.trim()}
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary-500 hover:bg-primary-600 shadow-elevation-1 hover:shadow-elevation-2"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -126,7 +129,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({
         )}
 
         {people.length >= maxPeople && (
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-neutral-600 text-center">
             Máximo de {maxPeople} {title.toLowerCase()} atingido
           </p>
         )}

@@ -18,7 +18,7 @@ const CadastrarContrato = () => {
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
-  
+
   // Estados para modo de edição
   const [isEditMode, setIsEditMode] = useState(false);
   const [contractId, setContractId] = useState<string | null>(null);
@@ -34,14 +34,17 @@ const CadastrarContrato = () => {
     if (state?.editMode && state?.contractId && state?.contractData) {
       setIsEditMode(true);
       setContractId(state.contractId);
-      
+
       // Mapear campos para garantir compatibilidade
       const mappedData = {
         ...state.contractData,
         // Garantir que nomeProprietario seja usado (pode vir como nomesResumidosLocadores)
-        nomeProprietario: state.contractData.nomeProprietario || state.contractData.nomesResumidosLocadores || '',
+        nomeProprietario:
+          state.contractData.nomeProprietario ||
+          state.contractData.nomesResumidosLocadores ||
+          '',
       };
-      
+
       setFormData(mappedData);
     }
   }, [location.state]);
@@ -284,7 +287,8 @@ const CadastrarContrato = () => {
         prazoDias: '30', // Sempre 30 dias
         dataComunicacao: data.dataInicioRescisao, // Data de comunicação = data de início
         // Garantir compatibilidade com ambos os nomes de campo
-        nomesResumidosLocadores: data.nomeProprietario || data.nomesResumidosLocadores || '',
+        nomesResumidosLocadores:
+          data.nomeProprietario || data.nomesResumidosLocadores || '',
       };
 
       if (isEditMode && contractId) {
@@ -311,7 +315,9 @@ const CadastrarContrato = () => {
           document_type: 'contrato',
         };
 
-        const { error } = await supabase.from('saved_terms').insert(contractData);
+        const { error } = await supabase
+          .from('saved_terms')
+          .insert(contractData);
         if (error) throw error;
 
         toast.success('Contrato cadastrado com sucesso!');
@@ -320,7 +326,9 @@ const CadastrarContrato = () => {
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
     } catch {
-      toast.error(isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato');
+      toast.error(
+        isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -335,8 +343,8 @@ const CadastrarContrato = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Modal Wizard Minimalista */}
+    <div className="min-h-screen bg-[#F8F9FA]">
+      {/* Modal Wizard Google Material Design 3 */}
       <ContractWizardModal
         open={isModalOpen}
         onOpenChange={handleModalClose}
@@ -347,9 +355,7 @@ const CadastrarContrato = () => {
         submitButtonText={
           isEditMode ? 'Atualizar Contrato' : 'Cadastrar Contrato'
         }
-        title={
-          isEditMode ? 'Editar Contrato' : 'Novo Contrato'
-        }
+        title={isEditMode ? 'Editar Contrato' : 'Novo Contrato'}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// Card minimalista com bordas suaves e sem sombras pesadas
+// Card Google Material Design 3
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -10,7 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'bg-white rounded-lg border border-neutral-200 transition-shadow duration-200',
+      'bg-white rounded-xl border border-neutral-200 shadow-elevation-1 hover:shadow-elevation-2 transition-shadow duration-200',
       className
     )}
     {...props}
@@ -18,7 +18,7 @@ const Card = React.forwardRef<
 ));
 Card.displayName = 'Card';
 
-// CardHeader com espaçamento mais generoso
+// CardHeader com espaçamento Material Design
 const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -31,7 +31,7 @@ const CardHeader = React.forwardRef<
 ));
 CardHeader.displayName = 'CardHeader';
 
-// CardTitle com tipografia limpa
+// CardTitle com tipografia Google
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
@@ -39,7 +39,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'text-lg font-semibold text-neutral-900 tracking-tight',
+      'text-lg font-medium text-[#202124] tracking-tight',
       className
     )}
     {...props}
@@ -47,16 +47,12 @@ const CardTitle = React.forwardRef<
 ));
 CardTitle.displayName = 'CardTitle';
 
-// CardDescription com cor neutra
+// CardDescription com cor Google
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn('text-sm text-neutral-600', className)}
-    {...props}
-  />
+  <p ref={ref} className={cn('text-sm text-[#5F6368]', className)} {...props} />
 ));
 CardDescription.displayName = 'CardDescription';
 
