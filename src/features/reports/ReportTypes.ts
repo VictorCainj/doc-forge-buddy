@@ -77,7 +77,7 @@ export interface ContractsReportData {
 // Relatório de Prestadores
 export interface PrestadoresReportData {
   totalPrestadores: number;
-  activeP restadores: number;
+  activePrestadores: number;
   prestadoresBySpecialty: Record<string, number>;
   prestadoresPerMonth: Record<string, number>;
   topPrestadores: Array<{

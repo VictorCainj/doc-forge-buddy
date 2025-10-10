@@ -181,15 +181,15 @@ export class ContinuousLearningSystem {
            e.feedback.comment?.toLowerCase().includes('prolixo')
     ).length;
 
-    const tooConci seCount = this.learningHistory.filter(
+    const tooConciseCount = this.learningHistory.filter(
       e => e.feedback.comment?.toLowerCase().includes('muito curto') ||
            e.feedback.comment?.toLowerCase().includes('incompleto')
     ).length;
 
-    if (tooVerboseCount > tooConci seCount && tooVerboseCount >= 3) {
+    if (tooVerboseCount > tooConciseCount && tooVerboseCount >= 3) {
       adjustments.verbosity = 'concise';
       log.debug('Ajustando verbosidade para conciso baseado em feedback');
-    } else if (tooConci seCount > tooVerboseCount && tooConci seCount >= 3) {
+    } else if (tooConciseCount > tooVerboseCount && tooConciseCount >= 3) {
       adjustments.verbosity = 'detailed';
       log.debug('Ajustando verbosidade para detalhado baseado em feedback');
     }
