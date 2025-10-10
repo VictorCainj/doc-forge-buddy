@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
@@ -14,9 +14,22 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [forceLoad, setForceLoad] = useState(false);
+
+  // Timeout de segurança para evitar loop infinito de loading
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Timeout de verificação de autenticação - forçando renderização');
+        setForceLoad(true);
+      }
+    }, 8000); // 8 segundos de timeout
+
+    return () => clearTimeout(timeoutId);
+  }, [loading]);
 
   // Mostrar loading enquanto verifica autenticação
-  if (loading) {
+  if (loading && !forceLoad) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">

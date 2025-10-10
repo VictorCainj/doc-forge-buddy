@@ -4,6 +4,7 @@ import PageLoader from './PageLoader';
 import { AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -12,9 +13,22 @@ interface AdminRouteProps {
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
+  const [forceLoad, setForceLoad] = useState(false);
+
+  // Timeout de segurança para evitar loop infinito de loading
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Timeout de verificação de admin - forçando renderização');
+        setForceLoad(true);
+      }
+    }, 8000); // 8 segundos de timeout
+
+    return () => clearTimeout(timeoutId);
+  }, [loading]);
 
   // Mostrar loader enquanto carrega
-  if (loading) {
+  if (loading && !forceLoad) {
     return <PageLoader />;
   }
 

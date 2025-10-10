@@ -77,22 +77,48 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
+    let isSubscribed = true;
+    let timeoutId: NodeJS.Timeout;
+
+    // Timeout de segurança para garantir que o loading não fique preso
+    const setupTimeout = () => {
+      timeoutId = setTimeout(() => {
+        if (isSubscribed) {
+          authLogger.warn('Timeout na verificação de autenticação');
+          setLoading(false);
+        }
+      }, 10000); // 10 segundos de timeout máximo
+    };
+
     // Obter sessão inicial
     const getInitialSession = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-      if (error) {
-        authLogger.error('Erro ao obter sessão inicial:', error);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
+      try {
+        setupTimeout();
+        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+        
+        if (!isSubscribed) return;
+
+        if (error) {
+          authLogger.error('Erro ao obter sessão inicial:', error);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await loadUserProfile(session.user.id);
+          }
+        }
+      } catch (error) {
+        authLogger.error('Erro fatal ao obter sessão:', error);
+      } finally {
+        if (isSubscribed) {
+          clearTimeout(timeoutId);
+          setLoading(false);
         }
       }
-      setLoading(false);
     };
 
     getInitialSession();
@@ -101,7 +127,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isSubscribed) return;
+      
       authLogger.debug('Auth state changed:', event, session?.user?.email);
+      
+      // Evitar processar eventos duplicados
+      if (event === 'INITIAL_SESSION') {
+        return;
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -114,7 +148,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
