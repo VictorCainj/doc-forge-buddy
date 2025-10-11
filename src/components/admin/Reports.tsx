@@ -26,7 +26,7 @@ import {
   FileBarChart,
   Shield,
   Loader2,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

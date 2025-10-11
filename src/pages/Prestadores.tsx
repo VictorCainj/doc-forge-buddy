@@ -31,7 +31,7 @@ import {
   Mail,
   MapPin,
   Briefcase,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import {
   usePrestadores,
   CreatePrestadorData,

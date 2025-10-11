@@ -8,10 +8,10 @@ import {
   Maximize2,
   FileText,
   Download,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { CopyButton } from '@/components/ui/copy-button';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 const GerarDocumento = () => {
   const location = useLocation();
@@ -202,6 +202,13 @@ const GerarDocumento = () => {
   // Verificar se é uma mensagem do WhatsApp
   const isWhatsAppMessage = documentType?.includes('WhatsApp');
 
+  // Verificar se é uma devolutiva (não deve mostrar botão Exportar)
+  const isDevolutiva =
+    documentType &&
+    (documentType.includes('Devolutiva') ||
+      documentType === 'Notificação de Desocupação e Agendamento de Vistoria' ||
+      documentType === 'Notificação de Desocupação - Comercial');
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header Minimalista */}
@@ -283,10 +290,12 @@ const GerarDocumento = () => {
                 )}
                 {isPrinting ? 'Preparando...' : 'Imprimir'}
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
+              {!isDevolutiva && (
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar
+                </Button>
+              )}
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, TrendingUp } from 'lucide-react';
+import { Plus, FileText, TrendingUp } from '@/utils/iconMapper';
 import { Link } from 'react-router-dom';
 
 export interface ContractHeaderProps {

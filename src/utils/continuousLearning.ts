@@ -1,5 +1,5 @@
 import { log } from './logger';
-import type { AIMemory, UserPreferences } from '@/hooks/useAIMemory';
+import type { UserPreferences } from '@/hooks/useAIMemory';
 import type { FeedbackData } from './chatMetrics';
 
 export interface LearningEvent {
@@ -34,7 +34,11 @@ export class ContinuousLearningSystem {
     aiResponse: string,
     feedback: FeedbackData
   ): void {
-    const adjustments = this.analyzeAndSuggestAdjustments(feedback, userMessage, aiResponse);
+    const adjustments = this.analyzeAndSuggestAdjustments(
+      feedback,
+      userMessage,
+      aiResponse
+    );
 
     const event: LearningEvent = {
       timestamp: new Date(),
@@ -96,7 +100,7 @@ export class ContinuousLearningSystem {
     // Análise baseada na avaliação
     if (feedback.rating <= 2) {
       adjustments.push('Revisar abordagem geral');
-      
+
       // Analisar comprimento
       if (aiResponse.length > 1000) {
         adjustments.push('Respostas mais concisas podem ser melhor');
@@ -115,13 +119,15 @@ export class ContinuousLearningSystem {
     const insights: LearningInsight[] = [];
 
     // Analisar padrões de feedback negativo
-    const negativeFeedback = this.learningHistory.filter(e => e.feedback.rating <= 2);
-    
+    const negativeFeedback = this.learningHistory.filter(
+      (e) => e.feedback.rating <= 2
+    );
+
     if (negativeFeedback.length > 0) {
       // Identificar problemas comuns
       const issueTypes = new Map<string, number>();
-      
-      negativeFeedback.forEach(event => {
+
+      negativeFeedback.forEach((event) => {
         issueTypes.set(
           event.feedback.feedbackType,
           (issueTypes.get(event.feedback.feedbackType) || 0) + 1
@@ -141,8 +147,10 @@ export class ContinuousLearningSystem {
     }
 
     // Analisar padrões de feedback positivo
-    const positiveFeedback = this.learningHistory.filter(e => e.feedback.rating >= 4);
-    
+    const positiveFeedback = this.learningHistory.filter(
+      (e) => e.feedback.rating >= 4
+    );
+
     if (positiveFeedback.length >= 5) {
       insights.push({
         pattern: 'Respostas bem-sucedidas',
@@ -171,19 +179,23 @@ export class ContinuousLearningSystem {
   /**
    * Ajusta preferências do usuário baseado em aprendizado
    */
-  adjustUserPreferences(currentPreferences: UserPreferences): Partial<UserPreferences> {
-    const insights = this.extractInsights();
+  adjustUserPreferences(
+    _currentPreferences: UserPreferences
+  ): Partial<UserPreferences> {
+    const _insights = this.extractInsights();
     const adjustments: Partial<UserPreferences> = {};
 
     // Analisar feedback sobre verbosidade
     const tooVerboseCount = this.learningHistory.filter(
-      e => e.feedback.comment?.toLowerCase().includes('muito longo') ||
-           e.feedback.comment?.toLowerCase().includes('prolixo')
+      (e) =>
+        e.feedback.comment?.toLowerCase().includes('muito longo') ||
+        e.feedback.comment?.toLowerCase().includes('prolixo')
     ).length;
 
     const tooConciseCount = this.learningHistory.filter(
-      e => e.feedback.comment?.toLowerCase().includes('muito curto') ||
-           e.feedback.comment?.toLowerCase().includes('incompleto')
+      (e) =>
+        e.feedback.comment?.toLowerCase().includes('muito curto') ||
+        e.feedback.comment?.toLowerCase().includes('incompleto')
     ).length;
 
     if (tooVerboseCount > tooConciseCount && tooVerboseCount >= 3) {
@@ -196,13 +208,15 @@ export class ContinuousLearningSystem {
 
     // Analisar feedback sobre formalidade
     const tooCasualCount = this.learningHistory.filter(
-      e => e.feedback.comment?.toLowerCase().includes('informal') ||
-           e.feedback.comment?.toLowerCase().includes('casual')
+      (e) =>
+        e.feedback.comment?.toLowerCase().includes('informal') ||
+        e.feedback.comment?.toLowerCase().includes('casual')
     ).length;
 
     const tooFormalCount = this.learningHistory.filter(
-      e => e.feedback.comment?.toLowerCase().includes('muito formal') ||
-           e.feedback.comment?.toLowerCase().includes('engessado')
+      (e) =>
+        e.feedback.comment?.toLowerCase().includes('muito formal') ||
+        e.feedback.comment?.toLowerCase().includes('engessado')
     ).length;
 
     if (tooCasualCount >= 3) {
@@ -227,7 +241,7 @@ export class ContinuousLearningSystem {
     learningRate: number; // % de melhoria ao longo do tempo
   } {
     const total = this.learningHistory.length;
-    
+
     if (total === 0) {
       return {
         totalEvents: 0,
@@ -238,27 +252,37 @@ export class ContinuousLearningSystem {
       };
     }
 
-    const positive = this.learningHistory.filter(e => e.feedback.rating >= 4).length;
-    const negative = this.learningHistory.filter(e => e.feedback.rating <= 2).length;
+    const positive = this.learningHistory.filter(
+      (e) => e.feedback.rating >= 4
+    ).length;
+    const negative = this.learningHistory.filter(
+      (e) => e.feedback.rating <= 2
+    ).length;
 
     // Calcular taxa de melhoria
     const recentEvents = this.learningHistory.slice(-50);
     const olderEvents = this.learningHistory.slice(0, 50);
-    
-    const recentPositiveRatio = recentEvents.filter(e => e.feedback.rating >= 4).length / recentEvents.length;
-    const olderPositiveRatio = olderEvents.length > 0 
-      ? olderEvents.filter(e => e.feedback.rating >= 4).length / olderEvents.length 
-      : 0;
 
-    const learningRate = olderPositiveRatio > 0 
-      ? ((recentPositiveRatio - olderPositiveRatio) / olderPositiveRatio) * 100 
-      : 0;
+    const recentPositiveRatio =
+      recentEvents.filter((e) => e.feedback.rating >= 4).length /
+      recentEvents.length;
+    const olderPositiveRatio =
+      olderEvents.length > 0
+        ? olderEvents.filter((e) => e.feedback.rating >= 4).length /
+          olderEvents.length
+        : 0;
+
+    const learningRate =
+      olderPositiveRatio > 0
+        ? ((recentPositiveRatio - olderPositiveRatio) / olderPositiveRatio) *
+          100
+        : 0;
 
     // Encontrar problema mais comum
     const issues = new Map<string, number>();
     this.learningHistory
-      .filter(e => e.feedback.rating <= 2)
-      .forEach(e => {
+      .filter((e) => e.feedback.rating <= 2)
+      .forEach((e) => {
         issues.set(
           e.feedback.feedbackType,
           (issues.get(e.feedback.feedbackType) || 0) + 1
@@ -302,7 +326,7 @@ export class ContinuousLearningSystem {
    * Importa histórico
    */
   import(events: LearningEvent[]): void {
-    this.learningHistory = events.map(e => ({
+    this.learningHistory = events.map((e) => ({
       ...e,
       timestamp: new Date(e.timestamp),
     }));

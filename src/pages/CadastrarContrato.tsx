@@ -8,10 +8,11 @@ import {
   Shield,
   Calendar,
   FileCheck,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { splitNames } from '@/utils/nameHelpers';
 
 const CadastrarContrato = () => {
   const navigate = useNavigate();
@@ -296,7 +297,7 @@ const CadastrarContrato = () => {
         const { error } = await supabase
           .from('saved_terms')
           .update({
-            title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(/ e | E /)[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(/ e | E /)[0]?.trim() || '[LOCATÁRIO]'}`,
+            title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'} - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`,
             content: JSON.stringify(enhancedData),
             form_data: enhancedData,
             updated_at: new Date().toISOString(),
@@ -317,7 +318,7 @@ const CadastrarContrato = () => {
         }
 
         const contractData = {
-          title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${data.nomeProprietario?.split(/ e | E /)[0]?.trim() || '[LOCADOR]'} - ${data.nomeLocatario?.split(/ e | E /)[0]?.trim() || '[LOCATÁRIO]'}`,
+          title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'} - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`,
           content: JSON.stringify(enhancedData),
           form_data: enhancedData,
           document_type: 'contrato',

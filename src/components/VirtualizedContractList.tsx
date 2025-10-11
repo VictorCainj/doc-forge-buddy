@@ -13,7 +13,7 @@ import {
   Clock,
   MapPin,
   Edit,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
 import { Contract } from '@/types/contract';
 
@@ -74,8 +74,8 @@ const ContractItem = memo<{
       const endereco =
         contract.form_data.endereco || contract.form_data.enderecoImovel;
       if (endereco) {
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
-        window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+        const earthUrl = `https://earth.google.com/web/search/${encodeURIComponent(endereco)}`;
+        window.open(earthUrl, '_blank', 'noopener,noreferrer');
       }
     },
     [contract.form_data.endereco, contract.form_data.enderecoImovel]
@@ -202,7 +202,7 @@ const ContractItem = memo<{
                 <p
                   className="text-xs font-semibold text-neutral-900 line-clamp-2 cursor-pointer hover:text-primary-600 hover:underline transition-colors"
                   onClick={handleMapClick}
-                  title="Clique para abrir no Google Maps"
+                  title="Clique para abrir no Google Earth"
                 >
                   {contract.form_data.endereco ||
                     contract.form_data.enderecoImovel ||
@@ -260,8 +260,40 @@ export const VirtualizedContractList = memo<VirtualizedContractListProps>(
     hasSearched,
     onGenerateDocument,
   }) => {
+    // TODOS OS HOOKS DEVEM VIR ANTES DE QUALQUER EARLY RETURN
     const listRef = useRef<List>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [listWidth, setListWidth] = useState(0);
 
+    // Função de renderização de cada item
+    const Row = useCallback(
+      ({ index, style }: { index: number; style: React.CSSProperties }) => {
+        const contract = contracts[index];
+        return (
+          <ContractItem
+            key={contract.id}
+            contract={contract}
+            style={style}
+            onGenerateDocument={onGenerateDocument}
+          />
+        );
+      },
+      [contracts, onGenerateDocument]
+    );
+
+    useEffect(() => {
+      const updateWidth = () => {
+        if (containerRef.current) {
+          setListWidth(containerRef.current.offsetWidth);
+        }
+      };
+
+      updateWidth();
+      window.addEventListener('resize', updateWidth);
+      return () => window.removeEventListener('resize', updateWidth);
+    }, []);
+
+    // AGORA PODEMOS TER EARLY RETURNS
     // Loading state
     if (isLoading) {
       return (
@@ -314,38 +346,8 @@ export const VirtualizedContractList = memo<VirtualizedContractListProps>(
       ? Math.max(0, totalCount - displayedCount)
       : 0;
 
-    // Função de renderização de cada item
-    const Row = useCallback(
-      ({ index, style }: { index: number; style: React.CSSProperties }) => {
-        const contract = contracts[index];
-        return (
-          <ContractItem
-            key={contract.id}
-            contract={contract}
-            style={style}
-            onGenerateDocument={onGenerateDocument}
-          />
-        );
-      },
-      [contracts, onGenerateDocument]
-    );
-
     // Altura estimada de cada item (pode ser ajustada)
     const itemSize = 520;
-    const [listWidth, setListWidth] = useState(0);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      const updateWidth = () => {
-        if (containerRef.current) {
-          setListWidth(containerRef.current.offsetWidth);
-        }
-      };
-
-      updateWidth();
-      window.addEventListener('resize', updateWidth);
-      return () => window.removeEventListener('resize', updateWidth);
-    }, []);
 
     return (
       <>

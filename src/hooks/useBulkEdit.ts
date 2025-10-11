@@ -9,7 +9,6 @@ import { toast } from 'sonner';
  */
 export const useBulkEdit = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const queryClient = useQueryClient();
 
   /**
    * Selecionar/deselecionar um item

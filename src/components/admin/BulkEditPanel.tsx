@@ -32,7 +32,7 @@ import { EntityType } from '@/types/admin';
 import { useBulkEdit, useBulkUpdate } from '@/hooks/useBulkEdit';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Users, FolderOpen, File, Trash2 } from 'lucide-react';
+import { FileText, Users, FolderOpen, File, Trash2 } from '@/utils/iconMapper';
 import { toast } from 'sonner';
 
 const entityConfig = {

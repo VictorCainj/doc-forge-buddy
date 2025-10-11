@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock } from '@/utils/iconMapper';
 import { VistoriaType } from '@/types/contract';
 
 interface AgendamentoModalProps {

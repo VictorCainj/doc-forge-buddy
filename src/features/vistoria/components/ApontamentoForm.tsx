@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Save, X, Upload, Trash2, Camera } from 'lucide-react';
+import { Plus, Save, X, Upload, Trash2, Camera } from '@/utils/iconMapper';
 import { ApontamentoVistoria } from '@/types/vistoria';
 import { BudgetItemType } from '@/types/orcamento';
 

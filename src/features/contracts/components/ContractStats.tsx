@@ -6,7 +6,7 @@ import {
   Clock,
   AlertTriangle,
   TrendingUp,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Contract } from '@/types/contract';
 
 interface ContractStatsProps {

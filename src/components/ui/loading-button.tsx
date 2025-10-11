@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/utils/iconMapper';
 import { cn } from '@/lib/utils';
 
 export interface LoadingButtonProps extends ButtonProps {

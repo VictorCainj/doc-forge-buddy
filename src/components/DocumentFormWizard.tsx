@@ -8,7 +8,7 @@ import {
   FileCheck,
   Search,
   Check,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { FormWizard, WizardStep } from '@/components/ui/form-wizard';
@@ -278,7 +278,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-white">
       {/* Barra de progresso compacta com botão voltar */}
       <div className="bg-white border-b border-neutral-200 px-6 py-3 shadow-sm">
         <div className="flex items-center justify-between text-neutral-700 text-xs">
@@ -307,10 +307,10 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       </div>
 
       {/* Card principal mais compacto */}
-      <main className="bg-neutral-50 min-h-screen">
-        <div className="max-w-3xl mx-auto p-4">
+      <main className="bg-white min-h-screen flex items-center justify-center">
+        <div className="max-w-4xl mx-auto p-6 w-full">
           <div className="bg-white border border-neutral-200 rounded-xl shadow-sm">
-            <div className="p-4">
+            <div className="p-8">
               <div className="text-center mb-4">
                 <h1 className="text-xl font-semibold mb-2 text-neutral-900">
                   Vistoria e Entrega

@@ -18,9 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PersonManager } from '@/components/ui/person-manager';
+import { splitNames } from '@/utils/nameHelpers';
 import { FormStep, FormField } from '@/hooks/use-form-wizard';
 import { useContractWizard } from '../hooks/useContractWizard';
-import { ChevronLeft, ChevronRight, Check, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, ChevronDown } from '@/utils/iconMapper';
 import { cn } from '@/lib/utils';
 
 interface Person {
@@ -83,10 +84,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
     if (initialData) {
       // Inicializar locadores
       if (initialData.nomeProprietario && locadores.length === 0) {
-        const nomesLocadores = initialData.nomeProprietario
-          .split(/ e | E /)
-          .map((nome) => nome.trim())
-          .filter((nome) => nome);
+        const nomesLocadores = splitNames(initialData.nomeProprietario);
         const locadoresIniciais = nomesLocadores.map((nome, index) => ({
           id: `locador-${index}`,
           name: nome,
@@ -98,10 +96,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
       // Inicializar locatários
       if (initialData.nomeLocatario && locatarios.length === 0) {
-        const nomesLocatarios = initialData.nomeLocatario
-          .split(/ e | E /)
-          .map((nome) => nome.trim())
-          .filter((nome) => nome);
+        const nomesLocatarios = splitNames(initialData.nomeLocatario);
         const locatariosIniciais = nomesLocatarios.map((nome, index) => ({
           id: `locatario-${index}`,
           name: nome,
@@ -113,10 +108,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
       // Inicializar fiadores
       if (initialData.nomeFiador && fiadores.length === 0) {
-        const nomesFiadores = initialData.nomeFiador
-          .split(/ e | E /)
-          .map((nome) => nome.trim())
-          .filter((nome) => nome);
+        const nomesFiadores = splitNames(initialData.nomeFiador);
         const fiadoresIniciais = nomesFiadores.map((nome, index) => ({
           id: `fiador-${index}`,
           name: nome,

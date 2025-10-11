@@ -6,7 +6,7 @@ import {
   Sparkles,
   X,
   Mic,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';

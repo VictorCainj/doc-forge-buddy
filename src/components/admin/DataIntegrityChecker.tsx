@@ -14,17 +14,15 @@ import {
   runFullIntegrityCheck,
   exportIntegrityReportCSV,
   IntegrityReport,
-  IntegrityIssue,
 } from '@/utils/dataIntegrityChecker';
 import {
   Shield,
-  AlertTriangle,
   CheckCircle2,
   Download,
   Play,
   Loader2,
   AlertCircle,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

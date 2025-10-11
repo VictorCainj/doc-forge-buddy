@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { analyzeTextAdvanced } from '@/utils/advancedTextAnalysis';
 import { log } from '@/utils/logger';
@@ -118,44 +117,47 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
   const [error, setError] = useState<string | null>(null);
 
   // Criar memória inicial
-  const createInitialMemory = useCallback((): AIMemory => ({
-    userId,
-    preferences: {
-      language: 'pt-BR',
-      formality: 'neutral',
-      verbosity: 'detailed',
-      responseStyle: 'conversational',
-      favoriteTopics: [],
-      avoidedTopics: [],
-    },
-    patterns: {
-      commonQuestions: [],
-      workingHours: {
-        start: '09:00',
-        end: '18:00',
-        timezone: 'America/Sao_Paulo',
+  const createInitialMemory = useCallback(
+    (): AIMemory => ({
+      userId,
+      preferences: {
+        language: 'pt-BR',
+        formality: 'neutral',
+        verbosity: 'detailed',
+        responseStyle: 'conversational',
+        favoriteTopics: [],
+        avoidedTopics: [],
       },
-      usageFrequency: {
-        daily: 0,
-        weekly: 0,
-        monthly: 0,
+      patterns: {
+        commonQuestions: [],
+        workingHours: {
+          start: '09:00',
+          end: '18:00',
+          timezone: 'America/Sao_Paulo',
+        },
+        usageFrequency: {
+          daily: 0,
+          weekly: 0,
+          monthly: 0,
+        },
+        preferredFeatures: [],
       },
-      preferredFeatures: [],
-    },
-    knowledge: {
-      contractInsights: [],
-      documentTemplates: [],
-      contextualFacts: [],
-    },
-    context: {
-      currentTopic: '',
-      recentTopics: [],
-      sessionGoals: [],
-      pendingActions: [],
-      emotionalState: 'neutral',
-    },
-    lastUpdated: new Date(),
-  }), [userId]);
+      knowledge: {
+        contractInsights: [],
+        documentTemplates: [],
+        contextualFacts: [],
+      },
+      context: {
+        currentTopic: '',
+        recentTopics: [],
+        sessionGoals: [],
+        pendingActions: [],
+        emotionalState: 'neutral',
+      },
+      lastUpdated: new Date(),
+    }),
+    [userId]
+  );
 
   // Usar o hook de localStorage para gerenciar a memória
   const [memory, setMemory] = useLocalStorage<AIMemory>(

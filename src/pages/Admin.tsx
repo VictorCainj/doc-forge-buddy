@@ -5,6 +5,7 @@ import { BulkEditPanel } from '@/components/admin/BulkEditPanel';
 import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
 import { Reports } from '@/components/admin/Reports';
 import { DataIntegrityChecker } from '@/components/admin/DataIntegrityChecker';
+import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
 import {
   Users,
   FileText,
@@ -13,7 +14,8 @@ import {
   Shield,
   BarChart3,
   Database,
-} from 'lucide-react';
+  Search,
+} from '@/utils/iconMapper';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SystemStats } from '@/types/admin';
@@ -150,7 +152,7 @@ const Admin = () => {
 
         {/* Tabs de Funcionalidades */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="users">
               <Users className="h-4 w-4 mr-2" />
               Usuários
@@ -158,6 +160,10 @@ const Admin = () => {
             <TabsTrigger value="bulk">
               <FileText className="h-4 w-4 mr-2" />
               Edição em Massa
+            </TabsTrigger>
+            <TabsTrigger value="vistorias">
+              <Search className="h-4 w-4 mr-2" />
+              Vistorias
             </TabsTrigger>
             <TabsTrigger value="audit">
               <Shield className="h-4 w-4 mr-2" />
@@ -179,6 +185,10 @@ const Admin = () => {
 
           <TabsContent value="bulk" className="space-y-4">
             <BulkEditPanel />
+          </TabsContent>
+
+          <TabsContent value="vistorias" className="space-y-4">
+            <VistoriaAnalisesPanel />
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-4">

@@ -2,14 +2,12 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Bot,
   Loader2,
-  Sparkles,
-  Image as ImageIcon,
   MessageSquare,
   Menu,
   Plus,
   Save,
   Images,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useOptimizedChat } from '@/hooks/useOptimizedChat';
@@ -70,31 +68,35 @@ const Chat = () => {
   // Extrair imagens das mensagens
   const chatImages = useMemo(() => {
     const images = messages
-      .filter(msg => msg.imageUrl || msg.imageData)
-      .map(msg => ({
+      .filter((msg) => msg.imageUrl || msg.imageData)
+      .map((msg) => ({
         url: msg.imageUrl || msg.imageData || '',
         timestamp: msg.timestamp,
         messageId: msg.id,
       }));
-    
+
     return images;
   }, [messages]);
 
   // Função para enviar imagem para o chat (reanálise)
-  const handleSendImageToChat = useCallback(async (imageUrl: string) => {
-    const imageMessage = messages.find(msg => msg.imageUrl === imageUrl || msg.imageData === imageUrl);
-    if (imageMessage?.imageData) {
-      // Usar uploadImage para processar novamente
-      const file = await fetch(imageMessage.imageData)
-        .then(r => r.blob())
-        .then(blob => new File([blob], 'image.png', { type: 'image/png' }));
-      uploadImage(file);
-    }
-  }, [messages, uploadImage]);
+  const handleSendImageToChat = useCallback(
+    async (imageUrl: string) => {
+      const imageMessage = messages.find(
+        (msg) => msg.imageUrl === imageUrl || msg.imageData === imageUrl
+      );
+      if (imageMessage?.imageData) {
+        // Usar uploadImage para processar novamente
+        const file = await fetch(imageMessage.imageData)
+          .then((r) => r.blob())
+          .then((blob) => new File([blob], 'image.png', { type: 'image/png' }));
+        uploadImage(file);
+      }
+    },
+    [messages, uploadImage]
+  );
 
   return (
     <div className="h-screen bg-neutral-50 flex relative overflow-hidden">
-
       {/* Sidebar - Chat History */}
       <AnimatePresence>
         {showSidebar && (
@@ -149,12 +151,16 @@ const Chat = () => {
                   <MessageSquare className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-neutral-900 font-semibold">DocForge AI</h1>
-                  <p className="text-xs text-neutral-500">Assistente Universal</p>
+                  <h1 className="text-neutral-900 font-semibold">
+                    DocForge AI
+                  </h1>
+                  <p className="text-xs text-neutral-500">
+                    Assistente Universal
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -213,7 +219,8 @@ const Chat = () => {
                   Como posso ajudar você hoje?
                 </h2>
                 <p className="text-neutral-600 max-w-md">
-                  Converse sobre qualquer assunto, analise imagens ou crie visualizações.
+                  Converse sobre qualquer assunto, analise imagens ou crie
+                  visualizações.
                 </p>
               </motion.div>
             ) : (
@@ -242,7 +249,9 @@ const Chat = () => {
                     <div className="bg-white border border-neutral-200 rounded-2xl px-4 py-3 shadow-sm">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin text-neutral-700" />
-                        <span className="text-sm text-neutral-900">Pensando...</span>
+                        <span className="text-sm text-neutral-900">
+                          Pensando...
+                        </span>
                       </div>
                     </div>
                   </motion.div>

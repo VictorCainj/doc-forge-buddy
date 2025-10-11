@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import {
   ChevronRight,
   User,
@@ -12,7 +12,7 @@ import {
   Briefcase,
   AlertTriangle,
   SearchCheck,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -52,647 +52,669 @@ interface QuickActionsDropdownProps {
   ) => void;
 }
 
-const QuickActionsDropdown: React.FC<QuickActionsDropdownProps> = ({
-  contractId,
-  contractNumber,
-  onGenerateDocument,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [loadingActions, setLoadingActions] = useState<Set<string>>(new Set());
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [hasAnalise, setHasAnalise] = useState(false);
-  const [checkingAnalise, setCheckingAnalise] = useState(false);
+const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
+  ({ contractId, contractNumber, onGenerateDocument }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [loadingActions, setLoadingActions] = useState<Set<string>>(
+      new Set()
+    );
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [hasAnalise, setHasAnalise] = useState(false);
+    const [checkingAnalise, setCheckingAnalise] = useState(false);
 
-  // Verificar se existe análise para este contrato
-  useEffect(() => {
-    const checkAnalise = async () => {
-      if (!user || !contractId) return;
-      
-      setCheckingAnalise(true);
+    // Verificar se existe análise para este contrato
+    useEffect(() => {
+      const checkAnalise = async () => {
+        if (!user || !contractId) return;
+
+        setCheckingAnalise(true);
+        try {
+          const { data, error } = await supabase
+            .from('vistoria_analises')
+            .select('id')
+            .eq('contract_id', contractId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (!error && data) {
+            setHasAnalise(true);
+          } else {
+            setHasAnalise(false);
+          }
+        } catch {
+          setHasAnalise(false);
+        } finally {
+          setCheckingAnalise(false);
+        }
+      };
+
+      if (isOpen) {
+        checkAnalise();
+      }
+    }, [contractId, user, isOpen]);
+
+    // Fechar dropdown ao clicar fora
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsOpen(false);
+        }
+      };
+
+      if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+      }
+
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [isOpen]);
+
+    const handleActionClick = async (action: QuickAction) => {
+      if (action.disabled) return;
+
+      setLoadingActions((prev) => new Set(prev).add(action.id));
+      try {
+        await action.onClick();
+      } finally {
+        setLoadingActions((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(action.id);
+          return newSet;
+        });
+      }
+    };
+
+    // Função para buscar dados do contrato
+    const fetchContractData = async (contractId: string) => {
       try {
         const { data, error } = await supabase
-          .from('vistoria_analises')
-          .select('id')
-          .eq('contract_id', contractId)
-          .eq('user_id', user.id)
-          .maybeSingle();
+          .from('saved_terms')
+          .select('*')
+          .eq('id', contractId)
+          .single();
 
-        if (!error && data) {
-          setHasAnalise(true);
-        } else {
-          setHasAnalise(false);
-        }
+        if (error) throw error;
+        if (!data) throw new Error('Contrato não encontrado');
+
+        return {
+          ...((data.form_data as Record<string, string>) || {}),
+          id: data.id,
+          title: data.title,
+        };
       } catch {
-        setHasAnalise(false);
-      } finally {
-        setCheckingAnalise(false);
+        toast.error('Erro ao carregar dados do contrato');
+        return null;
       }
     };
 
-    if (isOpen) {
-      checkAnalise();
-    }
-  }, [contractId, user, isOpen]);
-
-  // Fechar dropdown ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  const handleActionClick = async (action: QuickAction) => {
-    if (action.disabled) return;
-
-    setLoadingActions((prev) => new Set(prev).add(action.id));
-    try {
-      await action.onClick();
-    } finally {
-      setLoadingActions((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(action.id);
-        return newSet;
-      });
-    }
-  };
-
-  // Função para buscar dados do contrato
-  const fetchContractData = async (contractId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('saved_terms')
-        .select('*')
-        .eq('id', contractId)
-        .single();
-
-      if (error) throw error;
-      if (!data) throw new Error('Contrato não encontrado');
-
-      return {
-        ...((data.form_data as Record<string, string>) || {}),
-        id: data.id,
-        title: data.title,
-      };
-    } catch {
-      toast.error('Erro ao carregar dados do contrato');
-      return null;
-    }
-  };
-
-  const termActions: QuickAction[] = [
-    {
-      id: 'termo-locador',
-      label: 'Recebimento de Chaves (Locador)',
-      icon: Home,
-      onClick: async () => {
-        const contractData = await fetchContractData(contractId);
-        if (contractData) {
-          navigate('/termo-locador', { state: { contractData } });
-        }
-        setIsOpen(false);
+    const termActions: QuickAction[] = [
+      {
+        id: 'termo-locador',
+        label: 'Recebimento de Chaves (Locador)',
+        icon: Home,
+        onClick: async () => {
+          const contractData = await fetchContractData(contractId);
+          if (contractData) {
+            navigate('/termo-locador', { state: { contractData } });
+          }
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'termo-locatario',
-      label: 'Recebimento de Chaves (Locatário)',
-      icon: User,
-      onClick: async () => {
-        const contractData = await fetchContractData(contractId);
-        if (contractData) {
-          navigate('/termo-locatario', { state: { contractData } });
-        }
-        setIsOpen(false);
+      {
+        id: 'termo-locatario',
+        label: 'Recebimento de Chaves (Locatário)',
+        icon: User,
+        onClick: async () => {
+          const contractData = await fetchContractData(contractId);
+          if (contractData) {
+            navigate('/termo-locatario', { state: { contractData } });
+          }
+          setIsOpen(false);
+        },
       },
-    },
-  ];
+    ];
 
-  const communicationActions: QuickAction[] = [
-    {
-      id: 'devolutiva-email-locador',
-      label: 'Devolutiva E-mail (Locador)',
-      icon: User,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
-          'Notificação de Desocupação e Agendamento de Vistoria'
-        );
-        setIsOpen(false);
+    const communicationActions: QuickAction[] = [
+      {
+        id: 'devolutiva-email-locador',
+        label: 'Devolutiva E-mail (Locador)',
+        icon: User,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_PROPRIETARIO_TEMPLATE,
+            'Notificação de Desocupação e Agendamento de Vistoria'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'devolutiva-email-locatario',
-      label: 'Devolutiva E-mail (Locatário)',
-      icon: User2,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_LOCATARIO_TEMPLATE,
-          'Devolutiva Locatário'
-        );
-        setIsOpen(false);
+      {
+        id: 'devolutiva-email-locatario',
+        label: 'Devolutiva E-mail (Locatário)',
+        icon: User2,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_LOCATARIO_TEMPLATE,
+            'Devolutiva Locatário'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'notificacao-agendamento',
-      label: 'Notificação de Agendamento',
-      icon: Calendar,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          NOTIFICACAO_AGENDAMENTO_TEMPLATE,
-          'Notificação de Agendamento'
-        );
-        setIsOpen(false);
+      {
+        id: 'notificacao-agendamento',
+        label: 'Notificação de Agendamento',
+        icon: Calendar,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            NOTIFICACAO_AGENDAMENTO_TEMPLATE,
+            'Notificação de Agendamento'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'whatsapp-proprietaria',
-      label: 'Proprietária',
-      icon: User2,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
-          'WhatsApp - Proprietária'
-        );
-        setIsOpen(false);
+      {
+        id: 'whatsapp-proprietaria',
+        label: 'Proprietária',
+        icon: User2,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
+            'WhatsApp - Proprietária'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'whatsapp-comercial',
-      label: 'Comercial',
-      icon: Building,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_COMERCIAL_TEMPLATE,
-          'Notificação de Desocupação - Comercial'
-        );
-        setIsOpen(false);
+      {
+        id: 'whatsapp-comercial',
+        label: 'Comercial',
+        icon: Building,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_COMERCIAL_TEMPLATE,
+            'Notificação de Desocupação - Comercial'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'whatsapp-locataria',
-      label: 'Locatária',
-      icon: Phone,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
-          'WhatsApp - Locatária'
-        );
-        setIsOpen(false);
+      {
+        id: 'whatsapp-locataria',
+        label: 'Locatária',
+        icon: Phone,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
+            'WhatsApp - Locatária'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'status-vistoria',
-      label: 'Status Vistoria',
-      icon: Phone,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          STATUS_VISTORIA_WHATSAPP_TEMPLATE,
-          'Status Vistoria'
-        );
-        setIsOpen(false);
+      {
+        id: 'status-vistoria',
+        label: 'Status Vistoria',
+        icon: Phone,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            STATUS_VISTORIA_WHATSAPP_TEMPLATE,
+            'Status Vistoria'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'cobranca-consumo',
-      label: 'Cobrança de Consumo',
-      icon: Briefcase,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
-          'Cobrança de Consumo'
-        );
-        setIsOpen(false);
+      {
+        id: 'cobranca-consumo',
+        label: 'Cobrança de Consumo',
+        icon: Briefcase,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
+            'Cobrança de Consumo'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-  ];
+    ];
 
-  const documentActions: QuickAction[] = [
-    {
-      id: 'caderninho',
-      label: 'Caderninho',
-      icon: NotebookPen,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DEVOLUTIVA_CADERNINHO_TEMPLATE,
-          'Caderninho'
-        );
-        setIsOpen(false);
+    const documentActions: QuickAction[] = [
+      {
+        id: 'caderninho',
+        label: 'Caderninho',
+        icon: NotebookPen,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DEVOLUTIVA_CADERNINHO_TEMPLATE,
+            'Caderninho'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'distrato',
-      label: 'Distrato',
-      icon: FileText,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
-          'Distrato'
-        );
-        setIsOpen(false);
+      {
+        id: 'distrato',
+        label: 'Distrato',
+        icon: FileText,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
+            'Distrato'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-  ];
+    ];
 
-  const recusaActions: QuickAction[] = [
-    {
-      id: 'termo-recusa-email',
-      label: 'Termo de Recusa - E-mail',
-      icon: AlertTriangle,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
-          'Termo de Recusa de Assinatura - E-mail'
-        );
-        setIsOpen(false);
+    const recusaActions: QuickAction[] = [
+      {
+        id: 'termo-recusa-email',
+        label: 'Termo de Recusa - E-mail',
+        icon: AlertTriangle,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
+            'Termo de Recusa de Assinatura - E-mail'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-    {
-      id: 'termo-recusa-pdf',
-      label: 'Termo de Recusa - PDF',
-      icon: AlertTriangle,
-      onClick: () => {
-        onGenerateDocument(
-          contractId,
-          TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
-          'Termo de Recusa de Assinatura - PDF'
-        );
-        setIsOpen(false);
+      {
+        id: 'termo-recusa-pdf',
+        label: 'Termo de Recusa - PDF',
+        icon: AlertTriangle,
+        onClick: () => {
+          onGenerateDocument(
+            contractId,
+            TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
+            'Termo de Recusa de Assinatura - PDF'
+          );
+          setIsOpen(false);
+        },
       },
-    },
-  ];
+    ];
 
-  // Atualizar ações com estado de loading
-  const updateActionsWithLoading = (actions: QuickAction[]) =>
-    actions.map((action) => ({
-      ...action,
-      loading: loadingActions.has(action.id),
-    }));
+    // Atualizar ações com estado de loading
+    const updateActionsWithLoading = (actions: QuickAction[]) =>
+      actions.map((action) => ({
+        ...action,
+        loading: loadingActions.has(action.id),
+      }));
 
-  const termActionsWithLoading = updateActionsWithLoading(termActions);
-  const communicationActionsWithLoading =
-    updateActionsWithLoading(communicationActions);
-  const documentActionsWithLoading = updateActionsWithLoading(documentActions);
-  const recusaActionsWithLoading = updateActionsWithLoading(recusaActions);
+    const termActionsWithLoading = updateActionsWithLoading(termActions);
+    const communicationActionsWithLoading =
+      updateActionsWithLoading(communicationActions);
+    const documentActionsWithLoading =
+      updateActionsWithLoading(documentActions);
+    const recusaActionsWithLoading = updateActionsWithLoading(recusaActions);
 
-  return (
-    <div ref={dropdownRef} className="relative">
-      {/* Botão trigger */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 border',
-          isOpen 
-            ? 'bg-neutral-100 text-neutral-900 border-neutral-300 shadow-md'
-            : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 hover:shadow-sm'
-        )}
-      >
-        <span className="text-xs font-semibold">Ações Rápidas</span>
-        <ChevronRight
+    return (
+      <div ref={dropdownRef} className="relative">
+        {/* Botão trigger */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'h-4 w-4 transition-transform text-neutral-500',
-            isOpen && 'rotate-90'
+            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 border',
+            isOpen
+              ? 'bg-neutral-100 text-neutral-900 border-neutral-300 shadow-md'
+              : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 hover:shadow-sm'
           )}
-        />
-      </button>
-
-      {/* Modal centralizado */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/40 z-[9998]"
-            onClick={() => setIsOpen(false)}
+        >
+          <span className="text-xs font-semibold">Ações Rápidas</span>
+          <ChevronRight
+            className={cn(
+              'h-4 w-4 transition-transform text-neutral-500',
+              isOpen && 'rotate-90'
+            )}
           />
+        </button>
 
-          {/* Modal */}
-          <div className="fixed inset-4 md:inset-8 z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            {/* Header do modal */}
-            <div className="relative px-6 py-5 border-b border-neutral-200 bg-white">
-              <div className="text-center">
-                <h3 className="text-xl font-semibold text-neutral-900">
-                  Ações Rápidas
-                </h3>
-                {contractNumber && (
-                  <p className="text-sm text-neutral-600 mt-1">
-                    Contrato:{' '}
-                    <span className="font-medium text-neutral-900">
-                      {contractNumber}
-                    </span>
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 transition-colors p-2 rounded-full hover:bg-neutral-100"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        {/* Modal centralizado */}
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/40 z-[9998]"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Modal */}
+            <div className="fixed inset-4 md:inset-8 z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+              {/* Header do modal */}
+              <div className="relative px-6 py-5 border-b border-neutral-200 bg-white">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-neutral-900">
+                    Ações Rápidas
+                  </h3>
+                  {contractNumber && (
+                    <p className="text-sm text-neutral-600 mt-1">
+                      Contrato:{' '}
+                      <span className="font-medium text-neutral-900">
+                        {contractNumber}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 transition-colors p-2 rounded-full hover:bg-neutral-100"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
 
-            {/* Conteúdo do menu organizado */}
-            <div className="flex-1 p-6 overflow-y-auto bg-neutral-50">
-              <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Coluna 1: TERMOS */}
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <div className="px-1 pb-2">
-                        <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                          Chaves
-                        </h4>
+              {/* Conteúdo do menu organizado */}
+              <div className="flex-1 p-6 overflow-y-auto bg-neutral-50">
+                <div className="max-w-6xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Coluna 1: TERMOS */}
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <div className="px-1 pb-2">
+                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                            Chaves
+                          </h4>
+                        </div>
+                        {termActionsWithLoading.map((action) => (
+                          <button
+                            key={action.id}
+                            onClick={() => handleActionClick(action)}
+                            disabled={action.disabled}
+                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                          >
+                            {action.loading ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                            ) : (
+                              <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                            )}
+                            <span className="text-sm text-neutral-700 font-medium text-left">
+                              {action.id === 'termo-locador'
+                                ? 'Chaves (Locador)'
+                                : action.id === 'termo-locatario'
+                                  ? 'Chaves (Locatário)'
+                                  : action.label}
+                            </span>
+                          </button>
+                        ))}
                       </div>
-                      {termActionsWithLoading.map((action) => (
-                        <button
-                          key={action.id}
-                          onClick={() => handleActionClick(action)}
-                          disabled={action.disabled}
-                          className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                        >
-                          {action.loading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                          ) : (
-                            <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                          )}
-                          <span className="text-sm text-neutral-700 font-medium text-left">
-                            {action.id === 'termo-locador'
-                              ? 'Chaves (Locador)'
-                              : action.id === 'termo-locatario'
-                                ? 'Chaves (Locatário)'
-                                : action.label}
-                          </span>
-                        </button>
-                      ))}
                     </div>
-                  </div>
 
-                  {/* Coluna 2: WHATSAPP */}
-                  <div className="space-y-3">
-                    <div className="space-y-4">
-                      {/* E-mail */}
-                      <div>
-                        <div className="px-1 pb-2">
-                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            E-mail
-                          </h4>
-                        </div>
-                        <div className="space-y-2">
-                          {communicationActionsWithLoading
-                            .filter(
-                              (action) =>
-                                action.id.includes('email') ||
-                                action.id === 'notificacao-agendamento'
-                            )
-                            .map((action) => (
-                              <button
-                                key={action.id}
-                                onClick={() => handleActionClick(action)}
-                                disabled={action.disabled}
-                                className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                              >
-                                {action.loading ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                                ) : (
-                                  <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                                )}
-                                <span className="text-sm text-neutral-700 font-medium text-left">
-                                  {action.id === 'devolutiva-email-locador'
-                                    ? 'E-mail (Locador)'
-                                    : action.id === 'devolutiva-email-locatario'
-                                      ? 'E-mail (Locatário)'
-                                      : action.id === 'notificacao-agendamento'
-                                        ? 'Agendamento'
-                                        : action.label}
-                                </span>
-                              </button>
-                            ))}
-                        </div>
-                      </div>
-
-                      {/* WhatsApp */}
-                      <div>
-                        <div className="px-1 pb-2">
-                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            WhatsApp
-                          </h4>
-                        </div>
-                        <div className="space-y-2">
-                          {communicationActionsWithLoading
-                            .filter((action) => action.id.includes('whatsapp') || action.id === 'status-vistoria')
-                            .map((action) => (
-                              <button
-                                key={action.id}
-                                onClick={() => handleActionClick(action)}
-                                disabled={action.disabled}
-                                className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                              >
-                                {action.loading ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                                ) : (
-                                  <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                                )}
-                                <span className="text-sm text-neutral-700 font-medium text-left">
-                                  {action.id === 'whatsapp-proprietaria'
-                                    ? 'Proprietária'
-                                    : action.id === 'whatsapp-comercial'
-                                      ? 'Comercial'
-                                      : action.id === 'whatsapp-locataria'
-                                        ? 'Locatária'
-                                        : action.id === 'status-vistoria'
-                                          ? 'Status Vistoria'
+                    {/* Coluna 2: WHATSAPP */}
+                    <div className="space-y-3">
+                      <div className="space-y-4">
+                        {/* E-mail */}
+                        <div>
+                          <div className="px-1 pb-2">
+                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                              E-mail
+                            </h4>
+                          </div>
+                          <div className="space-y-2">
+                            {communicationActionsWithLoading
+                              .filter(
+                                (action) =>
+                                  action.id.includes('email') ||
+                                  action.id === 'notificacao-agendamento'
+                              )
+                              .map((action) => (
+                                <button
+                                  key={action.id}
+                                  onClick={() => handleActionClick(action)}
+                                  disabled={action.disabled}
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                                >
+                                  {action.loading ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                  ) : (
+                                    <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                  )}
+                                  <span className="text-sm text-neutral-700 font-medium text-left">
+                                    {action.id === 'devolutiva-email-locador'
+                                      ? 'E-mail (Locador)'
+                                      : action.id ===
+                                          'devolutiva-email-locatario'
+                                        ? 'E-mail (Locatário)'
+                                        : action.id ===
+                                            'notificacao-agendamento'
+                                          ? 'Agendamento'
                                           : action.label}
-                                </span>
-                              </button>
-                            ))}
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Outros */}
-                      <div>
-                        <div className="px-1 pb-2">
-                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            Outros
-                          </h4>
+                        {/* WhatsApp */}
+                        <div>
+                          <div className="px-1 pb-2">
+                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                              WhatsApp
+                            </h4>
+                          </div>
+                          <div className="space-y-2">
+                            {communicationActionsWithLoading
+                              .filter(
+                                (action) =>
+                                  action.id.includes('whatsapp') ||
+                                  action.id === 'status-vistoria'
+                              )
+                              .map((action) => (
+                                <button
+                                  key={action.id}
+                                  onClick={() => handleActionClick(action)}
+                                  disabled={action.disabled}
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                                >
+                                  {action.loading ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                  ) : (
+                                    <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                  )}
+                                  <span className="text-sm text-neutral-700 font-medium text-left">
+                                    {action.id === 'whatsapp-proprietaria'
+                                      ? 'Proprietária'
+                                      : action.id === 'whatsapp-comercial'
+                                        ? 'Comercial'
+                                        : action.id === 'whatsapp-locataria'
+                                          ? 'Locatária'
+                                          : action.id === 'status-vistoria'
+                                            ? 'Status Vistoria'
+                                            : action.label}
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          {communicationActionsWithLoading
-                            .filter(
-                              (action) =>
-                                !action.id.includes('email') &&
-                                !action.id.includes('whatsapp') &&
-                                action.id !== 'notificacao-agendamento' &&
-                                action.id !== 'status-vistoria'
-                            )
-                            .map((action) => (
-                              <button
-                                key={action.id}
-                                onClick={() => handleActionClick(action)}
-                                disabled={action.disabled}
-                                className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                              >
-                                {action.loading ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                                ) : (
-                                  <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                                )}
-                                <span className="text-sm text-neutral-700 font-medium text-left">
-                                  {action.id === 'cobranca-consumo'
-                                    ? 'Cobrança'
-                                    : action.label}
-                                </span>
-                              </button>
-                            ))}
-                          
-                          {/* Botão de Análise de Vistoria */}
-                          <button
-                            onClick={async () => {
-                              const { data: contract } = await supabase
-                                .from('saved_terms')
-                                .select('*')
-                                .eq('id', contractId)
-                                .single();
-                              
-                              if (contract) {
-                                const formData = contract.form_data as Record<string, string>;
-                                navigate('/analise-vistoria', {
-                                  state: {
-                                    contractId: contract.id,
-                                    contractData: {
-                                      locatario: formData?.nomeLocatario || formData?.primeiroLocatario || '',
-                                      endereco: formData?.enderecoImovel || formData?.endereco || '',
+
+                        {/* Outros */}
+                        <div>
+                          <div className="px-1 pb-2">
+                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                              Outros
+                            </h4>
+                          </div>
+                          <div className="space-y-2">
+                            {communicationActionsWithLoading
+                              .filter(
+                                (action) =>
+                                  !action.id.includes('email') &&
+                                  !action.id.includes('whatsapp') &&
+                                  action.id !== 'notificacao-agendamento' &&
+                                  action.id !== 'status-vistoria'
+                              )
+                              .map((action) => (
+                                <button
+                                  key={action.id}
+                                  onClick={() => handleActionClick(action)}
+                                  disabled={action.disabled}
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                                >
+                                  {action.loading ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                  ) : (
+                                    <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                  )}
+                                  <span className="text-sm text-neutral-700 font-medium text-left">
+                                    {action.id === 'cobranca-consumo'
+                                      ? 'Cobrança'
+                                      : action.label}
+                                  </span>
+                                </button>
+                              ))}
+
+                            {/* Botão de Análise de Vistoria */}
+                            <button
+                              onClick={async () => {
+                                const { data: contract } = await supabase
+                                  .from('saved_terms')
+                                  .select('*')
+                                  .eq('id', contractId)
+                                  .single();
+
+                                if (contract) {
+                                  const formData = contract.form_data as Record<
+                                    string,
+                                    string
+                                  >;
+                                  navigate('/analise-vistoria', {
+                                    state: {
+                                      contractId: contract.id,
+                                      contractData: {
+                                        locatario:
+                                          formData?.nomeLocatario ||
+                                          formData?.primeiroLocatario ||
+                                          '',
+                                        endereco:
+                                          formData?.enderecoImovel ||
+                                          formData?.endereco ||
+                                          '',
+                                      },
                                     },
-                                  },
-                                });
-                              }
-                              setIsOpen(false);
-                            }}
-                            disabled={checkingAnalise}
-                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                          >
-                            {checkingAnalise ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                            ) : (
-                              <SearchCheck className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                            )}
-                            <span className="text-sm text-neutral-700 font-medium text-left">
-                              {checkingAnalise ? 'Verificando...' : hasAnalise ? 'Carregar Análise' : 'Criar Análise'}
-                            </span>
-                          </button>
+                                  });
+                                }
+                                setIsOpen(false);
+                              }}
+                              disabled={checkingAnalise}
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                            >
+                              {checkingAnalise ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                              ) : (
+                                <SearchCheck className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                              )}
+                              <span className="text-sm text-neutral-700 font-medium text-left">
+                                {checkingAnalise
+                                  ? 'Verificando...'
+                                  : hasAnalise
+                                    ? 'Carregar Análise'
+                                    : 'Criar Análise'}
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Coluna 3: DOCUMENTOS E OUTROS */}
-                  <div className="space-y-3">
-                    {/* DOCUMENTOS */}
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="px-1 pb-2">
-                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            Contratos
-                          </h4>
+                    {/* Coluna 3: DOCUMENTOS E OUTROS */}
+                    <div className="space-y-3">
+                      {/* DOCUMENTOS */}
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="px-1 pb-2">
+                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                              Contratos
+                            </h4>
+                          </div>
+                          {documentActionsWithLoading.map((action) => (
+                            <button
+                              key={action.id}
+                              onClick={() => handleActionClick(action)}
+                              disabled={action.disabled}
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                            >
+                              {action.loading ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                              ) : (
+                                <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                              )}
+                              <span className="text-sm text-neutral-700 font-medium text-left">
+                                {action.id === 'caderninho'
+                                  ? 'Caderninho'
+                                  : action.id === 'distrato'
+                                    ? 'Distrato'
+                                    : action.label}
+                              </span>
+                            </button>
+                          ))}
                         </div>
-                        {documentActionsWithLoading.map((action) => (
-                          <button
-                            key={action.id}
-                            onClick={() => handleActionClick(action)}
-                            disabled={action.disabled}
-                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                          >
-                            {action.loading ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                            ) : (
-                              <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                            )}
-                            <span className="text-sm text-neutral-700 font-medium text-left">
-                              {action.id === 'caderninho'
-                                ? 'Caderninho'
-                                : action.id === 'distrato'
-                                  ? 'Distrato'
-                                  : action.label}
-                            </span>
-                          </button>
-                        ))}
                       </div>
-                    </div>
 
-                    {/* TERMO DE RECUSA */}
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="px-1 pb-2">
-                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            Assinatura
-                          </h4>
+                      {/* TERMO DE RECUSA */}
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="px-1 pb-2">
+                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                              Assinatura
+                            </h4>
+                          </div>
+                          {recusaActionsWithLoading.map((action) => (
+                            <button
+                              key={action.id}
+                              onClick={() => handleActionClick(action)}
+                              disabled={action.disabled}
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                            >
+                              {action.loading ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                              ) : (
+                                <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                              )}
+                              <span className="text-sm text-neutral-700 font-medium text-left">
+                                {action.id === 'termo-recusa-email'
+                                  ? 'Recusa E-mail'
+                                  : action.id === 'termo-recusa-pdf'
+                                    ? 'Recusa PDF'
+                                    : action.label}
+                              </span>
+                            </button>
+                          ))}
                         </div>
-                        {recusaActionsWithLoading.map((action) => (
-                          <button
-                            key={action.id}
-                            onClick={() => handleActionClick(action)}
-                            disabled={action.disabled}
-                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-                          >
-                            {action.loading ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
-                            ) : (
-                              <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
-                            )}
-                            <span className="text-sm text-neutral-700 font-medium text-left">
-                              {action.id === 'termo-recusa-email'
-                                ? 'Recusa E-mail'
-                                : action.id === 'termo-recusa-pdf'
-                                  ? 'Recusa PDF'
-                                  : action.label}
-                            </span>
-                          </button>
-                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+          </>
+        )}
+      </div>
+    );
+  }
+);
+
+QuickActionsDropdown.displayName = 'QuickActionsDropdown';
 
 export default QuickActionsDropdown;

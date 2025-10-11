@@ -12,9 +12,11 @@ import {
   Clock,
   MapPin,
   Edit,
-} from 'lucide-react';
+  Search,
+} from '@/utils/iconMapper';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
 import { Contract } from '@/types/contract';
+import { ContractBillsSection } from './ContractBillsSection';
 
 interface ContractListProps {
   contracts: Contract[];
@@ -65,6 +67,15 @@ export const ContractList = memo<ContractListProps>(
     onGenerateDocument,
   }) => {
     const navigate = useNavigate();
+
+    /**
+     * Abre busca no JusBrasil pelo nome completo
+     */
+    const handleJusBrasilSearch = (nomeCompleto: string) => {
+      if (!nomeCompleto) return;
+      const searchUrl = `https://www.jusbrasil.com.br/busca?q=${encodeURIComponent(nomeCompleto)}`;
+      window.open(searchUrl, '_blank', 'noopener,noreferrer');
+    };
 
     // Loading state
     if (isLoading) {
@@ -167,9 +178,23 @@ export const ContractList = memo<ContractListProps>(
                             ? 'Proprietários'
                             : 'Proprietário'}
                         </p>
-                        <p className="text-xs font-semibold text-neutral-900 truncate">
-                          {contract.form_data.nomeProprietario}
-                        </p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="text-xs font-semibold text-neutral-900 truncate">
+                            {contract.form_data.nomeProprietario}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleJusBrasilSearch(
+                                contract.form_data.nomeProprietario || ''
+                              );
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-neutral-200 rounded"
+                            title="Buscar no JusBrasil"
+                          >
+                            <Search className="h-3 w-3 text-neutral-600" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
@@ -184,9 +209,23 @@ export const ContractList = memo<ContractListProps>(
                             ? 'Locatários'
                             : 'Locatário'}
                         </p>
-                        <p className="text-xs font-semibold text-neutral-900 truncate">
-                          {contract.form_data.nomeLocatario}
-                        </p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="text-xs font-semibold text-neutral-900 truncate">
+                            {contract.form_data.nomeLocatario}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleJusBrasilSearch(
+                                contract.form_data.nomeLocatario || ''
+                              );
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-neutral-200 rounded"
+                            title="Buscar no JusBrasil"
+                          >
+                            <Search className="h-3 w-3 text-neutral-600" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -255,15 +294,15 @@ export const ContractList = memo<ContractListProps>(
                             contract.form_data.endereco ||
                             contract.form_data.enderecoImovel;
                           if (endereco) {
-                            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+                            const earthUrl = `https://earth.google.com/web/search/${encodeURIComponent(endereco)}`;
                             window.open(
-                              mapsUrl,
+                              earthUrl,
                               '_blank',
                               'noopener,noreferrer'
                             );
                           }
                         }}
-                        title="Clique para abrir no Google Maps"
+                        title="Clique para abrir no Google Earth"
                       >
                         {contract.form_data.endereco ||
                           contract.form_data.enderecoImovel ||
@@ -271,6 +310,14 @@ export const ContractList = memo<ContractListProps>(
                       </p>
                     </div>
                   </div>
+                </div>
+
+                {/* CONTAS DE CONSUMO */}
+                <div className="mb-4">
+                  <ContractBillsSection
+                    contractId={contract.id}
+                    formData={contract.form_data}
+                  />
                 </div>
 
                 {/* AÇÕES RÁPIDAS */}

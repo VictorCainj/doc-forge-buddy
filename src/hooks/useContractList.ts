@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hook para gerenciar lista de contratos, paginação e busca
  * Extrai responsabilidades do componente Contratos
@@ -14,21 +13,21 @@ export interface UseContractListReturn {
   contracts: Contract[];
   filteredContracts: Contract[];
   displayedContracts: Contract[];
-  
+
   // Estados de carregamento
   loading: boolean;
   loadingMore: boolean;
   hasMore: boolean;
-  
+
   // Paginação
   currentPage: number;
   contractsPerPage: number;
-  
+
   // Busca
   searchResults: Contract[];
   hasSearched: boolean;
   isSearching: boolean;
-  
+
   // Ações
   loadMore: () => Promise<void>;
   performSearch: (query: string) => void;
@@ -110,9 +109,12 @@ export const useContractList = (): UseContractListReturn => {
     }
   }, [loadMoreData]);
 
-  const performSearch = useCallback((query: string) => {
-    performSearchInternal(query);
-  }, [performSearchInternal]);
+  const performSearch = useCallback(
+    (query: string) => {
+      performSearchInternal(query);
+    },
+    [performSearchInternal]
+  );
 
   const clearSearch = useCallback(() => {
     clearSearchInternal();

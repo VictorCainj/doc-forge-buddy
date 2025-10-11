@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, FileText, User } from 'lucide-react';
+import { Calendar, FileText, User } from '@/utils/iconMapper';
 import { VistoriaWizardData } from '../../hooks/useVistoriaWizard';
 
 interface Step1Props {

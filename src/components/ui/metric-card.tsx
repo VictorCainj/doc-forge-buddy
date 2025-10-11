@@ -1,12 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from '@/utils/iconMapper';
+import { AppIcon } from '@/types/icons';
 import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   trend?: {
     value: number;
     period: string;

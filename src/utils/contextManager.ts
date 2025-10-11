@@ -1,9 +1,9 @@
-// @ts-nocheck
 import OpenAI from 'openai';
 import { log } from './logger';
 
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey:
+    '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',
   dangerouslyAllowBrowser: true,
 });
 
@@ -64,12 +64,15 @@ export class ContextManager {
     try {
       log.debug('Iniciando sumarização de mensagens antigas');
 
-      const toSummarize = this.context.recentMessages.splice(0, Math.floor(this.context.recentMessages.length / 2));
+      const toSummarize = this.context.recentMessages.splice(
+        0,
+        Math.floor(this.context.recentMessages.length / 2)
+      );
 
       if (toSummarize.length === 0) return;
 
       const conversationText = toSummarize
-        .map(m => `${m.role}: ${m.content}`)
+        .map((m) => `${m.role}: ${m.content}`)
         .join('\n');
 
       const completion = await openai.chat.completions.create({
@@ -77,7 +80,8 @@ export class ContextManager {
         messages: [
           {
             role: 'system',
-            content: 'Crie um sumário conciso desta conversa, incluindo um parágrafo resumindo o conteúdo e uma lista de 3-5 pontos-chave principais. Responda em JSON com formato: {"summary": "texto", "keyPoints": ["ponto 1", "ponto 2"]}'
+            content:
+              'Crie um sumário conciso desta conversa, incluindo um parágrafo resumindo o conteúdo e uma lista de 3-5 pontos-chave principais. Responda em JSON com formato: {"summary": "texto", "keyPoints": ["ponto 1", "ponto 2"]}',
           },
           {
             role: 'user',
@@ -87,7 +91,9 @@ export class ContextManager {
         temperature: 0.3,
       });
 
-      const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+      const result = JSON.parse(
+        completion.choices[0]?.message?.content || '{}'
+      );
 
       const summary: MessageSummary = {
         originalCount: toSummarize.length,
@@ -111,13 +117,13 @@ export class ContextManager {
     }
   }
 
-  getFormattedContext(includeSystem: boolean = true): string {
+  getFormattedContext(_includeSystem: boolean = true): string {
     const parts: string[] = [];
 
     if (this.context.summaries.length > 0) {
       const summariesText = this.context.summaries
         .map((s, idx) => {
-          const points = s.keyPoints.map(p => `  • ${p}`).join('\n');
+          const points = s.keyPoints.map((p) => `  • ${p}`).join('\n');
           return `=== Resumo ${idx + 1} (${s.originalCount} mensagens) ===\n${s.summaryText}\n\nPontos-chave:\n${points}`;
         })
         .join('\n\n');
@@ -127,7 +133,7 @@ export class ContextManager {
 
     if (this.context.recentMessages.length > 0) {
       const recentText = this.context.recentMessages
-        .map(m => `${m.role}: ${m.content}`)
+        .map((m) => `${m.role}: ${m.content}`)
         .join('\n');
 
       parts.push(`[CONVERSA RECENTE]\n${recentText}`);
@@ -151,7 +157,7 @@ export class ContextManager {
     totalProcessed: number;
     effectiveContextSize: number;
   } {
-    const effectiveContextSize = 
+    const effectiveContextSize =
       this.context.recentMessages.length +
       this.context.summaries.reduce((sum, s) => sum + s.originalCount, 0);
 
@@ -179,11 +185,11 @@ export class ContextManager {
   importContext(contextData: ContextWindow): void {
     this.context = {
       ...contextData,
-      recentMessages: contextData.recentMessages.map(m => ({
+      recentMessages: contextData.recentMessages.map((m) => ({
         ...m,
         timestamp: new Date(m.timestamp),
       })),
-      summaries: contextData.summaries.map(s => ({
+      summaries: contextData.summaries.map((s) => ({
         ...s,
         timestamp: new Date(s.timestamp),
       })),

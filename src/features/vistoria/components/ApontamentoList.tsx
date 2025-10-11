@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, ClipboardList, Package, Wrench } from 'lucide-react';
+import { Edit, Trash2, ClipboardList, Package, Wrench } from '@/utils/iconMapper';
 import { ApontamentoVistoria } from '@/types/vistoria';
 
 interface ApontamentoListProps {

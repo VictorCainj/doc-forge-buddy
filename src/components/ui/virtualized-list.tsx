@@ -1,10 +1,15 @@
-// @ts-nocheck
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, MapPin, User, CalendarDays } from 'lucide-react';
+import { FileText, MapPin, User } from '@/utils/iconMapper';
 
 interface VirtualizedListProps<T> {
   items: T[];
@@ -34,8 +39,8 @@ export const VirtualizedList = <T,>({
   containerHeight = 600,
   overscan = 5,
   loading = false,
-  emptyMessage = "Nenhum item encontrado",
-  className = "",
+  emptyMessage = 'Nenhum item encontrado',
+  className = '',
 }: VirtualizedListProps<T>) => {
   const [state, setState] = useState<VirtualizedListState>({
     scrollTop: 0,
@@ -50,8 +55,11 @@ export const VirtualizedList = <T,>({
   // Calcular itens visíveis
   const visibleItems = useMemo(() => {
     const { scrollTop, containerHeight, itemHeight, overscan } = state;
-    
-    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+
+    const startIndex = Math.max(
+      0,
+      Math.floor(scrollTop / itemHeight) - overscan
+    );
     const endIndex = Math.min(
       items.length - 1,
       Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
@@ -79,7 +87,7 @@ export const VirtualizedList = <T,>({
   // Handler de scroll
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
-    setState(prev => ({ ...prev, scrollTop }));
+    setState((prev) => ({ ...prev, scrollTop }));
   }, []);
 
   // Atualizar dimensões do container
@@ -87,7 +95,7 @@ export const VirtualizedList = <T,>({
     const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           containerHeight: rect.height,
         }));
@@ -120,7 +128,9 @@ export const VirtualizedList = <T,>({
 
   if (items.length === 0) {
     return (
-      <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
+      <div
+        className={`flex flex-col items-center justify-center py-12 ${className}`}
+      >
         <FileText className="h-12 w-12 text-muted-foreground mb-4" />
         <p className="text-muted-foreground text-lg">{emptyMessage}</p>
       </div>
@@ -224,7 +234,7 @@ export const ContractItem = React.memo<{
               </h3>
               {getStatusBadge(contract)}
             </div>
-            
+
             <div className="space-y-1 text-sm text-muted-foreground">
               <div className="flex items-center space-x-2">
                 <User className="h-3 w-3" />
@@ -232,23 +242,21 @@ export const ContractItem = React.memo<{
                   {contract.form_data.nomeLocatario || 'Sem nome'}
                 </span>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <MapPin className="h-3 w-3" />
                 <span className="truncate">
                   {contract.form_data.enderecoImovel || 'Sem endereço'}
                 </span>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <CalendarDays className="h-3 w-3" />
-                <span>
-                  Criado em {formatDate(contract.created_at)}
-                </span>
+                <span>Criado em {formatDate(contract.created_at)}</span>
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-col space-y-1 ml-4">
             {onEdit && (
               <Button

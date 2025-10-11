@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
+import { Printer } from '@/utils/iconMapper';
 import { usePrint } from '@/hooks/usePrint';
 import { toast } from 'sonner';
 

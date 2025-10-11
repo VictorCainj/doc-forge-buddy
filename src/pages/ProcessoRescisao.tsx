@@ -14,7 +14,7 @@ import {
   Building,
   Briefcase,
   Download,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';

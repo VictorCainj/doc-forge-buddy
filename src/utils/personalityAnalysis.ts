@@ -1,9 +1,10 @@
 import OpenAI from 'openai';
 import { log } from './logger';
-import type { AIMemory, UserPatterns } from '@/hooks/useAIMemory';
+import type { UserPatterns } from '@/hooks/useAIMemory';
 
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey:
+    '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',
   dangerouslyAllowBrowser: true,
 });
 
@@ -30,7 +31,9 @@ export async function analyzeUserCommunicationStyle(
   userMessages: string[]
 ): Promise<PersonalityProfile> {
   try {
-    log.debug('Analisando estilo de comunicação', { messageCount: userMessages.length });
+    log.debug('Analisando estilo de comunicação', {
+      messageCount: userMessages.length,
+    });
 
     if (userMessages.length < 5) {
       // Não há mensagens suficientes para análise precisa
@@ -191,7 +194,7 @@ export function extractUsagePatterns(
   userMessages: Array<{ content: string; timestamp: Date }>
 ): Partial<UserPatterns> {
   // Análise de horários de uso
-  const hours = userMessages.map(m => m.timestamp.getHours());
+  const hours = userMessages.map((m) => m.timestamp.getHours());
   const avgHour = hours.reduce((a, b) => a + b, 0) / hours.length;
 
   const workingHours = {
@@ -207,9 +210,9 @@ export function extractUsagePatterns(
   const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const usageFrequency = {
-    daily: userMessages.filter(m => m.timestamp > oneDayAgo).length,
-    weekly: userMessages.filter(m => m.timestamp > oneWeekAgo).length,
-    monthly: userMessages.filter(m => m.timestamp > oneMonthAgo).length,
+    daily: userMessages.filter((m) => m.timestamp > oneDayAgo).length,
+    weekly: userMessages.filter((m) => m.timestamp > oneWeekAgo).length,
+    monthly: userMessages.filter((m) => m.timestamp > oneMonthAgo).length,
   };
 
   return {

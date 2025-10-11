@@ -248,7 +248,7 @@ describe('useTermoLocatario', () => {
   });
 
   it('deve atualizar dados de contato no Supabase com sucesso', async () => {
-    const mockUpdate = vi.fn().mockResolvedValue({ error: null });
+    const _mockUpdate = vi.fn().mockResolvedValue({ error: null });
     const mockEq = vi.fn().mockReturnValue({ error: null });
     const mockSingle = vi.fn().mockResolvedValue({
       data: {

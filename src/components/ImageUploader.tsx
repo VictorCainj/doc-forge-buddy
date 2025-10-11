@@ -5,7 +5,7 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   AlertCircle,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {

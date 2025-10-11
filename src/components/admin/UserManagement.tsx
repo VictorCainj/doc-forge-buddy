@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, Edit, Power, Search } from 'lucide-react';
+import { UserPlus, Edit, Power, Search } from '@/utils/iconMapper';
 import { useUsersList, useToggleUserStatus } from '@/hooks/useUserManagement';
 import { UserProfile, UserFilters } from '@/types/admin';
 import { UserFormDialog } from './UserFormDialog';

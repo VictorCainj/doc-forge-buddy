@@ -79,7 +79,7 @@ export const initPerformanceMonitoring = () => {
 
     try {
       observer.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (e) {
+    } catch {
       // LCP não suportado
     }
   };
@@ -99,7 +99,7 @@ export const initPerformanceMonitoring = () => {
 
     try {
       observer.observe({ entryTypes: ['first-input'] });
-    } catch (e) {
+    } catch {
       // FID não suportado
     }
   };
@@ -123,7 +123,7 @@ export const initPerformanceMonitoring = () => {
 
     try {
       observer.observe({ entryTypes: ['layout-shift'] });
-    } catch (e) {
+    } catch {
       // CLS não suportado
     }
   };
@@ -145,7 +145,7 @@ export const initPerformanceMonitoring = () => {
 
     try {
       observer.observe({ entryTypes: ['paint'] });
-    } catch (e) {
+    } catch {
       // FCP não suportado
     }
   };

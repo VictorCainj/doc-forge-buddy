@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail } from '@/utils/iconMapper';
 
 interface ContactModalProps {
   open: boolean;

@@ -33,13 +33,22 @@ const TermoRecusaAssinaturaEmail = lazy(
 );
 const Chat = lazy(() => import('./pages/Chat'));
 const AnaliseVistoria = lazy(() => import('./pages/AnaliseVistoria'));
-const VistoriaAnalises = lazy(() => import('./pages/VistoriaAnalises'));
 const Prestadores = lazy(() => import('./pages/Prestadores'));
 const DebugImages = lazy(() => import('./pages/DebugImages'));
 const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
 const Admin = lazy(() => import('./pages/Admin'));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      gcTime: 10 * 60 * 1000, // 10 minutos (anteriormente cacheTime)
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -205,7 +214,8 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route
+                  {/* Rota movida para o painel de administrador */}
+                  {/* <Route
                     path="/vistoria-analises"
                     element={
                       <ProtectedRoute>
@@ -214,7 +224,7 @@ const App = () => (
                         </Layout>
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/prestadores"
                     element={

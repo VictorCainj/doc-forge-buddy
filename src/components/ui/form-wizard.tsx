@@ -1,6 +1,6 @@
 import React, { useState, ComponentProps } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from '@/utils/iconMapper';
 // import { Button } from '@/components/ui/button';
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // import { Progress } from '@/components/ui/progress';
@@ -212,7 +212,7 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             </p>
           )}
         </div>
-        <div className="max-h-[calc(100vh-550px)] min-h-[250px] overflow-y-auto pr-1 custom-scrollbar smooth-scroll">
+        <div className="max-h-[calc(100vh-400px)] min-h-[400px] overflow-y-auto pr-1 custom-scrollbar smooth-scroll">
           {currentStepData.content}
         </div>
       </div>

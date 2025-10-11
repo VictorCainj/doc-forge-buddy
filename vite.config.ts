@@ -16,9 +16,17 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          ui: [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+          ],
           utils: ['date-fns', 'clsx', 'tailwind-merge'],
           supabase: ['@supabase/supabase-js'],
+          openai: ['openai'],
+          pdf: ['html2pdf.js', 'docx'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          markdown: ['react-markdown', 'remark-gfm', 'rehype-raw'],
         },
       },
     },
@@ -31,8 +39,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   server: {
-    // @ts-ignore
-    allowedHosts: process.env.TEMPO === "true" ? true : undefined,
+    // @ts-expect-error - Vite types don't include allowedHosts but it's supported
+    allowedHosts: process.env.TEMPO === 'true' ? true : undefined,
     ...(mode === 'development'
       ? {
           host: '::',

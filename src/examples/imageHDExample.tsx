@@ -31,7 +31,7 @@ export function ExemploUploadSimples() {
       const base64HD = await fileToBase64HD(file);
       setImagemHD(base64HD);
       toast.success('Imagem convertida para HD!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao processar imagem');
     }
   };
@@ -79,7 +79,7 @@ export function ExemploMultiplasImagens() {
 
       setImagensHD(resultado);
       toast.success(`${resultado.length} imagens processadas em HD!`);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao processar imagens');
     } finally {
       setProcessando(false);
@@ -135,7 +135,7 @@ export function ExemploImpressao() {
       const printReady = await optimizeForPrint(file);
       setImagemPrint(printReady);
       toast.success('Imagem otimizada para impressão (300 DPI)!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao otimizar para impressão');
     }
   };
@@ -223,7 +223,7 @@ export function ExemploURLparaHD() {
 
       setImagemHD(base64HD);
       toast.success('URL convertida para HD!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao converter URL. Verifique se a imagem permite CORS.');
     } finally {
       setCarregando(false);
@@ -280,7 +280,7 @@ export function ExemploInfoImagem() {
       toast.success(
         `Imagem: ${imageInfo.width}x${imageInfo.height} (${imageInfo.aspectRatio.toFixed(2)}:1)`
       );
-    } catch (error) {
+    } catch {
       toast.error('Erro ao obter informações da imagem');
     }
   };
@@ -339,7 +339,7 @@ export function ExemploRedimensionamento() {
       const resized = await resizeForDocument(file, largura, altura);
       setImagemRedimensionada(resized);
       toast.success(`Imagem redimensionada para ${largura}x${altura}!`);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao redimensionar imagem');
     }
   };
@@ -417,7 +417,7 @@ export function ExemploComparacao() {
       setTamanhoHD(tamanhoBytes);
 
       toast.success('Comparação gerada!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao processar imagem HD');
     }
   };

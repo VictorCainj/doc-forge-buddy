@@ -308,6 +308,7 @@ const EditTerm = () => {
           options: [
             { value: 'DAEV', label: 'DAEV' },
             { value: 'SANASA', label: 'SANASA' },
+            { value: 'SANEBAVI', label: 'SANEBAVI' },
           ],
         },
         {

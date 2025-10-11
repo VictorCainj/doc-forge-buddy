@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from '@/utils/iconMapper';
 import { VistoriaWizardData } from '../../hooks/useVistoriaWizard';
 
 interface Step2AmbientesProps {

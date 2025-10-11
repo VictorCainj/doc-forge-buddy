@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, ArrowLeft, Key } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, Key } from '@/utils/iconMapper';
 import { Link } from 'react-router-dom';
 
 const forgotPasswordSchema = z.object({

@@ -239,7 +239,7 @@ export default function DebugImages() {
                       🔗 Todas as URLs das Imagens
                     </h3>
                     <div className="space-y-1 max-h-96 overflow-y-auto">
-                      {analise.todasImagens.map((img: any, index: number) => (
+                      {analise.todasImagens.map((img: any, _index: number) => (
                         <div
                           key={img.id}
                           className="p-2 bg-neutral-50 rounded text-xs"

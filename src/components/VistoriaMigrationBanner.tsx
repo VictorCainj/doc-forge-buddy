@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Database, ArrowRight, X, Loader2 } from 'lucide-react';
+import { Database, ArrowRight, X, Loader2 } from '@/utils/iconMapper';
 import { useVistoriaMigrator } from '@/utils/migrateVistoriaData';
 import { useToast } from '@/hooks/use-toast';
 

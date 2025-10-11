@@ -6,13 +6,12 @@ import {
   LogOut,
   Home,
   Search,
-  FolderOpen,
   Users,
   ChevronRight,
   Settings,
   Menu,
   X,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -60,12 +59,6 @@ const Sidebar = () => {
       icon: Search,
       path: '/analise-vistoria',
       active: location.pathname === '/analise-vistoria',
-    },
-    {
-      name: 'Análises Salvas',
-      icon: FolderOpen,
-      path: '/vistoria-analises',
-      active: location.pathname === '/vistoria-analises',
     },
     {
       name: 'Prestadores',

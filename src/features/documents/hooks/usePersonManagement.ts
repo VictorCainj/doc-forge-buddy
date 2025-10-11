@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { splitNames } from '@/utils/nameHelpers';
 
 interface Person {
   id: string;
@@ -37,9 +38,7 @@ export const usePersonManagement = ({
     if (hasPersonManagerSteps && initialData) {
       // Inicializar locadores se houver dados
       if (initialData.nomeProprietario && locadores.length === 0) {
-        const nomesLocadores = initialData.nomeProprietario
-          .split(/ e | E /)
-          .map((nome) => nome.trim());
+        const nomesLocadores = splitNames(initialData.nomeProprietario);
         const locadoresIniciais = nomesLocadores
           .map((nome, index) => ({
             id: `locador-${index}`,
@@ -53,9 +52,7 @@ export const usePersonManagement = ({
 
       // Inicializar locatários se houver dados
       if (initialData.nomeLocatario && locatarios.length === 0) {
-        const nomesLocatarios = initialData.nomeLocatario
-          .split(/ e | E /)
-          .map((nome) => nome.trim());
+        const nomesLocatarios = splitNames(initialData.nomeLocatario);
         const locatariosIniciais = nomesLocatarios
           .map((nome, index) => ({
             id: `locatario-${index}`,
@@ -69,9 +66,7 @@ export const usePersonManagement = ({
 
       // Inicializar fiadores se houver dados
       if (initialData.nomeFiador && fiadores.length === 0) {
-        const nomesFiadores = initialData.nomeFiador
-          .split(/ e | E /)
-          .map((nome) => nome.trim());
+        const nomesFiadores = splitNames(initialData.nomeFiador);
         const fiadoresIniciais = nomesFiadores
           .map((nome, index) => ({
             id: `fiador-${index}`,
@@ -83,7 +78,13 @@ export const usePersonManagement = ({
         }
       }
     }
-  }, [initialData, hasPersonManagerSteps, locadores.length, locatarios.length, fiadores.length]);
+  }, [
+    initialData,
+    hasPersonManagerSteps,
+    locadores.length,
+    locatarios.length,
+    fiadores.length,
+  ]);
 
   // Sincronizar dados das pessoas com o formData
   useEffect(() => {

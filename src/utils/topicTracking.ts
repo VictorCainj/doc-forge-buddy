@@ -2,7 +2,8 @@ import OpenAI from 'openai';
 import { log } from './logger';
 
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey:
+    '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',
   dangerouslyAllowBrowser: true,
 });
 
@@ -39,7 +40,7 @@ export async function extractTopicFromMessage(
   try {
     log.debug('Extraindo tópico da mensagem');
 
-    const context = conversationHistory 
+    const context = conversationHistory
       ? `Contexto da conversa:\n${conversationHistory}\n\n`
       : '';
 
@@ -66,7 +67,8 @@ Responda apenas com o nome do tópico, sem explicações.`,
       max_tokens: 50,
     });
 
-    const topic = completion.choices[0]?.message?.content?.trim() || 'Conversa geral';
+    const topic =
+      completion.choices[0]?.message?.content?.trim() || 'Conversa geral';
 
     log.debug('Tópico extraído', { topic });
 
@@ -101,7 +103,7 @@ function calculateStringSimilarity(str1: string, str2: string): number {
   const words1 = new Set(str1.split(/\s+/));
   const words2 = new Set(str2.split(/\s+/));
 
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const intersection = new Set([...words1].filter((x) => words2.has(x)));
   const union = new Set([...words1, ...words2]);
 
   return intersection.size / union.size;
@@ -118,9 +120,9 @@ export class TopicManager {
   /**
    * Atualiza ou cria um tópico
    */
-  updateTopic(topicName: string, messageContent?: string): string {
+  updateTopic(topicName: string, _messageContent?: string): string {
     const now = new Date();
-    
+
     // Verificar se já existe um tópico similar
     let topicId = this.findSimilarTopic(topicName);
 
@@ -171,7 +173,12 @@ export class TopicManager {
    */
   private findSimilarTopic(topicName: string): string | null {
     for (const [id, topic] of this.topics.entries()) {
-      if (calculateStringSimilarity(topic.name.toLowerCase(), topicName.toLowerCase()) > 0.6) {
+      if (
+        calculateStringSimilarity(
+          topic.name.toLowerCase(),
+          topicName.toLowerCase()
+        ) > 0.6
+      ) {
         return id;
       }
     }
@@ -220,7 +227,7 @@ export class TopicManager {
    */
   cleanOldTopics(): void {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
+
     for (const [id, topic] of this.topics.entries()) {
       if (topic.lastMentioned < sevenDaysAgo) {
         this.topics.delete(id);

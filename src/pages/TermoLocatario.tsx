@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from '@/utils/iconMapper';
 import { FormStep } from '../hooks/use-form-wizard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTermoLocatario } from '@/features/documents/hooks';
 import { ContactModal } from '@/features/documents/components';
+import { splitNames } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
@@ -71,9 +72,7 @@ const TermoLocatario: React.FC = () => {
           options: [
             { value: 'todos', label: 'Todos os locatários' },
             ...(contractData.nomeLocatario
-              ? contractData.nomeLocatario
-                  .split(/,| e | E /)
-                  .map((nome) => nome.trim())
+              ? splitNames(contractData.nomeLocatario)
                   .filter((nome) => nome && nome.length > 2)
                   .map((nome) => ({
                     value: nome,
@@ -151,7 +150,8 @@ const TermoLocatario: React.FC = () => {
           label: 'Motivo da Não Realização da Vistoria',
           type: 'textarea',
           required: false,
-          placeholder: 'Descreva o motivo pelo qual a vistoria não foi realizada',
+          placeholder:
+            'Descreva o motivo pelo qual a vistoria não foi realizada',
           conditional: {
             field: 'tipoVistoria',
             value: 'nao_realizada',
@@ -180,6 +180,7 @@ const TermoLocatario: React.FC = () => {
           options: [
             { value: 'DAEV', label: 'DAEV' },
             { value: 'SANASA', label: 'SANASA' },
+            { value: 'SANEBAVI', label: 'SANEBAVI' },
           ],
         },
         {
@@ -466,17 +467,21 @@ Foi entregue {{tipoQuantidadeChaves}}
     // Processar tipo de vistoria
     const tipoVistoria = data.tipoVistoria || 'vistoria';
     const tipoVistoriaTexto =
-      tipoVistoria === 'revistoria' ? 'Revistoria' : 
-      tipoVistoria === 'nao_realizada' ? 'Vistoria não realizada' : 'Vistoria';
+      tipoVistoria === 'revistoria'
+        ? 'Revistoria'
+        : tipoVistoria === 'nao_realizada'
+          ? 'Vistoria não realizada'
+          : 'Vistoria';
 
     // Processar status da vistoria baseado no tipo selecionado
     let statusVistoria;
     if (tipoVistoria === 'nao_realizada') {
       statusVistoria = 'nao_realizada';
     } else {
-      statusVistoria = tipoVistoria === 'revistoria'
-        ? data.statusRevistoria || 'aprovada'
-        : data.statusVistoria || 'aprovada';
+      statusVistoria =
+        tipoVistoria === 'revistoria'
+          ? data.statusRevistoria || 'aprovada'
+          : data.statusVistoria || 'aprovada';
     }
 
     let statusVistoriaCheckboxes;
@@ -494,8 +499,11 @@ Foi entregue {{tipoQuantidadeChaves}}
 
     // Processar data baseada no tipo selecionado
     const dataVistoria =
-      tipoVistoria === 'revistoria' ? data.dataRevistoria : 
-      tipoVistoria === 'nao_realizada' ? '' : data.dataVistoria;
+      tipoVistoria === 'revistoria'
+        ? data.dataRevistoria
+        : tipoVistoria === 'nao_realizada'
+          ? ''
+          : data.dataVistoria;
 
     // Processar observação (só mostra se preenchida)
     const observacao =
@@ -508,12 +516,8 @@ Foi entregue {{tipoQuantidadeChaves}}
     const fiadores: string[] = [];
 
     if (temFiadores && contractData.nomeFiador) {
-      // Dividir os nomes dos fiadores (separados por " e " ou ",")
-      const nomesFiadores = contractData.nomeFiador
-        .split(/ e | E |,/)
-        .map((nome) => nome.trim())
-        .filter((nome) => nome.length > 0);
-
+      // Dividir os nomes dos fiadores (separados por vírgulas e " e ")
+      const nomesFiadores = splitNames(contractData.nomeFiador);
       fiadores.push(...nomesFiadores);
     }
 
@@ -597,7 +601,7 @@ Foi entregue {{tipoQuantidadeChaves}}
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-white">
       {/* Main Content */}
       <div className="p-6">
         {/* Back Button */}

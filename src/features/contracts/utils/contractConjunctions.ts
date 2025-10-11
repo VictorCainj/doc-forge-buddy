@@ -4,6 +4,7 @@ import {
   gerarDocumentosSolicitados,
   ConfiguracaoDocumentos,
 } from '@/utils/documentosSolicitados';
+import { splitNames } from '@/utils/nameHelpers';
 
 /**
  * Aplica conjunções verbais e formatações aos dados do contrato
@@ -137,7 +138,7 @@ export function applyContractConjunctions(
     nomeProprietarioCheck.includes(' e ') ||
     nomeProprietarioCheck.includes(' E ');
 
-  const isMultipleProprietarios =
+  const _isMultipleProprietarios =
     generoProprietario === 'masculinos' ||
     generoProprietario === 'femininos' ||
     (!generoProprietario && autoDetectedMultipleProprietarios);
@@ -251,9 +252,7 @@ export function applyContractConjunctions(
   }
 
   if (hasMultipleProprietarioNames) {
-    const nomesProprietarios = nomeProprietarioSaudacao
-      .split(/ e | E /)
-      .map((nome) => nome.trim());
+    const nomesProprietarios = splitNames(nomeProprietarioSaudacao);
     const primeirosNomes = nomesProprietarios.map((nome) => {
       const primeiro = nome.split(' ')[0];
       return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
@@ -298,9 +297,7 @@ export function applyContractConjunctions(
   }
 
   if (hasMultipleLocatarioNames) {
-    const nomesLocatarios = nomeLocatarioSaudacao
-      .split(/ e | E /)
-      .map((nome) => nome.trim());
+    const nomesLocatarios = splitNames(nomeLocatarioSaudacao);
     const primeirosNomes = nomesLocatarios.map((nome) => {
       const primeiro = nome.split(' ')[0];
       return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
@@ -333,9 +330,7 @@ export function applyContractConjunctions(
     formData.nomeLocatario ||
     formData.primeiroLocatario ||
     '[NOME DO LOCATÁRIO]';
-  const nomesLocatarioArray = nomeLocatario
-    .split(/ e | E /)
-    .map((nome) => nome.trim());
+  const nomesLocatarioArray = splitNames(nomeLocatario);
   enhancedData.nomeLocatarioFormatado =
     nomesLocatarioArray.length > 1
       ? nomesLocatarioArray.slice(0, -1).join(', ') +
@@ -347,9 +342,7 @@ export function applyContractConjunctions(
     formData.nomeProprietario ||
     formData.nomesResumidosLocadores ||
     '[NOME DO PROPRIETÁRIO]';
-  const nomesProprietarioArray = nomeProprietario
-    .split(/ e | E /)
-    .map((nome) => nome.trim());
+  const nomesProprietarioArray = splitNames(nomeProprietario);
   enhancedData.nomeProprietarioFormatado =
     nomesProprietarioArray.length > 1
       ? nomesProprietarioArray

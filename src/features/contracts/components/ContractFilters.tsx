@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { X, Filter } from 'lucide-react';
+import { X, Filter } from '@/utils/iconMapper';
 import OptimizedSearch from '@/components/ui/optimized-search';
 
 interface ContractFiltersProps {

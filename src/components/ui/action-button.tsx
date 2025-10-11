@@ -1,11 +1,11 @@
 import { forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { LucideIcon } from 'lucide-react';
+import { AppIcon } from '@/types/icons';
 import { cn } from '@/lib/utils';
 
 interface ActionButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: LucideIcon;
+  icon: AppIcon;
   label?: string;
   variant?:
     | 'primary'

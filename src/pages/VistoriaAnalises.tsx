@@ -31,7 +31,7 @@ import {
   CheckCircle,
   Archive,
   Filter,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';

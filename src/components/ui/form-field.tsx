@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,8 +14,8 @@ import {
   // CheckCircle2,
   HelpCircle,
   ChevronRight,
-} from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+} from '@/utils/iconMapper';
+import { AppIcon } from '@/types/icons';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -50,7 +49,7 @@ export interface FormFieldProps {
   description?: string;
   options?: Array<{ value: string; label: string }>;
   tooltip?: string;
-  icon?: LucideIcon;
+  icon?: AppIcon;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({

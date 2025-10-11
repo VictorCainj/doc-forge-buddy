@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
@@ -19,25 +19,6 @@ export function DocumentViewer({ htmlContent, onClose }: DocumentViewerProps) {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
-
-  // Extrair URLs das imagens do HTML
-  const extractImageUrls = (html: string): string[] => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const images = doc.querySelectorAll('img');
-    const urls: string[] = [];
-    
-    images.forEach((img) => {
-      const src = img.getAttribute('src');
-      if (src && (src.startsWith('http') || src.startsWith('data:'))) {
-        urls.push(src);
-      }
-    });
-    
-    return urls;
-  };
-
-  const imageUrls = extractImageUrls(htmlContent);
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-auto">
@@ -107,7 +88,7 @@ export function DocumentViewer({ htmlContent, onClose }: DocumentViewerProps) {
                 <X className="h-6 w-6" />
               </Button>
             </div>
-            
+
             <img
               src={zoomedImage || ''}
               alt="Imagem ampliada"

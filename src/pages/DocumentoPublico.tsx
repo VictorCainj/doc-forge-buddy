@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X } from '@/utils/iconMapper';
 
 export default function DocumentoPublico() {
   const { id } = useParams<{ id: string }>();

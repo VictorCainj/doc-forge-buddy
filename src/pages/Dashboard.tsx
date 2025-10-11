@@ -8,11 +8,9 @@ import {
   TrendingUp,
   Calendar,
   ArrowRight,
-  Home,
   Clock,
   CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {

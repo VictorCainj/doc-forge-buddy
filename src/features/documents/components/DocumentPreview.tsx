@@ -7,7 +7,7 @@ import {
   Save,
   Minimize2,
   Maximize2,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 
 interface DocumentPreviewProps {
   title: string;

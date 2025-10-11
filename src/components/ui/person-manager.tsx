@@ -3,7 +3,7 @@ import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Plus, Trash2, User } from 'lucide-react';
+import { Plus, Trash2, User } from '@/utils/iconMapper';
 
 interface Person {
   id: string;

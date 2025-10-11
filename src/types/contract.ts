@@ -150,3 +150,32 @@ export interface WhatsAppData {
   selectedPerson: string;
   assinanteSelecionado: string;
 }
+
+/**
+ * Tipos de contas de consumo
+ */
+export type BillType = 'energia' | 'agua' | 'condominio' | 'gas';
+
+/**
+ * Interface para conta de consumo de um contrato
+ */
+export interface ContractBill {
+  id: string;
+  contract_id: string;
+  bill_type: BillType;
+  delivered: boolean;
+  delivered_at?: string;
+  created_at: string;
+  updated_at: string;
+  user_id?: string;
+}
+
+/**
+ * Status de entrega das contas de consumo
+ */
+export interface BillStatus {
+  energia?: boolean;
+  agua?: boolean;
+  condominio?: boolean;
+  gas?: boolean;
+}

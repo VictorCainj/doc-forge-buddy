@@ -5,7 +5,7 @@ import { TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE } from '@/templates/documentos';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 

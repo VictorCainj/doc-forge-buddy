@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,7 +10,7 @@ import {
   ClipboardList,
   Calculator,
   Eye,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { useVistoriaWizard } from '../hooks/useVistoriaWizard';
 import { Step1DadosBasicos } from './steps/Step1DadosBasicos';
 import { Step2Ambientes } from './steps/Step2Ambientes';

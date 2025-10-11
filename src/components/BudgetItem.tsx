@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ import {
   Calculator,
   Package,
   Wrench,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 
 interface BudgetItemProps {
   item: BudgetItem;
@@ -78,15 +77,31 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
                     )}
                   </h4>
                   <Badge
-                    variant={item.tipo === 'material' ? 'default' : item.tipo === 'mao_de_obra' ? 'secondary' : 'outline'}
+                    variant={
+                      item.tipo === 'material'
+                        ? 'default'
+                        : item.tipo === 'mao_de_obra'
+                          ? 'secondary'
+                          : 'outline'
+                    }
                     className="text-xs"
                   >
                     {item.tipo === 'material' ? (
-                      <><Package className="h-3 w-3 mr-1" />Material</>
+                      <>
+                        <Package className="h-3 w-3 mr-1" />
+                        Material
+                      </>
                     ) : item.tipo === 'mao_de_obra' ? (
-                      <><Wrench className="h-3 w-3 mr-1" />Mão de Obra</>
+                      <>
+                        <Wrench className="h-3 w-3 mr-1" />
+                        Mão de Obra
+                      </>
                     ) : (
-                      <><Package className="h-3 w-3 mr-1" /><Wrench className="h-3 w-3 ml-1 mr-1" />Ambos</>
+                      <>
+                        <Package className="h-3 w-3 mr-1" />
+                        <Wrench className="h-3 w-3 ml-1 mr-1" />
+                        Ambos
+                      </>
                     )}
                   </Badge>
                 </div>
@@ -96,10 +111,20 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
               </div>
             </div>
             <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="sm" onClick={() => onEdit(item.id)} className="h-7 w-7 p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(item.id)}
+                className="h-7 w-7 p-0"
+              >
                 <Edit className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onRemove(item.id)} className="h-7 w-7 p-0 text-destructive hover:text-destructive">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemove(item.id)}
+                className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+              >
                 <Trash2 className="h-3 w-3" />
               </Button>
             </div>
@@ -108,29 +133,42 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
           // MODO DE EDIÇÃO
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label className="text-xs font-medium">Ambiente</Label>
-                    <Input
-                    value={editData.ambiente}
-                    onChange={(e) => setEditData(prev => ({ ...prev, ambiente: e.target.value }))}
-                    className="h-8 text-sm"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label className="text-xs font-medium">Subtítulo</Label>
-                    <Input
-                    value={editData.subtitulo}
-                    onChange={(e) => setEditData(prev => ({ ...prev, subtitulo: e.target.value }))}
-                    className="h-8 text-sm"
-                    />
-                </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Ambiente</Label>
+                <Input
+                  value={editData.ambiente}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      ambiente: e.target.value,
+                    }))
+                  }
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Subtítulo</Label>
+                <Input
+                  value={editData.subtitulo}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      subtitulo: e.target.value,
+                    }))
+                  }
+                  className="h-8 text-sm"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium">Descrição</Label>
               <Textarea
                 value={editData.descricao}
                 onChange={(e) =>
-                  setEditData(prev => ({ ...prev, descricao: e.target.value }))
+                  setEditData((prev) => ({
+                    ...prev,
+                    descricao: e.target.value,
+                  }))
                 }
                 rows={2}
                 className="text-sm"
@@ -143,7 +181,7 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
                 <Select
                   value={editData.tipo}
                   onValueChange={(value: BudgetItemType) =>
-                    setEditData(prev => ({ ...prev, tipo: value }))
+                    setEditData((prev) => ({ ...prev, tipo: value }))
                   }
                 >
                   <SelectTrigger className="h-8">
@@ -182,7 +220,10 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
                     step="0.01"
                     value={editData.valor}
                     onChange={(e) =>
-                      setEditData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))
+                      setEditData((prev) => ({
+                        ...prev,
+                        valor: parseFloat(e.target.value) || 0,
+                      }))
                     }
                     className="pl-7 h-8 text-sm"
                     placeholder="0,00"
@@ -199,7 +240,10 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
                     step="0.01"
                     value={editData.quantidade}
                     onChange={(e) =>
-                      setEditData(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))
+                      setEditData((prev) => ({
+                        ...prev,
+                        quantidade: parseFloat(e.target.value) || 0,
+                      }))
                     }
                     className="pl-7 h-8 text-sm"
                     placeholder="0"
@@ -211,13 +255,23 @@ export const BudgetItemComponent: React.FC<BudgetItemProps> = ({
                 <Label className="text-xs font-medium">Subtotal</Label>
                 <div className="flex items-center space-x-1 h-8 px-2 bg-muted/50 rounded border text-sm font-medium">
                   <DollarSign className="h-3 w-3 text-muted-foreground" />
-                  <span>{subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                  <span>
+                    {subtotal.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end space-x-2 mt-4 pt-3 border-t">
-              <Button onClick={handleCancelEdit} variant="outline" size="sm" className="h-8">
+              <Button
+                onClick={handleCancelEdit}
+                variant="outline"
+                size="sm"
+                className="h-8"
+              >
                 Cancelar
               </Button>
               <Button onClick={handleSaveEdit} size="sm" className="h-8">

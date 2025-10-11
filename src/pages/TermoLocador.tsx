@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from '@/utils/iconMapper';
 import { FormStep } from '../hooks/use-form-wizard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { splitNames } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
@@ -64,12 +65,10 @@ const TermoLocador: React.FC = () => {
             { value: 'todos', label: 'Todos os locadores' },
             ...(contractData.nomesResumidosLocadores ||
             contractData.nomeProprietario
-              ? (
+              ? splitNames(
                   contractData.nomesResumidosLocadores ||
-                  contractData.nomeProprietario
+                    contractData.nomeProprietario
                 )
-                  .split(/,| e | E /)
-                  .map((nome) => nome.trim())
                   .filter((nome) => nome && nome.length > 2)
                   .map((nome) => ({
                     value: nome,
@@ -324,7 +323,7 @@ __________________________________________<br>
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-white">
       {/* Main Content */}
       <div className="p-6">
         {/* Back Button */}

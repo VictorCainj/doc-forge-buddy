@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import PageLoader from './PageLoader';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from '@/utils/iconMapper';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';

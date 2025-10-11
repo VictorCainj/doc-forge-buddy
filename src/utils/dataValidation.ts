@@ -187,7 +187,7 @@ export function validateEmail(email: string): ValidationResult {
   }
 
   // Verificar parte local (antes do @)
-  const [localPart, domain] = email.split('@');
+  const [localPart, _domain] = email.split('@');
   if (localPart.length > 64) {
     errors.push('Parte local do email muito longa');
     return { isValid: false, errors };

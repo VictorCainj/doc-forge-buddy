@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hook para gerenciar estados de modais do componente Contratos
  * Centraliza toda a lógica de abertura/fechamento de modais
@@ -71,7 +70,11 @@ export interface UseContractModalsReturn extends ContractModalStates {
   setSelectedPerson: (person: string) => void;
 
   // Ações para Assinante
-  openAssinanteModal: (data: { contract: Contract; template: string; documentType: string }) => void;
+  openAssinanteModal: (data: {
+    contract: Contract;
+    template: string;
+    documentType: string;
+  }) => void;
   closeAssinanteModal: () => void;
   setAssinanteSelecionado: (assinante: string) => void;
 
@@ -99,7 +102,8 @@ export interface UseContractModalsReturn extends ContractModalStates {
 export const useContractModals = (): UseContractModalsReturn => {
   // Estados dos modais
   const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
-  const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] = useState(false);
+  const [showRecusaAssinaturaModal, setShowRecusaAssinaturaModal] =
+    useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showAssinanteModal, setShowAssinanteModal] = useState(false);
   const [showNPSModal, setShowNPSModal] = useState(false);
@@ -107,28 +111,38 @@ export const useContractModals = (): UseContractModalsReturn => {
   const [showEditModal, setShowEditModal] = useState(false);
 
   // Dados selecionados
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [selectedNPSContract, setSelectedNPSContract] = useState<Contract | null>(null);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(
+    null
+  );
+  const [selectedNPSContract, setSelectedNPSContract] =
+    useState<Contract | null>(null);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
 
   // Dados de formulário
   const [dataVistoria, setDataVistoria] = useState('');
   const [horaVistoria, setHoraVistoria] = useState('');
   const [tipoVistoria, setTipoVistoria] = useState<VistoriaType>('final');
-  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] = useState<VistoriaType>('vistoria');
+  const [tipoVistoriaRecusa, setTipoVistoriaRecusa] =
+    useState<VistoriaType>('vistoria');
   const [dataRealizacaoVistoria, setDataRealizacaoVistoria] = useState('');
   const [whatsAppType, setWhatsAppType] = useState<PersonType | null>(null);
   const [selectedPerson, setSelectedPerson] = useState('');
   const [assinanteSelecionado, setAssinanteSelecionado] = useState('');
   const [npsMethod, setNpsMethod] = useState<'email' | 'whatsapp' | null>(null);
-  const [npsWhatsAppType, setNpsWhatsAppType] = useState<PersonType | null>(null);
+  const [npsWhatsAppType, setNpsWhatsAppType] = useState<PersonType | null>(
+    null
+  );
   const [selectedNPSPerson, setSelectedNPSPerson] = useState('');
   const [npsNumbers, setNpsNumbers] = useState<Record<string, string>>({});
-  const [npsSelectedParties, setNpsSelectedParties] = useState<Record<string, boolean>>({});
+  const [npsSelectedParties, setNpsSelectedParties] = useState<
+    Record<string, boolean>
+  >({});
   const [editFormData, setEditFormData] = useState<Record<string, string>>({});
 
   // Estados de carregamento
-  const [generatingDocument, setGeneratingDocument] = useState<string | null>(null);
+  const [generatingDocument, setGeneratingDocument] = useState<string | null>(
+    null
+  );
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Dados pendentes
@@ -167,11 +181,14 @@ export const useContractModals = (): UseContractModalsReturn => {
   }, []);
 
   // Ações para WhatsApp
-  const openWhatsAppModal = useCallback((contract: Contract, type: PersonType) => {
-    setSelectedContract(contract);
-    setWhatsAppType(type);
-    setShowWhatsAppModal(true);
-  }, []);
+  const openWhatsAppModal = useCallback(
+    (contract: Contract, type: PersonType) => {
+      setSelectedContract(contract);
+      setWhatsAppType(type);
+      setShowWhatsAppModal(true);
+    },
+    []
+  );
 
   const closeWhatsAppModal = useCallback(() => {
     setShowWhatsAppModal(false);
@@ -182,10 +199,13 @@ export const useContractModals = (): UseContractModalsReturn => {
   }, []);
 
   // Ações para Assinante
-  const openAssinanteModal = useCallback((data: { contract: Contract; template: string; documentType: string }) => {
-    setPendingDocumentData(data);
-    setShowAssinanteModal(true);
-  }, []);
+  const openAssinanteModal = useCallback(
+    (data: { contract: Contract; template: string; documentType: string }) => {
+      setPendingDocumentData(data);
+      setShowAssinanteModal(true);
+    },
+    []
+  );
 
   const closeAssinanteModal = useCallback(() => {
     setShowAssinanteModal(false);

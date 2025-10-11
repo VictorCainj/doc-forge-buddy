@@ -46,14 +46,14 @@ class FactRepository {
    */
   findRelatedFacts(userId: string, query: string, limit: number = 10): Fact[] {
     const userFacts = this.facts.get(userId) || [];
-    
+
     // Busca simples por palavras-chave
     const queryWords = query.toLowerCase().split(/\s+/);
-    
+
     return userFacts
-      .filter(fact => {
+      .filter((fact) => {
         const factText = fact.statement.toLowerCase();
-        return queryWords.some(word => factText.includes(word));
+        return queryWords.some((word) => factText.includes(word));
       })
       .slice(-limit);
   }
@@ -73,12 +73,12 @@ class FactRepository {
     const now = new Date();
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-    const filtered = userFacts.filter(fact => fact.timestamp > ninetyDaysAgo);
+    const filtered = userFacts.filter((fact) => fact.timestamp > ninetyDaysAgo);
     this.facts.set(userId, filtered);
 
-    log.debug('Fatos antigos removidos', { 
-      userId, 
-      removed: userFacts.length - filtered.length 
+    log.debug('Fatos antigos removidos', {
+      userId,
+      removed: userFacts.length - filtered.length,
     });
   }
 }
@@ -96,11 +96,13 @@ export function extractFactsFromResponse(
   const facts: Fact[] = [];
 
   // Identificar afirmações factuais (heurística simples)
-  const sentences = response.split(/[.!?]+/).filter(s => s.trim().length > 10);
+  const sentences = response
+    .split(/[.!?]+/)
+    .filter((s) => s.trim().length > 10);
 
   sentences.forEach((sentence, idx) => {
     const trimmed = sentence.trim();
-    
+
     // Detectar afirmações factuais (contém números, datas, nomes próprios)
     const hasNumbers = /\d+/.test(trimmed);
     const hasProperNouns = /[A-Z][a-z]+/.test(trimmed);
@@ -126,7 +128,7 @@ export function extractFactsFromResponse(
 export function checkFactConsistency(
   userId: string,
   newStatement: string,
-  context: string = ''
+  _context: string = ''
 ): FactCheckResult {
   const relatedFacts = factRepository.findRelatedFacts(userId, newStatement);
 
@@ -151,12 +153,14 @@ export function checkFactConsistency(
   const conflicts: Fact[] = [];
   const newLower = newStatement.toLowerCase();
 
-  relatedFacts.forEach(fact => {
+  relatedFacts.forEach((fact) => {
     const factLower = fact.statement.toLowerCase();
 
     contradictionPairs.forEach(([word1, word2]) => {
-      if ((newLower.includes(word1) && factLower.includes(word2)) ||
-          (newLower.includes(word2) && factLower.includes(word1))) {
+      if (
+        (newLower.includes(word1) && factLower.includes(word2)) ||
+        (newLower.includes(word2) && factLower.includes(word1))
+      ) {
         conflicts.push(fact);
       }
     });
@@ -183,8 +187,8 @@ export function saveFactsFromResponse(
   source: string = 'ai_response'
 ): void {
   const facts = extractFactsFromResponse(response, source);
-  
-  facts.forEach(fact => {
+
+  facts.forEach((fact) => {
     factRepository.addFact(userId, fact);
   });
 
@@ -203,7 +207,7 @@ export function getFactStats(userId: string): {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const recentFacts = allFacts.filter(f => f.timestamp > sevenDaysAgo);
+  const recentFacts = allFacts.filter((f) => f.timestamp > sevenDaysAgo);
   const oldestFact = allFacts.length > 0 ? allFacts[0].timestamp : null;
 
   return {

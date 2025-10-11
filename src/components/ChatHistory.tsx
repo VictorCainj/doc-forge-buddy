@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Clock, MessageSquare, Trash2, Loader2 } from 'lucide-react';
+import { Clock, MessageSquare, Trash2, Loader2 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useChatPersistence } from '@/hooks/useChatPersistence';
 import { formatDistanceToNow } from 'date-fns';

@@ -9,7 +9,7 @@ import {
   Loader2,
   Download,
   Eye,
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';

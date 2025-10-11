@@ -140,7 +140,7 @@ describe('useBulkUpdate', () => {
   });
 
   it('deve executar atualização em massa com sucesso', async () => {
-    const mockUpdate = vi.fn().mockResolvedValue({ error: null });
+    const _mockUpdate = vi.fn().mockResolvedValue({ error: null });
     const mockEq = vi.fn().mockReturnValue({ error: null });
 
     vi.mocked(supabase.from).mockReturnValue({

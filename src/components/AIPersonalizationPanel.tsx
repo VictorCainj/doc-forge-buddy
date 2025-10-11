@@ -1,8 +1,6 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
-import { Settings, Sparkles } from 'lucide-react';
+import { Settings, Sparkles } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import {
   Select,

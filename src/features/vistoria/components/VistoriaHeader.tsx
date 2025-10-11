@@ -21,7 +21,7 @@ import {
   ChevronUp,
   FileText,
   Calculator
-} from 'lucide-react';
+} from '@/utils/iconMapper';
 
 interface Contract {
   id: string;
