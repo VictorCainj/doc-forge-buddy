@@ -18,7 +18,7 @@ import {
   Plus,
   Trash2,
   Upload,
-  FileImage,
+  ImageIcon,
   CheckCircle,
   AlertTriangle,
   Eye,
@@ -2763,7 +2763,7 @@ está suja
                                   variant="secondary"
                                   className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-600 border-neutral-200 dark:border-neutral-200 pr-6"
                                 >
-                                  <FileImage className="h-3 w-3 mr-1" />
+                                  <ImageIcon className="h-3 w-3 mr-1" />
                                   {foto.name}
                                   {foto.isFromDatabase && (
                                     <span className="ml-1 text-xs opacity-70">
@@ -2855,7 +2855,7 @@ está suja
                                   variant="secondary"
                                   className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-900 border-neutral-200 pr-6"
                                 >
-                                  <FileImage className="h-3 w-3 mr-1" />
+                                  <ImageIcon className="h-3 w-3 mr-1" />
                                   {foto.name}
                                   {foto.isFromDatabase && (
                                     <span className="ml-1 text-xs opacity-70">

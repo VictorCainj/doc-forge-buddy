@@ -105,7 +105,6 @@ export const iconCategories: Record<string, IconCategory> = {
   ZoomIn: 'neutral',
   ZoomOut: 'neutral',
   RotateCcw: 'neutral',
-  CircleCheck: 'success',
   Filter: 'neutral',
   Plus: 'success',
   Minus: 'danger',
