@@ -42,8 +42,8 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <AlertCircle className="h-8 w-8 text-red-600" />
+          <div className="mx-auto w-16 h-16 bg-error-100 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="h-8 w-8 text-error-600" />
           </div>
           <h1 className="text-2xl font-bold text-neutral-900 mb-2">
             Acesso Negado

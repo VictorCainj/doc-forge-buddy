@@ -3,24 +3,48 @@ import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ActionButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
   label?: string;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'danger'
+    | 'warning'
+    | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   iconOnly?: boolean;
 }
 
 const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
-  ({ icon: Icon, label, variant = 'ghost', size = 'md', loading, iconOnly, className, ...props }, ref) => {
+  (
+    {
+      icon: Icon,
+      label,
+      variant = 'ghost',
+      size = 'md',
+      loading,
+      iconOnly,
+      className,
+      ...props
+    },
+    ref
+  ) => {
     const variantStyles = {
-      primary: 'bg-neutral-900 hover:bg-neutral-800 text-white',
-      secondary: 'bg-neutral-600 hover:bg-neutral-700 text-white',
-      success: 'bg-neutral-600 hover:bg-neutral-700 text-white',
-      danger: 'bg-neutral-700 hover:bg-neutral-800 text-white',
-      warning: 'bg-neutral-600 hover:bg-neutral-700 text-white',
-      ghost: 'bg-transparent hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 border border-neutral-200',
+      primary:
+        'bg-primary-500 hover:bg-primary-600 text-white shadow-elevation-1 hover:shadow-elevation-2',
+      secondary: 'bg-neutral-100 hover:bg-neutral-200 text-neutral-900',
+      success:
+        'bg-success-500 hover:bg-success-600 text-white shadow-elevation-1 hover:shadow-elevation-2',
+      danger:
+        'bg-error-500 hover:bg-error-600 text-white shadow-elevation-1 hover:shadow-elevation-2',
+      warning:
+        'bg-warning-500 hover:bg-warning-600 text-white shadow-elevation-1 hover:shadow-elevation-2',
+      ghost:
+        'bg-transparent hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900 border border-neutral-200',
     };
 
     const sizeStyles = {
@@ -49,10 +73,17 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
         {...props}
       >
         {loading ? (
-          <div className={cn('animate-spin rounded-full border-2 border-current border-t-transparent', iconSizes[size])} />
+          <div
+            className={cn(
+              'animate-spin rounded-full border-2 border-current border-t-transparent',
+              iconSizes[size]
+            )}
+          />
         ) : (
           <>
-            <Icon className={cn(iconSizes[size], !iconOnly && label && 'mr-2')} />
+            <Icon
+              className={cn(iconSizes[size], !iconOnly && label && 'mr-2')}
+            />
             {!iconOnly && label && <span>{label}</span>}
           </>
         )}

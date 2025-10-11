@@ -11,14 +11,20 @@ interface ChatFeedbackProps {
   onFeedbackSubmitted?: () => void;
 }
 
-export const ChatFeedback = ({ messageId, onFeedbackSubmitted }: ChatFeedbackProps) => {
+export const ChatFeedback = ({
+  messageId,
+  onFeedbackSubmitted,
+}: ChatFeedbackProps) => {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleRating = async (rating: 1 | 5, feedbackType: FeedbackData['feedbackType']) => {
+  const handleRating = async (
+    rating: 1 | 5,
+    feedbackType: FeedbackData['feedbackType']
+  ) => {
     setSelectedRating(rating);
 
     if (rating <= 2) {
@@ -83,7 +89,7 @@ export const ChatFeedback = ({ messageId, onFeedbackSubmitted }: ChatFeedbackPro
           size="sm"
           onClick={() => handleRating(5, 'helpful')}
           disabled={selectedRating !== null}
-          className={selectedRating === 5 ? 'text-green-600' : ''}
+          className={selectedRating === 5 ? 'text-success-600' : ''}
         >
           <ThumbsUp className="h-4 w-4" />
         </Button>
@@ -93,7 +99,7 @@ export const ChatFeedback = ({ messageId, onFeedbackSubmitted }: ChatFeedbackPro
           size="sm"
           onClick={() => handleRating(1, 'unhelpful')}
           disabled={selectedRating !== null}
-          className={selectedRating === 1 ? 'text-red-600' : ''}
+          className={selectedRating === 1 ? 'text-error-600' : ''}
         >
           <ThumbsDown className="h-4 w-4" />
         </Button>

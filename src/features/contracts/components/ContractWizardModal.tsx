@@ -62,7 +62,6 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [hasScroll, setHasScroll] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [showFooterShadow, setShowFooterShadow] = useState(false);
 
   const {
     currentStep,
@@ -178,8 +177,6 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
         setHasScroll(hasScrollContent);
         setIsScrolledToBottom(isAtBottom);
-        // Mostrar sombra no footer se há scroll e não está no final
-        setShowFooterShadow(hasScrollContent && !isAtBottom);
       }
     };
 
@@ -206,7 +203,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
       'bg-white border-neutral-300 text-neutral-900 placeholder:text-neutral-500',
       'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30',
       'hover:border-neutral-400',
-      'transition-all duration-200 rounded-lg'
+      'transition-all duration-200 rounded-lg',
+      'w-full min-w-0' // Garantir largura completa e permitir shrink
     );
 
     switch (field.type) {
@@ -218,7 +216,10 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             onChange={(e) => updateFieldValue(field.name, e.target.value)}
             placeholder={field.placeholder}
             required={field.required}
-            className={cn(fieldClasses, 'min-h-[100px] resize-none')}
+            className={cn(
+              fieldClasses,
+              'min-h-[80px] max-h-[120px] resize-none'
+            )}
           />
         );
 
@@ -300,15 +301,15 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl p-0 bg-white border border-neutral-200 shadow-elevation-4 overflow-visible rounded-xl">
-        {/* Header Google Material Design 3 */}
-        <DialogHeader className="relative p-6 border-b border-neutral-200 bg-white">
-          <DialogTitle className="text-2xl font-medium text-[#202124] text-center relative z-10">
+        {/* Header Google Material Design 3 - Ultra Compacto */}
+        <DialogHeader className="relative p-3 border-b border-neutral-200 bg-white">
+          <DialogTitle className="text-xl font-medium text-[#202124] text-center relative z-10">
             {title}
           </DialogTitle>
 
           {/* Progress bar - Azul Google */}
-          <div className="mt-4 relative">
-            <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
+          <div className="mt-2 relative">
+            <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-primary-500"
                 initial={{ width: 0 }}
@@ -316,7 +317,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
               />
             </div>
-            <div className="flex justify-between mt-2 text-xs text-neutral-700">
+            <div className="flex justify-between mt-1.5 text-xs text-neutral-700">
               <span className="font-medium">
                 Etapa {currentStep + 1} de {steps.length}
               </span>
@@ -325,8 +326,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           </div>
         </DialogHeader>
 
-        {/* Stage indicators - Google Material Design */}
-        <div className="flex items-center justify-center gap-2 p-4 bg-[#F8F9FA] border-b border-neutral-200">
+        {/* Stage indicators - Google Material Design - Ultra Compacto */}
+        <div className="flex items-center justify-center gap-1 p-2 bg-[#F8F9FA] border-b border-neutral-200">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
@@ -338,7 +339,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 onClick={() => handleStepClick(index)}
                 className={cn(
                   'relative group transition-all duration-200',
-                  'flex flex-col items-center gap-1 p-3 rounded-xl',
+                  'flex flex-col items-center gap-0.5 p-1.5 rounded-md',
                   isActive && 'bg-[#E8F0FE] border border-primary-300',
                   !isActive &&
                     'border border-transparent hover:border-neutral-300 hover:bg-white',
@@ -348,7 +349,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 {/* Ícone */}
                 <div
                   className={cn(
-                    'relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-elevation-1',
+                    'relative w-7 h-7 rounded-md flex items-center justify-center transition-all duration-200 shadow-elevation-1',
                     isActive && 'bg-primary-500 border border-primary-500',
                     !isActive &&
                       isCompleted &&
@@ -359,12 +360,12 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   )}
                 >
                   {isCompleted ? (
-                    <Check className="h-5 w-5 text-white" />
+                    <Check className="h-4 w-4 text-white" />
                   ) : (
                     Icon && (
                       <Icon
                         className={cn(
-                          'h-5 w-5',
+                          'h-4 w-4',
                           isActive && 'text-white',
                           !isActive && 'text-neutral-700'
                         )}
@@ -376,7 +377,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 {/* Label */}
                 <span
                   className={cn(
-                    'text-xs font-medium transition-colors duration-200',
+                    'text-[10px] font-medium transition-colors duration-200',
                     isActive && 'text-[#202124]',
                     !isActive && 'text-[#5F6368]'
                   )}
@@ -388,7 +389,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 {index < steps.length - 1 && (
                   <div
                     className={cn(
-                      'absolute top-8 left-full w-8 h-0.5 transition-all duration-200',
+                      'absolute top-5 left-full w-7 h-0.5 transition-all duration-200',
                       isCompleted ? 'bg-success-400' : 'bg-neutral-300'
                     )}
                   />
@@ -412,33 +413,30 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 x: { type: 'spring', stiffness: 300, damping: 30 },
                 opacity: { duration: 0.2 },
               }}
-              className="p-6 space-y-6"
+              className="p-3 space-y-3"
             >
-              {/* Step info - Google Material Design */}
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-medium text-[#202124]">
+              {/* Step info - Google Material Design - Ultra Compacto */}
+              <div className="text-center mb-3">
+                <h3 className="text-lg font-medium text-[#202124]">
                   {currentStepData.title}
                 </h3>
-                <p className="text-sm text-[#5F6368] mt-2">
+                <p className="text-xs text-[#5F6368] mt-0.5">
                   {currentStepData.description}
                 </p>
               </div>
 
-              {/* Content com scroll - maior para etapas com PersonManager */}
+              {/* Content com scroll - altura dinâmica baseada em viewport */}
               <div className="relative">
                 <div
                   ref={scrollRef}
                   className={cn(
-                    'overflow-y-auto pr-2 custom-scrollbar',
-                    currentStepData.id === 'locador' ||
-                      currentStepData.id === 'locatario'
-                      ? 'max-h-[550px]'
-                      : 'max-h-[450px]'
+                    'overflow-y-auto pr-1 custom-scrollbar smooth-scroll',
+                    'max-h-[calc(100vh-550px)] min-h-[350px]'
                   )}
                 >
                   {/* Person Managers */}
                   {currentStepData.id === 'locador' && (
-                    <div className="mb-6">
+                    <div className="mb-3">
                       <PersonManager
                         title="Locador(es)"
                         people={locadores}
@@ -450,7 +448,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   )}
 
                   {currentStepData.id === 'locatario' && (
-                    <div className="mb-6">
+                    <div className="mb-3">
                       <PersonManager
                         title="Locatário(s)"
                         people={locatarios}
@@ -463,7 +461,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
                   {currentStepData.id === 'fiador' &&
                     formData.temFiador === 'sim' && (
-                      <div className="mb-6">
+                      <div className="mb-3">
                         <PersonManager
                           title="Fiador(es)"
                           people={fiadores}
@@ -474,8 +472,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                       </div>
                     )}
 
-                  {/* Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Fields - Grid responsivo ultra compacto */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {currentStepData.fields.map((field) => {
                       // Ocultar campos de nome quando PersonManager estiver sendo usado
                       if (
@@ -495,22 +493,27 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                         <div
                           key={field.name}
                           className={cn(
-                            'space-y-2',
-                            field.type === 'textarea' && 'md:col-span-2'
+                            'space-y-1',
+                            field.type === 'textarea' && 'md:col-span-2',
+                            field.name === 'enderecoImovel' && 'md:col-span-2',
+                            field.name === 'qualificacaoCompletaLocadores' &&
+                              'md:col-span-2',
+                            field.name === 'qualificacaoCompletaLocatarios' &&
+                              'md:col-span-2'
                           )}
                         >
                           <Label
                             htmlFor={field.name}
-                            className="text-[#5F6368] font-medium flex items-center gap-1 text-sm"
+                            className="text-[#5F6368] font-medium flex items-center gap-0.5 text-xs"
                           >
                             {field.label}
                             {field.required && (
-                              <span className="text-error-500 text-sm">*</span>
+                              <span className="text-error-500 text-xs">*</span>
                             )}
                           </Label>
                           {renderField(field)}
                           {field.tooltip && (
-                            <p className="text-xs text-[#5F6368] italic">
+                            <p className="text-[10px] text-[#5F6368] italic">
                               {field.tooltip}
                             </p>
                           )}
@@ -520,13 +523,13 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   </div>
                 </div>
 
-                {/* Indicador de mais conteúdo abaixo - Google Material */}
+                {/* Indicador de mais conteúdo abaixo - Google Material (melhorado) */}
                 {hasScroll && !isScrolledToBottom && (
-                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-2">
-                    <div className="flex items-center gap-1 text-primary-600 text-xs animate-bounce font-medium">
-                      <ChevronDown className="h-4 w-4" />
-                      <span>Role para ver mais</span>
-                      <ChevronDown className="h-4 w-4" />
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none flex items-end justify-center pb-3">
+                    <div className="flex items-center gap-1 text-primary-600 text-sm animate-bounce font-semibold bg-white/90 px-3 py-1 rounded-full shadow-sm">
+                      <ChevronDown className="h-5 w-5" />
+                      <span>Role para ver mais campos</span>
+                      <ChevronDown className="h-5 w-5" />
                     </div>
                   </div>
                 )}
@@ -535,44 +538,38 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Footer Google Material Design - Sempre visível */}
-        <div
-          className={cn(
-            'flex items-center justify-between p-6 border-t border-neutral-200 bg-white',
-            'transition-shadow duration-200',
-            showFooterShadow && 'shadow-elevation-2'
-          )}
-        >
-          {/* Botão Anterior */}
+        {/* Footer Google Material Design - Ultra Compacto */}
+        <div className="flex items-center justify-between p-3 border-t border-neutral-200 bg-white">
+          {/* Botão Anterior - Ultra Compacto */}
           <Button
             onClick={handlePrevious}
             disabled={!canGoPrevious}
             variant="ghost"
             className={cn(
-              'gap-2 text-neutral-700',
+              'gap-1.5 text-neutral-700 text-sm px-2 py-1.5',
               'hover:bg-neutral-100',
               'disabled:opacity-0 disabled:pointer-events-none',
               'transition-all duration-200'
             )}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
             Anterior
           </Button>
 
           {/* Indicador de progresso no centro */}
-          <div className="flex items-center gap-2 text-sm text-neutral-700">
+          <div className="flex items-center gap-1.5 text-xs text-neutral-700">
             <span className="font-medium">
               {currentStep + 1} / {steps.length}
             </span>
           </div>
 
-          {/* Botão Próximo ou Finalizar - Azul Google */}
+          {/* Botão Próximo ou Finalizar - Azul Google - Ultra Compacto */}
           {currentStep === steps.length - 1 ? (
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid || isSubmitting}
               className={cn(
-                'gap-2 bg-primary-500 text-white px-6',
+                'gap-1.5 bg-primary-500 text-white px-3 py-1.5 text-sm',
                 'hover:bg-primary-600',
                 'shadow-elevation-1 hover:shadow-elevation-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -581,12 +578,12 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
                   Processando...
                 </>
               ) : (
                 <>
-                  <Check className="h-4 w-4" />
+                  <Check className="h-3.5 w-3.5" />
                   {submitButtonText}
                 </>
               )}
@@ -596,7 +593,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               onClick={handleNext}
               disabled={!isStepValid}
               className={cn(
-                'gap-2 bg-primary-500 text-white px-6',
+                'gap-1.5 bg-primary-500 text-white px-3 py-1.5 text-sm',
                 'hover:bg-primary-600',
                 'shadow-elevation-1 hover:shadow-elevation-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -604,7 +601,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               )}
             >
               Próximo
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>

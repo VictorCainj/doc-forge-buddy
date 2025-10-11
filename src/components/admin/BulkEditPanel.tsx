@@ -303,7 +303,7 @@ export const BulkEditPanel = () => {
                       <p className="text-xs text-neutral-500">
                         {item.email || item.endereco_imovel || ''}
                       </p>
-                      <p className="text-xs text-blue-500">
+                      <p className="text-xs text-primary-500">
                         ID: {item.id} | Selecionado:{' '}
                         {isSelected(item.id) ? 'Sim' : 'Não'}
                       </p>
@@ -396,7 +396,7 @@ export const BulkEditPanel = () => {
               <strong>{config.label}</strong>.
               <br />
               <br />
-              <span className="text-red-600 font-semibold">
+              <span className="text-error-600 font-semibold">
                 Esta ação não pode ser desfeita!
               </span>
             </AlertDialogDescription>
@@ -408,7 +408,7 @@ export const BulkEditPanel = () => {
             <AlertDialogAction
               onClick={handleDeleteSelected}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-error-500 hover:bg-error-600"
             >
               {isDeleting
                 ? 'Excluindo...'

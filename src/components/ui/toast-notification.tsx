@@ -3,7 +3,14 @@
  * Sistema de notificações simples e funcional
  */
 
-import { useState, useEffect, createContext, useContext, useCallback, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+} from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -71,51 +78,49 @@ const ToastComponent: React.FC<{
   const getIcon = () => {
     switch (toast.type) {
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-success-500" />;
       case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-error-500" />;
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-warning-500" />;
       case 'info':
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-info-500" />;
       default:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-info-500" />;
     }
   };
 
   const getStyles = () => {
-    const baseStyles = "border-l-4";
+    const baseStyles = 'border-l-4';
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} border-green-500 bg-green-50 dark:bg-green-900/20`;
+        return `${baseStyles} border-success-500 bg-success-50 dark:bg-success-900/20`;
       case 'error':
-        return `${baseStyles} border-red-500 bg-red-50 dark:bg-red-900/20`;
+        return `${baseStyles} border-error-500 bg-error-50 dark:bg-error-900/20`;
       case 'warning':
-        return `${baseStyles} border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20`;
+        return `${baseStyles} border-warning-500 bg-warning-50 dark:bg-warning-900/20`;
       case 'info':
-        return `${baseStyles} border-blue-500 bg-blue-50 dark:bg-blue-900/20`;
+        return `${baseStyles} border-info-500 bg-info-50 dark:bg-info-900/20`;
       default:
-        return `${baseStyles} border-blue-500 bg-blue-50 dark:bg-blue-900/20`;
+        return `${baseStyles} border-info-500 bg-info-50 dark:bg-info-900/20`;
     }
   };
 
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-4 rounded-lg shadow-lg backdrop-blur-sm transition-all duration-300 transform",
+        'flex items-start gap-3 p-4 rounded-lg shadow-lg backdrop-blur-sm transition-all duration-300 transform',
         getStyles(),
-        isVisible && !isRemoving 
-          ? "translate-x-0 opacity-100" 
-          : "translate-x-full opacity-0",
-        "max-w-sm w-full"
+        isVisible && !isRemoving
+          ? 'translate-x-0 opacity-100'
+          : 'translate-x-full opacity-0',
+        'max-w-sm w-full'
       )}
     >
       {getIcon()}
-      
+
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium text-foreground">
-          {toast.title}
-        </h4>
+        <h4 className="text-sm font-medium text-foreground">{toast.title}</h4>
         {toast.description && (
           <p className="text-sm text-muted-foreground mt-1">
             {toast.description}
@@ -135,27 +140,25 @@ const ToastComponent: React.FC<{
 };
 
 // ✅ Container de Toasts
-const ToastContainer: React.FC<{ toasts: Toast[]; onRemove: (id: string) => void }> = ({
-  toasts,
-  onRemove,
-}) => {
+const ToastContainer: React.FC<{
+  toasts: Toast[];
+  onRemove: (id: string) => void;
+}> = ({ toasts, onRemove }) => {
   if (toasts.length === 0) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {toasts.map((toast) => (
-        <ToastComponent
-          key={toast.id}
-          toast={toast}
-          onRemove={onRemove}
-        />
+        <ToastComponent key={toast.id} toast={toast} onRemove={onRemove} />
       ))}
     </div>
   );
 };
 
 // ✅ Provider de Toast
-export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
@@ -166,11 +169,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       duration: toast.duration ?? 5000, // 5 segundos por padrão
     };
 
-    setToasts(prev => [...prev, newToast]);
+    setToasts((prev) => [...prev, newToast]);
   }, []);
 
   const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
   return (
@@ -186,17 +189,20 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const useToastHelpers = () => {
   const { addToast } = useToastNotification();
 
-  return useMemo(() => ({
-    success: (title: string, description?: string) => 
-      addToast({ type: 'success', title, description }),
-    
-    error: (title: string, description?: string) => 
-      addToast({ type: 'error', title, description }),
-    
-    warning: (title: string, description?: string) => 
-      addToast({ type: 'warning', title, description }),
-    
-    info: (title: string, description?: string) => 
-      addToast({ type: 'info', title, description }),
-  }), [addToast]);
+  return useMemo(
+    () => ({
+      success: (title: string, description?: string) =>
+        addToast({ type: 'success', title, description }),
+
+      error: (title: string, description?: string) =>
+        addToast({ type: 'error', title, description }),
+
+      warning: (title: string, description?: string) =>
+        addToast({ type: 'warning', title, description }),
+
+      info: (title: string, description?: string) =>
+        addToast({ type: 'info', title, description }),
+    }),
+    [addToast]
+  );
 };

@@ -132,7 +132,7 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-blue-500" />
+                <Database className="h-4 w-4 text-primary-500" />
                 <span className="text-sm font-medium">Cache</span>
               </div>
               {stats ? (
@@ -149,10 +149,10 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
                       variant="outline"
                       className={`text-xs ${
                         stats.hitRate > 0.7
-                          ? 'bg-green-50 text-green-700 border-green-200'
+                          ? 'bg-success-50 text-success-700 border-success-200'
                           : stats.hitRate > 0.4
-                            ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                            : 'bg-red-50 text-red-700 border-red-200'
+                            ? 'bg-warning-50 text-warning-700 border-warning-200'
+                            : 'bg-error-50 text-error-700 border-error-200'
                       }`}
                     >
                       {Math.round(stats.hitRate * 100)}%
@@ -174,7 +174,7 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-orange-500" />
+                <Clock className="h-4 w-4 text-warning-500" />
                 <span className="text-sm font-medium">Histórico</span>
               </div>
               {stats ? (
@@ -214,21 +214,23 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
           {/* Indicadores de Performance */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-4 w-4 text-success-500" />
               <span className="text-sm font-medium">Performance</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="text-center p-2 bg-green-50 rounded border">
-                <Zap className="h-3 w-3 mx-auto text-green-600" />
-                <div className="text-xs text-green-700 mt-1">Cache Ativo</div>
+              <div className="text-center p-2 bg-success-50 rounded border">
+                <Zap className="h-3 w-3 mx-auto text-success-600" />
+                <div className="text-xs text-success-700 mt-1">Cache Ativo</div>
               </div>
-              <div className="text-center p-2 bg-blue-50 rounded border">
-                <Brain className="h-3 w-3 mx-auto text-blue-600" />
-                <div className="text-xs text-blue-700 mt-1">IA Otimizada</div>
+              <div className="text-center p-2 bg-primary-50 rounded border">
+                <Brain className="h-3 w-3 mx-auto text-primary-600" />
+                <div className="text-xs text-primary-700 mt-1">
+                  IA Otimizada
+                </div>
               </div>
-              <div className="text-center p-2 bg-purple-50 rounded border">
-                <Bot className="h-3 w-3 mx-auto text-purple-600" />
-                <div className="text-xs text-purple-700 mt-1">Retry Auto</div>
+              <div className="text-center p-2 bg-primary-50 rounded border">
+                <Bot className="h-3 w-3 mx-auto text-primary-600" />
+                <div className="text-xs text-primary-700 mt-1">Retry Auto</div>
               </div>
             </div>
           </div>

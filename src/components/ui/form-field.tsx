@@ -160,9 +160,9 @@ export const FormField: React.FC<FormFieldProps> = ({
   };
 
   const inputClasses = cn(
-    'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200',
-    hasError && 'border-red-500 focus:ring-red-500',
-    isValid && 'border-green-500 focus:ring-green-500',
+    'w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200',
+    hasError && 'border-error-500 focus:ring-error-500',
+    isValid && 'border-success-500 focus:ring-success-500',
     className
   );
 
@@ -252,11 +252,11 @@ export const FormField: React.FC<FormFieldProps> = ({
           }}
           disabled={disabled}
           className={cn(
-            'w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg',
+            'w-full flex items-center justify-between px-3 py-2 border border-neutral-300 rounded-lg',
             'hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
             'transition-all duration-200 cursor-pointer',
-            hasError && 'border-red-500 focus:ring-red-500',
-            isValid && 'border-green-500 focus:ring-green-500',
+            hasError && 'border-error-500 focus:ring-error-500',
+            isValid && 'border-success-500 focus:ring-success-500',
             disabled && 'opacity-50 cursor-not-allowed',
             className
           )}
@@ -264,14 +264,14 @@ export const FormField: React.FC<FormFieldProps> = ({
           <span
             className={cn(
               'text-left flex-1',
-              !selectedLabel && !value && 'text-gray-500'
+              !selectedLabel && !value && 'text-neutral-500'
             )}
           >
             {selectedLabel || value || placeholder}
           </span>
           <ChevronRight
             className={cn(
-              'h-4 w-4 text-gray-400 transition-transform duration-200 flex-shrink-0',
+              'h-4 w-4 text-neutral-400 transition-transform duration-200 flex-shrink-0',
               isOpen && 'rotate-90'
             )}
           />
@@ -298,7 +298,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   }}
                   className={cn(
                     'w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors cursor-pointer',
-                    value === option.value && 'bg-blue-50 text-blue-600'
+                    value === option.value && 'bg-primary-50 text-primary-600'
                   )}
                 >
                   {option.label}
@@ -409,8 +409,8 @@ export const FormField: React.FC<FormFieldProps> = ({
           <Icon
             className={cn(
               'h-4 w-4 transition-colors',
-              hasError && 'text-red-600',
-              isValid && 'text-green-600',
+              hasError && 'text-error-600',
+              isValid && 'text-success-600',
               !hasError && !isValid && 'text-muted-foreground'
             )}
           />
@@ -419,12 +419,12 @@ export const FormField: React.FC<FormFieldProps> = ({
           htmlFor={name}
           className={cn(
             'text-sm font-semibold text-foreground transition-colors',
-            hasError && 'text-red-600',
-            isValid && 'text-green-600'
+            hasError && 'text-error-600',
+            isValid && 'text-success-600'
           )}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-error-500 ml-1">*</span>}
         </Label>
 
         {tooltip && (
@@ -456,7 +456,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       {hasError && (
         <div
           id={`${name}-error`}
-          className="flex items-center gap-2 text-sm text-red-600 animate-in slide-in-from-left-1 duration-200"
+          className="flex items-center gap-2 text-sm text-error-600 animate-in slide-in-from-left-1 duration-200"
         >
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <span>{error}</span>

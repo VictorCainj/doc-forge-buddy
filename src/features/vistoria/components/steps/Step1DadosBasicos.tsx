@@ -1,7 +1,13 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar, FileText, User } from 'lucide-react';
 import { VistoriaWizardData } from '../../hooks/useVistoriaWizard';
 
@@ -18,15 +24,19 @@ interface Step1Props {
  * - Tipo (inicial/final)
  * - Responsável
  */
-export const Step1DadosBasicos: React.FC<Step1Props> = ({ data, updateData, errors }) => {
+export const Step1DadosBasicos: React.FC<Step1Props> = ({
+  data,
+  updateData,
+  errors,
+}) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <FileText className="h-6 w-6 text-blue-600" />
+        <h2 className="text-2xl font-bold text-neutral-900 flex items-center gap-2">
+          <FileText className="h-6 w-6 text-primary-600" />
           Dados Básicos da Vistoria
         </h2>
-        <p className="text-slate-600 mt-1">
+        <p className="text-neutral-600 mt-1">
           Informe os dados iniciais para começar a análise de vistoria
         </p>
       </div>
@@ -35,7 +45,7 @@ export const Step1DadosBasicos: React.FC<Step1Props> = ({ data, updateData, erro
         {/* Contrato */}
         <div className="space-y-2">
           <Label htmlFor="contrato">
-            Contrato <span className="text-red-500">*</span>
+            Contrato <span className="text-error-500">*</span>
           </Label>
           <Select
             value={data.contratoId}
@@ -51,17 +61,17 @@ export const Step1DadosBasicos: React.FC<Step1Props> = ({ data, updateData, erro
             </SelectContent>
           </Select>
           {errors.contratoId && (
-            <p className="text-sm text-red-500">{errors.contratoId}</p>
+            <p className="text-sm text-error-500">{errors.contratoId}</p>
           )}
         </div>
 
         {/* Data da Vistoria */}
         <div className="space-y-2">
           <Label htmlFor="dataVistoria">
-            Data da Vistoria <span className="text-red-500">*</span>
+            Data da Vistoria <span className="text-error-500">*</span>
           </Label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <Input
               id="dataVistoria"
               type="date"
@@ -71,14 +81,14 @@ export const Step1DadosBasicos: React.FC<Step1Props> = ({ data, updateData, erro
             />
           </div>
           {errors.dataVistoria && (
-            <p className="text-sm text-red-500">{errors.dataVistoria}</p>
+            <p className="text-sm text-error-500">{errors.dataVistoria}</p>
           )}
         </div>
 
         {/* Tipo de Vistoria */}
         <div className="space-y-2">
           <Label htmlFor="tipoVistoria">
-            Tipo de Vistoria <span className="text-red-500">*</span>
+            Tipo de Vistoria <span className="text-error-500">*</span>
           </Label>
           <Select
             value={data.tipoVistoria}
@@ -95,17 +105,15 @@ export const Step1DadosBasicos: React.FC<Step1Props> = ({ data, updateData, erro
             </SelectContent>
           </Select>
           {errors.tipoVistoria && (
-            <p className="text-sm text-red-500">{errors.tipoVistoria}</p>
+            <p className="text-sm text-error-500">{errors.tipoVistoria}</p>
           )}
         </div>
 
         {/* Responsável */}
         <div className="space-y-2">
-          <Label htmlFor="responsavel">
-            Responsável (Opcional)
-          </Label>
+          <Label htmlFor="responsavel">Responsável (Opcional)</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <Input
               id="responsavel"
               type="text"
@@ -119,14 +127,15 @@ export const Step1DadosBasicos: React.FC<Step1Props> = ({ data, updateData, erro
       </div>
 
       {/* Info Card */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
         <div className="flex gap-3">
-          <FileText className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-800">
+          <FileText className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-primary-800">
             <p className="font-semibold mb-1">Dica:</p>
             <p>
-              Certifique-se de selecionar o contrato correto antes de prosseguir.
-              Os dados do contrato serão utilizados ao longo de toda a vistoria.
+              Certifique-se de selecionar o contrato correto antes de
+              prosseguir. Os dados do contrato serão utilizados ao longo de toda
+              a vistoria.
             </p>
           </div>
         </div>

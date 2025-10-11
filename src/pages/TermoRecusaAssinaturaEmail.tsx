@@ -104,7 +104,7 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>

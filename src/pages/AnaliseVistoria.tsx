@@ -2319,7 +2319,7 @@ const AnaliseVistoria = () => {
               {/* Informações do Prestador Selecionado */}
               {selectedPrestadorId &&
                 prestadores.find((p) => p.id === selectedPrestadorId) && (
-                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
+                  <div className="bg-gradient-to-r from-success-500/20 to-success-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
                     {(() => {
                       const prestador = prestadores.find(
                         (p) => p.id === selectedPrestadorId
@@ -2368,7 +2368,7 @@ const AnaliseVistoria = () => {
 
         {/* Banner de Alerta - Apontamentos Sem Classificação */}
         {apontamentosSemClassificacao > 0 && documentMode === 'analise' && (
-          <Card className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300 shadow-md">
+          <Card className="mb-6 bg-gradient-to-r from-amber-50 to-warning-50 border-amber-300 shadow-md">
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -2403,7 +2403,7 @@ const AnaliseVistoria = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Formulário de Novo Apontamento */}
-          <Card className="xl:col-span-1 bg-white border-neutral-200">
+          <Card className="xl:col-span-1 bg-white border-neutral-200 h-fit self-start">
             <CardHeader className="pb-4 border-b border-white/10">
               <CardTitle className="flex items-center justify-between text-neutral-900">
                 <div className="flex items-center space-x-2">
@@ -2442,9 +2442,9 @@ const AnaliseVistoria = () => {
                 </Button>
 
                 {showExtractionPanel && (
-                  <div className="space-y-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                  <div className="space-y-3 p-4 bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-lg">
                     <div className="flex items-start space-x-2">
-                      <Wand2 className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <Wand2 className="h-5 w-5 text-primary-600 mt-0.5" />
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold text-neutral-900 mb-1">
                           Extração Automática de Apontamentos
@@ -2475,13 +2475,13 @@ está suja
                           value={extractionText}
                           onChange={(e) => setExtractionText(e.target.value)}
                           rows={10}
-                          className="text-sm bg-white border-blue-300 focus:border-blue-500 mb-3 font-mono"
+                          className="text-sm bg-white border-primary-300 focus:border-primary-500 mb-3 font-mono"
                         />
                         <div className="flex gap-2">
                           <Button
                             onClick={handleExtractApontamentos}
                             disabled={!extractionText.trim() || isAILoading}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                            className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
                             size="sm"
                           >
                             {isAILoading ? (
@@ -2949,7 +2949,7 @@ está suja
                       </SelectItem>
                       <SelectItem value="revisao">
                         <div className="flex items-center space-x-2">
-                          <span className="text-yellow-700">■</span>
+                          <span className="text-warning-700">■</span>
                           <span>Passível de Revisão</span>
                         </div>
                       </SelectItem>
@@ -3201,7 +3201,7 @@ está suja
           <div className="relative max-w-[95vw] max-h-[95vh]">
             <button
               onClick={() => setPreviewImageModal(null)}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl font-bold"
+              className="absolute -top-10 right-0 text-white hover:text-neutral-300 text-2xl font-bold"
             >
               ✕
             </button>

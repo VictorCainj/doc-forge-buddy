@@ -29,9 +29,9 @@ export const MetricCard = ({
   const getStatusColors = () => {
     switch (status) {
       case 'success':
-        return 'from-green-500 to-green-600';
+        return 'from-success-500 to-success-600';
       case 'warning':
-        return 'from-yellow-500 to-yellow-600';
+        return 'from-warning-500 to-warning-600';
       case 'error':
         return 'from-destructive to-destructive/80';
       default:
@@ -48,9 +48,9 @@ export const MetricCard = ({
 
   const getTrendColor = () => {
     if (!trend) return '';
-    if (trend.value > 0) return 'text-green-200';
-    if (trend.value < 0) return 'text-red-200';
-    return 'text-gray-200';
+    if (trend.value > 0) return 'text-success-200';
+    if (trend.value < 0) return 'text-error-200';
+    return 'text-neutral-200';
   };
 
   const TrendIcon = getTrendIcon();

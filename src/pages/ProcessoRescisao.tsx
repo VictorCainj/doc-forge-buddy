@@ -103,7 +103,7 @@ const ProcessoRescisao = () => {
   }, [contratoId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden p-6">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800 relative overflow-hidden p-6">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
@@ -116,18 +116,23 @@ const ProcessoRescisao = () => {
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <Link to="/contratos">
-              <Button variant="ghost" size="sm" className="gap-2 text-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-white hover:bg-white/10"
+              >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
             </Link>
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-400">
               Processo de Rescisão
             </h1>
-            <p className="text-blue-200 mt-2">
-              Contrato #{contratoId} - Gerencie todos os documentos do processo de rescisão
+            <p className="text-primary-200 mt-2">
+              Contrato #{contratoId} - Gerencie todos os documentos do processo
+              de rescisão
             </p>
           </div>
         </header>
@@ -140,19 +145,23 @@ const ProcessoRescisao = () => {
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center shadow-lg">
                     {processo.icon}
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-lg text-white">{processo.title}</CardTitle>
-                    <CardDescription className="text-blue-200">{processo.description}</CardDescription>
+                    <CardTitle className="text-lg text-white">
+                      {processo.title}
+                    </CardTitle>
+                    <CardDescription className="text-primary-200">
+                      {processo.description}
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
                   <Link to={processo.route} className="flex-1">
-                    <Button className="w-full gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
+                    <Button className="w-full gap-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white">
                       <FileText className="h-4 w-4" />
                       Gerar Documento
                     </Button>

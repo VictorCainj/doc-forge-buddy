@@ -35,7 +35,7 @@ export default function DebugImages() {
       }
 
       console.log(`✅ Contratos encontrados: ${contratos.length}`);
-      
+
       // Pegar o UUID do primeiro contrato encontrado
       const contratoUUID = contratos[0].id;
       console.log(`📋 UUID do contrato: ${contratoUUID}`);
@@ -80,11 +80,18 @@ export default function DebugImages() {
         console.log(`📸 Total de imagens: ${imagens?.length || 0}`);
 
         // Agrupar por apontamento
-        const porApontamento: Record<string, { inicial: number; final: number; urls: string[] }> = {};
-        
-        imagens?.forEach(img => {
+        const porApontamento: Record<
+          string,
+          { inicial: number; final: number; urls: string[] }
+        > = {};
+
+        imagens?.forEach((img) => {
           if (!porApontamento[img.apontamento_id]) {
-            porApontamento[img.apontamento_id] = { inicial: 0, final: 0, urls: [] };
+            porApontamento[img.apontamento_id] = {
+              inicial: 0,
+              final: 0,
+              urls: [],
+            };
           }
           if (img.tipo_vistoria === 'inicial') {
             porApontamento[img.apontamento_id].inicial++;
@@ -174,27 +181,43 @@ export default function DebugImages() {
                 <CardContent className="space-y-6">
                   {/* Distribuição por Apontamento */}
                   <div>
-                    <h3 className="font-semibold mb-3">📊 Imagens no Banco (por apontamento)</h3>
+                    <h3 className="font-semibold mb-3">
+                      📊 Imagens no Banco (por apontamento)
+                    </h3>
                     <div className="space-y-2">
-                      {Object.entries(analise.porApontamento).map(([apontamentoId, counts]: [string, any]) => (
-                        <div key={apontamentoId} className="p-3 bg-neutral-100 rounded">
-                          <p className="font-medium">Apontamento ID: {apontamentoId}</p>
-                          <div className="flex gap-4 mt-1 text-sm">
-                            <span>Inicial: {counts.inicial}</span>
-                            <span>Final: {counts.final}</span>
-                            <span className="font-semibold">Total: {counts.inicial + counts.final}</span>
+                      {Object.entries(analise.porApontamento).map(
+                        ([apontamentoId, counts]: [string, any]) => (
+                          <div
+                            key={apontamentoId}
+                            className="p-3 bg-neutral-100 rounded"
+                          >
+                            <p className="font-medium">
+                              Apontamento ID: {apontamentoId}
+                            </p>
+                            <div className="flex gap-4 mt-1 text-sm">
+                              <span>Inicial: {counts.inicial}</span>
+                              <span>Final: {counts.final}</span>
+                              <span className="font-semibold">
+                                Total: {counts.inicial + counts.final}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
 
                   {/* Apontamentos no JSON */}
                   <div>
-                    <h3 className="font-semibold mb-3">📝 Apontamentos no JSON</h3>
+                    <h3 className="font-semibold mb-3">
+                      📝 Apontamentos no JSON
+                    </h3>
                     <div className="space-y-2">
                       {analise.apontamentosJSON.map((apt: any) => (
-                        <div key={apt.index} className="p-3 bg-blue-50 rounded">
+                        <div
+                          key={apt.index}
+                          className="p-3 bg-primary-50 rounded"
+                        >
                           <p className="font-medium">
                             {apt.index}. {apt.ambiente}
                           </p>
@@ -212,12 +235,23 @@ export default function DebugImages() {
 
                   {/* Todas as URLs */}
                   <div>
-                    <h3 className="font-semibold mb-3">🔗 Todas as URLs das Imagens</h3>
+                    <h3 className="font-semibold mb-3">
+                      🔗 Todas as URLs das Imagens
+                    </h3>
                     <div className="space-y-1 max-h-96 overflow-y-auto">
                       {analise.todasImagens.map((img: any, index: number) => (
-                        <div key={img.id} className="p-2 bg-neutral-50 rounded text-xs">
+                        <div
+                          key={img.id}
+                          className="p-2 bg-neutral-50 rounded text-xs"
+                        >
                           <div className="flex items-center gap-2">
-                            <Badge variant={img.tipo_vistoria === 'inicial' ? 'default' : 'secondary'}>
+                            <Badge
+                              variant={
+                                img.tipo_vistoria === 'inicial'
+                                  ? 'default'
+                                  : 'secondary'
+                              }
+                            >
                               {img.tipo_vistoria}
                             </Badge>
                             <span className="font-mono">{img.file_name}</span>
@@ -226,7 +260,7 @@ export default function DebugImages() {
                             href={img.image_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline block mt-1"
+                            className="text-primary-600 hover:underline block mt-1"
                           >
                             {img.image_url}
                           </a>
@@ -243,7 +277,7 @@ export default function DebugImages() {
         {result && result.error && (
           <Card>
             <CardContent className="py-6">
-              <p className="text-red-600">❌ Erro: {result.error}</p>
+              <p className="text-error-600">❌ Erro: {result.error}</p>
             </CardContent>
           </Card>
         )}

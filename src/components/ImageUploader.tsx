@@ -1,8 +1,18 @@
 import React, { useCallback, useState } from 'react';
-import { Upload, X, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  X,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { validateImage, compressImage, formatFileSize } from '@/utils/imageValidation';
+import {
+  validateImage,
+  compressImage,
+  formatFileSize,
+} from '@/utils/imageValidation';
 
 interface ImageUploaderProps {
   onUpload: (file: File) => void;
@@ -35,79 +45,88 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
 
-  const handleFile = useCallback(async (file: File) => {
-    setIsProcessing(true);
+  const handleFile = useCallback(
+    async (file: File) => {
+      setIsProcessing(true);
 
-    try {
-      // Validar imagem
-      const validation = await validateImage(file, {
-        maxSize,
-        maxWidth,
-        maxHeight,
-      });
-
-      if (!validation.valid) {
-        toast.error(validation.error || 'Imagem inválida');
-        setIsProcessing(false);
-        return;
-      }
-
-      // Mostrar avisos se houver
-      if (validation.warnings && validation.warnings.length > 0) {
-        validation.warnings.forEach(warning => {
-          toast.warning(warning);
+      try {
+        // Validar imagem
+        const validation = await validateImage(file, {
+          maxSize,
+          maxWidth,
+          maxHeight,
         });
-      }
 
-      let finalFile = file;
-
-      // Comprimir se necessário (maior que 2MB)
-      if (file.size > 2048 * 1024) {
-        toast.info('Otimizando imagem HD...');
-        const compressed = await compressImage(file, 2048); // 2MB HD
-        if (compressed) {
-          finalFile = compressed;
-          const savedSize = file.size - compressed.size;
-          toast.success(
-            `Imagem otimizada! Economizados ${formatFileSize(savedSize)}`
-          );
+        if (!validation.valid) {
+          toast.error(validation.error || 'Imagem inválida');
+          setIsProcessing(false);
+          return;
         }
+
+        // Mostrar avisos se houver
+        if (validation.warnings && validation.warnings.length > 0) {
+          validation.warnings.forEach((warning) => {
+            toast.warning(warning);
+          });
+        }
+
+        let finalFile = file;
+
+        // Comprimir se necessário (maior que 2MB)
+        if (file.size > 2048 * 1024) {
+          toast.info('Otimizando imagem HD...');
+          const compressed = await compressImage(file, 2048); // 2MB HD
+          if (compressed) {
+            finalFile = compressed;
+            const savedSize = file.size - compressed.size;
+            toast.success(
+              `Imagem otimizada! Economizados ${formatFileSize(savedSize)}`
+            );
+          }
+        }
+
+        // Criar preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreview(reader.result as string);
+        };
+        reader.readAsDataURL(finalFile);
+
+        // Callback com arquivo otimizado
+        onUpload(finalFile);
+
+        toast.success('Imagem carregada com sucesso');
+      } catch {
+        toast.error('Erro ao processar imagem');
+      } finally {
+        setIsProcessing(false);
       }
+    },
+    [maxSize, maxWidth, maxHeight, onUpload]
+  );
 
-      // Criar preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(finalFile);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleFile(file);
+      }
+    },
+    [handleFile]
+  );
 
-      // Callback com arquivo otimizado
-      onUpload(finalFile);
-      
-      toast.success('Imagem carregada com sucesso');
-    } catch {
-      toast.error('Erro ao processar imagem');
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [maxSize, maxWidth, maxHeight, onUpload]);
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-    }
-  }, [handleFile]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      handleFile(file);
-    } else {
-      toast.error('Por favor, envie apenas arquivos de imagem');
-    }
-  }, [handleFile]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        handleFile(file);
+      } else {
+        toast.error('Por favor, envie apenas arquivos de imagem');
+      }
+    },
+    [handleFile]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -139,26 +158,30 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             disabled={disabled || isProcessing}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
           />
-          
+
           <div className="flex flex-col items-center justify-center text-center">
-            <div className={`
+            <div
+              className={`
               w-16 h-16 rounded-full flex items-center justify-center mb-4
               ${isProcessing ? 'bg-neutral-200' : 'bg-neutral-100'}
-            `}>
+            `}
+            >
               {isProcessing ? (
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-700"></div>
               ) : (
                 <Upload className="h-8 w-8 text-neutral-700" />
               )}
             </div>
-            
+
             <p className="text-sm font-medium text-neutral-700 mb-1">
-              {isProcessing ? 'Processando...' : 'Arraste uma imagem ou clique para selecionar'}
+              {isProcessing
+                ? 'Processando...'
+                : 'Arraste uma imagem ou clique para selecionar'}
             </p>
             <p className="text-xs text-neutral-500">
               PNG, JPG ou WEBP até {formatFileSize(maxSize)}
             </p>
-            
+
             {!disabled && !isProcessing && (
               <Button
                 type="button"
@@ -185,7 +208,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <CheckCircle2 className="h-4 w-4 text-white" />
               </div>
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -197,14 +220,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     Imagem otimizada e pronta para uso
                   </p>
                 </div>
-                
+
                 {!disabled && onRemove && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={handleRemove}
-                    className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                    className="h-8 w-8 p-0 hover:bg-error-100 hover:text-error-600"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -214,13 +237,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </div>
         </div>
       )}
-      
+
       {/* Info Card */}
       <div className="flex items-start gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
         <AlertCircle className="h-4 w-4 text-neutral-600 mt-0.5 flex-shrink-0" />
         <div className="text-xs text-neutral-700">
           <p className="font-medium mb-1">Otimização HD Automática</p>
-          <p>Imagens maiores que 2MB serão automaticamente otimizadas mantendo qualidade HD (2560x1440, 95%).</p>
+          <p>
+            Imagens maiores que 2MB serão automaticamente otimizadas mantendo
+            qualidade HD (2560x1440, 95%).
+          </p>
         </div>
       </div>
     </div>

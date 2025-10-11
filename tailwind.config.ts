@@ -53,31 +53,40 @@ export default {
         success: {
           50: '#E6F4EA', // Verde muito claro
           100: '#CEEAD6',
+          200: '#A8DAB5', // Borda clara
           500: '#34A853', // Verde Google
           600: '#1E8E3E',
           700: '#137333',
+          900: '#0D652D', // Verde profundo
         },
         // Amarelo Google - Warning
         warning: {
           50: '#FEF7E0', // Amarelo muito claro
           100: '#FEEFC3',
+          200: '#FEEAA7', // Borda clara
           500: '#FBBC04', // Amarelo Google
           600: '#F9AB00',
           700: '#F29900',
+          900: '#E37400', // Amarelo profundo
         },
         // Vermelho Google - Error
         error: {
           50: '#FCE8E6', // Vermelho muito claro
           100: '#FAD2CF',
+          200: '#F8BBB7', // Borda clara
           500: '#EA4335', // Vermelho Google
           600: '#D93025',
           700: '#C5221F',
+          900: '#A50E0E', // Vermelho profundo
         },
         // Azul Informativo
         info: {
           50: '#E8F0FE',
+          200: '#AECBFA', // Borda clara
           500: '#4285F4',
+          600: '#1A73E8',
           700: '#1967D2',
+          900: '#0D47A1', // Azul profundo
         },
         // Mapeamento para compatibilidade
         border: '#DADCE0',

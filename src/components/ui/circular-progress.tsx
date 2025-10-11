@@ -90,11 +90,11 @@ export const CircularProgress = ({
         {showValue && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-neutral-900">
                 {value.toFixed(0)}%
               </div>
               {label && (
-                <div className="text-xs text-gray-500 mt-1">{label}</div>
+                <div className="text-xs text-neutral-500 mt-1">{label}</div>
               )}
             </div>
           </div>

@@ -110,12 +110,17 @@ const Dashboard = () => {
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-neutral-900">Dashboard</h1>
+              <h1 className="text-2xl font-semibold text-neutral-900">
+                Dashboard
+              </h1>
               <p className="text-sm text-neutral-500 mt-1">
                 Bem-vindo de volta! Aqui está um resumo das suas atividades.
               </p>
             </div>
-            <Button variant="primary" onClick={() => navigate('/contratos/novo')}>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/contratos/novo')}
+            >
               <FileText className="h-4 w-4 mr-2" />
               Novo Contrato
             </Button>
@@ -129,7 +134,10 @@ const Dashboard = () => {
           {metrics.map((metric) => {
             const Icon = metric.icon;
             return (
-              <Card key={metric.title} className="hover:shadow-md transition-shadow">
+              <Card
+                key={metric.title}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
@@ -155,7 +163,9 @@ const Dashboard = () => {
                     <p className="text-2xl font-semibold text-neutral-900">
                       {metric.value}
                     </p>
-                    <p className="text-sm text-neutral-500 mt-1">{metric.title}</p>
+                    <p className="text-sm text-neutral-500 mt-1">
+                      {metric.title}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -180,10 +190,10 @@ const Dashboard = () => {
                       <div
                         className={`w-2 h-2 rounded-full mt-2 ${
                           activity.status === 'success'
-                            ? 'bg-green-500'
+                            ? 'bg-success-500'
                             : activity.status === 'warning'
-                            ? 'bg-yellow-500'
-                            : 'bg-blue-500'
+                              ? 'bg-warning-500'
+                              : 'bg-primary-500'
                         }`}
                       />
                       <div className="flex-1">
@@ -201,7 +211,11 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="mt-4 pt-4 border-t border-neutral-200">
-                  <Button variant="ghost" className="w-full" onClick={() => navigate('/atividades')}>
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => navigate('/atividades')}
+                  >
                     Ver todas as atividades
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -255,9 +269,11 @@ const Dashboard = () => {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-neutral-600">Sincronização</span>
+                    <span className="text-sm text-neutral-600">
+                      Sincronização
+                    </span>
                     <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                      <div className="w-2 h-2 bg-success-500 rounded-full mr-2"></div>
                       <span className="text-sm text-neutral-900">Ativo</span>
                     </div>
                   </div>

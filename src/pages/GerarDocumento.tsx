@@ -236,7 +236,7 @@ const GerarDocumento = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               {documentType === 'Análise de Vistoria' && (
                 <Button
@@ -300,7 +300,7 @@ const GerarDocumento = () => {
             <div
               className={`p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto ${
                 isWhatsAppMessage
-                  ? 'bg-white border border-green-200'
+                  ? 'bg-white border border-success-200'
                   : 'bg-white'
               }`}
               style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}

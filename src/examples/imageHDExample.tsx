@@ -1,18 +1,18 @@
 /**
  * Exemplos Práticos de Uso do Sistema de Imagens HD
- * 
+ *
  * Este arquivo contém exemplos reais de como usar o sistema de imagens HD
  * em diferentes cenários do aplicativo.
  */
 
 import { useState } from 'react';
-import { 
-  fileToBase64HD, 
-  urlToBase64HD, 
+import {
+  fileToBase64HD,
+  urlToBase64HD,
   processMultipleImagesHD,
   optimizeForPrint,
   resizeForDocument,
-  getImageInfo
+  getImageInfo,
 } from '@/utils/imageHD';
 import { ImageUploader } from '@/components/ImageUploader';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ export function ExemploUploadSimples() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Upload com HD Automático</h2>
-      
+
       <ImageUploader
         onUpload={handleUpload}
         maxSize={20 * 1024 * 1024} // 20MB
@@ -61,12 +61,14 @@ export function ExemploUploadSimples() {
 // ============================================
 
 export function ExemploMultiplasImagens() {
-  const [imagensHD, setImagensHD] = useState<Array<{ nome: string; base64: string }>>([]);
+  const [imagensHD, setImagensHD] = useState<
+    Array<{ nome: string; base64: string }>
+  >([]);
   const [processando, setProcessando] = useState(false);
 
   const handleMultipleUpload = async (files: File[]) => {
     setProcessando(true);
-    
+
     try {
       // Processar todas as imagens em HD
       const resultado = await processMultipleImagesHD(files, {
@@ -87,7 +89,7 @@ export function ExemploMultiplasImagens() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Múltiplas Imagens HD</h2>
-      
+
       <input
         type="file"
         multiple
@@ -101,8 +103,10 @@ export function ExemploMultiplasImagens() {
 
       {processando && (
         <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Processando imagens HD...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-neutral-600">
+            Processando imagens HD...
+          </p>
         </div>
       )}
 
@@ -110,7 +114,7 @@ export function ExemploMultiplasImagens() {
         {imagensHD.map((img, idx) => (
           <div key={idx} className="border rounded-lg p-2">
             <img src={img.base64} alt={img.nome} className="w-full h-auto" />
-            <p className="text-xs text-gray-600 mt-1 truncate">{img.nome}</p>
+            <p className="text-xs text-neutral-600 mt-1 truncate">{img.nome}</p>
           </div>
         ))}
       </div>
@@ -168,7 +172,7 @@ export function ExemploImpressao() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Otimização para Impressão</h2>
-      
+
       <ImageUploader
         onUpload={handlePrintOptimization}
         maxSize={20 * 1024 * 1024}
@@ -177,7 +181,11 @@ export function ExemploImpressao() {
       {imagemPrint && (
         <div className="space-y-2">
           <div className="border rounded-lg p-4">
-            <img src={imagemPrint} alt="Preview Impressão" className="max-w-full h-auto" />
+            <img
+              src={imagemPrint}
+              alt="Preview Impressão"
+              className="max-w-full h-auto"
+            />
           </div>
           <Button onClick={handlePrint} className="w-full">
             Imprimir (300 DPI)
@@ -204,7 +212,7 @@ export function ExemploURLparaHD() {
     }
 
     setCarregando(true);
-    
+
     try {
       // Converter URL para base64 HD
       const base64HD = await urlToBase64HD(url, {
@@ -225,7 +233,7 @@ export function ExemploURLparaHD() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Converter URL para HD</h2>
-      
+
       <div className="flex gap-2">
         <input
           type="url"
@@ -241,7 +249,11 @@ export function ExemploURLparaHD() {
 
       {imagemHD && (
         <div className="border rounded-lg p-4">
-          <img src={imagemHD} alt="URL convertida" className="max-w-full h-auto" />
+          <img
+            src={imagemHD}
+            alt="URL convertida"
+            className="max-w-full h-auto"
+          />
         </div>
       )}
     </div>
@@ -264,7 +276,7 @@ export function ExemploInfoImagem() {
     try {
       const imageInfo = await getImageInfo(file);
       setInfo(imageInfo);
-      
+
       toast.success(
         `Imagem: ${imageInfo.width}x${imageInfo.height} (${imageInfo.aspectRatio.toFixed(2)}:1)`
       );
@@ -276,27 +288,29 @@ export function ExemploInfoImagem() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Informações da Imagem</h2>
-      
+
       <ImageUploader onUpload={handleGetInfo} />
 
       {info && (
         <div className="border rounded-lg p-4 space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Largura</p>
+              <p className="text-sm text-neutral-600">Largura</p>
               <p className="text-lg font-semibold">{info.width}px</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Altura</p>
+              <p className="text-sm text-neutral-600">Altura</p>
               <p className="text-lg font-semibold">{info.height}px</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Proporção</p>
-              <p className="text-lg font-semibold">{info.aspectRatio.toFixed(2)}:1</p>
+              <p className="text-sm text-neutral-600">Proporção</p>
+              <p className="text-lg font-semibold">
+                {info.aspectRatio.toFixed(2)}:1
+              </p>
             </div>
             {info.size && (
               <div>
-                <p className="text-sm text-gray-600">Tamanho</p>
+                <p className="text-sm text-neutral-600">Tamanho</p>
                 <p className="text-lg font-semibold">
                   {(info.size / 1024 / 1024).toFixed(2)} MB
                 </p>
@@ -316,7 +330,9 @@ export function ExemploInfoImagem() {
 export function ExemploRedimensionamento() {
   const [largura, setLargura] = useState(1920);
   const [altura, setAltura] = useState(1080);
-  const [imagemRedimensionada, setImagemRedimensionada] = useState<string | null>(null);
+  const [imagemRedimensionada, setImagemRedimensionada] = useState<
+    string | null
+  >(null);
 
   const handleResize = async (file: File) => {
     try {
@@ -331,7 +347,7 @@ export function ExemploRedimensionamento() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Redimensionamento Personalizado</h2>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Largura (px)</label>
@@ -357,12 +373,12 @@ export function ExemploRedimensionamento() {
 
       {imagemRedimensionada && (
         <div className="border rounded-lg p-4">
-          <img 
-            src={imagemRedimensionada} 
-            alt="Redimensionada" 
+          <img
+            src={imagemRedimensionada}
+            alt="Redimensionada"
             className="max-w-full h-auto"
           />
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-neutral-600 mt-2">
             Redimensionada para {largura}x{altura}px com qualidade HD
           </p>
         </div>
@@ -394,7 +410,7 @@ export function ExemploComparacao() {
     try {
       const base64HD = await fileToBase64HD(file);
       setHD(base64HD);
-      
+
       // Calcular tamanho do base64
       const base64Length = base64HD.split(',')[1].length;
       const tamanhoBytes = (base64Length * 3) / 4;
@@ -409,7 +425,7 @@ export function ExemploComparacao() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Comparação Antes/Depois</h2>
-      
+
       <ImageUploader onUpload={handleCompare} />
 
       {original && hd && (
@@ -417,15 +433,15 @@ export function ExemploComparacao() {
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold mb-2">Original</h3>
             <img src={original} alt="Original" className="w-full h-auto mb-2" />
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-neutral-600">
               Tamanho: {(tamanhoOriginal / 1024 / 1024).toFixed(2)} MB
             </p>
           </div>
-          
+
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold mb-2">HD (2560x1440, 95%)</h3>
             <img src={hd} alt="HD" className="w-full h-auto mb-2" />
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-neutral-600">
               Tamanho: {(tamanhoHD / 1024 / 1024).toFixed(2)} MB
             </p>
           </div>
@@ -444,7 +460,7 @@ export default function ImageHDExamplesPage() {
     <div className="container mx-auto py-8 space-y-12">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Exemplos de Imagens HD</h1>
-        <p className="text-gray-600">
+        <p className="text-neutral-600">
           Demonstrações práticas do sistema de imagens em alta definição
         </p>
       </div>

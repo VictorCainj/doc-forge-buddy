@@ -4,7 +4,13 @@ import { Settings, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAIMemory } from '@/hooks/useAIMemory';
 import { useToast } from '@/hooks/use-toast';
 import type { UserPreferences } from '@/hooks/useAIMemory';
@@ -64,7 +70,7 @@ export const AIPersonalizationPanel = () => {
     };
     setPreferences(newPrefs);
     updatePreferences(newPrefs);
-    
+
     toast({
       title: `Perfil ${profile.name} aplicado`,
       description: 'A IA agora responderá com esse estilo.',
@@ -98,7 +104,7 @@ export const AIPersonalizationPanel = () => {
     <div className="fixed bottom-4 right-4 bg-white border rounded-lg shadow-lg p-6 w-96 z-50">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-blue-600" />
+          <Sparkles className="h-5 w-5 text-primary-600" />
           Personalizar IA
         </h3>
         <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
@@ -130,7 +136,10 @@ export const AIPersonalizationPanel = () => {
         <Select
           value={preferences.formality}
           onValueChange={(value) =>
-            setPreferences({ ...preferences, formality: value as UserPreferences['formality'] })
+            setPreferences({
+              ...preferences,
+              formality: value as UserPreferences['formality'],
+            })
           }
         >
           <SelectTrigger className="text-sm">
@@ -150,7 +159,10 @@ export const AIPersonalizationPanel = () => {
         <Select
           value={preferences.verbosity}
           onValueChange={(value) =>
-            setPreferences({ ...preferences, verbosity: value as UserPreferences['verbosity'] })
+            setPreferences({
+              ...preferences,
+              verbosity: value as UserPreferences['verbosity'],
+            })
           }
         >
           <SelectTrigger className="text-sm">
@@ -166,11 +178,16 @@ export const AIPersonalizationPanel = () => {
 
       {/* Estilo de Resposta */}
       <div className="mb-6">
-        <Label className="text-sm font-medium mb-2 block">Estilo de Resposta</Label>
+        <Label className="text-sm font-medium mb-2 block">
+          Estilo de Resposta
+        </Label>
         <Select
           value={preferences.responseStyle}
           onValueChange={(value) =>
-            setPreferences({ ...preferences, responseStyle: value as UserPreferences['responseStyle'] })
+            setPreferences({
+              ...preferences,
+              responseStyle: value as UserPreferences['responseStyle'],
+            })
           }
         >
           <SelectTrigger className="text-sm">

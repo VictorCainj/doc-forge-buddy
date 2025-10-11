@@ -4,6 +4,96 @@
 
 Sistema de gestão de contratos imobiliários com arquitetura modular baseada em features, otimizado para performance e escalabilidade.
 
+## 🎨 Design System - Google Material Design 3
+
+### Paleta de Cores
+
+O projeto segue rigorosamente a paleta **Google Material Design 3**. Todas as cores devem usar as classes Tailwind customizadas definidas em `tailwind.config.ts`.
+
+#### Cores Disponíveis
+
+| Cor         | Uso                                    | Classes                                                |
+| ----------- | -------------------------------------- | ------------------------------------------------------ |
+| **Primary** | Ações principais, links, destaques     | `primary-{50,100,200,300,400,500,600,700,800,900}`     |
+| **Success** | Sucesso, confirmações, status positivo | `success-{50,100,200,500,600,700,900}`                 |
+| **Warning** | Avisos, alertas, atenção               | `warning-{50,100,200,500,600,700,900}`                 |
+| **Error**   | Erros, validações, ações destrutivas   | `error-{50,100,200,500,600,700,900}`                   |
+| **Info**    | Informações, dicas, mensagens neutras  | `info-{50,200,500,600,700,900}`                        |
+| **Neutral** | Textos, fundos, bordas                 | `neutral-{50,100,200,300,400,500,600,700,800,900,950}` |
+
+#### ❌ Cores NÃO Permitidas
+
+Não use cores Tailwind padrão: `blue`, `green`, `red`, `yellow`, `slate`, `gray`, `purple`, etc.
+
+#### Exemplos de Uso
+
+```tsx
+// ✅ Correto
+<Button className="bg-primary-500 hover:bg-primary-600">Salvar</Button>
+<Badge className="bg-success-50 text-success-700">Ativo</Badge>
+<Alert variant="error">Erro ao processar</Alert>
+
+// ❌ Incorreto
+<Button className="bg-blue-500 hover:bg-blue-600">Salvar</Button>
+<Badge className="bg-green-50 text-green-700">Ativo</Badge>
+<div className="text-red-600">Erro</div>
+```
+
+#### Mapeamento de Substituições
+
+Quando migrar código legado ou corrigir cores não-Material, use este mapeamento:
+
+| Cor Antiga (Tailwind)   | Cor Material Design 3 | Contexto de Uso                    |
+| ----------------------- | --------------------- | ---------------------------------- |
+| `slate-*` / `gray-*`    | `neutral-*`           | Textos, fundos neutros, bordas     |
+| `blue-*` / `indigo-*`   | `primary-*`           | Ações principais, links, primários |
+| `green-*` / `emerald-*` | `success-*`           | Sucesso, confirmações, positivo    |
+| `red-*` / `pink-*`      | `error-*`             | Erros, validações, destrutivo      |
+| `yellow-*` / `orange-*` | `warning-*`           | Avisos, alertas, atenção           |
+| `cyan-*` / `sky-*`      | `info-*`              | Informações, mensagens neutras     |
+
+#### Tonalidades Disponíveis
+
+Cada cor possui tonalidades específicas para diferentes contextos:
+
+- **50-100**: Fundos muito claros (ex: `bg-primary-50`, `bg-success-100`)
+- **200**: Bordas claras e backgrounds hover (ex: `border-primary-200`)
+- **500-600**: Cores principais, botões, elementos de destaque (ex: `bg-primary-500`)
+- **700**: Textos sobre fundos claros, badges (ex: `text-success-700`)
+- **800-900**: Textos escuros, elementos de alto contraste (ex: `text-neutral-900`)
+
+#### Componentes Base Conformes
+
+Os seguintes componentes já estão 100% compatíveis com Material Design 3:
+
+- ✅ **ActionButton** (`src/components/ui/action-button.tsx`)
+- ✅ **Badge** (`src/components/ui/badge.tsx`)
+- ✅ **Alert** (`src/components/ui/alert.tsx`)
+- ✅ **FormField** (`src/components/ui/form-field.tsx`)
+- ✅ **ContactModal** (`src/features/documents/components/ContactModal.tsx`)
+- ✅ **VistoriaMigrationBanner** (`src/components/VistoriaMigrationBanner.tsx`)
+- ✅ **ChatStats** (`src/components/ChatStats.tsx`)
+- ✅ **ContractCard** (`src/components/ContractCard.tsx`)
+
+#### Auditoria e Validação
+
+Execute o script de auditoria para verificar conformidade:
+
+```bash
+node scripts/audit-colors.cjs
+```
+
+O script irá:
+
+- ✅ Detectar todas as cores Tailwind não-Material no projeto
+- ✅ Sugerir substituições automáticas
+- ✅ Gerar relatório por arquivo e tipo de cor
+- ✅ Indicar prioridade de correção
+
+**Meta de conformidade:** 100% de cores Material Design 3 em produção
+
+**Documentação completa:** Ver `padroniza--o-paleta-material.plan.md`
+
 ## 🏗️ Estrutura de Diretórios
 
 ```
@@ -49,21 +139,25 @@ src/
 ## 🎯 Princípios Arquiteturais
 
 ### 1. **Separação por Features (Domain-Driven)**
+
 - Cada feature contém seus próprios componentes, hooks e utilitários
 - Reduz acoplamento e facilita manutenção
 - Permite desenvolvimento paralelo de features
 
 ### 2. **Lazy Loading & Code Splitting**
+
 - Todas as páginas carregadas sob demanda com `React.lazy()`
 - Reduz bundle inicial em ~60%
 - Melhora tempo de carregamento inicial
 
 ### 3. **Hooks Customizados**
+
 - Lógica de negócio isolada em hooks reutilizáveis
 - Facilita testes unitários
 - Promove reuso de código
 
 ### 4. **Componentes Otimizados**
+
 - `React.memo()` para componentes que re-renderizam frequentemente
 - `useMemo()` para cálculos pesados
 - `useCallback()` para funções estáveis
@@ -71,21 +165,25 @@ src/
 ## 📊 Refatorações Realizadas
 
 ### ✅ AnaliseVistoria.tsx
+
 - **Antes**: Lógica complexa inline
 - **Depois**: Hooks especializados e componentes separados
 - **Resultado**: Código mais limpo e testável
 
 ### ✅ Contratos.tsx
+
 - **Antes**: Múltiplas responsabilidades
 - **Depois**: Utilitários aplicados diretamente
 - **Resultado**: Manutenção simplificada
 
 ### ✅ TermoLocatario.tsx
+
 - **Antes**: 770 linhas
 - **Depois**: 667 linhas (-13%)
 - **Resultado**: Hook `useTermoLocatario` criado
 
 ### ✅ DocumentFormWizard.tsx
+
 - **Antes**: 1151 linhas (43KB)
 - **Depois**: 306 linhas (9.8KB) (-73%)
 - **Hooks criados**:
@@ -126,35 +224,40 @@ src/
 ## 🔧 Utilitários Criados
 
 ### templateProcessor.ts
+
 ```typescript
-- replaceTemplateVariables() // Processar templates Handlebars
-- isMultipleLocatarios()      // Detectar múltiplos locatários
-- isTerceiraPessoa()          // Validar terceira pessoa
+-replaceTemplateVariables() - // Processar templates Handlebars
+  isMultipleLocatarios() - // Detectar múltiplos locatários
+  isTerceiraPessoa(); // Validar terceira pessoa
 ```
 
 ### Hooks de Documentos
+
 ```typescript
-- useDocumentFormState        // Estado e auto-preenchimento
-- useDocumentPreview          // Preview e impressão
-- useFontSizeAdjustment       // Ajuste dinâmico de fonte
-- usePersonManagement         // Gerenciar locadores/locatários/fiadores
-- useTermoLocatario           // Lógica do termo do locatário
+-useDocumentFormState - // Estado e auto-preenchimento
+  useDocumentPreview - // Preview e impressão
+  useFontSizeAdjustment - // Ajuste dinâmico de fonte
+  usePersonManagement - // Gerenciar locadores/locatários/fiadores
+  useTermoLocatario; // Lógica do termo do locatário
 ```
 
 ## 📝 Padrões de Código
 
 ### Nomenclatura
+
 - **Componentes**: PascalCase (ex: `DocumentPreview`)
 - **Hooks**: camelCase com prefixo `use` (ex: `useDocumentPreview`)
 - **Utilitários**: camelCase (ex: `replaceTemplateVariables`)
 - **Tipos**: PascalCase (ex: `DocumentFormWizardProps`)
 
 ### Estrutura de Arquivos
+
 - **index.ts**: Barrel exports para imports limpos
 - **Colocation**: Código relacionado próximo
 - **Separação**: Lógica vs Apresentação
 
 ### TypeScript
+
 - Tipos explícitos sempre que possível
 - Interfaces para props de componentes
 - Types para utilitários e funções
@@ -178,11 +281,13 @@ UI Components (Base)
 ## 🎨 Componentes UI
 
 ### Base (shadcn/ui)
+
 - Button, Input, Select, Dialog, etc.
 - Totalmente tipados
 - Acessíveis (a11y)
 
 ### Customizados
+
 - `PageLoader` - Loading de páginas
 - `DocumentPreview` - Preview de documentos
 - `FormStepContent` - Conteúdo de formulários
@@ -191,11 +296,13 @@ UI Components (Base)
 ## 🧪 Testabilidade
 
 ### Hooks Isolados
+
 - Lógica separada facilita testes unitários
 - Mocks simplificados
 - Testes independentes
 
 ### Componentes Puros
+
 - Props bem definidas
 - Sem side effects
 - Fácil de testar
@@ -203,6 +310,7 @@ UI Components (Base)
 ## 📈 Próximos Passos
 
 ### Pendentes
+
 1. ✅ Lazy loading e code splitting - **CONCLUÍDO**
 2. ⏳ Otimizar com React.memo e useMemo - **EM ANDAMENTO**
 3. ⏳ Implementar virtualização para listas grandes
@@ -210,6 +318,7 @@ UI Components (Base)
 5. ⏳ Implementar error boundaries
 
 ### Melhorias Futuras
+
 - Service Workers para cache
 - Progressive Web App (PWA)
 - Otimização de imagens

@@ -17,10 +17,10 @@ interface State {
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { 
-      hasError: false, 
+    this.state = {
+      hasError: false,
       error: null,
-      errorInfo: null 
+      errorInfo: null,
     };
   }
 
@@ -31,7 +31,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('🔴 Error caught by boundary:', error, errorInfo);
     this.setState({ errorInfo });
-    
+
     // TODO: Enviar para serviço de logging (Sentry, LogRocket, etc)
     // if (import.meta.env.PROD) {
     //   sendToMonitoring({ error, errorInfo });
@@ -39,10 +39,10 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ 
-      hasError: false, 
+    this.setState({
+      hasError: false,
       error: null,
-      errorInfo: null 
+      errorInfo: null,
     });
   };
 
@@ -53,7 +53,7 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800">
           <Card className="max-w-2xl w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 text-destructive">
@@ -84,7 +84,7 @@ class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Tentar Novamente
                 </Button>
-                <Button onClick={() => window.location.href = '/'}>
+                <Button onClick={() => (window.location.href = '/')}>
                   Voltar ao Início
                 </Button>
               </div>

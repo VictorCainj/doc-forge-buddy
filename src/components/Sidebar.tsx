@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -9,10 +10,11 @@ import {
   Users,
   ChevronRight,
   Settings,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +30,8 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, isAdmin, signOut } = useAuth();
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (!error) {
@@ -90,108 +94,142 @@ const Sidebar = () => {
   if (!user) return null;
 
   return (
-    <aside className="w-64 min-h-screen flex flex-col bg-white border-r border-neutral-200">
-      {/* Minimalista Header */}
-      <div className="p-6 border-b border-neutral-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 bg-neutral-900 rounded-lg flex items-center justify-center">
-            <Home className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-neutral-900">DocForge</h1>
-            <p className="text-xs text-neutral-500">Gestão Imobiliária</p>
+    <>
+      {/* Botão de Toggle - Sempre visível */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          'fixed top-4 z-50 p-2 bg-neutral-900 text-white rounded-r-lg shadow-lg hover:bg-neutral-800 transition-all duration-300',
+          isExpanded ? 'left-64' : 'left-0'
+        )}
+        aria-label={isExpanded ? 'Fechar menu' : 'Abrir menu'}
+      >
+        {isExpanded ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* Overlay quando expandido */}
+      {isExpanded && (
+        <div
+          className="fixed inset-0 bg-black/20 z-30 backdrop-blur-sm"
+          onClick={() => setIsExpanded(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 h-screen flex flex-col bg-white border-r border-neutral-200 z-40 transition-transform duration-300 ease-in-out',
+          isExpanded ? 'translate-x-0' : '-translate-x-full',
+          'w-64'
+        )}
+      >
+        {/* Minimalista Header */}
+        <div className="p-6 border-b border-neutral-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 bg-neutral-900 rounded-lg flex items-center justify-center">
+              <Home className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-neutral-900">
+                DocForge
+              </h1>
+              <p className="text-xs text-neutral-500">Gestão Imobiliária</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation Menu - Minimalista */}
-      <nav className="flex-1 px-4 py-6">
-        <div className="space-y-1">
-          <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3 px-3">
-            Menu
-          </h3>
-          <ul className="space-y-1">
-            {allMenuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <li key={item.name}>
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      'flex items-center px-3 py-2 rounded-md transition-all duration-200 group',
-                      item.active
-                        ? 'bg-neutral-100 text-neutral-900'
-                        : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
-                    )}
-                  >
-                    <Icon
+        {/* Navigation Menu - Minimalista */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto">
+          <div className="space-y-1">
+            <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3 px-3">
+              Menu
+            </h3>
+            <ul className="space-y-1">
+              {allMenuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.name}>
+                    <Link
+                      to={item.path}
+                      onClick={() => setIsExpanded(false)}
                       className={cn(
-                        'h-4 w-4 mr-3',
+                        'flex items-center px-3 py-2 rounded-md transition-all duration-200 group',
                         item.active
-                          ? 'text-neutral-700'
-                          : 'text-neutral-400 group-hover:text-neutral-600'
+                          ? 'bg-neutral-100 text-neutral-900'
+                          : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
                       )}
-                    />
-                    <span className="text-sm font-medium">{item.name}</span>
-                    {item.active && (
-                      <ChevronRight className="h-3 w-3 ml-auto text-neutral-400" />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </nav>
+                    >
+                      <Icon
+                        className={cn(
+                          'h-4 w-4 mr-3',
+                          item.active
+                            ? 'text-neutral-700'
+                            : 'text-neutral-400 group-hover:text-neutral-600'
+                        )}
+                      />
+                      <span className="text-sm font-medium">{item.name}</span>
+                      {item.active && (
+                        <ChevronRight className="h-3 w-3 ml-auto text-neutral-400" />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </nav>
 
-      {/* Profile Section - Minimalista */}
-      <div className="p-4 border-t border-neutral-200">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-auto p-2 hover:bg-neutral-50 rounded-md transition-all duration-200"
-            >
-              <Avatar className="h-8 w-8 mr-3">
-                <AvatarFallback className="bg-neutral-200 text-neutral-600 text-xs font-medium">
-                  {getUserInitials(user.email || '')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-medium text-neutral-900">
-                  {profile?.full_name || user.email?.split('@')[0] || 'Usuário'}
-                </span>
-                <span className="text-xs text-neutral-500">
-                  {profile?.role === 'admin' ? 'Administrador' : 'Usuário'}
-                </span>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {profile?.full_name || user.email}
-                </p>
-                <p className="text-xs leading-none text-neutral-500">
-                  {profile?.role === 'admin'
-                    ? 'Administrador do Sistema'
-                    : 'Usuário'}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleSignOut}
-              className="cursor-pointer text-neutral-700 hover:text-neutral-900"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sair</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </aside>
+        {/* Profile Section - Minimalista */}
+        <div className="p-4 border-t border-neutral-200">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-auto p-2 hover:bg-neutral-50 rounded-md transition-all duration-200"
+              >
+                <Avatar className="h-8 w-8 mr-3">
+                  <AvatarFallback className="bg-neutral-200 text-neutral-600 text-xs font-medium">
+                    {getUserInitials(user.email || '')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-sm font-medium text-neutral-900">
+                    {profile?.full_name ||
+                      user.email?.split('@')[0] ||
+                      'Usuário'}
+                  </span>
+                  <span className="text-xs text-neutral-500">
+                    {profile?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                  </span>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {profile?.full_name || user.email}
+                  </p>
+                  <p className="text-xs leading-none text-neutral-500">
+                    {profile?.role === 'admin'
+                      ? 'Administrador do Sistema'
+                      : 'Usuário'}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="cursor-pointer text-neutral-700 hover:text-neutral-900"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sair</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+    </>
   );
 };
 

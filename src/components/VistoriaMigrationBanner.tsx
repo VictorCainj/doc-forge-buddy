@@ -65,28 +65,28 @@ const VistoriaMigrationBanner = () => {
   }
 
   return (
-    <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20 mb-6">
+    <Card className="border-warning-200 bg-warning-50 dark:border-warning-800 dark:bg-warning-950/20 mb-6">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center">
-                <Database className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <div className="w-10 h-10 bg-warning-100 dark:bg-warning-900/50 rounded-full flex items-center justify-center">
+                <Database className="h-5 w-5 text-warning-600 dark:text-warning-400" />
               </div>
             </div>
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                <h3 className="font-semibold text-orange-900 dark:text-orange-100">
+                <h3 className="font-semibold text-warning-900 dark:text-warning-100">
                   Migração de Dados Disponível
                 </h3>
                 <Badge
                   variant="secondary"
-                  className="text-xs bg-orange-200 text-orange-800 dark:bg-orange-800 dark:text-orange-200"
+                  className="text-xs bg-warning-200 text-warning-800 dark:bg-warning-800 dark:text-warning-200"
                 >
                   Importante
                 </Badge>
               </div>
-              <p className="text-sm text-orange-800 dark:text-orange-200 mb-3">
+              <p className="text-sm text-warning-800 dark:text-warning-200 mb-3">
                 Detectamos dados antigos de análises de vistoria no seu
                 navegador. Para garantir que seus dados sejam preservados e
                 acessíveis em todos os dispositivos, recomendamos migrá-los para
@@ -97,7 +97,7 @@ const VistoriaMigrationBanner = () => {
                   onClick={handleMigration}
                   disabled={isMigrating}
                   size="sm"
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="bg-warning-600 hover:bg-warning-700 text-white"
                 >
                   {isMigrating ? (
                     <>
@@ -115,7 +115,7 @@ const VistoriaMigrationBanner = () => {
                   onClick={handleDismiss}
                   variant="ghost"
                   size="sm"
-                  className="text-orange-700 hover:text-orange-800 hover:bg-orange-100 dark:text-orange-300 dark:hover:text-orange-200 dark:hover:bg-orange-900/30"
+                  className="text-warning-700 hover:text-warning-800 hover:bg-warning-100 dark:text-warning-300 dark:hover:text-warning-200 dark:hover:bg-warning-900/30"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Mais tarde

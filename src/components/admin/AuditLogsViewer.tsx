@@ -46,20 +46,20 @@ import {
 } from 'lucide-react';
 
 const actionColors: Record<string, string> = {
-  CREATE: 'bg-green-100 text-green-800',
-  UPDATE: 'bg-blue-100 text-blue-800',
-  DELETE: 'bg-red-100 text-red-800',
-  LOGIN: 'bg-purple-100 text-purple-800',
-  LOGOUT: 'bg-gray-100 text-gray-800',
-  LOGIN_FAILED: 'bg-orange-100 text-orange-800',
-  PASSWORD_RESET: 'bg-yellow-100 text-yellow-800',
-  BULK_UPDATE: 'bg-cyan-100 text-cyan-800',
-  BULK_DELETE: 'bg-pink-100 text-pink-800',
-  EXPORT: 'bg-indigo-100 text-indigo-800',
-  IMPORT: 'bg-teal-100 text-teal-800',
-  PERMISSION_CHANGE: 'bg-amber-100 text-amber-800',
-  ROLE_CHANGE: 'bg-lime-100 text-lime-800',
-  STATUS_CHANGE: 'bg-emerald-100 text-emerald-800',
+  CREATE: 'bg-success-100 text-success-700',
+  UPDATE: 'bg-info-50 text-info-700',
+  DELETE: 'bg-error-100 text-error-700',
+  LOGIN: 'bg-primary-100 text-primary-700',
+  LOGOUT: 'bg-neutral-100 text-neutral-700',
+  LOGIN_FAILED: 'bg-warning-100 text-warning-900',
+  PASSWORD_RESET: 'bg-warning-100 text-warning-700',
+  BULK_UPDATE: 'bg-info-50 text-info-700',
+  BULK_DELETE: 'bg-error-100 text-error-700',
+  EXPORT: 'bg-primary-100 text-primary-700',
+  IMPORT: 'bg-success-100 text-success-700',
+  PERMISSION_CHANGE: 'bg-warning-50 text-warning-700',
+  ROLE_CHANGE: 'bg-success-50 text-success-700',
+  STATUS_CHANGE: 'bg-success-100 text-success-700',
 };
 
 const actionLabels: Record<string, string> = {

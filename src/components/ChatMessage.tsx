@@ -67,11 +67,13 @@ const ChatMessage = memo(
         case 'sending':
           return <Loader2 className="h-3 w-3 animate-spin" />;
         case 'error':
-          return <AlertCircle className="h-3 w-3 text-red-500" />;
+          return <AlertCircle className="h-3 w-3 text-error-500" />;
         case 'sent':
-          return <Check className="h-3 w-3 text-green-500" />;
+          return <Check className="h-3 w-3 text-success-500" />;
         case 'retrying':
-          return <RotateCcw className="h-3 w-3 animate-spin text-orange-500" />;
+          return (
+            <RotateCcw className="h-3 w-3 animate-spin text-warning-500" />
+          );
         default:
           return null;
       }
@@ -123,14 +125,21 @@ const ChatMessage = memo(
                   alt="Imagem enviada"
                   className="w-full rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
                   onLoad={() => setImageLoaded(true)}
-                  onClick={() => window.open(message.imageUrl || message.imageData, '_blank')}
+                  onClick={() =>
+                    window.open(message.imageUrl || message.imageData, '_blank')
+                  }
                   title="Clique para abrir em tamanho real"
                 />
                 <div className="absolute top-2 right-2 flex gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.open(message.imageUrl || message.imageData, '_blank')}
+                    onClick={() =>
+                      window.open(
+                        message.imageUrl || message.imageData,
+                        '_blank'
+                      )
+                    }
                     className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
                     title="Visualizar em tamanho real"
                   >
@@ -152,8 +161,8 @@ const ChatMessage = memo(
             {/* Audio Display */}
             {(message.audioUrl || message.audioData) && (
               <div className="mb-2">
-                <audio 
-                  controls 
+                <audio
+                  controls
                   className="w-full max-w-md rounded-lg"
                   src={message.audioUrl || message.audioData}
                 >
@@ -170,19 +179,34 @@ const ChatMessage = memo(
                   components={{
                     // Customizar estilos dos elementos Markdown
                     h1: ({ ...props }) => (
-                      <h1 className="text-xl font-bold text-current mb-3 mt-4" {...props} />
+                      <h1
+                        className="text-xl font-bold text-current mb-3 mt-4"
+                        {...props}
+                      />
                     ),
                     h2: ({ ...props }) => (
-                      <h2 className="text-lg font-bold text-current mb-2 mt-3" {...props} />
+                      <h2
+                        className="text-lg font-bold text-current mb-2 mt-3"
+                        {...props}
+                      />
                     ),
                     h3: ({ ...props }) => (
-                      <h3 className="text-base font-bold text-current mb-2 mt-3" {...props} />
+                      <h3
+                        className="text-base font-bold text-current mb-2 mt-3"
+                        {...props}
+                      />
                     ),
                     h4: ({ ...props }) => (
-                      <h4 className="text-sm font-bold text-current mb-2 mt-2" {...props} />
+                      <h4
+                        className="text-sm font-bold text-current mb-2 mt-2"
+                        {...props}
+                      />
                     ),
                     p: ({ ...props }) => (
-                      <p className="text-sm leading-relaxed mb-3 text-current" {...props} />
+                      <p
+                        className="text-sm leading-relaxed mb-3 text-current"
+                        {...props}
+                      />
                     ),
                     strong: ({ ...props }) => (
                       <strong className="font-bold text-current" {...props} />
@@ -191,15 +215,26 @@ const ChatMessage = memo(
                       <em className="italic text-current" {...props} />
                     ),
                     ul: ({ ...props }) => (
-                      <ul className="list-disc ml-4 mb-3 space-y-1.5" {...props} />
+                      <ul
+                        className="list-disc ml-4 mb-3 space-y-1.5"
+                        {...props}
+                      />
                     ),
                     ol: ({ ...props }) => (
-                      <ol className="list-decimal ml-4 mb-3 space-y-1.5" {...props} />
+                      <ol
+                        className="list-decimal ml-4 mb-3 space-y-1.5"
+                        {...props}
+                      />
                     ),
                     li: ({ ...props }) => (
                       <li className="text-sm text-current ml-1" {...props} />
                     ),
-                    code: ({ inline, ...props }: React.HTMLAttributes<HTMLElement> & { inline?: boolean }) =>
+                    code: ({
+                      inline,
+                      ...props
+                    }: React.HTMLAttributes<HTMLElement> & {
+                      inline?: boolean;
+                    }) =>
                       inline ? (
                         <code
                           className="bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-800 text-xs font-mono"
@@ -212,7 +247,10 @@ const ChatMessage = memo(
                         />
                       ),
                     pre: ({ ...props }) => (
-                      <pre className="bg-neutral-100 p-3 rounded-lg overflow-x-auto mb-2" {...props} />
+                      <pre
+                        className="bg-neutral-100 p-3 rounded-lg overflow-x-auto mb-2"
+                        {...props}
+                      />
                     ),
                     blockquote: ({ ...props }) => (
                       <blockquote

@@ -27,7 +27,14 @@ export interface FormFieldOption {
 export interface EnhancedFormFieldProps {
   name: string;
   label: string;
-  type?: 'text' | 'email' | 'tel' | 'password' | 'number' | 'textarea' | 'select';
+  type?:
+    | 'text'
+    | 'email'
+    | 'tel'
+    | 'password'
+    | 'number'
+    | 'textarea'
+    | 'select';
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -83,8 +90,9 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
     const baseProps = {
       id: fieldId,
       value,
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => 
-        onChange(e.target.value),
+      onChange: (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      ) => onChange(e.target.value),
       onBlur,
       placeholder,
       disabled,
@@ -92,31 +100,22 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
       maxLength,
       minLength,
       className: cn(
-        hasError && 'border-red-500 focus:border-red-500',
+        hasError && 'border-error-500 focus:border-error-500',
         inputClassName
       ),
     };
 
     switch (type) {
       case 'textarea':
-        return (
-          <Textarea
-            {...baseProps}
-            rows={rows}
-          />
-        );
+        return <Textarea {...baseProps} rows={rows} />;
 
       case 'select':
         return (
-          <Select 
-            value={value} 
-            onValueChange={onChange}
-            disabled={disabled}
-          >
-            <SelectTrigger 
+          <Select value={value} onValueChange={onChange} disabled={disabled}>
+            <SelectTrigger
               id={fieldId}
               className={cn(
-                hasError && 'border-red-500 focus:border-red-500',
+                hasError && 'border-error-500 focus:border-error-500',
                 inputClassName
               )}
             >
@@ -124,8 +123,8 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
             </SelectTrigger>
             <SelectContent>
               {options?.map((option) => (
-                <SelectItem 
-                  key={option.value} 
+                <SelectItem
+                  key={option.value}
                   value={option.value}
                   disabled={option.disabled}
                 >
@@ -139,10 +138,7 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
       case 'password':
         return (
           <div className="relative">
-            <Input
-              {...baseProps}
-              type={showPassword ? 'text' : 'password'}
-            />
+            <Input {...baseProps} type={showPassword ? 'text' : 'password'} />
             <Button
               type="button"
               variant="ghost"
@@ -161,44 +157,37 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
         );
 
       default:
-        return (
-          <Input
-            {...baseProps}
-            type={type}
-          />
-        );
+        return <Input {...baseProps} type={type} />;
     }
   };
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Label 
-        htmlFor={fieldId} 
+      <Label
+        htmlFor={fieldId}
         className={cn(
           'flex items-center gap-2',
-          hasError && 'text-red-600',
+          hasError && 'text-error-600',
           labelClassName
         )}
         title={tooltip}
       >
         {Icon && <Icon className="h-4 w-4" />}
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-error-500">*</span>}
       </Label>
-      
+
       {renderInput()}
-      
+
       {hasError && (
-        <p className="text-sm text-red-500 flex items-center gap-1">
+        <p className="text-sm text-error-500 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />
           {error}
         </p>
       )}
-      
+
       {helperText && !hasError && (
-        <p className="text-sm text-muted-foreground">
-          {helperText}
-        </p>
+        <p className="text-sm text-muted-foreground">{helperText}</p>
       )}
     </div>
   );
@@ -208,23 +197,19 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
  * Componentes especializados baseados no EnhancedFormField
  */
 
-export const EmailField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (props) => (
-  <EnhancedFormField
-    type="email"
-    placeholder="exemplo@email.com"
-    {...props}
-  />
+export const EmailField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (
+  props
+) => (
+  <EnhancedFormField type="email" placeholder="exemplo@email.com" {...props} />
 );
 
-export const PhoneField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (props) => (
-  <EnhancedFormField
-    type="tel"
-    placeholder="(11) 99999-9999"
-    {...props}
-  />
-);
+export const PhoneField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (
+  props
+) => <EnhancedFormField type="tel" placeholder="(11) 99999-9999" {...props} />;
 
-export const PasswordField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (props) => (
+export const PasswordField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (
+  props
+) => (
   <EnhancedFormField
     type="password"
     placeholder="Digite sua senha"
@@ -232,26 +217,17 @@ export const PasswordField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (pr
   />
 );
 
-export const NumberField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (props) => (
-  <EnhancedFormField
-    type="number"
-    {...props}
-  />
-);
+export const NumberField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (
+  props
+) => <EnhancedFormField type="number" {...props} />;
 
-export const TextAreaField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (props) => (
-  <EnhancedFormField
-    type="textarea"
-    {...props}
-  />
-);
+export const TextAreaField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (
+  props
+) => <EnhancedFormField type="textarea" {...props} />;
 
-export const SelectField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (props) => (
-  <EnhancedFormField
-    type="select"
-    {...props}
-  />
-);
+export const SelectField: React.FC<Omit<EnhancedFormFieldProps, 'type'>> = (
+  props
+) => <EnhancedFormField type="select" {...props} />;
 
 /**
  * Hook para gerenciar múltiplos campos de formulário
@@ -262,26 +238,31 @@ export const useFormFields = <T extends Record<string, string>>(
   initialValues: T
 ) => {
   const [values, setValues] = React.useState<T>(initialValues);
-  const [errors, setErrors] = React.useState<Partial<Record<keyof T, string>>>({});
+  const [errors, setErrors] = React.useState<Partial<Record<keyof T, string>>>(
+    {}
+  );
 
-  const updateField = React.useCallback((name: keyof T, value: string) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    // Limpar erro quando o campo é alterado
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  }, [errors]);
+  const updateField = React.useCallback(
+    (name: keyof T, value: string) => {
+      setValues((prev) => ({ ...prev, [name]: value }));
+      // Limpar erro quando o campo é alterado
+      if (errors[name]) {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
+    },
+    [errors]
+  );
 
   const setFieldError = React.useCallback((name: keyof T, error: string) => {
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   }, []);
 
   const clearFieldError = React.useCallback((name: keyof T) => {
-    setErrors(prev => {
+    setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[name];
       return newErrors;

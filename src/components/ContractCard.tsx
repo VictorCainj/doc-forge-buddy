@@ -7,7 +7,17 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 // Badge component removed - not used
 import { Button } from '@/components/ui/button';
-import { Calendar, FileText, Edit, MapPin, MoreVertical, Trash2, User, User2, SearchCheck } from 'lucide-react';
+import {
+  Calendar,
+  FileText,
+  Edit,
+  MapPin,
+  MoreVertical,
+  Trash2,
+  User,
+  User2,
+  SearchCheck,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -27,7 +37,10 @@ export interface ContractCardProps {
   onGenerateDocument: (contract: Contract, documentType: DocumentType) => void;
   onGenerateAgendamento: (contract: Contract) => void;
   onGenerateNPS: (contract: Contract) => void;
-  onGenerateWhatsApp: (contract: Contract, type: 'locador' | 'locatario') => void;
+  onGenerateWhatsApp: (
+    contract: Contract,
+    type: 'locador' | 'locatario'
+  ) => void;
   isGenerating?: boolean;
   generatingDocument?: string | null;
 }
@@ -56,7 +69,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
   useEffect(() => {
     const checkAnalise = async () => {
       if (!user || !contract.id) return;
-      
+
       setCheckingAnalise(true);
       try {
         const { data, error } = await supabase
@@ -86,8 +99,14 @@ export const ContractCard: React.FC<ContractCardProps> = ({
       state: {
         contractId: contract.id,
         contractData: {
-          locatario: contract.form_data.nomeLocatario || contract.form_data.primeiroLocatario || '',
-          endereco: contract.form_data.enderecoImovel || contract.form_data.endereco || '',
+          locatario:
+            contract.form_data.nomeLocatario ||
+            contract.form_data.primeiroLocatario ||
+            '',
+          endereco:
+            contract.form_data.enderecoImovel ||
+            contract.form_data.endereco ||
+            '',
         },
       },
     });
@@ -111,10 +130,15 @@ export const ContractCard: React.FC<ContractCardProps> = ({
     );
   };
 
-  const getLoadingIcon = (contractId: string, documentType: string, icon: React.ReactNode) => {
-    const isGeneratingDoc = generatingDocument === `${contractId}-${documentType}`;
+  const getLoadingIcon = (
+    contractId: string,
+    documentType: string,
+    icon: React.ReactNode
+  ) => {
+    const isGeneratingDoc =
+      generatingDocument === `${contractId}-${documentType}`;
     return isGeneratingDoc ? (
-      <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent" />
+      <div className="h-3 w-3 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent" />
     ) : (
       icon
     );
@@ -160,7 +184,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         </div>
 
         {/* Separador */}
-        <div className="border-t border-blue-500/20 mb-4"></div>
+        <div className="border-t border-primary-500/20 mb-4"></div>
 
         {/* PARTES ENVOLVIDAS */}
         <div className="mb-4">
@@ -169,8 +193,8 @@ export const ContractCard: React.FC<ContractCardProps> = ({
           </h4>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="p-1.5 rounded-md bg-green-500/10">
-                <User className="h-3 w-3 text-green-600" />
+              <div className="p-1.5 rounded-md bg-success-500/10">
+                <User className="h-3 w-3 text-success-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -190,8 +214,8 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="p-1.5 rounded-md bg-blue-500/10">
-                <User2 className="h-3 w-3 text-blue-600" />
+              <div className="p-1.5 rounded-md bg-primary-500/10">
+                <User2 className="h-3 w-3 text-primary-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -219,18 +243,20 @@ export const ContractCard: React.FC<ContractCardProps> = ({
             Informações do Imóvel
           </h4>
           <div className="flex items-start gap-3">
-            <div className="p-1.5 rounded-md bg-orange-500/10">
-              <MapPin className="h-3 w-3 text-orange-600" />
+            <div className="p-1.5 rounded-md bg-warning-500/10">
+              <MapPin className="h-3 w-3 text-warning-600" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Endereço
               </p>
-              <p 
+              <p
                 className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary hover:underline transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const endereco = contract.form_data.enderecoImovel || contract.form_data.endereco;
+                  const endereco =
+                    contract.form_data.enderecoImovel ||
+                    contract.form_data.endereco;
                   if (endereco && endereco !== '[ENDEREÇO DO IMÓVEL]') {
                     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
                     window.open(mapsUrl, '_blank', 'noopener,noreferrer');
@@ -247,7 +273,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         </div>
 
         {/* BOTÃO EDITAR */}
-        <div className="flex items-center justify-between mb-4 pt-2 border-t border-blue-500/20">
+        <div className="flex items-center justify-between mb-4 pt-2 border-t border-primary-500/20">
           <Button
             variant="ghost"
             size="sm"
@@ -260,7 +286,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
         </div>
 
         {/* AÇÕES RÁPIDAS */}
-        <div className="space-y-2 pt-3 border-t border-blue-500/20">
+        <div className="space-y-2 pt-3 border-t border-primary-500/20">
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
@@ -269,10 +295,14 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               onClick={() => onGenerateAgendamento(contract)}
               disabled={isGenerating}
             >
-              {getLoadingIcon(contract.id, 'agendamento', <Calendar className="h-3 w-3 mr-1" />)}
+              {getLoadingIcon(
+                contract.id,
+                'agendamento',
+                <Calendar className="h-3 w-3 mr-1" />
+              )}
               Agendamento
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -280,7 +310,11 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               onClick={() => onGenerateNPS(contract)}
               disabled={isGenerating}
             >
-              {getLoadingIcon(contract.id, 'nps', <FileText className="h-3 w-3 mr-1" />)}
+              {getLoadingIcon(
+                contract.id,
+                'nps',
+                <FileText className="h-3 w-3 mr-1" />
+              )}
               NPS
             </Button>
           </div>
@@ -295,7 +329,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({
             >
               WhatsApp Locador
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -316,7 +350,11 @@ export const ContractCard: React.FC<ContractCardProps> = ({
               disabled={checkingAnalise}
             >
               <SearchCheck className="h-3 w-3 mr-1" />
-              {checkingAnalise ? 'Verificando...' : hasAnalise ? 'Carregar Análise' : 'Criar Análise'}
+              {checkingAnalise
+                ? 'Verificando...'
+                : hasAnalise
+                  ? 'Carregar Análise'
+                  : 'Criar Análise'}
             </Button>
           </div>
         </div>

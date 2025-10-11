@@ -87,7 +87,7 @@ const ForgotPassword = () => {
           <Card className="glass-card w-full max-w-md border-border shadow-soft">
             <CardHeader className="space-y-1 text-center pb-4">
               <div className="flex items-center justify-center mb-6">
-                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <div className="w-16 h-16 bg-success-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
                   <Mail className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -184,7 +184,7 @@ const ForgotPassword = () => {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                   <Input
                     id="email"
                     type="email"
@@ -195,7 +195,9 @@ const ForgotPassword = () => {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
+                  <p className="text-sm text-error-600">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -214,7 +216,7 @@ const ForgotPassword = () => {
             <div className="mt-6 text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                className="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 hover:underline"
               >
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 Voltar ao login

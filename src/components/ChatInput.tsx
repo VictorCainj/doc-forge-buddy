@@ -1,5 +1,12 @@
 import { memo, useCallback, useRef, useState } from 'react';
-import { Send, Loader2, Image as ImageIcon, Sparkles, X, Mic } from 'lucide-react';
+import {
+  Send,
+  Loader2,
+  Image as ImageIcon,
+  Sparkles,
+  X,
+  Mic,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -46,11 +53,11 @@ const ChatInput = memo(
         // Look for image items
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          
+
           if (item.type.startsWith('image/')) {
             e.preventDefault();
             const file = item.getAsFile();
-            
+
             if (!file) continue;
 
             // Validate file size (max 10MB)
@@ -70,7 +77,7 @@ const ChatInput = memo(
             reader.onload = (event) => {
               newPreviews.push(event.target?.result as string);
               if (newPreviews.length === newFiles.length) {
-                setPreviewImages(prev => [...prev, ...newPreviews]);
+                setPreviewImages((prev) => [...prev, ...newPreviews]);
               }
             };
             reader.readAsDataURL(file);
@@ -78,7 +85,7 @@ const ChatInput = memo(
         }
 
         if (newFiles.length > 0) {
-          setSelectedFiles(prev => [...prev, ...newFiles]);
+          setSelectedFiles((prev) => [...prev, ...newFiles]);
           toast({
             title: `${newFiles.length} imagem(ns) colada(s)`,
             description: 'Imagens adicionadas com sucesso. Clique em enviar.',
@@ -89,8 +96,8 @@ const ChatInput = memo(
     );
 
     const handleRemoveImage = useCallback((index: number) => {
-      setPreviewImages(prev => prev.filter((_, i) => i !== index));
-      setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+      setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+      setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     }, []);
 
     const handleRemoveAllImages = useCallback(() => {
@@ -117,7 +124,7 @@ const ChatInput = memo(
         if (!value.trim()) return;
 
         // Intelligent detection for image generation
-        
+
         // Comprehensive and natural language detection for image generation
         const imageGenerationPatterns = [
           // Comandos diretos de geração
@@ -132,8 +139,8 @@ const ChatInput = memo(
           /^(imagem|desenho|ilustra[çc][ãa]o|visual)\s+(de|do|da)/i,
           /\b(render|renderize)\s+/i,
         ];
-        
-        const isImageGeneration = imageGenerationPatterns.some(pattern => 
+
+        const isImageGeneration = imageGenerationPatterns.some((pattern) =>
           pattern.test(value)
         );
 
@@ -148,7 +155,15 @@ const ChatInput = memo(
           textareaRef.current?.focus();
         }, 100);
       },
-      [value, isLoading, selectedFiles, onSubmit, onUploadMultipleImages, onGenerateImage, handleRemoveAllImages]
+      [
+        value,
+        isLoading,
+        selectedFiles,
+        onSubmit,
+        onUploadMultipleImages,
+        onGenerateImage,
+        handleRemoveAllImages,
+      ]
     );
 
     const handleKeyDown = useCallback(
@@ -185,7 +200,7 @@ const ChatInput = memo(
                   variant="ghost"
                   size="sm"
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-error-500 hover:bg-error-600 text-white rounded-full"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -196,7 +211,7 @@ const ChatInput = memo(
                 variant="ghost"
                 size="sm"
                 onClick={handleRemoveAllImages}
-                className="h-8 px-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs"
+                className="h-8 px-3 bg-error-500/20 hover:bg-error-500/30 text-error-300 text-xs"
               >
                 Remover todas
               </Button>
@@ -234,7 +249,7 @@ const ChatInput = memo(
                     const validFiles: File[] = [];
                     const newPreviews: string[] = [];
 
-                    files.forEach(file => {
+                    files.forEach((file) => {
                       // Validate file type
                       if (!file.type.startsWith('image/')) {
                         toast({
@@ -262,14 +277,14 @@ const ChatInput = memo(
                       reader.onload = (event) => {
                         newPreviews.push(event.target?.result as string);
                         if (newPreviews.length === validFiles.length) {
-                          setPreviewImages(prev => [...prev, ...newPreviews]);
+                          setPreviewImages((prev) => [...prev, ...newPreviews]);
                         }
                       };
                       reader.readAsDataURL(file);
                     });
 
                     if (validFiles.length > 0) {
-                      setSelectedFiles(prev => [...prev, ...validFiles]);
+                      setSelectedFiles((prev) => [...prev, ...validFiles]);
                     }
                   }}
                   className="hidden"
@@ -329,7 +344,9 @@ const ChatInput = memo(
               {/* Send Button */}
               <Button
                 type="submit"
-                disabled={(!value.trim() && selectedFiles.length === 0) || isLoading}
+                disabled={
+                  (!value.trim() && selectedFiles.length === 0) || isLoading
+                }
                 className="h-9 px-4 bg-neutral-900 hover:bg-neutral-800 text-white shadow-sm"
               >
                 {isLoading ? (
@@ -343,7 +360,9 @@ const ChatInput = memo(
 
           {/* Hint */}
           <div className="mt-2 text-xs text-neutral-500 text-center">
-            <span className="font-medium">Enter</span> para enviar • <span className="font-medium">Shift+Enter</span> para nova linha • <span className="font-medium">Ctrl+V</span> para colar imagem
+            <span className="font-medium">Enter</span> para enviar •{' '}
+            <span className="font-medium">Shift+Enter</span> para nova linha •{' '}
+            <span className="font-medium">Ctrl+V</span> para colar imagem
           </div>
         </form>
       </div>

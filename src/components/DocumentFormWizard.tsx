@@ -95,7 +95,8 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
   // Verificar se há etapas que usam PersonManager
   const hasPersonManagerSteps = steps.some(
-    (step) => step.id === 'locador' || step.id === 'locatario' || step.id === 'fiador'
+    (step) =>
+      step.id === 'locador' || step.id === 'locatario' || step.id === 'fiador'
   );
 
   // Hook principal do formulário
@@ -135,7 +136,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     updateField,
   });
 
-
   // Chamar onFormDataChange quando os dados do formulário mudarem
   useEffect(() => {
     if (onFormDataChange && formData) {
@@ -151,12 +151,12 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
     if (isFormValid && !isSubmitting) {
       try {
         const processedData = await onGenerate(formData);
-        
+
         // Se processedData é undefined ou null, não prosseguir
         if (!processedData) {
           return;
         }
-        
+
         const finalData = { ...formData, ...processedData };
         setProcessedFormData(finalData);
 
@@ -219,7 +219,6 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
       });
     }
   };
-
 
   // Mapear os ícones para cada etapa
   const stepIcons = [Home, User, Users, FileCheck, Search, Check];
@@ -309,14 +308,14 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
 
       {/* Card principal mais compacto */}
       <main className="bg-neutral-50 min-h-screen">
-        <div className="max-w-3xl mx-auto p-6">
+        <div className="max-w-3xl mx-auto p-4">
           <div className="bg-white border border-neutral-200 rounded-xl shadow-sm">
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <h1 className="text-2xl font-semibold mb-2 text-neutral-900">
+            <div className="p-4">
+              <div className="text-center mb-4">
+                <h1 className="text-xl font-semibold mb-2 text-neutral-900">
                   Vistoria e Entrega
                 </h1>
-                <p className="text-sm text-neutral-600 font-normal">
+                <p className="text-xs text-neutral-600 font-normal">
                   Detalhes da vistoria e entrega das chaves
                 </p>
               </div>

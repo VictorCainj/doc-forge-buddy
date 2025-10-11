@@ -20,7 +20,9 @@ const ProtectedRoute = ({
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn('Timeout de verificação de autenticação - forçando renderização');
+        console.warn(
+          'Timeout de verificação de autenticação - forçando renderização'
+        );
         setForceLoad(true);
       }
     }, 4000); // 4 segundos de timeout (otimizado)
@@ -33,8 +35,8 @@ const ProtectedRoute = ({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-gray-600">Verificando autenticação...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+          <p className="text-neutral-600">Verificando autenticação...</p>
         </div>
       </div>
     );

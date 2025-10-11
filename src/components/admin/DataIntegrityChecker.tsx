@@ -30,10 +30,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const severityColors: Record<string, string> = {
-  low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800',
+  low: 'bg-info-50 text-info-700',
+  medium: 'bg-warning-100 text-warning-700',
+  high: 'bg-warning-100 text-warning-900',
+  critical: 'bg-error-100 text-error-700',
 };
 
 const severityLabels: Record<string, string> = {
@@ -129,9 +129,9 @@ export const DataIntegrityChecker = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {report.totalIssues === 0 ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <CheckCircle2 className="h-5 w-5 text-success-600" />
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                  <AlertCircle className="h-5 w-5 text-warning-600" />
                 )}
                 Resumo da Verificação
               </CardTitle>
@@ -159,21 +159,21 @@ export const DataIntegrityChecker = () => {
                       {report.totalIssues}
                     </p>
                   </div>
-                  <div className="p-4 bg-white border border-red-200 rounded-lg">
+                  <div className="p-4 bg-white border border-error-200 rounded-lg">
                     <p className="text-xs text-neutral-500 mb-1">Críticos</p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-2xl font-bold text-error-600">
                       {report.issuesBySeverity.critical}
                     </p>
                   </div>
-                  <div className="p-4 bg-white border border-orange-200 rounded-lg">
+                  <div className="p-4 bg-white border border-warning-200 rounded-lg">
                     <p className="text-xs text-neutral-500 mb-1">Altos</p>
-                    <p className="text-2xl font-bold text-orange-600">
+                    <p className="text-2xl font-bold text-warning-900">
                       {report.issuesBySeverity.high}
                     </p>
                   </div>
-                  <div className="p-4 bg-white border border-yellow-200 rounded-lg">
+                  <div className="p-4 bg-white border border-warning-200 rounded-lg">
                     <p className="text-xs text-neutral-500 mb-1">Médios</p>
-                    <p className="text-2xl font-bold text-yellow-600">
+                    <p className="text-2xl font-bold text-warning-600">
                       {report.issuesBySeverity.medium}
                     </p>
                   </div>

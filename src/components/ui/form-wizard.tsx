@@ -181,8 +181,8 @@ export const FormWizard: React.FC<FormWizardProps> = ({
 
   return (
     <div className="w-full">
-      {/* Step Progress */}
-      <div className="flex justify-between rounded p-8 mb-6">
+      {/* Step Progress - Ultra Compacto */}
+      <div className="flex justify-between rounded p-3 mb-3">
         {steps.map((stepData, index) => (
           <Step
             key={index}
@@ -193,43 +193,45 @@ export const FormWizard: React.FC<FormWizardProps> = ({
         ))}
       </div>
 
-      {/* Step Content */}
-      <div className="space-y-6 mb-8">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center mb-3">
+      {/* Step Content - altura dinâmica baseada em viewport - Ultra Compacto */}
+      <div className="space-y-3 mb-4">
+        <div className="text-center mb-3">
+          <div className="flex items-center justify-center mb-1.5">
             {currentStepData.icon && (
-              <div className="bg-neutral-100 p-3 rounded-full mr-3">
-                <currentStepData.icon className="h-6 w-6 text-neutral-700" />
+              <div className="bg-neutral-100 p-2 rounded-full mr-2">
+                <currentStepData.icon className="h-5 w-5 text-neutral-700" />
               </div>
             )}
-            <h2 className="text-2xl font-semibold text-neutral-900">
+            <h2 className="text-lg font-semibold text-neutral-900">
               {currentStepData.title}
             </h2>
           </div>
           {currentStepData.description && (
-            <p className="text-neutral-600 font-normal">
+            <p className="text-xs text-neutral-600 font-normal">
               {currentStepData.description}
             </p>
           )}
         </div>
-        {currentStepData.content}
+        <div className="max-h-[calc(100vh-550px)] min-h-[250px] overflow-y-auto pr-1 custom-scrollbar smooth-scroll">
+          {currentStepData.content}
+        </div>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center pt-8 mt-8 border-t border-neutral-200">
+      {/* Navigation Buttons - Ultra Compacto */}
+      <div className="flex justify-between items-center pt-3 mt-3 border-t border-neutral-200">
         <button
           onClick={handlePrevious}
           disabled={currentStep === 0}
           className={`${
             currentStep === 0 ? 'pointer-events-none opacity-50' : ''
-          } duration-350 rounded px-2 py-1 text-neutral-600 transition hover:text-neutral-900 flex items-center gap-2`}
+          } duration-350 rounded px-2 py-1 text-sm text-neutral-600 transition hover:text-neutral-900 flex items-center gap-1.5`}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Anterior
         </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-neutral-600 font-medium">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-neutral-600 font-medium">
             {currentStep + 1} / {steps.length}
           </span>
         </div>
@@ -241,18 +243,18 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             currentStepData.isValid === false || isSubmitting
               ? 'pointer-events-none opacity-50'
               : ''
-          } bg duration-350 flex items-center justify-center rounded-lg bg-neutral-900 py-2 px-4 font-medium tracking-tight text-white transition hover:bg-neutral-800 active:bg-neutral-700 gap-2 shadow-sm`}
+          } bg duration-350 flex items-center justify-center rounded-lg bg-neutral-900 py-1.5 px-3 text-sm font-medium tracking-tight text-white transition hover:bg-neutral-800 active:bg-neutral-700 gap-1.5 shadow-sm`}
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
               {submitButtonText}
             </>
           ) : (
             <>
               {currentStep === steps.length - 1 ? submitButtonText : 'Próximo'}
               {currentStep < steps.length - 1 && (
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-3.5 w-3.5" />
               )}
             </>
           )}

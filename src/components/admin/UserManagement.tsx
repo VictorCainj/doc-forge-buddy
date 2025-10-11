@@ -171,7 +171,7 @@ export const UserManagement = () => {
                       variant={user.is_active ? 'default' : 'destructive'}
                       className={
                         user.is_active
-                          ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                          ? 'bg-success-100 text-success-800 hover:bg-success-100'
                           : ''
                       }
                     >
@@ -202,7 +202,9 @@ export const UserManagement = () => {
                       >
                         <Power
                           className={`h-4 w-4 ${
-                            user.is_active ? 'text-red-600' : 'text-green-600'
+                            user.is_active
+                              ? 'text-error-600'
+                              : 'text-success-600'
                           }`}
                         />
                       </Button>

@@ -1,0 +1,41 @@
+{
+  "name": "Doc Forge Buddy",
+  "short_name": "DocForge",
+  "description": "Sistema de gerenciamento de contratos e documentos imobiliários",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/placeholder.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Novo Contrato",
+      "short_name": "Contrato",
+      "description": "Criar novo contrato",
+      "url": "/cadastrar-contrato",
+      "icons": []
+    },
+    {
+      "name": "Contratos",
+      "short_name": "Contratos",
+      "description": "Ver todos os contratos",
+      "url": "/contratos",
+      "icons": []
+    }
+  ]
+}

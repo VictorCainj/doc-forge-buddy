@@ -8,15 +8,11 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-neutral-50">
-      <div className="flex">
-        {/* Minimalista Sidebar */}
-        <Sidebar />
+      {/* Sidebar Expansível (fixed) */}
+      <Sidebar />
 
-        {/* Main Content Area - Minimalista */}
-        <main className="flex-1 min-h-screen overflow-auto">
-          {children}
-        </main>
-      </div>
+      {/* Main Content Area - Full Width */}
+      <main className="min-h-screen w-full overflow-auto">{children}</main>
     </div>
   );
 };
