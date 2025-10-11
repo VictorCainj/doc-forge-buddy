@@ -18,6 +18,14 @@ import {
   User,
   User2,
   SearchCheck,
+  // Ícones coloridos para o card
+  FileTextColored,
+  CalendarColored,
+  UserColored,
+  User2Colored,
+  MapPinColored,
+  EditColored,
+  SearchCheckColored,
 } from '@/utils/iconMapper';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -155,7 +163,7 @@ export const ContractCard = memo<ContractCardProps>(
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
-                <FileText className="h-4 w-4 text-primary" />
+                <FileTextColored className="h-4 w-4" />
               </div>
               <div>
                 <h3 className="font-bold text-sm text-foreground">
@@ -196,7 +204,7 @@ export const ContractCard = memo<ContractCardProps>(
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="p-1.5 rounded-md bg-success-500/10">
-                  <User className="h-3 w-3 text-success-600" />
+                  <UserColored className="h-3 w-3" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -217,7 +225,7 @@ export const ContractCard = memo<ContractCardProps>(
               </div>
               <div className="flex items-start gap-3">
                 <div className="p-1.5 rounded-md bg-primary-500/10">
-                  <User2 className="h-3 w-3 text-primary-600" />
+                  <User2Colored className="h-3 w-3" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -246,7 +254,7 @@ export const ContractCard = memo<ContractCardProps>(
             </h4>
             <div className="flex items-start gap-3">
               <div className="p-1.5 rounded-md bg-warning-500/10">
-                <MapPin className="h-3 w-3 text-warning-600" />
+                <MapPinColored className="h-3 w-3" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -282,7 +290,7 @@ export const ContractCard = memo<ContractCardProps>(
               className="text-xs h-8 text-muted-foreground hover:text-foreground"
               onClick={handleEditContract}
             >
-              <Edit className="h-3 w-3 mr-1" />
+              <EditColored className="h-3 w-3 mr-1" />
               Editar
             </Button>
           </div>
@@ -300,7 +308,7 @@ export const ContractCard = memo<ContractCardProps>(
                 {getLoadingIcon(
                   contract.id,
                   'agendamento',
-                  <Calendar className="h-3 w-3 mr-1" />
+                  <CalendarColored className="h-3 w-3 mr-1" />
                 )}
                 Agendamento
               </Button>
@@ -315,7 +323,7 @@ export const ContractCard = memo<ContractCardProps>(
                 {getLoadingIcon(
                   contract.id,
                   'nps',
-                  <FileText className="h-3 w-3 mr-1" />
+                  <FileTextColored className="h-3 w-3 mr-1" />
                 )}
                 NPS
               </Button>
@@ -351,7 +359,7 @@ export const ContractCard = memo<ContractCardProps>(
                 onClick={handleAnaliseClick}
                 disabled={checkingAnalise}
               >
-                <SearchCheck className="h-3 w-3 mr-1" />
+                <SearchCheckColored className="h-3 w-3 mr-1" />
                 {checkingAnalise
                   ? 'Verificando...'
                   : hasAnalise

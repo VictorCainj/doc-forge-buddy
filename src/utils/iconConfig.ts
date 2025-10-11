@@ -1,9 +1,29 @@
 import { IconCategory } from '@/types/icons';
 
 /**
- * Esquema de cores para ícones por categoria
+ * Esquema de cores NEUTRAS para ícones (usado globalmente)
+ * Todos os ícones usam cores neutras por padrão
  */
 export const iconColors: Record<IconCategory, string> = {
+  document: '#6B7280', // Cinza neutro
+  success: '#6B7280', // Cinza neutro
+  danger: '#6B7280', // Cinza neutro
+  navigation: '#6B7280', // Cinza neutro
+  user: '#6B7280', // Cinza neutro
+  system: '#374151', // Cinza escuro
+  communication: '#6B7280', // Cinza neutro
+  time: '#6B7280', // Cinza neutro
+  location: '#6B7280', // Cinza neutro
+  edit: '#6B7280', // Cinza neutro
+  loading: '#9CA3AF', // Cinza claro
+  neutral: '#6B7280', // Cinza neutro
+};
+
+/**
+ * Esquema de cores COLORIDAS para ícones do card de contrato
+ * Usado apenas quando explicitamente solicitado
+ */
+export const iconColorsColored: Record<IconCategory, string> = {
   document: '#3B82F6', // Azul - Documentos/Arquivos
   success: '#10B981', // Verde - Ações positivas/sucesso
   danger: '#EF4444', // Vermelho - Ações negativas/exclusão
@@ -141,10 +161,20 @@ export const iconCategories: Record<string, IconCategory> = {
 
 /**
  * Obtém a cor de um ícone baseado no seu nome
+ * Por padrão retorna cor neutra
  */
-export function getIconColor(iconName: string): string {
+export function getIconColor(iconName: string, colored: boolean = false): string {
   const category = iconCategories[iconName] || 'neutral';
-  return iconColors[category];
+  return colored ? iconColorsColored[category] : iconColors[category];
+}
+
+/**
+ * Obtém a cor colorida de um ícone baseado no seu nome
+ * Usa o esquema de cores original (colorido)
+ */
+export function getIconColorColored(iconName: string): string {
+  const category = iconCategories[iconName] || 'neutral';
+  return iconColorsColored[category];
 }
 
 /**

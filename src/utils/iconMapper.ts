@@ -107,18 +107,33 @@ import {
 } from 'react-icons/hi2';
 
 // Importar função de cores
-import { getIconColor } from './iconConfig';
+import { getIconColor, getIconColorColored } from './iconConfig';
 
-// Função helper para criar ícone com cor (sem JSX)
+// Função helper para criar ícone com cor NEUTRA (padrão global)
 const withColor = (Icon: any, name: string) => {
   const ColoredIcon = (props: any) => {
-    const color = getIconColor(name);
+    const color = getIconColor(name, false); // false = neutro
     return React.createElement(Icon, {
       ...props,
-      style: { color, ...props.style },
+      color: color,
+      style: props.style,
     });
   };
   ColoredIcon.displayName = name;
+  return ColoredIcon;
+};
+
+// Função helper para criar ícone com cor COLORIDA (para cards de contrato)
+const withColorColored = (Icon: any, name: string) => {
+  const ColoredIcon = (props: any) => {
+    const color = getIconColorColored(name); // cores específicas por categoria
+    return React.createElement(Icon, {
+      ...props,
+      color: color,
+      style: props.style,
+    });
+  };
+  ColoredIcon.displayName = `${name}Colored`;
   return ColoredIcon;
 };
 
@@ -326,3 +341,21 @@ export const iconMapper = {
   RotateCcw,
   CircleCheck,
 };
+
+// ========================================
+// ÍCONES COLORIDOS PARA CARDS DE CONTRATO
+// ========================================
+/**
+ * Versões coloridas dos ícones para uso exclusivo nos cards de contrato
+ * Esses ícones mantêm as cores específicas de suas categorias
+ */
+export const FileTextColored = withColorColored(PiFileText, 'FileText');
+export const CalendarColored = withColorColored(PiCalendar, 'Calendar');
+export const UserColored = withColorColored(PiUser, 'User');
+export const User2Colored = withColorColored(PiUserCircle, 'User2');
+export const MapPinColored = withColorColored(PiMapPin, 'MapPin');
+export const EditColored = withColorColored(PiPencilSimple, 'Edit');
+export const SearchCheckColored = withColorColored(
+  PiMagnifyingGlass,
+  'SearchCheck'
+);
