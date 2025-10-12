@@ -145,12 +145,12 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
 `;
 
 export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
-<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #202124; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
     <div style="flex: 0 0 auto;">
       <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
     </div>
-    <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
+    <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px; color: #5F6368;">
       Valinhos, {{dataAtual}}.
     </div>
   </div>
@@ -159,48 +159,88 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Venho por meio desta solicitar os comprovantes de pagamento das contas de consumo do imóvel sito à <strong>{{enderecoImovel}}</strong>, conforme contrato Nº <strong>{{numeroContrato}}</strong> firmado em <strong>{{dataFirmamentoContrato}}</strong>.</p>
+  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de vistoria de saída do imóvel <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>), precisamos das <strong>3 últimas contas completas e comprovantes de pagamento</strong> (dos 3 últimos meses) das contas de consumo.</p>
   
-  <p style="margin-bottom: 20px;">Para darmos continuidade ao agendamento da vistoria de saída, solicitamos os comprovantes de pagamento das contas de consumo, acompanhados de suas respectivas faturas (conta completa), referentes aos meses de <strong>{{mesesComprovantes}}</strong>.</p>
+  <p style="margin-bottom: 20px;">É importante enviar tanto o <strong>comprovante de pagamento</strong> quanto a <strong>conta completa (fatura)</strong> dos últimos 3 meses de cada documento solicitado.</p>
   
-  <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
-    <p style="margin-bottom: 10px; font-weight: bold; color: #007bff;">DOCUMENTOS SOLICITADOS:</p>
+  <div style="margin: 25px 0; padding: 18px; background-color: #F8F9FA; border-left: 4px solid #5F6368; border-radius: 4px;">
+    <p style="margin-bottom: 12px; font-weight: 600; color: #202124; font-size: 15px;">Documentos necessários:</p>
     {{#if cpfl}}
     {{#eq cpfl "SIM"}}
-    <p style="margin-bottom: 5px;">• CPFL (Energia Elétrica): Comprovante de pagamento e fatura</p>
+    <p style="margin-bottom: 8px; color: #202124;">• <strong>Energia elétrica (CPFL)</strong> - 3 últimas contas completas e comprovantes (dos 3 últimos meses)</p>
     {{/eq}}
     {{/if}}
     {{#if statusAgua}}
     {{#eq statusAgua "SIM"}}
-    <p style="margin-bottom: 5px;">• {{tipoAgua}} (Água): Comprovante de pagamento e fatura</p>
+    <p style="margin-bottom: 8px; color: #202124;">• <strong>Água ({{tipoAgua}})</strong> - 3 últimas contas completas e comprovantes (dos 3 últimos meses)</p>
     {{/eq}}
     {{/if}}
     {{#if solicitarGas}}
     {{#eq solicitarGas "sim"}}
-    <p style="margin-bottom: 5px;">• Gás (se houver): Comprovante de pagamento e fatura</p>
+    <p style="margin-bottom: 8px; color: #202124;">• <strong>Gás</strong> (se houver) - 3 últimas contas completas e comprovantes (dos 3 últimos meses)</p>
     {{/eq}}
     {{/if}}
     {{#if solicitarCondominio}}
     {{#eq solicitarCondominio "sim"}}
-    <p style="margin-bottom: 5px;">• Condomínio: Comprovante de pagamento e fatura</p>
+    <p style="margin-bottom: 8px; color: #202124;">• <strong>Condomínio</strong> - 3 últimos boletos e comprovantes (dos 3 últimos meses)</p>
     {{/eq}}
     {{/if}}
     {{#if solicitarCND}}
     {{#eq solicitarCND "sim"}}
-    <p style="margin-bottom: 5px;">• Certidão Negativa de Débitos (CND): Documento atualizado</p>
+    <p style="margin-bottom: 8px; color: #202124;">• <strong>Certidão Negativa de Débitos (CND)</strong></p>
     {{/eq}}
     {{/if}}
   </div>
   
-  <p style="margin-bottom: 20px;"><strong>Solicitamos que encaminhe esses documentos o mais breve possível</strong>, pois são essenciais para o agendamento da vistoria de saída.</p>
+  <div style="margin: 30px 0; padding: 20px; background-color: #F8F9FA; border-radius: 8px;">
+    <p style="margin-bottom: 15px; font-weight: 600; color: #202124; font-size: 15px;">O que é a "conta completa"?</p>
+    <p style="margin-bottom: 15px; color: #5F6368;">A conta completa (fatura) contém todas as informações: dados do imóvel, histórico de consumo, valores detalhados e código de barras.</p>
+    
+    {{#if cpfl}}
+    {{#eq cpfl "SIM"}}
+    <div style="margin: 20px 0;">
+      <p style="font-weight: 600; color: #202124; margin-bottom: 10px;">Exemplo de conta completa de energia elétrica (CPFL):</p>
+      <img src="https://cdn.saocarlosagora.com.br/img/pc/780/530/dn_arquivo/2022/07/1657665165.jpg?c=1" alt="Exemplo de conta de energia completa" style="max-width: 100%; height: auto; border: 1px solid #E8EAED; border-radius: 4px; margin-bottom: 10px;" />
+      <p style="font-size: 13px; color: #5F6368; font-style: italic;">Este é o modelo da fatura completa que precisa ser enviada (em formato de documento ou foto).</p>
+      <div style="margin-top: 12px; padding: 12px; background-color: #FFFFFF; border: 1px solid #E8EAED; border-radius: 4px;">
+        <p style="font-size: 13px; color: #5F6368; margin: 0;"><strong style="color: #202124;">Como obter:</strong> Acesse o site ou aplicativo da CPFL, faça login e, na área "Débitos e Segunda Via", baixe sua conta.</p>
+      </div>
+    </div>
+    {{/eq}}
+    {{/if}}
+    
+    {{#if statusAgua}}
+    {{#eq statusAgua "SIM"}}
+    <div style="margin: 20px 0;">
+      <p style="font-weight: 600; color: #202124; margin-bottom: 10px;">Exemplo de conta completade água ({{tipoAgua}}):</p>
+      <img src="https://www.daev.org.br/webapp/uploads/noticias/imagem_whatsapp-image-2021-12-14-at-094721jpeg.jpeg" alt="Exemplo de conta completa de água completa" style="max-width: 100%; height: auto; border: 1px solid #E8EAED; border-radius: 4px; margin-bottom: 10px;" />
+      <p style="font-size: 13px; color: #5F6368; font-style: italic;">Este é o modelo da fatura completa que precisa ser enviada (em formato de documento ou foto).</p>
+      <div style="margin-top: 12px; padding: 12px; background-color: #FFFFFF; border: 1px solid #E8EAED; border-radius: 4px;">
+        <p style="font-size: 13px; color: #5F6368; margin: 0;"><strong style="color: #202124;">Como obter:</strong> Para resgatar sua conta de água do DAEV, acesse o site, vá até a opção "2ª via de contas" e informe o número da conta de água e o CPF do titular para emitir a segunda via.</p>
+      </div>
+    </div>
+    {{/eq}}
+    {{/if}}
+    
+    <p style="margin-top: 15px; padding: 12px; background-color: #FFFFFF; border-left: 3px solid #5F6368; color: #202124; font-weight: 500;">Lembre-se: é necessário enviar tanto o comprovante de pagamento quanto a fatura completa de cada documento.</p>
+  </div>
   
-  <p style="margin-bottom: 20px;"><strong>Conforme estabelecido no contrato de locação, {{locatarioTermNoArtigo}} é responsável pelo pagamento das contas de consumo durante todo o período de ocupação do imóvel</strong>.</p>
+  {{#if solicitarCND}}
+  {{#eq solicitarCND "sim"}}
+  <div style="margin: 20px 0; padding: 15px; background-color: #F8F9FA; border-left: 4px solid #5F6368; border-radius: 4px;">
+    <p style="margin-bottom: 10px; font-weight: 600; color: #202124;">Como obter a Certidão Negativa de Débitos (CND):</p>
+    <p style="margin: 5px 0; color: #5F6368;">A CND pode ser obtida diretamente com o síndico ou a administradora do condomínio. Este documento comprova que não há débitos pendentes.</p>
+  </div>
+  {{/eq}}
+  {{/if}}
   
-  <p style="margin-bottom: 20px;">Caso haja alguma dúvida sobre quais documentos são necessários, permanecemos à disposição para esclarecimentos.</p>
+  <p style="margin-bottom: 20px; color: #5F6368;">Pedimos a gentileza de enviar esses documentos o quanto antes, pois são essenciais para darmos continuidade ao agendamento da vistoria de saída.</p>
   
-  <p style="margin-bottom: 20px;">Agradecemos pela compreensão e aguardamos o retorno com os documentos solicitados.</p>
+  <p style="margin-bottom: 20px; color: #5F6368;">Caso tenha alguma dúvida, estamos à disposição para ajudar!</p>
   
-  <p style="margin-top: 40px;">Atenciosamente,</p>
+  <p style="margin-bottom: 20px; color: #5F6368;">Agradecemos pela colaboração.</p>
+  
+  <p style="margin-top: 40px; color: #202124;">Atenciosamente,</p>
 </div>
 `;
 
@@ -348,28 +388,8 @@ export const DEVOLUTIVA_COMERCIAL_TEMPLATE = `
 
 export const DEVOLUTIVA_CADERNINHO_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
-  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
-    <div style="flex: 0 0 auto;">
-      <img src="https://i.imgur.com/jSbw2Ec.jpeg" alt="Madia Imóveis" style="height: 150px; width: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
-    </div>
-    <div style="flex: 1; text-align: right; font-size: 15px; margin-left: 20px;">
-      Valinhos, {{dataAtual}}.
-    </div>
-  </div>
-  
-  <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #d32f2f; font-weight: bold; font-size: 18px; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
-      FORMALIZAÇÃO INTERNA - DEVOLUTIVA COMERCIAL
-    </h1>
-  </div>
-  
   <div style="margin-bottom: 30px; text-align: justify;">
-    <p style="margin: 10px 0; font-size: 15px;">{{locatarioTerm}} <strong>{{nomeLocatarioFormatado}}</strong>, do contrato <strong>{{numeroContrato}}</strong>, {{locatarioComunicou}} a rescisão do imóvel na <strong>{{enderecoImovel}}</strong>, em <strong>{{dataComunicacao}}</strong>, com prazo até <strong>{{dataTerminoRescisao}}</strong>. A informação foi repassada {{tratamentoLocadorGenero}} e ao setor comercial.</p>
-  </div>
-  
-  <div style="margin-top: 40px; text-align: center;">
-    <p style="margin: 5px 0; font-size: 15px;"><strong>MADIA IMÓVEIS LTDA</strong></p>
-    <p style="margin: 5px 0; font-size: 15px;">Setor de Rescisão</p>
+    <p style="margin: 10px 0; font-size: 15px; text-transform: capitalize;">{{locatarioTermNoArtigo}} <strong>{{nomeLocatarioFormatado}}</strong> do contrato <strong>{{numeroContrato}}</strong> notificou a desocupação em <strong>{{dataComunicacao}}</strong>, com prazo até <strong>{{dataTerminoRescisao}}</strong>. A informação foi repassada ao locador e setor comercial.</p>
   </div>
 </div>
 `;
@@ -495,9 +515,9 @@ export const TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE = `
     </h1>
   </div>
   
-  <p style="margin-bottom: 20px;">Prezado (a) - <strong>{{nomeLocatarioFormatado}}</strong></p>
+  <p style="margin-bottom: 20px;">{{locatarioPrezado}} Sr.(a) <strong>{{nomeLocatarioFormatado}}</strong></p>
   
-  <p style="margin-bottom: 20px; text-align: justify;">Informamos que a vistoria de saída do imóvel localizado em <strong>{{enderecoImovel}}</strong> foi realizada na data de <strong>{{dataVistoria}}</strong>, conforme previsto em contrato.</p>
+  <p style="margin-bottom: 20px; text-align: justify;">Informamos que a {{tipoVistoriaTextoMinusculo}} do imóvel localizado em <strong>{{enderecoImovel}}</strong> foi realizada na data de <strong>{{dataVistoria}}</strong>, conforme previsto em contrato.</p>
   
   <p style="margin-bottom: 20px; text-align: justify;">O laudo correspondente foi apresentado para ciência e assinatura {{locatarioDocumentacao}}, porém <strong>houve recusa formal em assiná-lo</strong>. Em razão das limitações do sistema de assinatura eletrônica, <strong>a recusa será registrada administrativamente pela Madia e arquivada como parte integrante do processo de desocupação</strong>, servindo como comprovação da condição do imóvel na data da vistoria.</p>
   

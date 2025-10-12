@@ -57,7 +57,7 @@ export function applyContractConjunctions(
   if (generoLocatario === 'femininos') {
     // Plural feminino
     enhancedData.locatarioTerm = 'LOCATÁRIAS';
-    enhancedData.locatarioTermComercial = 'LOCATÁRIAS';
+    enhancedData.locatarioTermComercial = 'locatárias';
     enhancedData.locatarioTermNoArtigo = 'as locatárias';
     enhancedData.locatarioComunicou = 'informaram';
     enhancedData.locatarioIra = 'irão';
@@ -68,7 +68,7 @@ export function applyContractConjunctions(
   } else if (generoLocatario === 'masculinos') {
     // Plural masculino
     enhancedData.locatarioTerm = 'LOCATÁRIOS';
-    enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
+    enhancedData.locatarioTermComercial = 'locatários';
     enhancedData.locatarioTermNoArtigo = 'os locatários';
     enhancedData.locatarioComunicou = 'informaram';
     enhancedData.locatarioIra = 'irão';
@@ -79,7 +79,7 @@ export function applyContractConjunctions(
   } else if (generoLocatario === 'feminino') {
     // Singular feminino
     enhancedData.locatarioTerm = 'LOCATÁRIA';
-    enhancedData.locatarioTermComercial = 'LOCATÁRIA';
+    enhancedData.locatarioTermComercial = 'locatária';
     enhancedData.locatarioTermNoArtigo = 'a locatária';
     enhancedData.locatarioDocumentacao = 'da locatária';
     enhancedData.locatarioResponsabilidade = 'da locatária';
@@ -90,7 +90,7 @@ export function applyContractConjunctions(
   } else if (generoLocatario === 'masculino') {
     // Singular masculino
     enhancedData.locatarioTerm = 'LOCATÁRIO';
-    enhancedData.locatarioTermComercial = 'LOCATÁRIO';
+    enhancedData.locatarioTermComercial = 'locatário';
     enhancedData.locatarioTermNoArtigo = 'o locatário';
     enhancedData.locatarioDocumentacao = 'do locatário';
     enhancedData.locatarioResponsabilidade = 'do locatário';
@@ -101,7 +101,7 @@ export function applyContractConjunctions(
   } else if (autoDetectedMultiple) {
     // Fallback: detecção automática indica plural (padrão masculino)
     enhancedData.locatarioTerm = 'LOCATÁRIOS';
-    enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
+    enhancedData.locatarioTermComercial = 'locatários';
     enhancedData.locatarioTermNoArtigo = 'os locatários';
     enhancedData.locatarioComunicou = 'informaram';
     enhancedData.locatarioIra = 'irão';
@@ -112,7 +112,7 @@ export function applyContractConjunctions(
   } else {
     // Fallback: singular masculino (padrão)
     enhancedData.locatarioTerm = 'LOCATÁRIO';
-    enhancedData.locatarioTermComercial = 'LOCATÁRIO';
+    enhancedData.locatarioTermComercial = 'locatário';
     enhancedData.locatarioTermNoArtigo = 'o locatário';
     enhancedData.locatarioDocumentacao = 'do locatário';
     enhancedData.locatarioResponsabilidade = 'do locatário';
@@ -148,37 +148,37 @@ export function applyContractConjunctions(
     // Plural feminino
     enhancedData.proprietarioTerm = 'as proprietárias';
     enhancedData.locadorTerm = 'LOCADORAS';
-    enhancedData.locadorTermComercial = 'LOCADORAS';
+    enhancedData.locadorTermComercial = 'locadoras';
     enhancedData.proprietarioPrezado = 'Prezadas';
   } else if (generoProprietario === 'masculinos') {
     // Plural masculino
     enhancedData.proprietarioTerm = 'os proprietários';
     enhancedData.locadorTerm = 'LOCADORES';
-    enhancedData.locadorTermComercial = 'LOCADORES';
+    enhancedData.locadorTermComercial = 'locadores';
     enhancedData.proprietarioPrezado = 'Prezados';
   } else if (generoProprietario === 'feminino') {
     // Singular feminino
     enhancedData.proprietarioTerm = 'a proprietária';
     enhancedData.locadorTerm = 'LOCADORA';
-    enhancedData.locadorTermComercial = 'LOCADORA';
+    enhancedData.locadorTermComercial = 'locadora';
     enhancedData.proprietarioPrezado = 'Prezada';
   } else if (generoProprietario === 'masculino') {
     // Singular masculino
     enhancedData.proprietarioTerm = 'o proprietário';
     enhancedData.locadorTerm = 'LOCADOR';
-    enhancedData.locadorTermComercial = 'LOCADOR';
+    enhancedData.locadorTermComercial = 'locador';
     enhancedData.proprietarioPrezado = 'Prezado';
   } else if (autoDetectedMultipleProprietarios) {
     // Fallback: detecção automática indica plural (padrão masculino)
     enhancedData.proprietarioTerm = 'os proprietários';
     enhancedData.locadorTerm = 'LOCADORES';
-    enhancedData.locadorTermComercial = 'LOCADORES';
+    enhancedData.locadorTermComercial = 'locadores';
     enhancedData.proprietarioPrezado = 'Prezados';
   } else {
     // Fallback: singular masculino (padrão)
     enhancedData.proprietarioTerm = 'o proprietário';
     enhancedData.locadorTerm = 'LOCADOR';
-    enhancedData.locadorTermComercial = 'LOCADOR';
+    enhancedData.locadorTermComercial = 'locador';
     enhancedData.proprietarioPrezado = 'Prezado';
   }
 
@@ -450,9 +450,12 @@ export function applyContractConjunctions(
     formData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
 
   // Campos de energia e água
-  enhancedData.cpfl = formData.cpfl || 'SIM';
-  enhancedData.statusAgua = formData.statusAgua || 'SIM';
-  enhancedData.tipoAgua = formData.tipoAgua || 'DAEV';
+  // Energia sempre é solicitada (conforme regra de negócio)
+  enhancedData.cpfl = 'SIM';
+
+  // Água: usar campo solicitarAgua do cadastro
+  enhancedData.statusAgua = formData.solicitarAgua === 'sim' ? 'SIM' : 'NAO';
+  enhancedData.tipoAgua = formData.tipoAgua || 'DAEV'; // mantém default apenas se não informado
 
   // Variáveis do distrato
   enhancedData.dataLiquidacao =
@@ -461,12 +464,8 @@ export function applyContractConjunctions(
   // Gerar lista de documentos solicitados
   const configDocumentos: ConfiguracaoDocumentos = {
     solicitarCondominio: formData.solicitarCondominio || 'nao',
-    // Verificar tanto solicitarAgua quanto statusAgua para compatibilidade
-    solicitarAgua:
-      formData.solicitarAgua === 'sim' ||
-      formData.statusAgua?.toUpperCase() === 'SIM'
-        ? 'sim'
-        : 'nao',
+    // Usar somente solicitarAgua do cadastro (não mais statusAgua)
+    solicitarAgua: formData.solicitarAgua === 'sim' ? 'sim' : 'nao',
     // Energia elétrica sempre é solicitada (conforme comentário no formulário)
     solicitarEnergia: 'sim',
     solicitarGas: formData.solicitarGas || 'nao',
@@ -478,11 +477,7 @@ export function applyContractConjunctions(
 
   // Manter campos individuais
   enhancedData.solicitarCondominio = formData.solicitarCondominio || 'nao';
-  enhancedData.solicitarAgua =
-    formData.solicitarAgua === 'sim' ||
-    formData.statusAgua?.toUpperCase() === 'SIM'
-      ? 'sim'
-      : 'nao';
+  enhancedData.solicitarAgua = formData.solicitarAgua === 'sim' ? 'sim' : 'nao';
   enhancedData.solicitarEnergia = 'sim'; // Energia elétrica sempre é solicitada
   enhancedData.solicitarGas = formData.solicitarGas || 'nao';
   enhancedData.solicitarCND = formData.solicitarCND || 'nao';

@@ -40,8 +40,8 @@ export function useContractBills({
   const getRequiredBillTypes = useCallback((): BillType[] => {
     const required: BillType[] = ['energia']; // Energia sempre é obrigatória
 
-    // Água: se statusAgua === 'SIM'
-    if (formData.statusAgua?.toUpperCase() === 'SIM') {
+    // Água: se solicitarAgua === 'sim' no cadastro
+    if (formData.solicitarAgua?.toLowerCase() === 'sim') {
       required.push('agua');
     }
 

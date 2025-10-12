@@ -168,6 +168,7 @@ const Contratos = () => {
         'Notificação de Desocupação e Agendamento de Vistoria',
         'Devolutiva Locatário',
         'Devolutiva Cobrança de Consumo',
+        'Cobrança de Consumo',
         'Devolutiva Caderninho',
         'Caderninho',
         'Notificação de Desocupação - Comercial',
@@ -179,8 +180,12 @@ const Contratos = () => {
         navigate('/termo-locador', { state: { contractData: formData } });
       } else if (documentType === 'Termo do Locatário') {
         navigate('/termo-locatario', { state: { contractData: formData } });
-      } else if (documentType === 'Termo de Recusa de Assinatura - E-mail') {
+      } else if (
+        documentType === 'Termo de Recusa de Assinatura - E-mail' ||
+        documentType === 'Termo de Recusa de Assinatura - PDF'
+      ) {
         actions.selectContract(contract);
+        actions.setPendingDocument({ contract, template, documentType });
         actions.openModal('recusaAssinatura');
       } else if (documentType === 'Notificação de Agendamento') {
         actions.selectContract(contract);
@@ -308,7 +313,8 @@ const Contratos = () => {
     if (
       !state.selectedContract ||
       !state.formData.dataRealizacaoVistoria ||
-      !state.formData.assinanteSelecionado
+      !state.formData.assinanteSelecionado ||
+      !state.pendingDocument
     ) {
       showError('validation', {
         description: 'Por favor, preencha todos os campos',
@@ -327,24 +333,31 @@ const Contratos = () => {
         ? 'revistoria'
         : 'vistoria';
     enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
+    enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
+    enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
 
-    const processedTemplate = processContractTemplate(
-      TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
-      enhancedData
-    );
-    const documentTitle = `Termo de Recusa de Assinatura - E-mail - ${state.selectedContract.title}`;
+    // Usar dataRealizacaoVistoria como dataVistoria para o template
+    enhancedData.dataVistoria = state.formData.dataRealizacaoVistoria;
+
+    // Usar o template correto baseado no tipo de documento
+    const template = state.pendingDocument.template;
+    const documentType = state.pendingDocument.documentType;
+
+    const processedTemplate = processContractTemplate(template, enhancedData);
+    const documentTitle = `${documentType} - ${state.selectedContract.title}`;
 
     navigate('/gerar-documento', {
       state: {
         title: documentTitle,
         template: processedTemplate,
         formData: enhancedData,
-        documentType: 'Termo de Recusa de Assinatura - E-mail',
+        documentType: documentType,
       },
     });
 
     actions.closeModal('recusaAssinatura');
     actions.selectContract(null);
+    actions.setPendingDocument(null);
     actions.resetFormData();
   }, [state, actions, navigate, showError]);
 

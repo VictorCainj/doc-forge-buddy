@@ -3,6 +3,8 @@
  * Mantém fonte Arial, negrito e estrutura do texto
  */
 
+import { convertImagesToBase64 } from './imageToBase64';
+
 export const copyDocumentText = async (
   htmlContent: string
 ): Promise<string> => {
@@ -67,28 +69,40 @@ export const copyDocumentText = async (
 
 /**
  * Copia o texto formatado para a área de transferência
+ * Inclui conversão de imagens para base64 para garantir que sejam coladas corretamente
  */
 export const copyToClipboard = async (
   htmlContent: string
 ): Promise<boolean> => {
   try {
+    // Converter imagens externas para base64
+    let htmlWithBase64Images = htmlContent;
+    try {
+      htmlWithBase64Images = await convertImagesToBase64(htmlContent);
+    } catch (error) {
+      console.warn('Aviso: Não foi possível converter todas as imagens', error);
+    }
+
     // Verificar se navigator.clipboard está disponível
     if (navigator.clipboard && navigator.clipboard.write) {
       // Tentar copiar com formatação HTML primeiro
       try {
-        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const htmlBlob = new Blob([htmlWithBase64Images], {
+          type: 'text/html',
+        });
+        const textContent = await copyDocumentText(htmlContent);
+        const textBlob = new Blob([textContent], { type: 'text/plain' });
+
         const clipboardItem = new ClipboardItem({
-          'text/html': blob,
-          'text/plain': new Blob([await copyDocumentText(htmlContent)], {
-            type: 'text/plain',
-          }),
+          'text/html': htmlBlob,
+          'text/plain': textBlob,
         });
 
         await navigator.clipboard.write([clipboardItem]);
         return true;
-      } catch {
+      } catch (error) {
         // Se falhar com HTML, tentar apenas texto
-        // console.log('Falha ao copiar HTML, tentando texto simples');
+        console.warn('Fallback para texto simples:', error);
         const formattedText = await copyDocumentText(htmlContent);
         await navigator.clipboard.writeText(formattedText);
         return true;
@@ -99,18 +113,81 @@ export const copyToClipboard = async (
       await navigator.clipboard.writeText(formattedText);
       return true;
     } else {
-      // Fallback para navegadores mais antigos
+      // Tentar fallback com HTML primeiro (preserva formatação e imagens)
+      const htmlSuccess = fallbackCopyHtmlToClipboard(htmlWithBase64Images);
+      if (htmlSuccess) {
+        return true;
+      }
+
+      // Se falhar, tentar apenas texto como último recurso
       const formattedText = await copyDocumentText(htmlContent);
       return fallbackCopyTextToClipboard(formattedText);
     }
-  } catch {
+  } catch (error) {
+    console.error('Erro ao copiar:', error);
+
     // Tentar fallback em caso de erro
     try {
+      // Tentar HTML primeiro
+      let htmlWithBase64Images = htmlContent;
+      try {
+        htmlWithBase64Images = await convertImagesToBase64(htmlContent);
+      } catch {
+        // Usar HTML original se conversão falhar
+      }
+
+      const htmlSuccess = fallbackCopyHtmlToClipboard(htmlWithBase64Images);
+      if (htmlSuccess) {
+        return true;
+      }
+
+      // Se falhar, tentar texto
       const formattedText = await copyDocumentText(htmlContent);
       return fallbackCopyTextToClipboard(formattedText);
-    } catch {
+    } catch (fallbackError) {
+      console.error('Erro no fallback:', fallbackError);
       return false;
     }
+  }
+};
+
+/**
+ * Método fallback para copiar HTML com imagens (quando clipboard.write não está disponível)
+ */
+const fallbackCopyHtmlToClipboard = (htmlContent: string): boolean => {
+  try {
+    // Criar um elemento temporário com o HTML
+    const container = document.createElement('div');
+    container.innerHTML = htmlContent;
+
+    // Configurar estilos para invisibilidade mas permitir seleção
+    container.style.position = 'fixed';
+    container.style.left = '-999999px';
+    container.style.top = '0';
+    container.style.opacity = '0';
+    container.style.pointerEvents = 'none';
+
+    // Adicionar ao DOM
+    document.body.appendChild(container);
+
+    // Selecionar o conteúdo
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(container);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    // Copiar
+    const successful = document.execCommand('copy');
+
+    // Limpar
+    selection?.removeAllRanges();
+    document.body.removeChild(container);
+
+    return successful;
+  } catch (error) {
+    console.error('Erro no fallback HTML:', error);
+    return false;
   }
 };
 
@@ -136,7 +213,8 @@ const fallbackCopyTextToClipboard = (text: string): boolean => {
     document.body.removeChild(textArea);
 
     return successful;
-  } catch {
+  } catch (error) {
+    console.error('Erro no fallback de texto:', error);
     return false;
   }
 };

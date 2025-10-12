@@ -113,7 +113,7 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
 
       if (isMultipleLocatariosCheck) {
         enhancedData.locatarioTerm = 'LOCATÁRIOS';
-        enhancedData.locatarioTermComercial = 'LOCATÁRIOS';
+        enhancedData.locatarioTermComercial = 'locatários';
         enhancedData.locatarioDocumentacao = 'dos locatários';
         enhancedData.locatarioResponsabilidade = 'dos locatários';
       } else if (formData.primeiroLocatario) {
@@ -121,20 +121,20 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
         const generoLocatario = formData.generoLocatario;
         if (generoLocatario === 'feminino') {
           enhancedData.locatarioTerm = 'LOCATÁRIA';
-          enhancedData.locatarioTermComercial = 'LOCATÁRIA';
+          enhancedData.locatarioTermComercial = 'locatária';
           enhancedData.locatarioDocumentacao = 'da locatária';
           enhancedData.locatarioResponsabilidade = 'da locatária';
           enhancedData.locatarioPrezado = 'Prezada';
         } else {
           enhancedData.locatarioTerm = 'LOCATÁRIO';
-          enhancedData.locatarioTermComercial = 'LOCATÁRIO';
+          enhancedData.locatarioTermComercial = 'locatário';
           enhancedData.locatarioDocumentacao = 'do locatário';
           enhancedData.locatarioResponsabilidade = 'do locatário';
           enhancedData.locatarioPrezado = 'Prezado';
         }
       } else {
         enhancedData.locatarioTerm = 'LOCATÁRIO';
-        enhancedData.locatarioTermComercial = 'LOCATÁRIO';
+        enhancedData.locatarioTermComercial = 'locatário';
         enhancedData.locatarioDocumentacao = 'do locatário';
         enhancedData.locatarioResponsabilidade = 'do locatário';
         enhancedData.locatarioPrezado = 'Prezado';
@@ -151,23 +151,23 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
         formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
       if (isMultipleProprietariosCheck) {
         enhancedData.proprietarioTerm = 'os proprietários';
-        enhancedData.locadorTermComercial = 'LOCADORES';
+        enhancedData.locadorTermComercial = 'locadores';
         enhancedData.proprietarioPrezado = 'Prezado';
       } else if (formData.nomeProprietario) {
         // Usar o gênero do proprietário para definir o termo correto
         const generoProprietario = formData.generoProprietario;
         if (generoProprietario === 'feminino') {
           enhancedData.proprietarioTerm = 'a proprietária';
-          enhancedData.locadorTermComercial = 'LOCADORA';
+          enhancedData.locadorTermComercial = 'locadora';
           enhancedData.proprietarioPrezado = 'Prezada';
         } else {
           enhancedData.proprietarioTerm = 'o proprietário';
-          enhancedData.locadorTermComercial = 'LOCADOR';
+          enhancedData.locadorTermComercial = 'locador';
           enhancedData.proprietarioPrezado = 'Prezado';
         }
       } else {
         enhancedData.proprietarioTerm = 'o proprietário';
-        enhancedData.locadorTermComercial = 'LOCADOR';
+        enhancedData.locadorTermComercial = 'locador';
         enhancedData.proprietarioPrezado = 'Prezado';
       }
 

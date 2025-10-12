@@ -164,7 +164,10 @@ export const ContractModals = memo<ContractModalsProps>(
         >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Termo de Recusa de Assinatura - E-mail</DialogTitle>
+              <DialogTitle>
+                {pendingDocument?.documentType ||
+                  'Termo de Recusa de Assinatura'}
+              </DialogTitle>
               <DialogDescription>
                 Preencha a data da vistoria/revistoria e selecione quem vai
                 assinar o documento.

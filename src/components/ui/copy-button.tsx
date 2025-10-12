@@ -18,18 +18,27 @@ export const CopyButton = ({
   variant = 'outline',
 }: CopyButtonProps) => {
   const [copied, setCopied] = useState(false);
+  const [copying, setCopying] = useState(false);
   const { toast } = useToast();
 
   const handleCopy = async () => {
     try {
+      setCopying(true);
+
+      // Verificar se há imagens no conteúdo
+      const hasImages = /<img[^>]+src=["'][^"']+["'][^>]*>/i.test(content);
+
       const success = await copyToClipboard(content);
 
       if (success) {
         setCopied(true);
+        const description = hasImages
+          ? 'Documento copiado com texto, formatação e imagens! Pronto para colar no e-mail.'
+          : 'O conteúdo foi copiado para a área de transferência com formatação preservada.';
+
         toast({
-          title: 'Texto copiado!',
-          description:
-            'O conteúdo foi copiado para a área de transferência com formatação preservada.',
+          title: 'Documento copiado!',
+          description,
         });
 
         // Resetar estado após 2 segundos
@@ -37,12 +46,14 @@ export const CopyButton = ({
       } else {
         throw new Error('Falha ao copiar');
       }
-    } catch {
+    } catch (error) {
       toast({
         title: 'Erro ao copiar',
         description: 'Não foi possível copiar o texto. Tente novamente.',
         variant: 'destructive',
       });
+    } finally {
+      setCopying(false);
     }
   };
 
@@ -52,9 +63,15 @@ export const CopyButton = ({
       variant={variant}
       size={size}
       className={`gap-2 ${className}`}
-      title="Copiar texto do documento"
+      title="Copiar documento completo (texto, formatação e imagens)"
+      disabled={copying}
     >
-      {copied ? (
+      {copying ? (
+        <>
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          Copiando...
+        </>
+      ) : copied ? (
         <>
           <Check className="h-4 w-4" />
           Copiado
