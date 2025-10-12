@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Search, X } from '@/utils/iconMapper';
+import { X } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,8 +15,8 @@ interface OptimizedSearchProps {
 
 export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
   onSearch,
-  placeholder = "Buscar contratos...",
-  className = "",
+  placeholder = 'Buscar contratos...',
+  className = '',
   showResultsCount = true,
   resultsCount = 0,
   isLoading = false,
@@ -26,7 +26,7 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
 
   const handleSearch = useCallback(async () => {
     if (!searchTerm.trim()) return;
-    
+
     setIsSearching(true);
     try {
       await onSearch(searchTerm.trim());
@@ -40,24 +40,26 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
     onSearch('');
   }, [onSearch]);
 
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  }, [handleSearch]);
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+    },
+    [handleSearch]
+  );
 
   const hasResults = useMemo(() => resultsCount > 0, [resultsCount]);
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
-          className="pl-10 pr-10"
+          className="pr-10"
           disabled={isLoading}
         />
         {searchTerm && (
@@ -71,7 +73,7 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
           </Button>
         )}
       </div>
-      
+
       <Button
         onClick={handleSearch}
         disabled={!searchTerm.trim() || isLoading || isSearching}
@@ -83,10 +85,7 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
             <span>Buscando...</span>
           </div>
         ) : (
-          <>
-            <Search className="h-4 w-4 mr-2" />
-            Buscar
-          </>
+          'Buscar'
         )}
       </Button>
 

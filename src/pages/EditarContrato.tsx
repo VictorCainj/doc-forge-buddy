@@ -354,17 +354,17 @@ const EditarContrato = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-[#5F6368]">Carregando dados do contrato...</p>
+          <p className="text-neutral-700">Carregando dados do contrato...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-neutral-50">
       {/* Modal Wizard Google Material Design 3 */}
       <ContractWizardModal
         open={isModalOpen}

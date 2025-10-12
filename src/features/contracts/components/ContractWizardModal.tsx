@@ -295,7 +295,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
       <DialogContent className="max-w-4xl p-0 bg-white border border-neutral-200 shadow-elevation-4 overflow-visible rounded-xl">
         {/* Header Google Material Design 3 - Ultra Compacto */}
         <DialogHeader className="relative p-3 border-b border-neutral-200 bg-white">
-          <DialogTitle className="text-xl font-medium text-[#202124] text-center relative z-10">
+          <DialogTitle className="text-xl font-medium text-neutral-900 text-center relative z-10">
             {title}
           </DialogTitle>
 
@@ -319,7 +319,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         </DialogHeader>
 
         {/* Stage indicators - Google Material Design - Ultra Compacto */}
-        <div className="flex items-center justify-center gap-1 p-2 bg-[#F8F9FA] border-b border-neutral-200">
+        <div className="flex items-center justify-center gap-1 p-2 bg-neutral-50 border-b border-neutral-200">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
@@ -332,7 +332,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 className={cn(
                   'relative group transition-all duration-200',
                   'flex flex-col items-center gap-0.5 p-1.5 rounded-md',
-                  isActive && 'bg-[#E8F0FE] border border-primary-300',
+                  isActive && 'bg-primary-50 border border-primary-300',
                   !isActive &&
                     'border border-transparent hover:border-neutral-300 hover:bg-white',
                   isCompleted && 'opacity-70'
@@ -370,8 +370,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 <span
                   className={cn(
                     'text-[10px] font-medium transition-colors duration-200',
-                    isActive && 'text-[#202124]',
-                    !isActive && 'text-[#5F6368]'
+                    isActive && 'text-neutral-900',
+                    !isActive && 'text-neutral-700'
                   )}
                 >
                   {step.title.split(' ')[0]}
@@ -409,10 +409,10 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             >
               {/* Step info - Google Material Design - Ultra Compacto */}
               <div className="text-center mb-3">
-                <h3 className="text-lg font-medium text-[#202124]">
+                <h3 className="text-lg font-medium text-neutral-900">
                   {currentStepData.title}
                 </h3>
-                <p className="text-xs text-[#5F6368] mt-0.5">
+                <p className="text-xs text-neutral-700 mt-0.5">
                   {currentStepData.description}
                 </p>
               </div>
@@ -496,7 +496,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                         >
                           <Label
                             htmlFor={field.name}
-                            className="text-[#5F6368] font-medium flex items-center gap-0.5 text-xs"
+                            className="text-neutral-700 font-medium flex items-center gap-0.5 text-xs"
                           >
                             {field.label}
                             {field.required && (
@@ -505,7 +505,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                           </Label>
                           {renderField(field)}
                           {field.tooltip && (
-                            <p className="text-[10px] text-[#5F6368] italic">
+                            <p className="text-[10px] text-neutral-700 italic">
                               {field.tooltip}
                             </p>
                           )}

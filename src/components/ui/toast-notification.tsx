@@ -11,7 +11,13 @@ import {
   useCallback,
   useMemo,
 } from 'react';
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from '@/utils/iconMapper';
+import {
+  X,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+} from '@/utils/iconMapper';
 import { cn } from '@/lib/utils';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -166,7 +172,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     const newToast: Toast = {
       ...toast,
       id,
-      duration: toast.duration ?? 5000, // 5 segundos por padrão
+      duration: toast.duration ?? 3000, // 3 segundos por padrão
     };
 
     setToasts((prev) => [...prev, newToast]);

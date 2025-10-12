@@ -6,7 +6,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, TrendingUp } from '@/utils/iconMapper';
+import { FileText, TrendingUp } from '@/utils/iconMapper';
 import { Link } from 'react-router-dom';
 
 export interface ContractHeaderProps {
@@ -26,25 +26,24 @@ export const ContractHeader: React.FC<ContractHeaderProps> = ({
         <h2 className="text-xl font-semibold text-foreground">
           Contratos Cadastrados
         </h2>
-        
+
         {hasSearched ? (
           <Badge variant="secondary" className="flex items-center gap-1">
             <FileText className="h-3 w-3" />
-            {searchResultsCount} resultado{searchResultsCount !== 1 ? 's' : ''} encontrado{searchResultsCount !== 1 ? 's' : ''}
+            {searchResultsCount} resultado{searchResultsCount !== 1 ? 's' : ''}{' '}
+            encontrado{searchResultsCount !== 1 ? 's' : ''}
           </Badge>
         ) : (
           <Badge variant="secondary" className="flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
-            {totalContracts} contrato{totalContracts !== 1 ? 's' : ''} total{totalContracts !== 1 ? 'is' : ''}
+            {totalContracts} contrato{totalContracts !== 1 ? 's' : ''} total
+            {totalContracts !== 1 ? 'is' : ''}
           </Badge>
         )}
       </div>
 
       <Button asChild>
-        <Link to="/cadastrar-contrato">
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Contrato
-        </Link>
+        <Link to="/cadastrar-contrato">Novo Contrato</Link>
       </Button>
     </div>
   );

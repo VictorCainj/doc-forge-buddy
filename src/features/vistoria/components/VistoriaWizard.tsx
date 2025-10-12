@@ -127,7 +127,7 @@ export const VistoriaWizard: React.FC<VistoriaWizardProps> = ({
           {/* Progress Bar */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-xs font-medium text-[#5F6368]">
+              <span className="text-xs font-medium text-neutral-700">
                 Progresso
               </span>
               <span className="text-xs font-bold text-primary-500">
@@ -157,7 +157,7 @@ export const VistoriaWizard: React.FC<VistoriaWizardProps> = ({
                     className={`
                       relative group transition-all duration-200
                       flex flex-col items-center gap-1 p-2 rounded-lg
-                      ${isActive ? 'bg-[#E8F0FE] border border-primary-300' : ''}
+                      ${isActive ? 'bg-primary-50 border border-primary-300' : ''}
                       ${!isActive && 'border border-transparent hover:border-neutral-300 hover:bg-white'}
                       ${step.id > currentStep ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
@@ -180,11 +180,11 @@ export const VistoriaWizard: React.FC<VistoriaWizardProps> = ({
                     </div>
                     <div className="text-center">
                       <p
-                        className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? 'text-[#202124]' : 'text-[#5F6368]'}`}
+                        className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? 'text-neutral-900' : 'text-neutral-700'}`}
                       >
                         {step.title}
                       </p>
-                      <p className="text-[8px] text-[#5F6368] hidden md:block">
+                      <p className="text-[8px] text-neutral-700 hidden md:block">
                         {step.description}
                       </p>
                     </div>

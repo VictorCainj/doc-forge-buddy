@@ -4,13 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { parseAuthError } from '@/types/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, Mail, Lock, Home } from '@/utils/iconMapper';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -56,190 +50,99 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex">
-      {/* Left Side - Minimalist Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-white flex-col justify-center px-16 xl:px-24">
-        <div className="max-w-md">
-          {/* Logo minimalista */}
-          <div className="flex items-center mb-12">
-            <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center mr-3">
-              <Home className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-neutral-900">ContractPro</h1>
-              <p className="text-neutral-500 text-xs">Gestão Imobiliária</p>
-            </div>
-          </div>
-
-          {/* Heading simplificado */}
-          <h2 className="text-3xl font-light text-neutral-900 mb-4 leading-tight">
-            Gerencie contratos
-            <span className="block font-normal">
-              com simplicidade
-            </span>
-          </h2>
-
-          <p className="text-neutral-600 mb-12 leading-relaxed">
-            Plataforma completa para administração de contratos de locação 
-            e processos imobiliários.
-          </p>
-
-          {/* Features minimalistas */}
-          <div className="space-y-3">
-            <div className="flex items-center text-neutral-600">
-              <div className="w-1 h-1 bg-neutral-400 rounded-full mr-3"></div>
-              <span className="text-sm">Contratos digitais</span>
-            </div>
-            <div className="flex items-center text-neutral-600">
-              <div className="w-1 h-1 bg-neutral-400 rounded-full mr-3"></div>
-              <span className="text-sm">Segurança jurídica</span>
-            </div>
-            <div className="flex items-center text-neutral-600">
-              <div className="w-1 h-1 bg-neutral-400 rounded-full mr-3"></div>
-              <span className="text-sm">Gestão completa</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-[450px]">
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="text-4xl font-normal text-[#202124] mb-3 tracking-tight">
+            Cain
+          </h1>
+          <h2 className="text-2xl font-normal text-[#202124]">Fazer login</h2>
+          <p className="text-sm text-[#5f6368] mt-2">para continuar</p>
         </div>
-      </div>
 
-      {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 bg-neutral-50 flex items-center justify-center p-8 lg:p-12">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center mb-8">
-            <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center">
-              <Home className="h-5 w-5 text-white" />
-            </div>
-          </div>
-
-          {/* Login Card - Minimalista */}
-          <Card className="bg-white border-neutral-200 shadow-sm">
-            <CardHeader className="text-center pb-4">
-              <h3 className="text-xl font-semibold text-neutral-900 mb-1">
-                Entrar
-              </h3>
-              <p className="text-neutral-500 text-sm">
-                Acesse sua conta para continuar
-              </p>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {error && (
-                  <Alert className="bg-error-50 border-error-500/20 text-error-700">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-neutral-700 text-sm font-medium">
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      className="pl-10"
-                      {...register('email')}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-sm text-error-500">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-neutral-700 text-sm font-medium">
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10 pr-10"
-                      {...register('password')}
-                      disabled={isLoading}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
-                      disabled={isLoading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-sm text-error-500">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Forgot Password */}
-                <div className="text-right">
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-                  >
-                    Esqueceu sua senha?
-                  </Link>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full"
-                  variant="default"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
-                    </>
-                  ) : (
-                    'Entrar'
-                  )}
-                </Button>
-              </form>
-
-              {/* Footer */}
-              <div className="text-center pt-4 border-t border-neutral-200">
-                <p className="text-neutral-600 text-sm">
-                  Não tem uma conta?{' '}
-                  <button 
-                    onClick={() => navigate('/signup')}
-                    className="text-neutral-900 font-medium hover:underline transition-colors"
-                  >
-                    Solicite acesso
-                  </button>
-                </p>
+        <div className="bg-white border border-[#dadce0] rounded-lg p-10 shadow-sm">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+              <div className="bg-[#fce8e6] border border-[#c5221f] text-[#c5221f] text-sm px-4 py-3 rounded">
+                {error}
               </div>
-            </CardContent>
-          </Card>
+            )}
 
-          {/* Security Notice */}
-          <div className="mt-6 text-center">
-            <p className="text-neutral-400 text-xs">
-              Conexão segura • Dados protegidos
-            </p>
-          </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-[#5f6368]"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Digite seu email"
+                className="w-full px-4 py-3 border border-[#dadce0] rounded text-[#202124] text-base focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 transition-all disabled:bg-[#f1f3f4] disabled:text-[#5f6368]"
+                {...register('email')}
+                disabled={isLoading}
+                required
+              />
+              {errors.email && (
+                <p className="text-xs text-[#c5221f] mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-[#5f6368]"
+              >
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Digite sua senha"
+                  className="w-full px-4 py-3 border border-[#dadce0] rounded text-[#202124] text-base focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 transition-all disabled:bg-[#f1f3f4] disabled:text-[#5f6368]"
+                  {...register('password')}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+              {errors.password && (
+                <p className="text-xs text-[#c5221f] mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="showPassword"
+                checked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+                className="w-4 h-4 text-[#1a73e8] border-[#dadce0] rounded focus:ring-[#1a73e8]"
+                disabled={isLoading}
+              />
+              <label
+                htmlFor="showPassword"
+                className="ml-2 text-sm text-[#5f6368] cursor-pointer select-none"
+              >
+                Mostrar senha
+              </label>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#1a73e8] hover:bg-[#1765cc] text-white font-medium py-3 px-6 rounded text-sm transition-colors disabled:bg-[#e8eaed] disabled:text-[#5f6368] disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Entrando...' : 'Próxima'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -9,15 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 // Badge component removed - not used
 import { Button } from '@/components/ui/button';
 import {
-  Calendar,
-  FileText,
-  Edit,
-  MapPin,
   MoreVertical,
   Trash2,
-  User,
-  User2,
-  SearchCheck,
   // Ícones coloridos para o card
   FileTextColored,
   CalendarColored,

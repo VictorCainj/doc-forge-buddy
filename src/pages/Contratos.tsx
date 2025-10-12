@@ -1,7 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Plus } from '@/utils/iconMapper';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
@@ -19,7 +18,6 @@ import {
   NOTIFICACAO_AGENDAMENTO_TEMPLATE,
   DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
   DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
-  TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
   STATUS_VISTORIA_WHATSAPP_TEMPLATE,
 } from '@/templates/documentos';
 import { ContractList, ContractModals } from '@/features/contracts/components';
@@ -523,10 +521,7 @@ const Contratos = () => {
                   </Button>
                 )}
                 <Link to="/cadastrar-contrato">
-                  <Button variant="primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Contrato
-                  </Button>
+                  <Button variant="primary">Novo Contrato</Button>
                 </Link>
               </div>
             </div>

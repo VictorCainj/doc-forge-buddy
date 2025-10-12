@@ -78,7 +78,7 @@ const convertImageViaCanvas = async (url: string): Promise<string> => {
           const base64 = canvas.toDataURL('image/png');
           imageCache.set(url, base64);
           resolve(base64);
-        } catch (error) {
+        } catch {
           // Se falhar (por exemplo, por CORS), retornar URL original
           console.warn(`CORS bloqueou conversão da imagem: ${url}`);
           resolve(url);

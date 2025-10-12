@@ -119,7 +119,6 @@ const Dashboard = () => {
               variant="primary"
               onClick={() => navigate('/contratos/novo')}
             >
-              <FileText className="h-4 w-4 mr-2" />
               Novo Contrato
             </Button>
           </div>

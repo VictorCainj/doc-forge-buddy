@@ -2192,7 +2192,7 @@ const AnaliseVistoria = () => {
         <div className="max-w-6xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
                 <ClipboardList className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -2214,7 +2214,7 @@ const AnaliseVistoria = () => {
                 {savedAnaliseId && (
                   <Badge
                     variant="default"
-                    className="text-sm bg-neutral-600 hover:bg-neutral-700"
+                    className="text-sm bg-success-500 text-white hover:bg-success-600"
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Salva
@@ -2242,7 +2242,7 @@ const AnaliseVistoria = () => {
                           ? 'Atualizar Análise Existente'
                           : 'Salvar Análise'
                   }
-                  variant="secondary"
+                  variant="success"
                   size="md"
                   loading={saving}
                   disabled={apontamentos.length === 0 || !selectedContract}
@@ -2255,7 +2255,7 @@ const AnaliseVistoria = () => {
                       ? 'Visualizar Exibição'
                       : 'Gerar Link de Exibição'
                   }
-                  variant="secondary"
+                  variant="default"
                   size="md"
                   disabled={apontamentos.length === 0 || !selectedContract}
                   onClick={openViewerMode}
@@ -3303,7 +3303,7 @@ está suja
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex items-center space-x-3">
-                                <div className="w-6 h-6 bg-neutral-900 rounded-full flex items-center justify-center">
+                                <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
                                   <span className="text-xs font-bold text-white">
                                     {index + 1}
                                   </span>

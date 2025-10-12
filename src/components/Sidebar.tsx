@@ -119,7 +119,7 @@ const Sidebar = () => {
         {/* Minimalista Header */}
         <div className="p-6 border-b border-neutral-200">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-neutral-900 rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-primary-500 rounded-lg flex items-center justify-center">
               <Home className="h-4 w-4 text-white" />
             </div>
             <div>

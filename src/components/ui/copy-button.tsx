@@ -46,7 +46,7 @@ export const CopyButton = ({
       } else {
         throw new Error('Falha ao copiar');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao copiar',
         description: 'Não foi possível copiar o texto. Tente novamente.',

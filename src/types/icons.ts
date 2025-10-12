@@ -1,27 +1,33 @@
-import { IconType } from 'react-icons';
+import { LucideIcon } from 'lucide-react';
+
+/**
+ * Tipos de Ícones - Sistema Lucide React
+ * Estilo Profissional Google Material Design
+ */
 
 /**
  * Tipo base para ícones da aplicação
  * Utilizado em toda a aplicação para garantir consistência
  */
-export type AppIcon = IconType;
+export type AppIcon = LucideIcon;
 
 /**
  * Categorias de ícones para aplicação de cores
+ * Cada categoria possui um esquema de cores específico
  */
 export type IconCategory =
-  | 'document'
-  | 'success'
-  | 'danger'
-  | 'navigation'
-  | 'user'
-  | 'system'
-  | 'communication'
-  | 'time'
-  | 'location'
-  | 'edit'
-  | 'loading'
-  | 'neutral';
+  | 'document'      // Arquivos, documentos, pastas
+  | 'success'       // Ações positivas, confirmações
+  | 'danger'        // Ações negativas, alertas, exclusões
+  | 'navigation'    // Navegação, setas, menus
+  | 'user'          // Usuários, pessoas, perfis
+  | 'system'        // Configurações, sistema, ferramentas
+  | 'communication' // Chat, mensagens, comunicação
+  | 'time'          // Calendário, relógio, tempo
+  | 'location'      // Localização, endereços, mapas
+  | 'edit'          // Edição, lápis, canetas
+  | 'loading'       // Carregamento, progresso
+  | 'neutral';      // Padrão, neutro
 
 /**
  * Props para componente de ícone colorido
@@ -32,5 +38,16 @@ export interface ColoredIconProps {
   size?: number | string;
   className?: string;
   color?: string; // Cor customizada que sobrescreve a categoria
+  strokeWidth?: number;
 }
 
+/**
+ * Props para ícone padrão (Lucide React)
+ */
+export interface IconProps {
+  size?: number | string;
+  color?: string;
+  strokeWidth?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}

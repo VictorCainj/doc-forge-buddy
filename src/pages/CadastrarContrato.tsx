@@ -359,7 +359,7 @@ const CadastrarContrato = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-neutral-50">
       {/* Modal Wizard Google Material Design 3 */}
       <ContractWizardModal
         open={isModalOpen}
