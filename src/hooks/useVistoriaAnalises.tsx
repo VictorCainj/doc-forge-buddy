@@ -45,7 +45,7 @@ export const useVistoriaAnalises = () => {
         (analisesData || []).map(async (analise) => {
           // eslint-disable-next-line no-console
           console.log(`🔍 Buscando imagens para vistoria_id: ${analise.id}`);
-          
+
           const { data: imagesData, error: imagesError } = await supabase
             .from('vistoria_images')
             .select('*')
@@ -62,12 +62,15 @@ export const useVistoriaAnalises = () => {
           console.log(`✅ Imagens encontradas: ${imagesData?.length || 0}`);
           if (imagesData && imagesData.length > 0) {
             // eslint-disable-next-line no-console
-            console.log('📸 Detalhes das imagens:', imagesData.map(img => ({
-              apontamento_id: img.apontamento_id,
-              tipo: img.tipo_vistoria,
-              file_name: img.file_name,
-              url: img.image_url
-            })));
+            console.log(
+              '📸 Detalhes das imagens:',
+              imagesData.map((img) => ({
+                apontamento_id: img.apontamento_id,
+                tipo: img.tipo_vistoria,
+                file_name: img.file_name,
+                url: img.image_url,
+              }))
+            );
           }
 
           return {
@@ -377,22 +380,25 @@ export const useVistoriaAnalises = () => {
       for (let i = 0; i < apontamentos.length; i++) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const apontamentoData = apontamentos[i] as any;
-        
+
         // eslint-disable-next-line no-console
-        console.log(`\n--- Apontamento ${i + 1}: ${apontamentoData.ambiente || 'Sem nome'} ---`);
+        console.log(
+          `\n--- Apontamento ${i + 1}: ${apontamentoData.ambiente || 'Sem nome'} ---`
+        );
 
         // Processar fotos da vistoria inicial
         if (apontamentoData.vistoriaInicial?.fotos) {
           const fotosIniciais = apontamentoData.vistoriaInicial.fotos;
           // eslint-disable-next-line no-console
           console.log('Fotos vistoria inicial:', fotosIniciais.length);
-          
+
           for (let j = 0; j < fotosIniciais.length; j++) {
             const foto = fotosIniciais[j];
             // eslint-disable-next-line no-console
             console.log(`  Foto inicial ${j + 1}:`, {
               isFile: foto instanceof File,
               isFromDatabase: foto?.isFromDatabase,
+              isExternal: foto?.isExternal,
               name: foto?.name,
               url: foto?.url,
             });
@@ -421,6 +427,18 @@ export const useVistoriaAnalises = () => {
                 file_size: foto.size || 0,
                 file_type: foto.type || 'image/jpeg',
               });
+            } else if (foto?.isExternal && foto?.url) {
+              // Imagem externa - salvar URL diretamente
+              // eslint-disable-next-line no-console
+              console.log('  → Salvando imagem externa:', foto.url);
+              existingImageRefs.push({
+                apontamento_id: apontamentoData.id,
+                tipo_vistoria: 'inicial',
+                image_url: foto.url,
+                file_name: foto.name || 'imagem_externa',
+                file_size: foto.size || 0,
+                file_type: foto.type || 'image/external',
+              });
             }
           }
         }
@@ -430,13 +448,14 @@ export const useVistoriaAnalises = () => {
           const fotosFinais = apontamentoData.vistoriaFinal.fotos;
           // eslint-disable-next-line no-console
           console.log('Fotos vistoria final:', fotosFinais.length);
-          
+
           for (let j = 0; j < fotosFinais.length; j++) {
             const foto = fotosFinais[j];
             // eslint-disable-next-line no-console
             console.log(`  Foto final ${j + 1}:`, {
               isFile: foto instanceof File,
               isFromDatabase: foto?.isFromDatabase,
+              isExternal: foto?.isExternal,
               name: foto?.name,
               url: foto?.url,
             });
@@ -465,6 +484,18 @@ export const useVistoriaAnalises = () => {
                 file_size: foto.size || 0,
                 file_type: foto.type || 'image/jpeg',
               });
+            } else if (foto?.isExternal && foto?.url) {
+              // Imagem externa - salvar URL diretamente
+              // eslint-disable-next-line no-console
+              console.log('  → Salvando imagem externa:', foto.url);
+              existingImageRefs.push({
+                apontamento_id: apontamentoData.id,
+                tipo_vistoria: 'final',
+                image_url: foto.url,
+                file_name: foto.name || 'imagem_externa',
+                file_size: foto.size || 0,
+                file_type: foto.type || 'image/external',
+              });
             }
           }
         }
@@ -489,7 +520,7 @@ export const useVistoriaAnalises = () => {
         const { error: insertError } = await supabase
           .from('vistoria_images')
           .insert(
-            existingImageRefs.map(ref => ({
+            existingImageRefs.map((ref) => ({
               vistoria_id: vistoriaId,
               apontamento_id: ref.apontamento_id,
               tipo_vistoria: ref.tipo_vistoria,

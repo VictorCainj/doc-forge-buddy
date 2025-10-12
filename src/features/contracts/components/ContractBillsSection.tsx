@@ -55,11 +55,11 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
     }));
 
   return (
-    <div>
+    <div className="overflow-visible">
       <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">
         Contas de Consumo
       </h4>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 overflow-visible">
         {visibleBills.map(({ type, delivered }) => {
           const Icon = billIcons[type];
           return (
@@ -71,10 +71,11 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
               }}
               disabled={isLoading}
               className={cn(
-                'flex items-center justify-between gap-2 p-2 rounded-lg transition-all duration-200',
-                'border cursor-pointer',
+                'flex items-center justify-between gap-2 p-2.5 rounded-lg transition-all duration-200',
+                'border cursor-pointer min-h-[2.5rem]',
                 'hover:shadow-sm active:scale-95',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
+                'overflow-visible',
                 delivered
                   ? 'bg-success-50 border-success-200 hover:bg-success-100'
                   : 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100'
@@ -97,12 +98,12 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
                 </span>
               </div>
               {delivered && (
-                <div className="flex items-center justify-center w-4 h-4 rounded-full bg-success-600">
-                  <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-success-600 shadow-sm">
+                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
                 </div>
               )}
               {!delivered && (
-                <div className="w-4 h-4 rounded-full border-2 border-neutral-300" />
+                <div className="w-5 h-5 rounded-full border-2 border-neutral-300 bg-white" />
               )}
             </button>
           );

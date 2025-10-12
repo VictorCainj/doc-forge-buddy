@@ -136,7 +136,7 @@ export const ContractList = memo<ContractListProps>(
           {contracts.map((contract) => (
             <Card
               key={contract.id}
-              className="bg-white border-neutral-200 shadow-md hover:border-neutral-300 hover:shadow-sm transition-all duration-200 overflow-visible"
+              className="bg-white border-neutral-200 shadow-md hover:border-neutral-300 hover:shadow-sm transition-all duration-200 overflow-visible min-h-fit"
             >
               <CardContent className="p-5">
                 {/* Header do Contrato */}
@@ -313,7 +313,7 @@ export const ContractList = memo<ContractListProps>(
                 </div>
 
                 {/* CONTAS DE CONSUMO */}
-                <div className="mb-4">
+                <div className="mb-4 pb-2">
                   <ContractBillsSection
                     contractId={contract.id}
                     formData={contract.form_data}

@@ -39,6 +39,9 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  Package,
+  Wrench,
+  Copy,
 } from '@/utils/iconMapper';
 import { useToast } from '@/hooks/use-toast';
 import { useOpenAI } from '@/hooks/useOpenAI';
@@ -75,6 +78,7 @@ const AnaliseVistoria = () => {
     correctText,
     extractApontamentos,
     isLoading: isAILoading,
+    error: aiError,
   } = useOpenAI();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
@@ -131,12 +135,63 @@ const AnaliseVistoria = () => {
   const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>(
     'analise'
   );
+  const [componentError, setComponentError] = useState<string | null>(null);
+
+  // Capturar erros do hook useOpenAI
+  useEffect(() => {
+    if (aiError) {
+      console.error('Erro no hook useOpenAI:', aiError);
+      toast({
+        title: 'Erro na IA',
+        description: `Erro ao carregar funcionalidades de IA: ${aiError}`,
+        variant: 'destructive',
+      });
+    }
+  }, [aiError, toast]);
+
+  // Verificar se todos os hooks estão funcionando corretamente
+  useEffect(() => {
+    if (!correctText || !extractApontamentos) {
+      console.error('Hooks do useOpenAI não estão funcionando corretamente:', {
+        correctText: !!correctText,
+        extractApontamentos: !!extractApontamentos,
+      });
+    }
+  }, [correctText, extractApontamentos]);
+
+  // Verificar se há problemas específicos no modo orçamento
+  useEffect(() => {
+    if (documentMode === 'orcamento') {
+      console.log('Modo orçamento ativado, verificando dependências:', {
+        prestadores: prestadores?.length || 0,
+        correctText: !!correctText,
+        extractApontamentos: !!extractApontamentos,
+        user: !!user,
+      });
+    }
+  }, [documentMode, prestadores, correctText, extractApontamentos, user]);
+
+  // Capturar erros gerais do componente
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error(
+        'Erro capturado no componente AnaliseVistoria:',
+        event.error
+      );
+      setComponentError(event.error?.message || 'Erro desconhecido');
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
   const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
   const [extractionText, setExtractionText] = useState('');
   const [showExtractionPanel, setShowExtractionPanel] = useState(false);
   const [publicDocumentId, setPublicDocumentId] = useState<string | null>(null);
+  const [externalImageUrl, setExternalImageUrl] = useState('');
+  const [showExternalUrlInput, setShowExternalUrlInput] = useState(false);
   const [publicDocumentUrl, setPublicDocumentUrl] = useState<string | null>(
     null
   );
@@ -634,6 +689,19 @@ const AnaliseVistoria = () => {
                       lastModified: foto.lastModified,
                       base64: foto.url, // Usar a URL diretamente
                       isFromDatabase: true,
+                      url: foto.url,
+                    };
+                  }
+
+                  // Se é uma imagem externa, usar a URL diretamente
+                  if (foto.isExternal) {
+                    return {
+                      name: foto.name,
+                      size: foto.size,
+                      type: foto.type,
+                      lastModified: foto.lastModified,
+                      base64: foto.url, // Usar a URL externa diretamente
+                      isExternal: true,
                       url: foto.url,
                     };
                   }
@@ -1146,6 +1214,56 @@ const AnaliseVistoria = () => {
     },
     [toast]
   );
+
+  // Função para adicionar imagem externa
+  const handleAddExternalImage = useCallback(() => {
+    if (!externalImageUrl.trim()) {
+      toast({
+        title: 'URL inválida',
+        description: 'Por favor, insira uma URL válida.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar se é uma URL válida
+    try {
+      new URL(externalImageUrl);
+    } catch {
+      toast({
+        title: 'URL inválida',
+        description: 'Por favor, insira uma URL válida.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Criar um objeto que simula um File mas com URL externa
+    const externalImage = {
+      name: `Imagem Externa - ${new Date().toLocaleString()}`,
+      size: 0,
+      type: 'image/external',
+      isExternal: true,
+      url: externalImageUrl,
+      lastModified: Date.now(),
+    };
+
+    setCurrentApontamento((prev) => ({
+      ...prev,
+      vistoriaFinal: {
+        ...prev.vistoriaFinal,
+        fotos: [...(prev.vistoriaFinal?.fotos || []), externalImage],
+      },
+    }));
+
+    setExternalImageUrl('');
+    setShowExternalUrlInput(false);
+
+    toast({
+      title: 'Imagem externa adicionada',
+      description: 'A imagem externa foi adicionada com sucesso.',
+    });
+  }, [externalImageUrl, toast]);
 
   // Função para lidar com Ctrl+V (colar imagens)
   const handlePaste = (event: ClipboardEvent, tipo: 'inicial' | 'final') => {
@@ -1674,6 +1792,10 @@ const AnaliseVistoria = () => {
             if (foto?.isFromDatabase) {
               return foto.url && foto.url.length > 0;
             }
+            // Se é imagem externa, verificar se tem URL
+            if (foto?.isExternal) {
+              return foto.url && foto.url.length > 0;
+            }
             // Se é File, verificar se é válido
             return foto instanceof File && foto.size > 0;
           }) || [];
@@ -1878,6 +2000,10 @@ const AnaliseVistoria = () => {
     }
 
     try {
+      if (!correctText) {
+        throw new Error('Função correctText não está disponível');
+      }
+
       const correctedText = await correctText(currentText);
       setCurrentApontamento((prev) => ({
         ...prev,
@@ -1964,6 +2090,10 @@ const AnaliseVistoria = () => {
         description: 'Extraindo apontamentos do texto com IA. Aguarde...',
       });
 
+      if (!extractApontamentos) {
+        throw new Error('Função extractApontamentos não está disponível');
+      }
+
       const extractedApontamentos = await extractApontamentos(extractionText);
 
       if (extractedApontamentos.length === 0) {
@@ -2028,6 +2158,32 @@ const AnaliseVistoria = () => {
       });
     }
   };
+
+  // Exibir tela de erro se houver algum problema
+  if (componentError) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-neutral-900 mb-2">
+              Erro no Componente
+            </h2>
+            <p className="text-neutral-600 mb-4">{componentError}</p>
+            <Button
+              onClick={() => {
+                setComponentError(null);
+                window.location.reload();
+              }}
+              className="w-full"
+            >
+              Recarregar Página
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -2823,10 +2979,59 @@ está suja
 
                 {/* Vistoria Final */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
-                    <AlertTriangle className="h-4 w-4 text-neutral-600" />
-                    <span>Vistoria Final</span>
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
+                      <AlertTriangle className="h-4 w-4 text-neutral-600" />
+                      <span>Vistoria Final</span>
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setShowExternalUrlInput(!showExternalUrlInput)
+                      }
+                      className="text-xs h-7 px-2"
+                    >
+                      <Copy className="h-3 w-3 mr-1" />
+                      Link Externo
+                    </Button>
+                  </div>
+
+                  {/* Input para URL externa */}
+                  {showExternalUrlInput && (
+                    <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <Label className="text-xs font-medium text-blue-900">
+                        URL da Imagem Externa
+                      </Label>
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="https://exemplo.com/imagem.jpg"
+                          value={externalImageUrl}
+                          onChange={(e) => setExternalImageUrl(e.target.value)}
+                          className="text-xs h-8"
+                        />
+                        <Button
+                          onClick={handleAddExternalImage}
+                          size="sm"
+                          className="h-8 px-3 text-xs"
+                        >
+                          Adicionar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowExternalUrlInput(false);
+                            setExternalImageUrl('');
+                          }}
+                          size="sm"
+                          className="h-8 px-3 text-xs"
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <div
                     className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
                     onPaste={(e) => handlePaste(e.nativeEvent, 'final')}
@@ -2855,11 +3060,20 @@ está suja
                                   variant="secondary"
                                   className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-900 border-neutral-200 pr-6"
                                 >
-                                  <ImageIcon className="h-3 w-3 mr-1" />
+                                  {foto.isExternal ? (
+                                    <Copy className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <ImageIcon className="h-3 w-3 mr-1" />
+                                  )}
                                   {foto.name}
                                   {foto.isFromDatabase && (
                                     <span className="ml-1 text-xs opacity-70">
                                       (DB)
+                                    </span>
+                                  )}
+                                  {foto.isExternal && (
+                                    <span className="ml-1 text-xs opacity-70">
+                                      (Link)
                                     </span>
                                   )}
                                 </Badge>
@@ -3199,20 +3413,26 @@ está suja
       {/* Modal de Imagem da Pré-visualização */}
       {previewImageModal && (
         <div
-          className="fixed inset-0 z-[9999] bg-black bg-opacity-90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black bg-opacity-95 flex items-center justify-center p-2"
           onClick={() => setPreviewImageModal(null)}
         >
-          <div className="relative max-w-[95vw] max-h-[95vh]">
+          <div className="relative w-full h-full flex items-center justify-center">
             <button
               onClick={() => setPreviewImageModal(null)}
-              className="absolute -top-10 right-0 text-white hover:text-neutral-300 text-2xl font-bold"
+              className="absolute top-4 right-4 text-white hover:text-neutral-300 text-3xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center"
             >
               ✕
             </button>
             <img
               src={previewImageModal}
-              alt="Visualização"
-              className="max-w-full max-h-[95vh] object-contain rounded-lg shadow-2xl"
+              alt="Visualização em tamanho real"
+              className="max-w-none max-h-none w-auto h-auto object-contain rounded-lg shadow-2xl"
+              style={{
+                maxWidth: '98vw',
+                maxHeight: '98vh',
+                width: 'auto',
+                height: 'auto',
+              }}
               onClick={(e) => e.stopPropagation()}
             />
           </div>

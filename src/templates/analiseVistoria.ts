@@ -59,9 +59,11 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         try {
           console.log(`[${tipoVistoria}] Foto ${index + 1}:`, {
             isFromDatabase: foto.isFromDatabase,
+            isExternal: foto.isExternal,
             hasUrl: !!foto.url,
             isFile: foto instanceof File,
             name: foto.name,
+            url: foto.url,
           });
 
           // Se é uma imagem do banco de dados
@@ -89,6 +91,60 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                 error
               );
               return { nome: foto.name || 'imagem', base64: foto.url };
+            }
+          }
+
+          // Se é uma imagem externa
+          if (foto.isExternal && foto.url) {
+            console.log(
+              `[${tipoVistoria}] Processando imagem externa:`,
+              foto.url
+            );
+
+            // Detectar URLs do Devolus Vistoria
+            const isDevolusUrl = foto.url.includes('devolusvistoria.com.br');
+
+            if (isDevolusUrl) {
+              console.log(
+                `[${tipoVistoria}] 🏢 URL do Devolus Vistoria detectada`
+              );
+
+              // Para URLs do Devolus, usar URL diretamente (evita CORS)
+              // O template irá renderizar com headers específicos
+              console.log(
+                `[${tipoVistoria}] ✓ Usando URL do Devolus diretamente (evita CORS)`
+              );
+
+              return {
+                nome: foto.name || 'imagem_devolus',
+                base64: foto.url,
+                isExternal: true,
+                isDevolusUrl: true, // Flag especial para URLs do Devolus
+              };
+            } else {
+              // Para outras URLs externas, usar diretamente sem conversão
+              console.log(
+                `[${tipoVistoria}] ✓ Usando URL externa diretamente (evita CORS)`
+              );
+
+              // Validar se a URL é válida
+              try {
+                new URL(foto.url);
+                console.log(
+                  `[${tipoVistoria}] ✓ URL externa válida: ${foto.url}`
+                );
+              } catch (error) {
+                console.error(
+                  `[${tipoVistoria}] ❌ URL externa inválida: ${foto.url}`,
+                  error
+                );
+              }
+
+              return {
+                nome: foto.name || 'imagem_externa',
+                base64: foto.url,
+                isExternal: true,
+              };
             }
           }
 
@@ -479,9 +535,22 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                                   : '120px';
                           return `
                         <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+                          ${
+                            foto.isDevolusUrl
+                              ? `
+                          <img src="${foto.base64}" 
+                               style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border-radius: 4px; object-fit: contain;" 
+                               alt="Foto ${fotoIndex + 1}"
+                               crossorigin="anonymous"
+                               referrerpolicy="no-referrer" />
+                          <p style="font-size: 10px; color: #6B7280; margin: 4px 0 0 0; font-style: italic;">Imagem Externa (Devolus)</p>
+                          `
+                              : `
                           <img src="${foto.base64}" 
                                style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border-radius: 4px; object-fit: contain;" 
                                alt="Foto ${fotoIndex + 1}" />
+                          `
+                          }
                         </div>
                       `;
                         })

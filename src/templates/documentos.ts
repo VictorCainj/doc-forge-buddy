@@ -221,8 +221,6 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
     </div>
     {{/eq}}
     {{/if}}
-    
-    <p style="margin-top: 15px; padding: 12px; background-color: #FFFFFF; border-left: 3px solid #5F6368; color: #202124; font-weight: 500;">Lembre-se: é necessário enviar tanto o comprovante de pagamento quanto a fatura completa de cada documento.</p>
   </div>
   
   {{#if solicitarCND}}
