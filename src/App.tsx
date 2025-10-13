@@ -37,6 +37,7 @@ const Prestadores = lazy(() => import('./pages/Prestadores'));
 const DebugImages = lazy(() => import('./pages/DebugImages'));
 const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Tarefas = lazy(() => import('./pages/Tarefas'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -231,6 +232,16 @@ const App = () => (
                       <ProtectedRoute>
                         <Layout>
                           <Prestadores />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tarefas"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Tarefas />
                         </Layout>
                       </ProtectedRoute>
                     }

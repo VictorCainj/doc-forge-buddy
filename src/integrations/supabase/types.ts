@@ -535,10 +535,12 @@ export type Database = {
         Row: {
           created_at: string;
           email: string;
+          exp: number;
           full_name: string | null;
           id: string;
           is_active: boolean;
           last_password_change: string | null;
+          level: number;
           role: Database['public']['Enums']['user_role'];
           two_factor_backup_codes: string[] | null;
           two_factor_enabled: boolean;
@@ -549,10 +551,12 @@ export type Database = {
         Insert: {
           created_at?: string;
           email: string;
+          exp?: number;
           full_name?: string | null;
           id?: string;
           is_active?: boolean;
           last_password_change?: string | null;
+          level?: number;
           role?: Database['public']['Enums']['user_role'];
           two_factor_backup_codes?: string[] | null;
           two_factor_enabled?: boolean;
@@ -563,10 +567,12 @@ export type Database = {
         Update: {
           created_at?: string;
           email?: string;
+          exp?: number;
           full_name?: string | null;
           id?: string;
           is_active?: boolean;
           last_password_change?: string | null;
+          level?: number;
           role?: Database['public']['Enums']['user_role'];
           two_factor_backup_codes?: string[] | null;
           two_factor_enabled?: boolean;

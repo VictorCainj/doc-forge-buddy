@@ -1,6 +1,6 @@
 /**
  * Sistema de Ícones Profissionais - Lucide React (Estilo Google Material Design)
- * 
+ *
  * Características:
  * - Ícones limpos e profissionais estilo Google
  * - Sistema de cores: neutro (padrão) e colorido (cards de contrato)
@@ -64,18 +64,36 @@ const withColoredStyle = (Icon: any, name: string) => {
 // Documentos e Arquivos
 export const FileText = withNeutralColor(LucideIcons.FileText, 'FileText');
 export const File = withNeutralColor(LucideIcons.File, 'File');
-export const FolderOpen = withNeutralColor(LucideIcons.FolderOpen, 'FolderOpen');
+export const FolderOpen = withNeutralColor(
+  LucideIcons.FolderOpen,
+  'FolderOpen'
+);
 export const Folder = withNeutralColor(LucideIcons.Folder, 'Folder');
 export const FileCheck = withNeutralColor(LucideIcons.FileCheck, 'FileCheck');
-export const FileBarChart = withNeutralColor(LucideIcons.FileBarChart, 'FileBarChart');
-export const ClipboardList = withNeutralColor(LucideIcons.ClipboardList, 'ClipboardList');
+export const FileBarChart = withNeutralColor(
+  LucideIcons.FileBarChart,
+  'FileBarChart'
+);
+export const ClipboardList = withNeutralColor(
+  LucideIcons.ClipboardList,
+  'ClipboardList'
+);
 export const Archive = withNeutralColor(LucideIcons.Archive, 'Archive');
 
 // Ações Positivas
 export const Check = withNeutralColor(LucideIcons.Check, 'Check');
-export const CheckCircle = withNeutralColor(LucideIcons.CheckCircle, 'CheckCircle');
-export const CheckCircle2 = withNeutralColor(LucideIcons.CheckCircle2, 'CheckCircle2');
-export const CircleCheck = withNeutralColor(LucideIcons.CircleCheck, 'CircleCheck');
+export const CheckCircle = withNeutralColor(
+  LucideIcons.CheckCircle,
+  'CheckCircle'
+);
+export const CheckCircle2 = withNeutralColor(
+  LucideIcons.CheckCircle2,
+  'CheckCircle2'
+);
+export const CircleCheck = withNeutralColor(
+  LucideIcons.CircleCheck,
+  'CircleCheck'
+);
 export const Save = withNeutralColor(LucideIcons.Save, 'Save');
 export const Download = withNeutralColor(LucideIcons.Download, 'Download');
 export const Upload = withNeutralColor(LucideIcons.Upload, 'Upload');
@@ -87,22 +105,52 @@ export const Trash = withNeutralColor(LucideIcons.Trash, 'Trash');
 export const Trash2 = withNeutralColor(LucideIcons.Trash2, 'Trash2');
 export const X = withNeutralColor(LucideIcons.X, 'X');
 export const XCircle = withNeutralColor(LucideIcons.XCircle, 'XCircle');
-export const AlertTriangle = withNeutralColor(LucideIcons.AlertTriangle, 'AlertTriangle');
-export const AlertCircle = withNeutralColor(LucideIcons.AlertCircle, 'AlertCircle');
-export const ThumbsDown = withNeutralColor(LucideIcons.ThumbsDown, 'ThumbsDown');
+export const AlertTriangle = withNeutralColor(
+  LucideIcons.AlertTriangle,
+  'AlertTriangle'
+);
+export const AlertCircle = withNeutralColor(
+  LucideIcons.AlertCircle,
+  'AlertCircle'
+);
+export const ThumbsDown = withNeutralColor(
+  LucideIcons.ThumbsDown,
+  'ThumbsDown'
+);
 
 // Navegação
 export const ArrowLeft = withNeutralColor(LucideIcons.ArrowLeft, 'ArrowLeft');
-export const ArrowRight = withNeutralColor(LucideIcons.ArrowRight, 'ArrowRight');
-export const ChevronLeft = withNeutralColor(LucideIcons.ChevronLeft, 'ChevronLeft');
-export const ChevronRight = withNeutralColor(LucideIcons.ChevronRight, 'ChevronRight');
-export const ChevronDown = withNeutralColor(LucideIcons.ChevronDown, 'ChevronDown');
+export const ArrowRight = withNeutralColor(
+  LucideIcons.ArrowRight,
+  'ArrowRight'
+);
+export const ChevronLeft = withNeutralColor(
+  LucideIcons.ChevronLeft,
+  'ChevronLeft'
+);
+export const ChevronRight = withNeutralColor(
+  LucideIcons.ChevronRight,
+  'ChevronRight'
+);
+export const ChevronDown = withNeutralColor(
+  LucideIcons.ChevronDown,
+  'ChevronDown'
+);
 export const ChevronUp = withNeutralColor(LucideIcons.ChevronUp, 'ChevronUp');
-export const ChevronsUpDown = withNeutralColor(LucideIcons.ChevronsUpDown, 'ChevronsUpDown');
+export const ChevronsUpDown = withNeutralColor(
+  LucideIcons.ChevronsUpDown,
+  'ChevronsUpDown'
+);
 export const Home = withNeutralColor(LucideIcons.Home, 'Home');
 export const Menu = withNeutralColor(LucideIcons.Menu, 'Menu');
-export const MoreVertical = withNeutralColor(LucideIcons.MoreVertical, 'MoreVertical');
-export const MoreHorizontal = withNeutralColor(LucideIcons.MoreHorizontal, 'MoreHorizontal');
+export const MoreVertical = withNeutralColor(
+  LucideIcons.MoreVertical,
+  'MoreVertical'
+);
+export const MoreHorizontal = withNeutralColor(
+  LucideIcons.MoreHorizontal,
+  'MoreHorizontal'
+);
 
 // Usuários e Pessoas
 export const User = withNeutralColor(LucideIcons.User, 'User');
@@ -110,7 +158,10 @@ export const User2 = withNeutralColor(LucideIcons.User2, 'User2');
 export const Users = withNeutralColor(LucideIcons.Users, 'Users');
 export const UserPlus = withNeutralColor(LucideIcons.UserPlus, 'UserPlus');
 export const UserCheck = withNeutralColor(LucideIcons.UserCheck, 'UserCheck');
-export const UserCircle = withNeutralColor(LucideIcons.UserCircle, 'UserCircle');
+export const UserCircle = withNeutralColor(
+  LucideIcons.UserCircle,
+  'UserCircle'
+);
 export const UserCog = withNeutralColor(LucideIcons.UserCog, 'UserCog');
 
 // Sistema e Configurações
@@ -126,19 +177,31 @@ export const Wrench = withNeutralColor(LucideIcons.Wrench, 'Wrench');
 export const Package = withNeutralColor(LucideIcons.Package, 'Package');
 
 // Comunicação
-export const MessageSquare = withNeutralColor(LucideIcons.MessageSquare, 'MessageSquare');
-export const MessageCircle = withNeutralColor(LucideIcons.MessageCircle, 'MessageCircle');
+export const MessageSquare = withNeutralColor(
+  LucideIcons.MessageSquare,
+  'MessageSquare'
+);
+export const MessageCircle = withNeutralColor(
+  LucideIcons.MessageCircle,
+  'MessageCircle'
+);
 export const Mail = withNeutralColor(LucideIcons.Mail, 'Mail');
 export const Phone = withNeutralColor(LucideIcons.Phone, 'Phone');
 export const Bot = withNeutralColor(LucideIcons.Bot, 'Bot');
 export const Brain = withNeutralColor(LucideIcons.Brain, 'Brain');
 export const Info = withNeutralColor(LucideIcons.Info, 'Info');
-export const HelpCircle = withNeutralColor(LucideIcons.HelpCircle, 'HelpCircle');
+export const HelpCircle = withNeutralColor(
+  LucideIcons.HelpCircle,
+  'HelpCircle'
+);
 export const Mic = withNeutralColor(LucideIcons.Mic, 'Mic');
 
 // Tempo e Calendário
 export const Calendar = withNeutralColor(LucideIcons.Calendar, 'Calendar');
-export const CalendarDays = withNeutralColor(LucideIcons.CalendarDays, 'CalendarDays');
+export const CalendarDays = withNeutralColor(
+  LucideIcons.CalendarDays,
+  'CalendarDays'
+);
 export const Clock = withNeutralColor(LucideIcons.Clock, 'Clock');
 export const Timer = withNeutralColor(LucideIcons.Timer, 'Timer');
 
@@ -153,20 +216,32 @@ export const Edit2 = withNeutralColor(LucideIcons.Edit2, 'Edit2');
 export const Edit3 = withNeutralColor(LucideIcons.Edit3, 'Edit3');
 export const SquarePen = withNeutralColor(LucideIcons.SquarePen, 'SquarePen');
 export const Pencil = withNeutralColor(LucideIcons.Pencil, 'Pencil');
-export const NotebookPen = withNeutralColor(LucideIcons.NotebookPen, 'NotebookPen');
+export const NotebookPen = withNeutralColor(
+  LucideIcons.NotebookPen,
+  'NotebookPen'
+);
 
 // Pesquisa e Filtros
 export const Search = withNeutralColor(LucideIcons.Search, 'Search');
-export const SearchCheck = withNeutralColor(LucideIcons.SearchCheck, 'SearchCheck');
+export const SearchCheck = withNeutralColor(
+  LucideIcons.SearchCheck,
+  'SearchCheck'
+);
 export const Filter = withNeutralColor(LucideIcons.Filter, 'Filter');
 export const ZoomIn = withNeutralColor(LucideIcons.ZoomIn, 'ZoomIn');
 export const ZoomOut = withNeutralColor(LucideIcons.ZoomOut, 'ZoomOut');
 
 // Ações Gerais
 export const Plus = withNeutralColor(LucideIcons.Plus, 'Plus');
-export const PlusCircle = withNeutralColor(LucideIcons.PlusCircle, 'PlusCircle');
+export const PlusCircle = withNeutralColor(
+  LucideIcons.PlusCircle,
+  'PlusCircle'
+);
 export const Minus = withNeutralColor(LucideIcons.Minus, 'Minus');
-export const MinusCircle = withNeutralColor(LucideIcons.MinusCircle, 'MinusCircle');
+export const MinusCircle = withNeutralColor(
+  LucideIcons.MinusCircle,
+  'MinusCircle'
+);
 export const Copy = withNeutralColor(LucideIcons.Copy, 'Copy');
 export const Eye = withNeutralColor(LucideIcons.Eye, 'Eye');
 export const EyeOff = withNeutralColor(LucideIcons.EyeOff, 'EyeOff');
@@ -179,8 +254,13 @@ export const Images = withNeutralColor(LucideIcons.Images, 'Images');
 export const Image = withNeutralColor(LucideIcons.Image, 'Image');
 export const ImageIcon = withNeutralColor(LucideIcons.Image, 'ImageIcon');
 export const Play = withNeutralColor(LucideIcons.Play, 'Play');
+export const PlayCircle = withNeutralColor(
+  LucideIcons.PlayCircle,
+  'PlayCircle'
+);
 export const Pause = withNeutralColor(LucideIcons.Pause, 'Pause');
 export const Video = withNeutralColor(LucideIcons.Video, 'Video');
+export const Circle = withNeutralColor(LucideIcons.Circle, 'Circle');
 
 // Utilitários
 export const Maximize2 = withNeutralColor(LucideIcons.Maximize2, 'Maximize2');
@@ -188,7 +268,10 @@ export const Minimize2 = withNeutralColor(LucideIcons.Minimize2, 'Minimize2');
 export const Printer = withNeutralColor(LucideIcons.Printer, 'Printer');
 export const RefreshCw = withNeutralColor(LucideIcons.RefreshCw, 'RefreshCw');
 export const RotateCcw = withNeutralColor(LucideIcons.RotateCcw, 'RotateCcw');
-export const Calculator = withNeutralColor(LucideIcons.Calculator, 'Calculator');
+export const Calculator = withNeutralColor(
+  LucideIcons.Calculator,
+  'Calculator'
+);
 export const Droplets = withNeutralColor(LucideIcons.Droplets, 'Droplets');
 export const Zap = withNeutralColor(LucideIcons.Zap, 'Zap');
 export const Flame = withNeutralColor(LucideIcons.Flame, 'Flame');
@@ -200,16 +283,28 @@ export const Star = withNeutralColor(LucideIcons.Star, 'Star');
 export const Heart = withNeutralColor(LucideIcons.Heart, 'Heart');
 
 // Gráficos e Estatísticas
-export const TrendingUp = withNeutralColor(LucideIcons.TrendingUp, 'TrendingUp');
-export const TrendingDown = withNeutralColor(LucideIcons.TrendingDown, 'TrendingDown');
+export const TrendingUp = withNeutralColor(
+  LucideIcons.TrendingUp,
+  'TrendingUp'
+);
+export const TrendingDown = withNeutralColor(
+  LucideIcons.TrendingDown,
+  'TrendingDown'
+);
 export const BarChart3 = withNeutralColor(LucideIcons.BarChart3, 'BarChart3');
 export const BarChart = withNeutralColor(LucideIcons.BarChart, 'BarChart');
 export const LineChart = withNeutralColor(LucideIcons.LineChart, 'LineChart');
 export const PieChart = withNeutralColor(LucideIcons.PieChart, 'PieChart');
 
 // Financeiro
-export const DollarSign = withNeutralColor(LucideIcons.DollarSign, 'DollarSign');
-export const CreditCard = withNeutralColor(LucideIcons.CreditCard, 'CreditCard');
+export const DollarSign = withNeutralColor(
+  LucideIcons.DollarSign,
+  'DollarSign'
+);
+export const CreditCard = withNeutralColor(
+  LucideIcons.CreditCard,
+  'CreditCard'
+);
 export const Wallet = withNeutralColor(LucideIcons.Wallet, 'Wallet');
 
 // Loading e Estados
@@ -220,22 +315,49 @@ export const Loader2 = withNeutralColor(LucideIcons.Loader2, 'Loader2');
 // ÍCONES COLORIDOS (CARDS DE CONTRATO)
 // ====================================
 
-export const FileTextColored = withColoredStyle(LucideIcons.FileText, 'FileText');
-export const CalendarColored = withColoredStyle(LucideIcons.Calendar, 'Calendar');
-export const CalendarDaysColored = withColoredStyle(LucideIcons.CalendarDays, 'CalendarDays');
+export const FileTextColored = withColoredStyle(
+  LucideIcons.FileText,
+  'FileText'
+);
+export const CalendarColored = withColoredStyle(
+  LucideIcons.Calendar,
+  'Calendar'
+);
+export const CalendarDaysColored = withColoredStyle(
+  LucideIcons.CalendarDays,
+  'CalendarDays'
+);
 export const UserColored = withColoredStyle(LucideIcons.User, 'User');
 export const User2Colored = withColoredStyle(LucideIcons.User2, 'User2');
 export const UsersColored = withColoredStyle(LucideIcons.Users, 'Users');
 export const MapPinColored = withColoredStyle(LucideIcons.MapPin, 'MapPin');
-export const BuildingColored = withColoredStyle(LucideIcons.Building, 'Building');
-export const Building2Colored = withColoredStyle(LucideIcons.Building2, 'Building2');
+export const BuildingColored = withColoredStyle(
+  LucideIcons.Building,
+  'Building'
+);
+export const Building2Colored = withColoredStyle(
+  LucideIcons.Building2,
+  'Building2'
+);
 export const EditColored = withColoredStyle(LucideIcons.Edit, 'Edit');
 export const Edit2Colored = withColoredStyle(LucideIcons.Edit2, 'Edit2');
-export const SearchCheckColored = withColoredStyle(LucideIcons.SearchCheck, 'SearchCheck');
-export const CheckCircleColored = withColoredStyle(LucideIcons.CheckCircle, 'CheckCircle');
-export const MessageSquareColored = withColoredStyle(LucideIcons.MessageSquare, 'MessageSquare');
+export const SearchCheckColored = withColoredStyle(
+  LucideIcons.SearchCheck,
+  'SearchCheck'
+);
+export const CheckCircleColored = withColoredStyle(
+  LucideIcons.CheckCircle,
+  'CheckCircle'
+);
+export const MessageSquareColored = withColoredStyle(
+  LucideIcons.MessageSquare,
+  'MessageSquare'
+);
 export const ClockColored = withColoredStyle(LucideIcons.Clock, 'Clock');
-export const DollarSignColored = withColoredStyle(LucideIcons.DollarSign, 'DollarSign');
+export const DollarSignColored = withColoredStyle(
+  LucideIcons.DollarSign,
+  'DollarSign'
+);
 
 // ====================================
 // MAPEAMENTO PARA LOOKUP DINÂMICO
@@ -253,7 +375,7 @@ export const iconMapper = {
   FileBarChart,
   ClipboardList,
   Archive,
-  
+
   // Ações Positivas
   Check,
   CheckCircle,
@@ -264,7 +386,7 @@ export const iconMapper = {
   Upload,
   Send,
   ThumbsUp,
-  
+
   // Ações Negativas
   Trash,
   Trash2,
@@ -273,7 +395,7 @@ export const iconMapper = {
   AlertTriangle,
   AlertCircle,
   ThumbsDown,
-  
+
   // Navegação
   ArrowLeft,
   ArrowRight,
@@ -286,7 +408,7 @@ export const iconMapper = {
   Menu,
   MoreVertical,
   MoreHorizontal,
-  
+
   // Usuários
   User,
   User2,
@@ -295,7 +417,7 @@ export const iconMapper = {
   UserCheck,
   UserCircle,
   UserCog,
-  
+
   // Sistema
   Settings,
   Database,
@@ -307,7 +429,7 @@ export const iconMapper = {
   Briefcase,
   Wrench,
   Package,
-  
+
   // Comunicação
   MessageSquare,
   MessageCircle,
@@ -318,18 +440,18 @@ export const iconMapper = {
   Info,
   HelpCircle,
   Mic,
-  
+
   // Tempo
   Calendar,
   CalendarDays,
   Clock,
   Timer,
-  
+
   // Localização
   MapPin,
   Building,
   Building2,
-  
+
   // Edição
   Edit,
   Edit2,
@@ -337,14 +459,14 @@ export const iconMapper = {
   SquarePen,
   Pencil,
   NotebookPen,
-  
+
   // Pesquisa
   Search,
   SearchCheck,
   Filter,
   ZoomIn,
   ZoomOut,
-  
+
   // Ações Gerais
   Plus,
   PlusCircle,
@@ -355,16 +477,18 @@ export const iconMapper = {
   EyeOff,
   LogOut,
   LogIn,
-  
+
   // Mídia
   Camera,
   Images,
   Image,
   ImageIcon,
   Play,
+  PlayCircle,
   Pause,
   Video,
-  
+  Circle,
+
   // Utilitários
   Maximize2,
   Minimize2,
@@ -375,13 +499,13 @@ export const iconMapper = {
   Droplets,
   Zap,
   Flame,
-  
+
   // Indicadores
   Sparkles,
   Wand2,
   Star,
   Heart,
-  
+
   // Gráficos
   TrendingUp,
   TrendingDown,
@@ -389,12 +513,12 @@ export const iconMapper = {
   BarChart,
   LineChart,
   PieChart,
-  
+
   // Financeiro
   DollarSign,
   CreditCard,
   Wallet,
-  
+
   // Loading
   Loader,
   Loader2,

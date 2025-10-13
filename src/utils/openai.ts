@@ -568,3 +568,160 @@ IMPORTANTE:
     throw new Error('Erro ao extrair apontamentos do texto. Tente novamente.');
   }
 };
+
+export interface DailySummaryTask {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  observacao: string;
+  status: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export const generateDailySummary = async (
+  tasks: DailySummaryTask[],
+  userName: string
+): Promise<string> => {
+  try {
+    if (tasks.length === 0) {
+      return 'Nenhuma atividade foi registrada hoje.';
+    }
+
+    // Preparar dados das tarefas para o prompt - MODO DETALHADO
+    const tasksInfo = tasks
+      .map((task, index) => {
+        const createdTime = new Date(task.created_at).toLocaleTimeString(
+          'pt-BR',
+          {
+            hour: '2-digit',
+            minute: '2-digit',
+          }
+        );
+        const createdDate = new Date(task.created_at).toLocaleDateString(
+          'pt-BR'
+        );
+
+        let info = `\n=== TAREFA ${index + 1} ===`;
+        info += `\n📋 Título: "${task.title}"`;
+
+        if (task.subtitle && task.subtitle.trim()) {
+          info += `\n📌 Subtítulo: "${task.subtitle}"`;
+        }
+
+        info += `\n📝 Descrição Completa: "${task.description}"`;
+
+        if (task.observacao && task.observacao.trim()) {
+          info += `\n📍 OBSERVAÇÕES E ATUALIZAÇÕES (IMPORTANTE):`;
+          info += `\n${task.observacao}`;
+        }
+
+        const statusLabel =
+          task.status === 'completed'
+            ? '✅ Concluída'
+            : task.status === 'in_progress'
+              ? '🔄 Em Andamento'
+              : '⏸️ Não Iniciada';
+        info += `\n🔖 Status: ${statusLabel}`;
+        info += `\n🕐 Criada: ${createdDate} às ${createdTime}`;
+
+        if (task.completed_at) {
+          const completedTime = new Date(task.completed_at).toLocaleTimeString(
+            'pt-BR',
+            {
+              hour: '2-digit',
+              minute: '2-digit',
+            }
+          );
+          const completedDate = new Date(task.completed_at).toLocaleDateString(
+            'pt-BR'
+          );
+          info += `\n✅ Concluída: ${completedDate} às ${completedTime}`;
+        }
+
+        return info;
+      })
+      .join('\n');
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente executivo especializado em criar resumos narrativos DETALHADOS e COMPLETOS de atividades profissionais diárias.
+
+REGRAS OBRIGATÓRIAS - NÃO PULE NENHUMA INFORMAÇÃO:
+
+1. COMPLETUDE ABSOLUTA:
+   - TODAS as tarefas devem estar no resumo, sem exceção
+   - TODAS as descrições devem ser incluídas de forma narrativa
+   - TODAS as observações (quando presentes) são CRÍTICAS e devem ser incorporadas completamente
+   - TODOS os horários e datas devem ser mencionados
+   - TODOS os status e mudanças devem ser documentados
+
+2. OBSERVAÇÕES TÊM PRIORIDADE MÁXIMA:
+   - As "OBSERVAÇÕES E ATUALIZAÇÕES" são informações VITAIS do gestor
+   - Estas observações contêm atualizações, progresso, problemas e decisões
+   - NUNCA omita ou resuma observações - incorpore-as integralmente na narrativa
+   - Se houver múltiplas atualizações nas observações, mencione TODAS em ordem cronológica
+
+3. ESTRUTURA NARRATIVA:
+   - Iniciar mencionando o gestor ${userName} e a data
+   - Apresentar CADA tarefa em ordem cronológica de criação
+   - Para CADA tarefa, incluir:
+     * Título e contexto (subtítulo se houver)
+     * Descrição completa do que precisa ser feito
+     * Observações detalhadas (progresso, atualizações, problemas)
+     * Status atual e horários relevantes
+     * Conclusão e horário de finalização (se aplicável)
+
+4. DETALHAMENTO PROFISSIONAL:
+   - Transformar informações técnicas em narrativa fluida
+   - Manter todos os detalhes importantes
+   - Usar linguagem profissional e objetiva
+   - Destacar ações, decisões e resultados
+
+5. FORMATO DE SAÍDA:
+   - Texto corrido em parágrafos bem estruturados
+   - Começar com contexto geral do dia
+   - Desenvolver cada tarefa com seus detalhes
+   - Finalizar com síntese das realizações
+   - SEM títulos, bullets ou formatação markdown
+
+IMPORTANTE: Este resumo será usado para documentação oficial. NENHUMA informação pode ser perdida ou omitida.`,
+        },
+        {
+          role: 'user',
+          content: `Crie um resumo narrativo COMPLETO e DETALHADO das atividades diárias do gestor ${userName}.
+
+INSTRUÇÕES ESPECÍFICAS:
+- Leia TODAS as informações de cada tarefa
+- Preste atenção especial às "OBSERVAÇÕES E ATUALIZAÇÕES" - estas são cruciais
+- Inclua TODOS os detalhes, não resuma nem omita nada
+- Mantenha a ordem cronológica
+- Transforme em uma narrativa profissional fluida
+
+DADOS DAS TAREFAS:
+${tasksInfo}
+
+Agora crie o resumo narrativo completo:`,
+        },
+      ],
+      max_tokens: 4000,
+      temperature: 0.5,
+    });
+
+    const summary = completion.choices[0]?.message?.content;
+
+    if (!summary) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    log.debug('Resumo diário gerado com sucesso');
+    return summary.trim();
+  } catch (error) {
+    log.error('Erro ao gerar resumo diário:', error);
+    throw new Error('Erro ao gerar resumo do dia. Tente novamente.');
+  }
+};

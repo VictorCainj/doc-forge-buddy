@@ -11,6 +11,8 @@ export interface UserProfile {
   full_name: string | null;
   role: UserRole;
   is_active: boolean;
+  exp: number;
+  level: number;
   created_at: string;
   updated_at: string;
 }

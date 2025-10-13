@@ -11,6 +11,7 @@ import {
   Settings,
   Menu,
   X,
+  ClipboardList,
 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -23,12 +24,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserLevel } from '@/hooks/useUserLevel';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, isAdmin, signOut } = useAuth();
+  const { title, level, exp, progress, currentLevelExp, nextLevelExp } =
+    useUserLevel();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSignOut = async () => {
@@ -59,6 +64,12 @@ const Sidebar = () => {
       icon: Search,
       path: '/analise-vistoria',
       active: location.pathname === '/analise-vistoria',
+    },
+    {
+      name: 'Tarefas',
+      icon: ClipboardList,
+      path: '/tarefas',
+      active: location.pathname === '/tarefas',
     },
     {
       name: 'Prestadores',
@@ -185,29 +196,50 @@ const Sidebar = () => {
                     {getUserInitials(user.email || '')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col items-start text-left">
-                  <span className="text-sm font-medium text-neutral-900">
+                <div className="flex flex-col items-start text-left flex-1 min-w-0">
+                  <span className="text-sm font-medium text-neutral-900 truncate w-full">
                     {profile?.full_name ||
                       user.email?.split('@')[0] ||
                       'Usuário'}
                   </span>
-                  <span className="text-xs text-neutral-500">
-                    {profile?.role === 'admin' ? 'Administrador' : 'Usuário'}
-                  </span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-xs text-neutral-500">Nv.{level}</span>
+                    <span className="text-xs text-neutral-400">•</span>
+                    <span className="text-xs text-neutral-500">{title}</span>
+                  </div>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {profile?.full_name || user.email}
-                  </p>
-                  <p className="text-xs leading-none text-neutral-500">
-                    {profile?.role === 'admin'
-                      ? 'Administrador do Sistema'
-                      : 'Usuário'}
-                  </p>
+                <div className="flex flex-col space-y-2">
+                  <div>
+                    <p className="text-sm font-medium leading-none text-neutral-900">
+                      {profile?.full_name || user.email}
+                    </p>
+                    <p className="text-xs leading-none text-neutral-500 mt-1">
+                      {profile?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-neutral-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-neutral-600">
+                        Nível {level} • {title}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs text-neutral-500">
+                        {currentLevelExp}/{nextLevelExp} EXP
+                      </span>
+                      <span className="text-xs text-neutral-400">
+                        {Math.round(progress)}%
+                      </span>
+                    </div>
+                    <Progress value={progress} className="h-1.5" />
+                    <p className="text-xs text-neutral-400 mt-1">
+                      {exp} EXP total
+                    </p>
+                  </div>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
