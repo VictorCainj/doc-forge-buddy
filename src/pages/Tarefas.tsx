@@ -3,9 +3,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, FileText, Loader2 } from '@/utils/iconMapper';
+import { Input } from '@/components/ui/input';
+import { Plus, FileText, Loader2, Wand2, Search } from '@/utils/iconMapper';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskModal } from '@/components/TaskModal';
+import { AITaskCreationModal } from '@/components/AITaskCreationModal';
 import { DailySummaryModal } from '@/components/DailySummaryModal';
 import { UserStatsCard } from '@/components/UserStatsCard';
 import { useTasks } from '@/hooks/useTasks';
@@ -32,16 +34,37 @@ const Tarefas = () => {
 
   const [selectedTab, setSelectedTab] = useState<string>('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [dailySummary, setDailySummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Filtrar tarefas por status
+  // Filtrar tarefas por status e busca
   const filteredTasks = useMemo(() => {
-    if (selectedTab === 'all') return tasks;
-    return tasks.filter((task) => task.status === selectedTab);
-  }, [tasks, selectedTab]);
+    let filtered = tasks;
+
+    // Filtrar por status
+    if (selectedTab !== 'all') {
+      filtered = filtered.filter((task) => task.status === selectedTab);
+    }
+
+    // Filtrar por busca (título, subtítulo, descrição e observação)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((task) => {
+        return (
+          task.title.toLowerCase().includes(query) ||
+          task.subtitle?.toLowerCase().includes(query) ||
+          task.description.toLowerCase().includes(query) ||
+          task.observacao?.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    return filtered;
+  }, [tasks, selectedTab, searchQuery]);
 
   // Contar tarefas por status
   const taskCounts = useMemo(() => {
@@ -138,6 +161,27 @@ const Tarefas = () => {
     setIsTaskModalOpen(true);
   };
 
+  const handleAITask = () => {
+    setIsAIModalOpen(true);
+  };
+
+  const handleEditAITask = (taskData: CreateTaskInput) => {
+    // Simular uma tarefa editável com os dados gerados pela IA
+    const mockTask: Task = {
+      id: 'temp',
+      user_id: '',
+      title: taskData.title,
+      subtitle: taskData.subtitle || '',
+      description: taskData.description,
+      observacao: taskData.observacao || '',
+      status: taskData.status || 'not_started',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    setEditingTask(mockTask);
+    setIsTaskModalOpen(true);
+  };
+
   const handleGenerateSummary = async () => {
     const todayTasks = getTodayTasks();
 
@@ -187,7 +231,7 @@ const Tarefas = () => {
       {/* Header */}
       <div className="bg-white border-b border-neutral-200">
         <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-semibold text-neutral-900">
                 Tarefas
@@ -201,11 +245,27 @@ const Tarefas = () => {
                 <FileText className="h-4 w-4 mr-2" />
                 Resumir Dia
               </Button>
+              <Button variant="secondary" onClick={handleAITask}>
+                <Wand2 className="h-4 w-4 mr-2" />
+                Criar com IA
+              </Button>
               <Button onClick={handleNewTask}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Tarefa
               </Button>
             </div>
+          </div>
+
+          {/* Barra de busca */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Input
+              type="text"
+              placeholder="Buscar tarefas por título, descrição, subtítulo ou observação..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
       </div>
@@ -332,6 +392,13 @@ const Tarefas = () => {
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
         isSubmitting={isCreating || isUpdating || isDeleting}
+      />
+
+      <AITaskCreationModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+        onCreateTask={handleCreateTask}
+        onEditManually={handleEditAITask}
       />
 
       <DailySummaryModal

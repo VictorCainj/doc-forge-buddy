@@ -41,6 +41,13 @@ export const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
   completed: 'success',
 };
 
+export interface AIGeneratedTask {
+  title: string;
+  subtitle: string;
+  description: string;
+  status: TaskStatus;
+}
+
 // Sistema de Níveis e EXP
 export interface UserLevel {
   level: number;

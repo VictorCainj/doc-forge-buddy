@@ -725,3 +725,77 @@ Agora crie o resumo narrativo completo:`,
     throw new Error('Erro ao gerar resumo do dia. Tente novamente.');
   }
 };
+
+export const generateTaskFromSituation = async (
+  situation: string
+): Promise<{
+  title: string;
+  subtitle: string;
+  description: string;
+  status: 'not_started' | 'in_progress' | 'completed';
+}> => {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Você cria tarefas objetivas e diretas.
+
+Responda APENAS com JSON no formato:
+{
+  "title": "Título da tarefa (máximo 60 caracteres)",
+  "subtitle": "Subtítulo breve (máximo 80 caracteres)",
+  "description": "Descrição simples e direta do que precisa ser feito",
+  "status": "not_started" | "in_progress" | "completed"
+}
+
+REGRAS:
+1. Título: Direto ao ponto, verbo de ação
+2. Subtítulo: Informação complementar curta
+3. Descrição: Máximo 2-3 frases objetivas, sem explicações longas
+4. Status: "not_started" (padrão), "in_progress" (se já iniciado), "completed" (se concluído)
+
+Seja conciso e prático. NÃO contextualize demais.`,
+        },
+        {
+          role: 'user',
+          content: situation,
+        },
+      ],
+      max_tokens: 500,
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+    });
+
+    const responseText = completion.choices[0]?.message?.content;
+
+    if (!responseText) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    const taskData = JSON.parse(responseText);
+
+    // Validar campos obrigatórios
+    if (!taskData.title || !taskData.description) {
+      throw new Error('Tarefa gerada está incompleta');
+    }
+
+    // Garantir que status é válido
+    const validStatuses = ['not_started', 'in_progress', 'completed'];
+    if (!validStatuses.includes(taskData.status)) {
+      taskData.status = 'not_started';
+    }
+
+    // Garantir que subtitle existe (pode ser vazio)
+    if (!taskData.subtitle) {
+      taskData.subtitle = '';
+    }
+
+    log.debug('Tarefa gerada com sucesso pela IA');
+    return taskData;
+  } catch (error) {
+    log.error('Erro ao gerar tarefa com IA:', error);
+    throw new Error('Erro ao gerar tarefa. Tente novamente.');
+  }
+};
