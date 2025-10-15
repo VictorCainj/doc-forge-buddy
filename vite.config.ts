@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
           utils: ['date-fns', 'clsx', 'tailwind-merge'],
           supabase: ['@supabase/supabase-js'],
           openai: ['openai'],
-          pdf: ['html2pdf.js', 'docx'],
+          pdf: ['jspdf', 'docx'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
           markdown: ['react-markdown', 'remark-gfm', 'rehype-raw'],
         },
