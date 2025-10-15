@@ -69,62 +69,67 @@ export default function DocumentoPublico() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-neutral-600">Carregando documento...</p>
+      <main role="main" aria-label="Carregando documento">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-neutral-600">Carregando documento...</p>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="text-center">
-          <div className="text-6xl mb-4">📄</div>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-            Documento não encontrado
-          </h1>
-          <p className="text-neutral-600">{error}</p>
+      <main role="main" aria-label="Erro ao carregar documento">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+          <div className="text-center">
+            <div className="text-6xl mb-4">📄</div>
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+              Documento não encontrado
+            </h1>
+            <p className="text-neutral-600">{error}</p>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <div
-          ref={contentRef}
-          className="document-public-content"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
-      </div>
-
-      {/* Modal de Zoom de Imagem */}
-      {zoomedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setZoomedImage(null)}
-        >
-          <button
-            onClick={() => setZoomedImage(null)}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-            aria-label="Fechar"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <img
-            src={zoomedImage}
-            alt="Imagem ampliada"
-            className="max-w-[95vw] max-h-[95vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
+    <main role="main" aria-label="Documento público">
+      <div className="min-h-screen bg-white">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <div
+            ref={contentRef}
+            className="document-public-content"
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </div>
-      )}
 
-      <style>{`
+        {/* Modal de Zoom de Imagem */}
+        {zoomedImage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setZoomedImage(null)}
+          >
+            <button
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={zoomedImage}
+              alt="Imagem ampliada"
+              className="max-w-[95vw] max-h-[95vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
+
+        <style>{`
         .document-public-content img {
           max-width: 100%;
           height: auto;
@@ -153,6 +158,7 @@ export default function DocumentoPublico() {
           }
         }
       `}</style>
-    </div>
+      </div>
+    </main>
   );
 }

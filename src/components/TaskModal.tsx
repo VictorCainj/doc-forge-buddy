@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Wand2, Loader2 } from '@/utils/iconMapper';
+import { Wand2, Loader2, CheckCheck } from '@/utils/iconMapper';
 import {
   Task,
   TaskStatus,
@@ -50,8 +50,10 @@ export const TaskModal = ({
   const [status, setStatus] = useState<TaskStatus>('not_started');
   const [isImproving, setIsImproving] = useState(false);
   const [isImprovingObservacao, setIsImprovingObservacao] = useState(false);
+  const [isCorrecting, setIsCorrecting] = useState(false);
+  const [isCorrectingObservacao, setIsCorrectingObservacao] = useState(false);
 
-  const { improveText } = useOpenAI();
+  const { improveText, correctText } = useOpenAI();
   const { toast } = useToast();
 
   // Reset form when modal opens or task changes
@@ -130,6 +132,66 @@ export const TaskModal = ({
       });
     } finally {
       setIsImprovingObservacao(false);
+    }
+  };
+
+  const handleCorrectDescription = async () => {
+    if (!description.trim()) {
+      toast({
+        title: 'Campo vazio',
+        description: 'Adicione uma descrição antes de corrigir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsCorrecting(true);
+    try {
+      const correctedText = await correctText(description);
+      setDescription(correctedText);
+      toast({
+        title: 'Gramática corrigida',
+        description: 'A descrição foi corrigida pela IA.',
+      });
+    } catch (error) {
+      console.error('Erro ao corrigir texto:', error);
+      toast({
+        title: 'Erro ao corrigir',
+        description: 'Não foi possível corrigir o texto. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCorrecting(false);
+    }
+  };
+
+  const handleCorrectObservacao = async () => {
+    if (!observacao.trim()) {
+      toast({
+        title: 'Campo vazio',
+        description: 'Adicione uma observação antes de corrigir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsCorrectingObservacao(true);
+    try {
+      const correctedText = await correctText(observacao);
+      setObservacao(correctedText);
+      toast({
+        title: 'Gramática corrigida',
+        description: 'A observação foi corrigida pela IA.',
+      });
+    } catch (error) {
+      console.error('Erro ao corrigir texto:', error);
+      toast({
+        title: 'Erro ao corrigir',
+        description: 'Não foi possível corrigir o texto. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCorrectingObservacao(false);
     }
   };
 
@@ -212,26 +274,52 @@ export const TaskModal = ({
                 <Label htmlFor="description">
                   Descrição <span className="text-red-500">*</span>
                 </Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleImproveDescription}
-                  disabled={isImproving || isSubmitting || !description.trim()}
-                  className="h-8 gap-1"
-                >
-                  {isImproving ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Revisando...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="h-3 w-3" />
-                      Revisar com IA
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCorrectDescription}
+                    disabled={
+                      isCorrecting || isSubmitting || !description.trim()
+                    }
+                    className="h-8 gap-1"
+                  >
+                    {isCorrecting ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Corrigindo...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCheck className="h-3 w-3" />
+                        Corrigir Gramática
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImproveDescription}
+                    disabled={
+                      isImproving || isSubmitting || !description.trim()
+                    }
+                    className="h-8 gap-1"
+                  >
+                    {isImproving ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Revisando...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-3 w-3" />
+                        Revisar com IA
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
               <Textarea
                 id="description"
@@ -246,28 +334,56 @@ export const TaskModal = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="observacao">Observação</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleImproveObservacao}
-                  disabled={
-                    isImprovingObservacao || isSubmitting || !observacao.trim()
-                  }
-                  className="h-8 gap-1"
-                >
-                  {isImprovingObservacao ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Revisando...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="h-3 w-3" />
-                      Revisar com IA
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCorrectObservacao}
+                    disabled={
+                      isCorrectingObservacao ||
+                      isSubmitting ||
+                      !observacao.trim()
+                    }
+                    className="h-8 gap-1"
+                  >
+                    {isCorrectingObservacao ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Corrigindo...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCheck className="h-3 w-3" />
+                        Corrigir Gramática
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImproveObservacao}
+                    disabled={
+                      isImprovingObservacao ||
+                      isSubmitting ||
+                      !observacao.trim()
+                    }
+                    className="h-8 gap-1"
+                  >
+                    {isImprovingObservacao ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Revisando...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-3 w-3" />
+                        Revisar com IA
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
               <Textarea
                 id="observacao"

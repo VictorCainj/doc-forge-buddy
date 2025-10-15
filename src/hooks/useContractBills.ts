@@ -55,6 +55,9 @@ export function useContractBills({
       required.push('gas');
     }
 
+    // Notificação de Rescisão: sempre obrigatória
+    required.push('notificacao_rescisao');
+
     return required;
   }, [formData]);
 
@@ -162,11 +165,12 @@ export function useContractBills({
           agua: 'Água',
           condominio: 'Condomínio',
           gas: 'Gás',
+          notificacao_rescisao: 'Notificação de Rescisão',
         }[billType];
 
         toast.success(
           newDeliveredStatus
-            ? `${billName} marcada como entregue`
+            ? `${billName} concluída`
             : `${billName} marcada como não entregue`
         );
       } catch (error) {
@@ -192,6 +196,9 @@ export function useContractBills({
     agua: bills.find((b) => b.bill_type === 'agua')?.delivered,
     condominio: bills.find((b) => b.bill_type === 'condominio')?.delivered,
     gas: bills.find((b) => b.bill_type === 'gas')?.delivered,
+    notificacao_rescisao: bills.find(
+      (b) => b.bill_type === 'notificacao_rescisao'
+    )?.delivered,
   };
 
   // Carregar bills quando o componente monta ou contractId muda

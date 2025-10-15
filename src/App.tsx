@@ -215,17 +215,6 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  {/* Rota movida para o painel de administrador */}
-                  {/* <Route
-                    path="/vistoria-analises"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <VistoriaAnalises />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  /> */}
                   <Route
                     path="/prestadores"
                     element={

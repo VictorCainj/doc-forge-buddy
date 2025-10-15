@@ -14,6 +14,10 @@ export const useVistoriaAnalises = () => {
   const [analises, setAnalises] = useState<VistoriaAnaliseWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Controle para prevenir processamento simultâneo de imagens
+  const [processingImages, setProcessingImages] = useState<Set<string>>(
+    new Set()
+  );
 
   // Carregar todas as análises do usuário
   const fetchAnalises = useCallback(async () => {
@@ -146,12 +150,9 @@ export const useVistoriaAnalises = () => {
 
         if (updateError) throw updateError;
 
-        // Remover TODAS as imagens antigas antes de processar
-        // (serão re-inseridas com as novas no processAndSaveImages)
-        await supabase
-          .from('vistoria_images')
-          .delete()
-          .eq('vistoria_id', analiseId);
+        // ✅ PROTEÇÃO 4: NÃO deletar todas as imagens
+        // A função processAndSaveImages agora preserva imagens existentes
+        // e adiciona apenas as novas
       } else {
         // Criar nova análise
         const { data: analiseData, error: analiseError } = await supabase
@@ -241,9 +242,9 @@ export const useVistoriaAnalises = () => {
 
       if (analiseError) throw analiseError;
 
-      // Remover TODAS as imagens antigas antes de processar
-      // (serão re-inseridas com as novas no processAndSaveImages)
-      await supabase.from('vistoria_images').delete().eq('vistoria_id', id);
+      // ✅ PROTEÇÃO 4: NÃO deletar todas as imagens
+      // A função processAndSaveImages agora preserva imagens existentes
+      // e adiciona apenas as novas
 
       // Processar e salvar novas imagens
       if (data.apontamentos) {
@@ -356,19 +357,51 @@ export const useVistoriaAnalises = () => {
     }
   };
 
-  // Processar e salvar imagens
+  // Processar e salvar imagens com proteção contra duplicação
   const processAndSaveImages = async (
     vistoriaId: string,
     apontamentos: unknown[]
   ) => {
+    // ✅ PROTEÇÃO 1: Prevenir processamento simultâneo
+    if (processingImages.has(vistoriaId)) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '⚠️ Processamento de imagens já em andamento para:',
+        vistoriaId
+      );
+      return;
+    }
+
     try {
+      // Marcar como em processamento
+      setProcessingImages((prev) => new Set(prev).add(vistoriaId));
+
       // eslint-disable-next-line no-console
       console.log('=== PROCESSANDO IMAGENS PARA VISTORIA:', vistoriaId, '===');
       // eslint-disable-next-line no-console
       console.log('Total de apontamentos:', apontamentos.length);
 
+      // ✅ PROTEÇÃO 2: Buscar imagens existentes no banco ANTES de processar
+      const { data: existingDbImages } = await supabase
+        .from('vistoria_images')
+        .select('id, image_url, apontamento_id, tipo_vistoria, file_name')
+        .eq('vistoria_id', vistoriaId);
+
+      // eslint-disable-next-line no-console
+      console.log(
+        '📊 Imagens já existentes no banco:',
+        existingDbImages?.length || 0
+      );
+      if (existingDbImages && existingDbImages.length > 0) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '📸 IDs das imagens existentes:',
+          existingDbImages.map((img) => img.id)
+        );
+      }
+
       const imagePromises: Promise<unknown>[] = [];
-      const existingImageRefs: Array<{
+      const externalImageRefs: Array<{
         apontamento_id: string;
         tipo_vistoria: 'inicial' | 'final';
         image_url: string;
@@ -404,7 +437,7 @@ export const useVistoriaAnalises = () => {
             });
 
             if (foto instanceof File) {
-              // Nova imagem - fazer upload
+              // ✅ Nova imagem - fazer upload
               // eslint-disable-next-line no-console
               console.log('  → Upload de nova imagem:', foto.name);
               imagePromises.push(
@@ -416,29 +449,39 @@ export const useVistoriaAnalises = () => {
                 )
               );
             } else if (foto?.isFromDatabase && foto?.url) {
-              // Imagem já existe no banco - preservar referência
+              // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
               // eslint-disable-next-line no-console
-              console.log('  → Preservando imagem do banco:', foto.url);
-              existingImageRefs.push({
-                apontamento_id: apontamentoData.id,
-                tipo_vistoria: 'inicial',
-                image_url: foto.url,
-                file_name: foto.name || 'unknown',
-                file_size: foto.size || 0,
-                file_type: foto.type || 'image/jpeg',
-              });
+              console.log(
+                '  ✓ Imagem do banco preservada (não será re-inserida):',
+                foto.url
+              );
             } else if (foto?.isExternal && foto?.url) {
-              // Imagem externa - salvar URL diretamente
-              // eslint-disable-next-line no-console
-              console.log('  → Salvando imagem externa:', foto.url);
-              existingImageRefs.push({
-                apontamento_id: apontamentoData.id,
-                tipo_vistoria: 'inicial',
-                image_url: foto.url,
-                file_name: foto.name || 'imagem_externa',
-                file_size: foto.size || 0,
-                file_type: foto.type || 'image/external',
-              });
+              // ✅ Imagem externa - verificar se já existe antes de adicionar
+              const alreadyExists = existingDbImages?.some(
+                (dbImg) =>
+                  dbImg.image_url === foto.url &&
+                  dbImg.apontamento_id === apontamentoData.id &&
+                  dbImg.tipo_vistoria === 'inicial'
+              );
+
+              if (!alreadyExists) {
+                // eslint-disable-next-line no-console
+                console.log('  → Salvando imagem externa:', foto.url);
+                externalImageRefs.push({
+                  apontamento_id: apontamentoData.id,
+                  tipo_vistoria: 'inicial',
+                  image_url: foto.url,
+                  file_name: foto.name || 'imagem_externa',
+                  file_size: foto.size || 0,
+                  file_type: foto.type || 'image/external',
+                });
+              } else {
+                // eslint-disable-next-line no-console
+                console.log(
+                  '  ⚠️ Imagem externa já existe, ignorando:',
+                  foto.url
+                );
+              }
             }
           }
         }
@@ -461,7 +504,7 @@ export const useVistoriaAnalises = () => {
             });
 
             if (foto instanceof File) {
-              // Nova imagem - fazer upload
+              // ✅ Nova imagem - fazer upload
               // eslint-disable-next-line no-console
               console.log('  → Upload de nova imagem:', foto.name);
               imagePromises.push(
@@ -473,29 +516,39 @@ export const useVistoriaAnalises = () => {
                 )
               );
             } else if (foto?.isFromDatabase && foto?.url) {
-              // Imagem já existe no banco - preservar referência
+              // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
               // eslint-disable-next-line no-console
-              console.log('  → Preservando imagem do banco:', foto.url);
-              existingImageRefs.push({
-                apontamento_id: apontamentoData.id,
-                tipo_vistoria: 'final',
-                image_url: foto.url,
-                file_name: foto.name || 'unknown',
-                file_size: foto.size || 0,
-                file_type: foto.type || 'image/jpeg',
-              });
+              console.log(
+                '  ✓ Imagem do banco preservada (não será re-inserida):',
+                foto.url
+              );
             } else if (foto?.isExternal && foto?.url) {
-              // Imagem externa - salvar URL diretamente
-              // eslint-disable-next-line no-console
-              console.log('  → Salvando imagem externa:', foto.url);
-              existingImageRefs.push({
-                apontamento_id: apontamentoData.id,
-                tipo_vistoria: 'final',
-                image_url: foto.url,
-                file_name: foto.name || 'imagem_externa',
-                file_size: foto.size || 0,
-                file_type: foto.type || 'image/external',
-              });
+              // ✅ Imagem externa - verificar se já existe antes de adicionar
+              const alreadyExists = existingDbImages?.some(
+                (dbImg) =>
+                  dbImg.image_url === foto.url &&
+                  dbImg.apontamento_id === apontamentoData.id &&
+                  dbImg.tipo_vistoria === 'final'
+              );
+
+              if (!alreadyExists) {
+                // eslint-disable-next-line no-console
+                console.log('  → Salvando imagem externa:', foto.url);
+                externalImageRefs.push({
+                  apontamento_id: apontamentoData.id,
+                  tipo_vistoria: 'final',
+                  image_url: foto.url,
+                  file_name: foto.name || 'imagem_externa',
+                  file_size: foto.size || 0,
+                  file_type: foto.type || 'image/external',
+                });
+              } else {
+                // eslint-disable-next-line no-console
+                console.log(
+                  '  ⚠️ Imagem externa já existe, ignorando:',
+                  foto.url
+                );
+              }
             }
           }
         }
@@ -506,7 +559,12 @@ export const useVistoriaAnalises = () => {
       // eslint-disable-next-line no-console
       console.log('Novas imagens para upload:', imagePromises.length);
       // eslint-disable-next-line no-console
-      console.log('Imagens existentes preservadas:', existingImageRefs.length);
+      console.log('Imagens externas para inserir:', externalImageRefs.length);
+      // eslint-disable-next-line no-console
+      console.log(
+        'Imagens do banco preservadas (não re-inseridas):',
+        existingDbImages?.length || 0
+      );
 
       // Aguardar upload de todas as novas imagens
       if (imagePromises.length > 0) {
@@ -515,29 +573,54 @@ export const useVistoriaAnalises = () => {
         console.log('✓ Todas as novas imagens foram enviadas com sucesso');
       }
 
-      // Re-inserir referências de imagens existentes
-      if (existingImageRefs.length > 0) {
-        const { error: insertError } = await supabase
-          .from('vistoria_images')
-          .insert(
-            existingImageRefs.map((ref) => ({
-              vistoria_id: vistoriaId,
-              apontamento_id: ref.apontamento_id,
-              tipo_vistoria: ref.tipo_vistoria,
-              image_url: ref.image_url,
-              file_name: ref.file_name,
-              file_size: ref.file_size,
-              file_type: ref.file_type,
-              user_id: user?.id,
-            }))
-          );
+      // ✅ PROTEÇÃO 4: Inserir apenas imagens externas novas (não duplicadas)
+      if (externalImageRefs.length > 0) {
+        // Filtrar novamente para garantir que não há duplicatas
+        const uniqueRefs = externalImageRefs.filter(
+          (ref, index, self) =>
+            index ===
+            self.findIndex(
+              (r) =>
+                r.image_url === ref.image_url &&
+                r.apontamento_id === ref.apontamento_id &&
+                r.tipo_vistoria === ref.tipo_vistoria
+            )
+        );
 
-        if (insertError) {
+        if (uniqueRefs.length < externalImageRefs.length) {
           // eslint-disable-next-line no-console
-          console.error('Erro ao re-inserir imagens existentes:', insertError);
-        } else {
-          // eslint-disable-next-line no-console
-          console.log('✓ Imagens existentes re-inseridas com sucesso');
+          console.warn(
+            '⚠️ Duplicatas removidas:',
+            externalImageRefs.length - uniqueRefs.length
+          );
+        }
+
+        if (uniqueRefs.length > 0) {
+          const { error: insertError } = await supabase
+            .from('vistoria_images')
+            .insert(
+              uniqueRefs.map((ref) => ({
+                vistoria_id: vistoriaId,
+                apontamento_id: ref.apontamento_id,
+                tipo_vistoria: ref.tipo_vistoria,
+                image_url: ref.image_url,
+                file_name: ref.file_name,
+                file_size: ref.file_size,
+                file_type: ref.file_type,
+                user_id: user?.id,
+              }))
+            );
+
+          if (insertError) {
+            // eslint-disable-next-line no-console
+            console.error('❌ Erro ao inserir imagens externas:', insertError);
+          } else {
+            // eslint-disable-next-line no-console
+            console.log(
+              '✓ Imagens externas inseridas com sucesso:',
+              uniqueRefs.length
+            );
+          }
         }
       }
 
@@ -547,10 +630,17 @@ export const useVistoriaAnalises = () => {
       // eslint-disable-next-line no-console
       console.error('❌ Erro ao processar imagens:', error);
       // Não re-lançar o erro para não quebrar o salvamento da análise principal
+    } finally {
+      // ✅ PROTEÇÃO 1: Remover flag de processamento
+      setProcessingImages((prev) => {
+        const next = new Set(prev);
+        next.delete(vistoriaId);
+        return next;
+      });
     }
   };
 
-  // Upload de imagem para o Supabase Storage
+  // Upload de imagem para o Supabase Storage com proteção contra duplicação
   const uploadImageToStorage = async (
     file: File,
     vistoriaId: string,
@@ -560,6 +650,26 @@ export const useVistoriaAnalises = () => {
     if (!user) return;
 
     try {
+      // ✅ PROTEÇÃO 5: Verificar se já existe imagem com mesmo nome antes do upload
+      const { data: existingImage } = await supabase
+        .from('vistoria_images')
+        .select('id, image_url')
+        .eq('vistoria_id', vistoriaId)
+        .eq('apontamento_id', apontamentoId)
+        .eq('tipo_vistoria', tipoVistoria)
+        .eq('file_name', file.name)
+        .maybeSingle();
+
+      if (existingImage) {
+        // eslint-disable-next-line no-console
+        console.warn('⚠️ Imagem já existe no banco, pulando upload:', {
+          file: file.name,
+          existing_id: existingImage.id,
+          url: existingImage.image_url,
+        });
+        return;
+      }
+
       // Verificar se o bucket existe
       const { data: buckets } = await supabase.storage.listBuckets();
       const bucketExists = buckets?.some(
@@ -596,7 +706,12 @@ export const useVistoriaAnalises = () => {
 
       // Upload para o Supabase Storage
       // eslint-disable-next-line no-console
-      console.log('Fazendo upload da imagem:', fileName, 'Tamanho:', file.size);
+      console.log(
+        '📤 Fazendo upload da imagem:',
+        fileName,
+        'Tamanho:',
+        file.size
+      );
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('vistoria-images')
@@ -604,12 +719,12 @@ export const useVistoriaAnalises = () => {
 
       if (uploadError) {
         // eslint-disable-next-line no-console
-        console.error('Erro no upload:', uploadError);
+        console.error('❌ Erro no upload:', uploadError);
         throw uploadError;
       }
 
       // eslint-disable-next-line no-console
-      console.log('Upload realizado com sucesso:', uploadData);
+      console.log('✓ Upload realizado com sucesso:', uploadData);
 
       // Obter URL pública
       const {
@@ -630,12 +745,15 @@ export const useVistoriaAnalises = () => {
 
       if (dbError) {
         // eslint-disable-next-line no-console
-        console.error('Erro ao salvar referência no banco:', dbError);
+        console.error('❌ Erro ao salvar referência no banco:', dbError);
         throw dbError;
       }
+
+      // eslint-disable-next-line no-console
+      console.log('✓ Referência salva no banco para:', file.name);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Erro ao fazer upload da imagem:', error);
+      console.error('❌ Erro ao fazer upload da imagem:', error);
       throw error;
     }
   };

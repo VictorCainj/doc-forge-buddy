@@ -24,10 +24,10 @@ All colors MUST be HSL.
 
     /* Cinza claro Google */
     --secondary: 220 14% 96%;
-    --secondary-foreground: 214 9% 37%;
+    --secondary-foreground: 214 9% 25%;
 
     --muted: 220 13% 91%;
-    --muted-foreground: 214 9% 50%;
+    --muted-foreground: 214 9% 35%;
 
     --accent: 217 89% 61%;
     --accent-foreground: 0 0% 100%;
@@ -484,6 +484,19 @@ All colors MUST be HSL.
     .person-manager-card
     .text-muted-foreground {
     color: rgb(148, 163, 184) !important;
+  }
+
+  /* Screen reader only - Acessibilidade */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 
   /* HD Image Rendering - Otimização global para todas as imagens */

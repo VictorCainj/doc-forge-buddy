@@ -1,5 +1,12 @@
 import React from 'react';
-import { Check, Zap, Droplets, Building2, Flame } from '@/utils/iconMapper';
+import {
+  Check,
+  Zap,
+  Droplets,
+  Building2,
+  Flame,
+  Bell,
+} from '@/utils/iconMapper';
 import { useContractBills } from '@/hooks/useContractBills';
 import { ContractFormData, BillType } from '@/types/contract';
 import { cn } from '@/lib/utils';
@@ -36,6 +43,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
     agua: 'Água',
     condominio: 'Condomínio',
     gas: 'Gás',
+    notificacao_rescisao: 'Notificação de Rescisão',
   };
 
   const billIcons: Record<BillType, React.ElementType> = {
@@ -43,10 +51,17 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
     agua: Droplets,
     condominio: Building2,
     gas: Flame,
+    notificacao_rescisao: Bell,
   };
 
   // Ordenar bills na ordem padrão
-  const orderedBillTypes: BillType[] = ['energia', 'agua', 'condominio', 'gas'];
+  const orderedBillTypes: BillType[] = [
+    'energia',
+    'agua',
+    'condominio',
+    'gas',
+    'notificacao_rescisao',
+  ];
   const visibleBills = orderedBillTypes
     .filter((type) => bills.some((b) => b.bill_type === type))
     .map((type) => ({
@@ -98,7 +113,10 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
                 </span>
               </div>
               {delivered && (
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-success-600 shadow-sm">
+                <div
+                  className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 shadow-sm"
+                  style={{ backgroundColor: '#34A853' }}
+                >
                   <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
                 </div>
               )}

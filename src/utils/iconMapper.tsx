@@ -82,6 +82,10 @@ export const Archive = withNeutralColor(LucideIcons.Archive, 'Archive');
 
 // Ações Positivas
 export const Check = withNeutralColor(LucideIcons.Check, 'Check');
+export const CheckCheck = withNeutralColor(
+  LucideIcons.CheckCheck,
+  'CheckCheck'
+);
 export const CheckCircle = withNeutralColor(
   LucideIcons.CheckCircle,
   'CheckCircle'
@@ -195,6 +199,7 @@ export const HelpCircle = withNeutralColor(
   'HelpCircle'
 );
 export const Mic = withNeutralColor(LucideIcons.Mic, 'Mic');
+export const Bell = withNeutralColor(LucideIcons.Bell, 'Bell');
 
 // Tempo e Calendário
 export const Calendar = withNeutralColor(LucideIcons.Calendar, 'Calendar');
@@ -378,6 +383,7 @@ export const iconMapper = {
 
   // Ações Positivas
   Check,
+  CheckCheck,
   CheckCircle,
   CheckCircle2,
   CircleCheck,
@@ -440,6 +446,7 @@ export const iconMapper = {
   Info,
   HelpCircle,
   Mic,
+  Bell,
 
   // Tempo
   Calendar,

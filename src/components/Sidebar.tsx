@@ -143,9 +143,13 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation Menu - Minimalista */}
-        <nav className="flex-1 px-4 py-6 overflow-y-auto">
+        <nav
+          role="navigation"
+          aria-label="Menu principal"
+          className="flex-1 px-4 py-6 overflow-y-auto"
+        >
           <div className="space-y-1">
-            <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3 px-3">
+            <h3 className="text-xs font-medium text-neutral-600 uppercase tracking-wider mb-3 px-3">
               Menu
             </h3>
             <ul className="space-y-1">

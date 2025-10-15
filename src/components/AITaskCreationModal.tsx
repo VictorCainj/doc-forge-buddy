@@ -12,9 +12,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wand2, Loader2, Sparkles, Edit, Check } from '@/utils/iconMapper';
+import {
+  Wand2,
+  Loader2,
+  Sparkles,
+  Edit,
+  Check,
+  CheckCheck,
+} from '@/utils/iconMapper';
 import { generateTaskFromSituation } from '@/utils/openai';
 import { useToast } from '@/hooks/use-toast';
+import { useOpenAI } from '@/hooks/useOpenAI';
 import {
   AIGeneratedTask,
   TASK_STATUS_LABELS,
@@ -40,7 +48,39 @@ export const AITaskCreationModal = ({
     null
   );
   const [isCreating, setIsCreating] = useState(false);
+  const [isCorrecting, setIsCorrecting] = useState(false);
   const { toast } = useToast();
+  const { correctText } = useOpenAI();
+
+  const handleCorrectSituation = async () => {
+    if (!situation.trim()) {
+      toast({
+        title: 'Campo vazio',
+        description: 'Descreva a situação antes de corrigir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsCorrecting(true);
+    try {
+      const correctedText = await correctText(situation);
+      setSituation(correctedText);
+      toast({
+        title: 'Texto corrigido!',
+        description: 'A descrição da situação foi corrigida pela IA.',
+      });
+    } catch (error) {
+      console.error('Erro ao corrigir texto:', error);
+      toast({
+        title: 'Erro ao corrigir',
+        description: 'Não foi possível corrigir o texto. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCorrecting(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!situation.trim()) {
@@ -139,13 +179,37 @@ export const AITaskCreationModal = ({
           {!generatedTask ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="situation">Descreva a situação ou tarefa</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="situation">
+                    Descreva a situação ou tarefa
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCorrectSituation}
+                    disabled={isCorrecting || isGenerating || !situation.trim()}
+                    className="h-8 gap-1"
+                  >
+                    {isCorrecting ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Corrigindo...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCheck className="h-3 w-3" />
+                        Corrigir Gramática
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <Textarea
                   id="situation"
                   placeholder="Ex: O cliente do contrato 12345 está com atraso de pagamento há 3 meses e preciso cobrar urgentemente..."
                   value={situation}
                   onChange={(e) => setSituation(e.target.value)}
-                  disabled={isGenerating}
+                  disabled={isGenerating || isCorrecting}
                   rows={6}
                   className="resize-none"
                 />
@@ -157,7 +221,7 @@ export const AITaskCreationModal = ({
 
               <Button
                 onClick={handleGenerate}
-                disabled={isGenerating || !situation.trim()}
+                disabled={isGenerating || isCorrecting || !situation.trim()}
                 className="w-full"
                 size="lg"
               >

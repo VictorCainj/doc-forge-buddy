@@ -154,7 +154,7 @@ export interface WhatsAppData {
 /**
  * Tipos de contas de consumo
  */
-export type BillType = 'energia' | 'agua' | 'condominio' | 'gas';
+export type BillType = 'energia' | 'agua' | 'condominio' | 'gas' | 'notificacao_rescisao';
 
 /**
  * Interface para conta de consumo de um contrato
@@ -178,4 +178,5 @@ export interface BillStatus {
   agua?: boolean;
   condominio?: boolean;
   gas?: boolean;
+  notificacao_rescisao?: boolean;
 }

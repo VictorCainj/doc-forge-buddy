@@ -1,15 +1,17 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
 import { useOptimizedData } from '@/hooks/useOptimizedData';
+import { useContractsWithPendingBills } from '@/hooks/useContractsWithPendingBills';
 import { useStandardToast } from '@/utils/toastHelpers';
 import {
   formatDateBrazilian,
   convertDateToBrazilian,
 } from '@/utils/dateFormatter';
+import { AlertCircle } from '@/utils/iconMapper';
 import { TemplateProcessor } from '@/utils/templateProcessor';
 import { Contract } from '@/types/contract';
 import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
@@ -28,6 +30,9 @@ import OptimizedSearch from '@/components/ui/optimized-search';
 const Contratos = () => {
   const navigate = useNavigate();
   const { showError } = useStandardToast();
+
+  // Estado para controlar filtro de pendências
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
 
   // Reducer state (substitui ~20 useState)
   const { state, actions } = useContractReducer();
@@ -58,13 +63,28 @@ const Contratos = () => {
     limit: 6,
   });
 
-  // Contratos exibidos (busca ou paginação normal)
+  // Hook para buscar contratos com pendências
+  const { data: pendingContracts, loading: loadingPending } =
+    useContractsWithPendingBills({
+      enabled: showPendingOnly,
+    });
+
+  // Contratos exibidos (filtro de pendências, busca ou paginação normal)
   const displayedContracts = useMemo(() => {
-    if (hasSearched && searchResults.length > 0) {
-      return searchResults;
+    if (showPendingOnly) {
+      return pendingContracts; // Exibir apenas contratos com pendências
     }
-    return contracts;
-  }, [hasSearched, searchResults, contracts]);
+    if (hasSearched && searchResults.length > 0) {
+      return searchResults; // Exibir resultados da busca
+    }
+    return contracts; // Exibir todos os contratos
+  }, [
+    showPendingOnly,
+    pendingContracts,
+    hasSearched,
+    searchResults,
+    contracts,
+  ]);
 
   // ============================================================
   // DOCUMENT GENERATION HANDLERS
@@ -490,6 +510,15 @@ const Contratos = () => {
     }
   }, [loadMore, actions, state.currentPage]);
 
+  // Handler para toggle do filtro de pendências
+  const handleTogglePendingFilter = useCallback(() => {
+    if (!showPendingOnly) {
+      // Ativando filtro: limpar busca
+      clearSearch();
+    }
+    setShowPendingOnly(!showPendingOnly);
+  }, [showPendingOnly, clearSearch]);
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-neutral-50">
@@ -515,6 +544,24 @@ const Contratos = () => {
                   isLoading={isSearching}
                   className="w-80"
                 />
+
+                {/* Botão Toggle para Filtro de Pendências */}
+                <Button
+                  variant={showPendingOnly ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={handleTogglePendingFilter}
+                  className="gap-2"
+                  disabled={loadingPending}
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  Pendentes
+                  {showPendingOnly && pendingContracts.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 text-xs bg-white/20 rounded">
+                      {pendingContracts.length}
+                    </span>
+                  )}
+                </Button>
+
                 {hasSearched && (
                   <Button variant="outline" size="sm" onClick={clearSearch}>
                     Limpar
@@ -533,11 +580,11 @@ const Contratos = () => {
           {/* Lista de Contratos */}
           <ContractList
             contracts={displayedContracts}
-            isLoading={loading}
-            hasMore={hasMore}
+            isLoading={showPendingOnly ? loadingPending : loading}
+            hasMore={showPendingOnly ? false : hasMore}
             loadMore={handleLoadMore}
             isLoadingMore={state.loading.loadMore}
-            totalCount={totalCount}
+            totalCount={showPendingOnly ? pendingContracts.length : totalCount}
             displayedCount={displayedContracts.length}
             hasSearched={hasSearched}
             onGenerateDocument={generateDocument}

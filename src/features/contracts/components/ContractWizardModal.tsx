@@ -193,7 +193,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
     const fieldClasses = cn(
       'bg-white border-neutral-300 text-neutral-900 placeholder:text-neutral-500',
-      'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30',
+      'focus:border-neutral-600 focus:ring-2 focus:ring-neutral-500/20',
       'hover:border-neutral-400',
       'transition-all duration-200 rounded-lg',
       'w-full min-w-0' // Garantir largura completa e permitir shrink
@@ -299,11 +299,11 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             {title}
           </DialogTitle>
 
-          {/* Progress bar - Azul Google */}
+          {/* Progress bar - Tons Neutros */}
           <div className="mt-2 relative">
             <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-primary-500"
+                className="h-full bg-neutral-700"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
@@ -323,7 +323,27 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
-            const isCompleted = index < currentStep;
+            
+            // Lógica melhorada para determinar se etapa está concluída
+            const isCompleted = index < currentStep || (() => {
+              // Se é a etapa atual ou anterior, verifica se todos os campos obrigatórios estão preenchidos
+              const requiredFields = step.fields.filter(field => field.required);
+              const allFieldsFilled = requiredFields.every(field => {
+                const value = formData[field.name];
+                return value !== undefined && value.trim() !== '';
+              });
+              
+              // Debug log
+              if (index <= currentStep) {
+                console.log(`Etapa ${step.title}:`, {
+                  requiredFields: requiredFields.length,
+                  allFieldsFilled,
+                  isCompleted: index < currentStep || allFieldsFilled
+                });
+              }
+              
+              return allFieldsFilled;
+            })();
 
             return (
               <button
@@ -332,7 +352,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 className={cn(
                   'relative group transition-all duration-200',
                   'flex flex-col items-center gap-0.5 p-1.5 rounded-md',
-                  isActive && 'bg-primary-50 border border-primary-300',
+                  isActive && 'bg-neutral-50 border border-neutral-300',
                   !isActive &&
                     'border border-transparent hover:border-neutral-300 hover:bg-white',
                   isCompleted && 'opacity-70'
@@ -341,25 +361,28 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 {/* Ícone */}
                 <div
                   className={cn(
-                    'relative w-7 h-7 rounded-md flex items-center justify-center transition-all duration-200 shadow-elevation-1',
-                    isActive && 'bg-primary-500 border border-primary-500',
+                    'relative w-7 h-7 flex items-center justify-center transition-all duration-200 shadow-sm',
+                    isActive && 'bg-white border-2 border-neutral-800 rounded-md',
                     !isActive &&
                       isCompleted &&
-                      'bg-success-500 border border-success-500',
+                      'bg-green-500 rounded-full',
                     !isActive &&
                       !isCompleted &&
-                      'bg-white border border-neutral-300'
+                      'bg-white border border-neutral-300 rounded-md'
                   )}
+                  style={{
+                    backgroundColor: !isActive && isCompleted ? '#34A853' : undefined
+                  }}
                 >
                   {isCompleted ? (
-                    <Check className="h-4 w-4 text-white" />
+                    <Check className="h-4 w-4 text-white stroke-2" />
                   ) : (
                     Icon && (
                       <Icon
                         className={cn(
                           'h-4 w-4',
-                          isActive && 'text-white',
-                          !isActive && 'text-neutral-700'
+                          isActive && 'text-neutral-800',
+                          !isActive && 'text-neutral-600'
                         )}
                       />
                     )
@@ -382,8 +405,11 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   <div
                     className={cn(
                       'absolute top-5 left-full w-7 h-0.5 transition-all duration-200',
-                      isCompleted ? 'bg-success-400' : 'bg-neutral-300'
+                      isCompleted ? 'bg-green-500' : 'bg-neutral-300'
                     )}
+                    style={{
+                      backgroundColor: isCompleted ? '#34A853' : '#DADCE0'
+                    }}
                   />
                 )}
               </button>
@@ -515,16 +541,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   </div>
                 </div>
 
-                {/* Indicador de mais conteúdo abaixo - Google Material (melhorado) */}
-                {hasScroll && !isScrolledToBottom && (
-                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none flex items-end justify-center pb-3">
-                    <div className="flex items-center gap-1 text-primary-600 text-sm animate-bounce font-semibold bg-white/90 px-3 py-1 rounded-full shadow-sm">
-                      <ChevronDown className="h-5 w-5" />
-                      <span>Role para ver mais campos</span>
-                      <ChevronDown className="h-5 w-5" />
-                    </div>
-                  </div>
-                )}
+
               </div>
             </motion.div>
           </AnimatePresence>
@@ -555,14 +572,14 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
             </span>
           </div>
 
-          {/* Botão Próximo ou Finalizar - Azul Google - Ultra Compacto */}
+          {/* Botão Próximo ou Finalizar - Tons Neutros - Ultra Compacto */}
           {currentStep === steps.length - 1 ? (
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid || isSubmitting}
               className={cn(
-                'gap-1.5 bg-primary-500 text-white px-3 py-1.5 text-sm',
-                'hover:bg-primary-600',
+                'gap-1.5 bg-neutral-800 text-white px-3 py-1.5 text-sm',
+                'hover:bg-neutral-900',
                 'shadow-elevation-1 hover:shadow-elevation-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'transition-all duration-200'
@@ -585,8 +602,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               onClick={handleNext}
               disabled={!isStepValid}
               className={cn(
-                'gap-1.5 bg-primary-500 text-white px-3 py-1.5 text-sm',
-                'hover:bg-primary-600',
+                'gap-1.5 bg-neutral-800 text-white px-3 py-1.5 text-sm',
+                'hover:bg-neutral-900',
                 'shadow-elevation-1 hover:shadow-elevation-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'transition-all duration-200'

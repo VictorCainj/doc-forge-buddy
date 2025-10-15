@@ -182,6 +182,7 @@ export class VistoriaDataMigrator {
 
   /**
    * Processa e faz upload de imagens base64 para o Supabase Storage
+   * ✅ COM PROTEÇÃO CONTRA DUPLICAÇÃO
    */
   private async processAndUploadImages(
     fotos: FotoData[],
@@ -194,47 +195,72 @@ export class VistoriaDataMigrator {
     for (let i = 0; i < fotos.length; i++) {
       const foto = fotos[i];
 
-      // try {
-      // Verificar se tem base64
-      if (!foto.base64) continue;
+      try {
+        // Verificar se tem base64
+        if (!foto.base64) continue;
 
-      // Converter base64 para blob
-      const response = await fetch(foto.base64);
-      const blob = await response.blob();
+        // ✅ PROTEÇÃO 7: Verificar se imagem já foi migrada antes
+        const { data: existingImage } = await supabase
+          .from('vistoria_images')
+          .select('id, image_url')
+          .eq('vistoria_id', analiseId)
+          .eq('apontamento_id', apontamentoId)
+          .eq('tipo_vistoria', tipoVistoria)
+          .eq('file_name', foto.name)
+          .maybeSingle();
 
-      // Gerar nome único para o arquivo
-      const fileExt = foto.name.split('.').pop() || 'jpg';
-      const fileName = `${analiseId}/${apontamentoId}/${tipoVistoria}/migrated_${Date.now()}_${i}.${fileExt}`;
+        if (existingImage) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '⚠️ Imagem já migrada anteriormente, pulando:',
+            foto.name
+          );
+          continue;
+        }
 
-      // Upload para o Supabase Storage
-      const { data: _uploadData, error: uploadError } = await supabase.storage
-        .from('vistoria-images')
-        .upload(fileName, blob);
+        // Converter base64 para blob
+        const response = await fetch(foto.base64);
+        const blob = await response.blob();
 
-      if (uploadError) throw uploadError;
+        // Gerar nome único para o arquivo
+        const fileExt = foto.name.split('.').pop() || 'jpg';
+        const fileName = `${analiseId}/${apontamentoId}/${tipoVistoria}/migrated_${Date.now()}_${i}.${fileExt}`;
 
-      // Obter URL pública
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
+        // Upload para o Supabase Storage
+        const { data: _uploadData, error: uploadError } = await supabase.storage
+          .from('vistoria-images')
+          .upload(fileName, blob);
 
-      // Salvar referência no banco
-      const { error: dbError } = await supabase.from('vistoria_images').insert({
-        vistoria_id: analiseId,
-        apontamento_id: apontamentoId,
-        tipo_vistoria: tipoVistoria,
-        image_url: publicUrl,
-        file_name: foto.name,
-        file_size: foto.size || blob.size,
-        file_type: foto.type || blob.type,
-        user_id: this.user.id,
-      });
+        if (uploadError) throw uploadError;
 
-      if (dbError) throw dbError;
-      // } catch {
-      //   // console.error(`Erro ao processar foto ${i}`);
-      //   // Continuar com as outras fotos mesmo se uma falhar
-      // }
+        // Obter URL pública
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
+
+        // Salvar referência no banco
+        const { error: dbError } = await supabase
+          .from('vistoria_images')
+          .insert({
+            vistoria_id: analiseId,
+            apontamento_id: apontamentoId,
+            tipo_vistoria: tipoVistoria,
+            image_url: publicUrl,
+            file_name: foto.name,
+            file_size: foto.size || blob.size,
+            file_type: foto.type || blob.type,
+            user_id: this.user.id,
+          });
+
+        if (dbError) throw dbError;
+
+        // eslint-disable-next-line no-console
+        console.log('✓ Imagem migrada com sucesso:', foto.name);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(`❌ Erro ao processar foto ${i}:`, error);
+        // Continuar com as outras fotos mesmo se uma falhar
+      }
     }
   }
 

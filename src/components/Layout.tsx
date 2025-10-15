@@ -12,7 +12,13 @@ const Layout = ({ children }: LayoutProps) => {
       <Sidebar />
 
       {/* Main Content Area - Full Width */}
-      <main className="min-h-screen w-full overflow-auto">{children}</main>
+      <main
+        role="main"
+        aria-label="Conteúdo principal"
+        className="min-h-screen w-full overflow-auto"
+      >
+        {children}
+      </main>
     </div>
   );
 };

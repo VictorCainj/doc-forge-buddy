@@ -1,92 +1,45 @@
-import OpenAI from 'openai';
 import { Contract } from '@/hooks/useContractAnalysis';
 import { CompleteContractData } from '@/hooks/useCompleteContractData';
 import { log } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 
-const openai = new OpenAI({
-  apiKey:
-    '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',
-  dangerouslyAllowBrowser: true, // Apenas para desenvolvimento
-});
+// Helper para chamar a edge function
+const callOpenAIProxy = async (action: string, data: any): Promise<any> => {
+  const { data: result, error } = await supabase.functions.invoke(
+    'openai-proxy',
+    {
+      body: { action, data },
+    }
+  );
+
+  if (error) {
+    log.error(`Erro ao chamar ${action}:`, error);
+    throw new Error(error.message || 'Erro ao comunicar com a IA');
+  }
+
+  if (!result.success) {
+    throw new Error(result.error || 'Erro desconhecido');
+  }
+
+  return result.content;
+};
 
 export const correctTextWithAI = async (text: string): Promise<string> => {
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um assistente especializado em correção de texto em português brasileiro. 
-          
-          Suas tarefas são:
-          1. Corrigir erros de gramática, ortografia e pontuação
-          2. Melhorar a clareza e fluidez do texto
-          3. Manter o tom e estilo original do autor
-          4. Preservar a estrutura e formatação do texto
-          5. Não alterar o significado ou conteúdo principal
-          
-          Responda APENAS com o texto corrigido, sem explicações adicionais.`,
-        },
-        {
-          role: 'user',
-          content: `Por favor, corrija o seguinte texto em português brasileiro:\n\n${text}`,
-        },
-      ],
-      max_tokens: 5000,
-      temperature: 0.3,
-    });
-
-    const correctedText = completion.choices[0]?.message?.content;
-
-    if (!correctedText) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    return correctedText.trim();
-  } catch {
-    // // console.error('Erro na API da OpenAI:', error);
+    const content = await callOpenAIProxy('correctText', { text });
+    return content;
+  } catch (error) {
+    log.error('Erro ao corrigir texto:', error);
     throw new Error('Erro ao corrigir o texto. Tente novamente.');
   }
 };
 
 export const improveTextWithAI = async (text: string): Promise<string> => {
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um assistente especializado em melhorar textos para máxima clareza e compreensão do destinatário em português brasileiro.
-          
-          Suas tarefas são:
-          1. Corrigir erros de gramática, ortografia e pontuação
-          2. Reestruturar o texto para máxima clareza e compreensão
-          3. Melhorar a organização das ideias e fluxo lógico
-          4. Tornar o texto mais direto e objetivo quando apropriado
-          5. Garantir que o destinatário entenda perfeitamente a mensagem
-          6. Manter o tom profissional e adequado ao contexto
-          7. Preservar todas as informações importantes
-          
-          Responda APENAS com o texto melhorado, sem explicações adicionais.`,
-        },
-        {
-          role: 'user',
-          content: `Por favor, melhore o seguinte texto para que o destinatário entenda perfeitamente a mensagem:\n\n${text}`,
-        },
-      ],
-      max_tokens: 5000,
-      temperature: 0.4,
-    });
-
-    const improvedText = completion.choices[0]?.message?.content;
-
-    if (!improvedText) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    return improvedText.trim();
-  } catch {
-    // // console.error('Erro na API da OpenAI:', error);
+    const content = await callOpenAIProxy('improveText', { text });
+    return content;
+  } catch (error) {
+    log.error('Erro ao melhorar texto:', error);
     throw new Error('Erro ao melhorar o texto. Tente novamente.');
   }
 };
@@ -97,174 +50,24 @@ export const analyzeContractsWithAI = async (
   completeContracts?: CompleteContractData[]
 ): Promise<string> => {
   try {
-    // console.log('Iniciando análise de contratos...');
-    // console.log('Query:', query);
-    // console.log('Contratos básicos:', contracts.length);
-    // console.log('Contratos completos:', completeContracts?.length || 0);
-
-    // Preparar informações dos contratos para o contexto
-    let contractsContext = '';
-
-    if (completeContracts && completeContracts.length > 0) {
-      // Usar dados completos se disponíveis
-      contractsContext = completeContracts
-        .map(
-          (contract, index) => `
-Contrato ${index + 1} (Dados Completos):
-- ID: ${contract.id}
-- Título: ${contract.title}
-- Número do Contrato: ${contract.form_data.numeroContrato || 'N/A'}
-- Data de Firmamento: ${contract.form_data.dataFirmamentoContrato || 'N/A'}
-- Endereço do Imóvel: ${contract.form_data.enderecoImovel || 'N/A'}
-- Quantidade de Chaves: ${contract.form_data.quantidadeChaves || 'N/A'}
-
-DADOS DOS LOCADORES:
-- Gênero: ${contract.form_data.generoProprietario || 'N/A'}
-- Nome: ${contract.form_data.nomeProprietario || 'N/A'}
-- Qualificação Completa: ${contract.form_data.qualificacaoCompletaLocadores || 'N/A'}
-
-DADOS DOS LOCATÁRIOS:
-- Gênero: ${contract.form_data.generoLocatario || 'N/A'}
-- Nome: ${contract.form_data.nomeLocatario || 'N/A'}
-- Qualificação Completa: ${contract.form_data.qualificacaoCompletaLocatarios || 'N/A'}
-- Celular: ${contract.form_data.celularLocatario || 'N/A'}
-- Email: ${contract.form_data.emailLocatario || 'N/A'}
-
-DADOS DE RESCISÃO:
-- Data Início: ${contract.form_data.dataInicioRescisao || 'N/A'}
-- Data Término: ${contract.form_data.dataTerminoRescisao || 'N/A'}
-
-DOCUMENTOS SOLICITADOS:
-- Condomínio: ${contract.form_data.solicitarCondominio || 'N/A'}
-- Água: ${contract.form_data.solicitarAgua || 'N/A'}
-- Gás: ${contract.form_data.solicitarGas || 'N/A'}
-- CND: ${contract.form_data.solicitarCND || 'N/A'}
-
-- Criado em: ${contract.created_at}
-- Atualizado em: ${contract.updated_at}
-`
-        )
-        .join('\n');
-    } else {
-      // Usar dados básicos se dados completos não estiverem disponíveis
-      contractsContext = contracts
-        .map(
-          (contract, index) => `
-Contrato ${index + 1} (Dados Básicos):
-- ID: ${contract.id}
-- Número do Contrato: ${contract.numero_contrato}
-- Locatário: ${contract.nome_locatario}
-- Endereço: ${contract.endereco_imovel}
-- Proprietário: ${contract.nome_proprietario}
-- Email do Proprietário: ${contract.email_proprietario}
-- Data da Comunicação: ${contract.data_comunicacao}
-- Data Início Desocupação: ${contract.data_inicio_desocupacao}
-- Data Término Desocupação: ${contract.data_termino_desocupacao}
-- Prazo (dias): ${contract.prazo_dias}
-- Criado em: ${contract.created_at}
-- Atualizado em: ${contract.updated_at}
-`
-        )
-        .join('\n');
-    }
-
-    // console.log('Chamando API da OpenAI...');
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um assistente especializado em contratos imobiliários com acesso completo a todos os dados dos contratos. Você tem uma vasta memória e pode responder perguntas sobre qualquer aspecto dos contratos de forma natural e conversacional.
-
-          Suas capacidades incluem:
-          - Responder perguntas sobre contratos específicos
-          - Fornecer estatísticas e informações gerais
-          - Analisar padrões e tendências quando solicitado
-          - Explicar detalhes sobre locatários, proprietários e imóveis
-          - Calcular prazos, datas e cronologias
-          - Identificar informações geográficas e relacionamentos
-          - Sugerir insights baseados nos dados disponíveis
-
-          IMPORTANTE: Responda sempre em formato conversacional, como se estivesse conversando com uma pessoa. Seja natural, amigável e direto. Use linguagem clara e acessível. Quando fornecer informações, explique de forma que seja fácil de entender. Se não souber algo específico ou não tiver dados suficientes, seja honesto sobre isso.`,
-        },
-        {
-          role: 'user',
-          content: `Aqui estão os dados de todos os contratos disponíveis:
-
-${contractsContext}
-
-Pergunta: ${query}
-
-Por favor, responda de forma conversacional e natural, como se estivesse conversando comigo.`,
-        },
-      ],
-      max_tokens: 4000,
-      temperature: 0.7,
+    const content = await callOpenAIProxy('analyzeContracts', {
+      query,
+      contracts,
+      completeContracts,
     });
-
-    // console.log('Resposta da API recebida:', completion.choices[0]?.message?.content?.substring(0, 100) + '...');
-
-    const analysis = completion.choices[0]?.message?.content;
-
-    if (!analysis) {
-      // console.error('Resposta vazia da API');
-      throw new Error('Resposta vazia da API');
-    }
-
-    // console.log('Retornando análise:', analysis.trim().substring(0, 100) + '...');
-    return analysis.trim();
-  } catch {
-    // console.error('Erro na API da OpenAI para análise:', error);
+    return content;
+  } catch (error) {
+    log.error('Erro ao analisar contratos:', error);
     throw new Error('Erro ao analisar os contratos. Tente novamente.');
   }
 };
 
 export const chatCompletionWithAI = async (prompt: string): Promise<string> => {
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um assistente de IA avançado e versátil, capaz de ajudar com qualquer tipo de pergunta ou tarefa.
-          
-          Suas características:
-          - Responda de forma natural, clara e amigável
-          - Adapte-se ao contexto da conversa
-          - Forneça informações precisas e úteis
-          - Seja criativo quando necessário
-          - Mantenha um tom profissional mas acessível
-          - Se não souber algo, seja honesto e sugira alternativas
-          
-          Você pode ajudar com:
-          - Análise de documentos e contratos
-          - Questões técnicas e programação
-          - Escrita criativa e revisão de textos
-          - Matemática e ciências
-          - Pesquisa e informações gerais
-          - Brainstorming e resolução de problemas
-          - E qualquer outro assunto que o usuário precisar
-          
-          Importante: Interprete o contexto da conversa para entender se o usuário quer gerar uma imagem, analisar algo ou apenas conversar. Não peça confirmação, apenas responda de acordo com a intenção percebida.`,
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      max_tokens: 3000,
-      temperature: 0.7,
-    });
-
-    const response = completion.choices[0]?.message?.content;
-
-    if (!response) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    return response.trim();
-  } catch {
+    const content = await callOpenAIProxy('chatCompletion', { prompt });
+    return content;
+  } catch (error) {
+    log.error('Erro ao processar chat:', error);
     throw new Error('Erro ao processar sua mensagem. Tente novamente.');
   }
 };
@@ -274,38 +77,11 @@ export const analyzeImageWithAI = async (
   userPrompt?: string
 ): Promise<string> => {
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text:
-                userPrompt ||
-                'Analise esta imagem em detalhes. Se for um documento, extraia todas as informações relevantes. Se for uma foto, descreva o que você vê.',
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageBase64,
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 4000,
-      temperature: 0.7,
+    const content = await callOpenAIProxy('analyzeImage', {
+      imageBase64,
+      userPrompt,
     });
-
-    const analysis = completion.choices[0]?.message?.content;
-
-    if (!analysis) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    return analysis.trim();
+    return content;
   } catch (error) {
     log.error('Erro ao analisar imagem:', error);
     throw new Error('Erro ao analisar a imagem. Tente novamente.');
@@ -314,22 +90,10 @@ export const analyzeImageWithAI = async (
 
 export const generateImageWithAI = async (prompt: string): Promise<string> => {
   try {
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: `Create a professional, high-quality image: ${prompt}`,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard',
-    });
-
-    const imageUrl = response.data[0]?.url;
-
-    if (!imageUrl) {
-      throw new Error('URL da imagem não retornada pela API');
-    }
-
+    const imageUrl = await callOpenAIProxy('generateImage', { prompt });
     return imageUrl;
-  } catch {
+  } catch (error) {
+    log.error('Erro ao gerar imagem:', error);
     throw new Error('Erro ao gerar imagem. Tente novamente.');
   }
 };
@@ -340,19 +104,28 @@ export const transcribeAudioWithAI = async (
   try {
     log.info('Iniciando transcrição de áudio:', audioFile.name);
 
-    const response = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: 'whisper-1',
-      language: 'pt', // Português
-      response_format: 'text',
+    // Converter File para base64
+    const reader = new FileReader();
+    const base64Promise = new Promise<string>((resolve, reject) => {
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        // Remover o prefixo "data:audio/webm;base64," ou similar
+        const base64Data = base64.split(',')[1] || base64;
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
     });
 
-    if (!response) {
-      throw new Error('Resposta vazia da API de transcrição');
-    }
+    reader.readAsDataURL(audioFile);
+    const audioBase64 = await base64Promise;
+
+    const transcription = await callOpenAIProxy('transcribeAudio', {
+      audioBase64,
+      fileName: audioFile.name,
+    });
 
     log.info('Transcrição concluída com sucesso');
-    return response as string;
+    return transcription;
   } catch (error) {
     log.error('Erro ao transcrever áudio:', error);
     throw new Error('Erro ao transcrever o áudio. Tente novamente.');
@@ -372,150 +145,31 @@ export const extractApontamentosFromText = async (
     log.info('Iniciando extração de apontamentos do texto');
     log.info(`Tamanho do texto de entrada: ${text.length} caracteres`);
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um assistente especializado em análise de vistorias imobiliárias. Sua tarefa é extrair apontamentos estruturados de textos de vistoria.
+    const response = await callOpenAIProxy('extractApontamentos', { text });
 
-⚠️ EXTREMAMENTE IMPORTANTE: PROCESSE TODO O TEXTO FORNECIDO INTEGRALMENTE ⚠️
-- Você DEVE processar TODOS os apontamentos presentes no texto, do início ao fim
-- NUNCA omita, resuma ou pule nenhum apontamento
-- NUNCA truncar a lista de apontamentos
-- Cada apontamento encontrado DEVE estar presente na resposta final
-- Se houver 50 apontamentos no texto, você DEVE retornar os 50 apontamentos
-
-FORMATO DO TEXTO DE ENTRADA:
-- O texto começa com o nome do AMBIENTE em MAIÚSCULAS (ex: SALA, COZINHA, DORMITÓRIO E., WC SUÍTE)
-- Após o ambiente, vem o SUBTÍTULO (linha completa da ação, ex: "Pintar as paredes", "Reparar e remover manchas do sofá")
-- Após o subtítulo, vem a DESCRIÇÃO detalhada do problema
-- Os apontamentos são separados por "---------"
-- Quando aparece um novo AMBIENTE em MAIÚSCULAS, todos os apontamentos seguintes pertencem a esse ambiente até aparecer outro
-
-EXEMPLO DE ENTRADA:
-SALA
-Pintar as paredes
-estão excessivamente sujas. Na vistoria de entrada estavam em bom estado.
----------
-Reparar e remover manchas do sofá
-os encostos retráteis não estão travando. E remover as manchas diversas no sofá.
----------
-COZINHA
-Limpar a Air fryer
-está suja
----------
-
-REGRAS DE EXTRAÇÃO:
-1. Identifique o AMBIENTE (palavras em MAIÚSCULAS que indicam cômodo)
-2. O SUBTÍTULO é a primeira linha após o ambiente ou após o separador "---------"
-3. A DESCRIÇÃO é todo o texto após o subtítulo até o próximo separador "---------" ou próximo ambiente
-4. Mantenha o ambiente atual para todos os apontamentos até aparecer um novo ambiente
-5. PROCESSE TODOS OS APONTAMENTOS - não omita nenhum, mesmo que o texto seja longo
-
-FORMATO DE SAÍDA:
-Retorne um objeto JSON com a chave "apontamentos" contendo um array:
-{
-  "apontamentos": [
-    {
-      "ambiente": "SALA",
-      "subtitulo": "Pintar as paredes",
-      "descricao": "estão excessivamente sujas. Na vistoria de entrada estavam em bom estado."
-    },
-    {
-      "ambiente": "SALA",
-      "subtitulo": "Reparar e remover manchas do sofá",
-      "descricao": "os encostos retráteis não estão travando. E remover as manchas diversas no sofá."
-    },
-    {
-      "ambiente": "COZINHA",
-      "subtitulo": "Limpar a Air fryer",
-      "descricao": "está suja"
-    }
-  ]
-}
-
-IMPORTANTE:
-- Retorne APENAS o JSON válido, sem markdown, sem explicações
-- Use o nome do ambiente EXATAMENTE como aparece no texto (em MAIÚSCULAS)
-- O subtítulo deve ser a linha completa da ação (ex: "Pintar as paredes", não apenas "Pintar")
-- A descrição é todo o texto após o subtítulo COMPLETO e sem omissões
-- Mantenha o ambiente para apontamentos consecutivos até aparecer novo ambiente
-- PROCESSE TODO O TEXTO - Não omita nenhum apontamento por razões de tamanho`,
-        },
-        {
-          role: 'user',
-          content: `Extraia os apontamentos do seguinte texto de vistoria. IMPORTANTE: Processe TODO o texto e retorne TODOS os apontamentos encontrados:\n\n${text}`,
-        },
-      ],
-      max_tokens: 16000,
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-    });
-
-    const response = completion.choices[0]?.message?.content;
-    const finishReason = completion.choices[0]?.finish_reason;
-
-    if (!response) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    // Verificar se a resposta foi truncada
-    if (finishReason === 'length') {
-      log.warn(
-        '⚠️ AVISO: A resposta da API foi truncada devido ao limite de tokens!'
-      );
-      log.warn(
-        'Isso pode significar que alguns apontamentos não foram processados.'
-      );
-      log.warn(
-        'Considere dividir o texto em partes menores ou entrar em contato com o suporte.'
-      );
-    }
-
-    log.debug(
-      'Resposta da API (primeiros 500 caracteres):',
-      response.substring(0, 500)
-    );
-    log.debug('Finish reason:', finishReason);
-    log.info(`Tamanho da resposta: ${response.length} caracteres`);
-
-    // Tentar parsear a resposta JSON
-    let parsedResponse;
-    try {
-      parsedResponse = JSON.parse(response);
-    } catch (parseError) {
-      log.error('Erro ao parsear JSON:', parseError);
-      log.error('Resposta recebida:', response);
-      throw new Error('Erro ao processar resposta da IA. Resposta inválida.');
-    }
-
-    // A resposta pode vir em diferentes formatos, verificar estrutura
+    // A resposta já vem parseada do proxy
     let apontamentos: ExtractedApontamento[] = [];
 
-    if (Array.isArray(parsedResponse)) {
-      apontamentos = parsedResponse;
-    } else if (
-      parsedResponse.apontamentos &&
-      Array.isArray(parsedResponse.apontamentos)
-    ) {
-      apontamentos = parsedResponse.apontamentos;
-    } else if (parsedResponse.items && Array.isArray(parsedResponse.items)) {
-      apontamentos = parsedResponse.items;
-    } else if (parsedResponse.data && Array.isArray(parsedResponse.data)) {
-      apontamentos = parsedResponse.data;
+    if (Array.isArray(response)) {
+      apontamentos = response;
+    } else if (response.apontamentos && Array.isArray(response.apontamentos)) {
+      apontamentos = response.apontamentos;
+    } else if (response.items && Array.isArray(response.items)) {
+      apontamentos = response.items;
+    } else if (response.data && Array.isArray(response.data)) {
+      apontamentos = response.data;
     } else {
       // Tentar encontrar qualquer array no objeto
-      const keys = Object.keys(parsedResponse);
+      const keys = Object.keys(response);
       for (const key of keys) {
-        if (Array.isArray(parsedResponse[key])) {
-          apontamentos = parsedResponse[key];
+        if (Array.isArray(response[key])) {
+          apontamentos = response[key];
           break;
         }
       }
 
       if (apontamentos.length === 0) {
-        log.error('Formato de resposta inesperado:', parsedResponse);
+        log.error('Formato de resposta inesperado:', response);
         throw new Error(
           'Não foi possível encontrar apontamentos na resposta da IA. Tente reformular o texto.'
         );
@@ -589,137 +243,13 @@ export const generateDailySummary = async (
       return 'Nenhuma atividade foi registrada hoje.';
     }
 
-    // Preparar dados das tarefas para o prompt - MODO DETALHADO
-    const tasksInfo = tasks
-      .map((task, index) => {
-        const createdTime = new Date(task.created_at).toLocaleTimeString(
-          'pt-BR',
-          {
-            hour: '2-digit',
-            minute: '2-digit',
-          }
-        );
-        const createdDate = new Date(task.created_at).toLocaleDateString(
-          'pt-BR'
-        );
-
-        let info = `\n=== TAREFA ${index + 1} ===`;
-        info += `\n📋 Título: "${task.title}"`;
-
-        if (task.subtitle && task.subtitle.trim()) {
-          info += `\n📌 Subtítulo: "${task.subtitle}"`;
-        }
-
-        info += `\n📝 Descrição Completa: "${task.description}"`;
-
-        if (task.observacao && task.observacao.trim()) {
-          info += `\n📍 OBSERVAÇÕES E ATUALIZAÇÕES (IMPORTANTE):`;
-          info += `\n${task.observacao}`;
-        }
-
-        const statusLabel =
-          task.status === 'completed'
-            ? '✅ Concluída'
-            : task.status === 'in_progress'
-              ? '🔄 Em Andamento'
-              : '⏸️ Não Iniciada';
-        info += `\n🔖 Status: ${statusLabel}`;
-        info += `\n🕐 Criada: ${createdDate} às ${createdTime}`;
-
-        if (task.completed_at) {
-          const completedTime = new Date(task.completed_at).toLocaleTimeString(
-            'pt-BR',
-            {
-              hour: '2-digit',
-              minute: '2-digit',
-            }
-          );
-          const completedDate = new Date(task.completed_at).toLocaleDateString(
-            'pt-BR'
-          );
-          info += `\n✅ Concluída: ${completedDate} às ${completedTime}`;
-        }
-
-        return info;
-      })
-      .join('\n');
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um assistente executivo especializado em criar resumos narrativos DETALHADOS e COMPLETOS de atividades profissionais diárias.
-
-REGRAS OBRIGATÓRIAS - NÃO PULE NENHUMA INFORMAÇÃO:
-
-1. COMPLETUDE ABSOLUTA:
-   - TODAS as tarefas devem estar no resumo, sem exceção
-   - TODAS as descrições devem ser incluídas de forma narrativa
-   - TODAS as observações (quando presentes) são CRÍTICAS e devem ser incorporadas completamente
-   - TODOS os horários e datas devem ser mencionados
-   - TODOS os status e mudanças devem ser documentados
-
-2. OBSERVAÇÕES TÊM PRIORIDADE MÁXIMA:
-   - As "OBSERVAÇÕES E ATUALIZAÇÕES" são informações VITAIS do gestor
-   - Estas observações contêm atualizações, progresso, problemas e decisões
-   - NUNCA omita ou resuma observações - incorpore-as integralmente na narrativa
-   - Se houver múltiplas atualizações nas observações, mencione TODAS em ordem cronológica
-
-3. ESTRUTURA NARRATIVA:
-   - Iniciar mencionando o gestor ${userName} e a data
-   - Apresentar CADA tarefa em ordem cronológica de criação
-   - Para CADA tarefa, incluir:
-     * Título e contexto (subtítulo se houver)
-     * Descrição completa do que precisa ser feito
-     * Observações detalhadas (progresso, atualizações, problemas)
-     * Status atual e horários relevantes
-     * Conclusão e horário de finalização (se aplicável)
-
-4. DETALHAMENTO PROFISSIONAL:
-   - Transformar informações técnicas em narrativa fluida
-   - Manter todos os detalhes importantes
-   - Usar linguagem profissional e objetiva
-   - Destacar ações, decisões e resultados
-
-5. FORMATO DE SAÍDA:
-   - Texto corrido em parágrafos bem estruturados
-   - Começar com contexto geral do dia
-   - Desenvolver cada tarefa com seus detalhes
-   - Finalizar com síntese das realizações
-   - SEM títulos, bullets ou formatação markdown
-
-IMPORTANTE: Este resumo será usado para documentação oficial. NENHUMA informação pode ser perdida ou omitida.`,
-        },
-        {
-          role: 'user',
-          content: `Crie um resumo narrativo COMPLETO e DETALHADO das atividades diárias do gestor ${userName}.
-
-INSTRUÇÕES ESPECÍFICAS:
-- Leia TODAS as informações de cada tarefa
-- Preste atenção especial às "OBSERVAÇÕES E ATUALIZAÇÕES" - estas são cruciais
-- Inclua TODOS os detalhes, não resuma nem omita nada
-- Mantenha a ordem cronológica
-- Transforme em uma narrativa profissional fluida
-
-DADOS DAS TAREFAS:
-${tasksInfo}
-
-Agora crie o resumo narrativo completo:`,
-        },
-      ],
-      max_tokens: 4000,
-      temperature: 0.5,
+    const summary = await callOpenAIProxy('generateDailySummary', {
+      tasks,
+      userName,
     });
 
-    const summary = completion.choices[0]?.message?.content;
-
-    if (!summary) {
-      throw new Error('Resposta vazia da API');
-    }
-
     log.debug('Resumo diário gerado com sucesso');
-    return summary.trim();
+    return summary;
   } catch (error) {
     log.error('Erro ao gerar resumo diário:', error);
     throw new Error('Erro ao gerar resumo do dia. Tente novamente.');
@@ -735,46 +265,7 @@ export const generateTaskFromSituation = async (
   status: 'not_started' | 'in_progress' | 'completed';
 }> => {
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `Você cria tarefas objetivas e diretas.
-
-Responda APENAS com JSON no formato:
-{
-  "title": "Título da tarefa (máximo 60 caracteres)",
-  "subtitle": "Subtítulo breve (máximo 80 caracteres)",
-  "description": "Descrição simples e direta do que precisa ser feito",
-  "status": "not_started" | "in_progress" | "completed"
-}
-
-REGRAS:
-1. Título: Direto ao ponto, verbo de ação
-2. Subtítulo: Informação complementar curta
-3. Descrição: Máximo 2-3 frases objetivas, sem explicações longas
-4. Status: "not_started" (padrão), "in_progress" (se já iniciado), "completed" (se concluído)
-
-Seja conciso e prático. NÃO contextualize demais.`,
-        },
-        {
-          role: 'user',
-          content: situation,
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-    });
-
-    const responseText = completion.choices[0]?.message?.content;
-
-    if (!responseText) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    const taskData = JSON.parse(responseText);
+    const taskData = await callOpenAIProxy('generateTask', { situation });
 
     // Validar campos obrigatórios
     if (!taskData.title || !taskData.description) {

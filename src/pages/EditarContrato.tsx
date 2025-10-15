@@ -249,8 +249,6 @@ const EditarContrato = () => {
           type: 'text',
           required: true,
           placeholder: 'DD/MM/AAAA - Ex: 22/07/2025',
-          tooltip:
-            "Preencha manualmente ou use o botão 'Calcular Automaticamente' (início + 29 dias)",
         },
       ],
     },

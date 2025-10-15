@@ -55,6 +55,30 @@ export const useVistoriaImages = () => {
         const file = files[i];
 
         try {
+          // ✅ PROTEÇÃO 6: Verificar se já existe imagem com mesmo nome
+          const { data: existingImage } = await supabase
+            .from('vistoria_images')
+            .select('id, image_url')
+            .eq('vistoria_id', vistoriaId)
+            .eq('apontamento_id', apontamentoId)
+            .eq('tipo_vistoria', tipoVistoria)
+            .eq('file_name', file.name)
+            .maybeSingle();
+
+          if (existingImage) {
+            // eslint-disable-next-line no-console
+            console.warn('⚠️ Imagem já existe, pulando upload:', file.name);
+            setUploadProgress((prev) =>
+              prev.map((item, index) =>
+                index === i
+                  ? { ...item, progress: 100, status: 'completed' }
+                  : item
+              )
+            );
+            uploadedUrls.push(existingImage.image_url);
+            continue;
+          }
+
           // Atualizar progresso
           setUploadProgress((prev) =>
             prev.map((item, index) =>

@@ -119,7 +119,35 @@ O projeto requer configuração do Supabase com:
 - Storage (Upload de imagens)
 - Edge Functions (opcional)
 
-Migrations SQL disponíveis em `supabase/migrations/`
+### Migrations
+
+Migrations SQL disponíveis em `supabase/migrations/`:
+
+- **20241220000000_add_notificacao_rescisao_to_existing_contracts.sql** - Adiciona notificação de rescisão aos contratos
+- **20250115000000_optimize_rls_policies.sql** - Otimização de performance RLS (29 políticas)
+
+#### Otimização RLS
+
+A migração `20250115000000_optimize_rls_policies.sql` otimiza 29 políticas de Row Level Security para melhorar a performance em escala, substituindo chamadas diretas a `auth.uid()` por `(select auth.uid())`.
+
+**Aplicar migração:**
+
+```bash
+# Via Supabase CLI
+supabase db push
+
+# Ou via Dashboard > SQL Editor
+# Cole o conteúdo do arquivo e execute
+```
+
+**Validar otimização:**
+
+```bash
+# Execute o script de validação no SQL Editor
+# Arquivo: supabase/migrations/validate_rls_optimization.sql
+```
+
+Para mais detalhes, consulte: `supabase/migrations/README_RLS_OPTIMIZATION.md`
 
 ## 🎨 Design System
 
