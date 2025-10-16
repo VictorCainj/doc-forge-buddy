@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,7 @@ const Tarefas = () => {
     getTodayTasks,
   } = useTasks();
 
-  const [selectedTab, setSelectedTab] = useState<string>('all');
+  const [selectedTab, setSelectedTab] = useState<string>('in_progress');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -40,6 +40,11 @@ const Tarefas = () => {
   const [dailySummary, setDailySummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Garantir que o filtro sempre comece com 'in_progress' selecionado
+  useEffect(() => {
+    setSelectedTab('in_progress');
+  }, []);
 
   // Filtrar tarefas por status e busca
   const filteredTasks = useMemo(() => {
