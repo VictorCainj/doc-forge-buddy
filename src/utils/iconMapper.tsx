@@ -199,6 +199,8 @@ export const HelpCircle = withNeutralColor(
   'HelpCircle'
 );
 export const Mic = withNeutralColor(LucideIcons.Mic, 'Mic');
+export const MicOff = withNeutralColor(LucideIcons.MicOff, 'MicOff');
+export const Square = withNeutralColor(LucideIcons.Square, 'Square');
 export const Bell = withNeutralColor(LucideIcons.Bell, 'Bell');
 
 // Tempo e Calendário
@@ -446,6 +448,8 @@ export const iconMapper = {
   Info,
   HelpCircle,
   Mic,
+  MicOff,
+  Square,
   Bell,
 
   // Tempo

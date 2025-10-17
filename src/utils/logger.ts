@@ -21,33 +21,33 @@ class Logger {
     this.level = level;
   }
 
-  debug(_message: string, ..._args: unknown[]) {
+  debug(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.DEBUG) {
-      // console.debug(`[DEBUG] ${_message}`, ..._args);
+      console.debug(`[DEBUG] ${message}`, ...args);
     }
   }
 
-  info(_message: string, ..._args: unknown[]) {
+  info(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.INFO) {
-      // console.info(`[INFO] ${_message}`, ..._args);
+      console.info(`[INFO] ${message}`, ...args);
     }
   }
 
-  warn(_message: string, ..._args: unknown[]) {
+  warn(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.WARN) {
-      // console.warn(`[WARN] ${_message}`, ..._args);
+      console.warn(`[WARN] ${message}`, ...args);
     }
   }
 
-  error(_message: string, ..._args: unknown[]) {
+  error(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.ERROR) {
-      // console.error(`[ERROR] ${_message}`, ..._args);
+      console.error(`[ERROR] ${message}`, ...args);
     }
   }
 
   // Método para logs que devem sempre aparecer (críticos)
-  critical(_message: string, ..._args: unknown[]) {
-    // console.error(`[CRITICAL] ${_message}`, ..._args);
+  critical(message: string, ...args: unknown[]) {
+    console.error(`[CRITICAL] ${message}`, ...args);
   }
 }
 

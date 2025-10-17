@@ -221,7 +221,7 @@ export const useTasks = () => {
 
     // Se subiu de nível, mostrar toast especial
     if (newLevel > oldLevel) {
-      const levelInfo = await supabase
+      const _levelInfo = await supabase
         .from('profiles')
         .select('level')
         .eq('user_id', userId)

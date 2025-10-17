@@ -9,6 +9,9 @@ import {
   Loader2,
   Download,
   Eye,
+  ThumbsUp,
+  ThumbsDown,
+  Edit,
 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -31,6 +34,8 @@ interface Message {
     model?: string;
     tokens?: number;
     transcription?: string;
+    analysis?: any;
+    adaptiveResponse?: boolean;
   };
 }
 
@@ -39,10 +44,17 @@ interface ChatMessageProps {
   copiedMessageId: string | null;
   onCopy: (text: string, messageId: string) => void;
   onRetry?: (messageId: string) => void;
+  onFeedback?: (messageId: string, feedback: 'positive' | 'negative') => void;
 }
 
 const ChatMessage = memo(
-  ({ message, copiedMessageId, onCopy, onRetry }: ChatMessageProps) => {
+  ({
+    message,
+    copiedMessageId,
+    onCopy,
+    onRetry,
+    onFeedback,
+  }: ChatMessageProps) => {
     const formatTime = useCallback((date: Date) => {
       return date.toLocaleTimeString('pt-BR', {
         hour: '2-digit',
@@ -313,6 +325,32 @@ const ChatMessage = memo(
                     <RotateCcw className="h-3 w-3" />
                   </Button>
                 )}
+
+                {/* Botões de feedback para respostas adaptativas */}
+                {message.role === 'assistant' &&
+                  message.metadata?.adaptiveResponse &&
+                  onFeedback && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:bg-green-100 text-green-600"
+                        onClick={() => onFeedback(message.id, 'positive')}
+                        title="Resposta boa"
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:bg-red-100 text-red-600"
+                        onClick={() => onFeedback(message.id, 'negative')}
+                        title="Resposta inadequada"
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
 
                 <Button
                   variant="ghost"

@@ -4,6 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Plus, FileText, Loader2, Wand2, Search } from '@/utils/iconMapper';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskModal } from '@/components/TaskModal';
@@ -19,6 +29,8 @@ import { generateDailySummary } from '@/utils/openai';
 const Tarefas = () => {
   const { toast } = useToast();
   const { profile } = useAuth();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const {
     tasks,
     isLoading,
@@ -120,11 +132,16 @@ const Tarefas = () => {
     }
   };
 
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+  const handleDeleteTask = (taskId: string) => {
+    setTaskToDelete(taskId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return;
 
     try {
-      await deleteTask(taskId);
+      await deleteTask(taskToDelete);
       toast({
         title: 'Tarefa excluída',
         description: 'A tarefa foi excluída com sucesso.',
@@ -136,6 +153,9 @@ const Tarefas = () => {
         description: 'Não foi possível excluir a tarefa. Tente novamente.',
         variant: 'destructive',
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setTaskToDelete(null);
     }
   };
 
@@ -413,6 +433,24 @@ const Tarefas = () => {
         isGenerating={isGeneratingSummary}
         userName={profile?.full_name || 'Gestor'}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteTask}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

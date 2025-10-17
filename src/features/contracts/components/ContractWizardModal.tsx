@@ -21,7 +21,7 @@ import { PersonManager } from '@/components/ui/person-manager';
 import { splitNames } from '@/utils/nameHelpers';
 import { FormStep, FormField } from '@/hooks/use-form-wizard';
 import { useContractWizard } from '../hooks/useContractWizard';
-import { ChevronLeft, ChevronRight, Check, ChevronDown } from '@/utils/iconMapper';
+import { ChevronLeft, ChevronRight, Check } from '@/utils/iconMapper';
 import { cn } from '@/lib/utils';
 
 interface Person {
@@ -60,8 +60,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [fiadores, setFiadores] = useState<Person[]>([]);
 
   // Estado e ref para detectar scroll
-  const [hasScroll, setHasScroll] = useState(false);
-  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+  const [_hasScroll, _setHasScroll] = useState(false);
+  const [_isScrolledToBottom, _setIsScrolledToBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -323,27 +323,31 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
-            
+
             // Lógica melhorada para determinar se etapa está concluída
-            const isCompleted = index < currentStep || (() => {
-              // Se é a etapa atual ou anterior, verifica se todos os campos obrigatórios estão preenchidos
-              const requiredFields = step.fields.filter(field => field.required);
-              const allFieldsFilled = requiredFields.every(field => {
-                const value = formData[field.name];
-                return value !== undefined && value.trim() !== '';
-              });
-              
-              // Debug log
-              if (index <= currentStep) {
-                console.log(`Etapa ${step.title}:`, {
-                  requiredFields: requiredFields.length,
-                  allFieldsFilled,
-                  isCompleted: index < currentStep || allFieldsFilled
+            const isCompleted =
+              index < currentStep ||
+              (() => {
+                // Se é a etapa atual ou anterior, verifica se todos os campos obrigatórios estão preenchidos
+                const requiredFields = step.fields.filter(
+                  (field) => field.required
+                );
+                const allFieldsFilled = requiredFields.every((field) => {
+                  const value = formData[field.name];
+                  return value !== undefined && value.trim() !== '';
                 });
-              }
-              
-              return allFieldsFilled;
-            })();
+
+                // Debug log
+                if (index <= currentStep) {
+                  console.log(`Etapa ${step.title}:`, {
+                    requiredFields: requiredFields.length,
+                    allFieldsFilled,
+                    isCompleted: index < currentStep || allFieldsFilled,
+                  });
+                }
+
+                return allFieldsFilled;
+              })();
 
             return (
               <button
@@ -362,16 +366,16 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 <div
                   className={cn(
                     'relative w-7 h-7 flex items-center justify-center transition-all duration-200 shadow-sm',
-                    isActive && 'bg-white border-2 border-neutral-800 rounded-md',
-                    !isActive &&
-                      isCompleted &&
-                      'bg-green-500 rounded-full',
+                    isActive &&
+                      'bg-white border-2 border-neutral-800 rounded-md',
+                    !isActive && isCompleted && 'bg-green-500 rounded-full',
                     !isActive &&
                       !isCompleted &&
                       'bg-white border border-neutral-300 rounded-md'
                   )}
                   style={{
-                    backgroundColor: !isActive && isCompleted ? '#34A853' : undefined
+                    backgroundColor:
+                      !isActive && isCompleted ? '#34A853' : undefined,
                   }}
                 >
                   {isCompleted ? (
@@ -408,7 +412,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                       isCompleted ? 'bg-green-500' : 'bg-neutral-300'
                     )}
                     style={{
-                      backgroundColor: isCompleted ? '#34A853' : '#DADCE0'
+                      backgroundColor: isCompleted ? '#34A853' : '#DADCE0',
                     }}
                   />
                 )}
@@ -540,8 +544,6 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                     })}
                   </div>
                 </div>
-
-
               </div>
             </motion.div>
           </AnimatePresence>

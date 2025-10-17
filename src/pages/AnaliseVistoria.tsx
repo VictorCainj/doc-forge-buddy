@@ -166,7 +166,7 @@ const AnaliseVistoria = () => {
   // Verificar se há problemas específicos no modo orçamento
   useEffect(() => {
     if (documentMode === 'orcamento') {
-      console.log('Modo orçamento ativado, verificando dependências:', {
+      log.info('Modo orçamento ativado, verificando dependências:', {
         prestadores: prestadores?.length || 0,
         correctText: !!correctText,
         extractApontamentos: !!extractApontamentos,
@@ -440,13 +440,10 @@ const AnaliseVistoria = () => {
                     prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
                 }));
 
-                console.log(
-                  '📋 Dados do contrato preenchidos ao carregar análise:',
-                  {
-                    locatario: locatarioFinal,
-                    endereco: enderecoFinal,
-                  }
-                );
+                log.info('Dados do contrato preenchidos ao carregar análise:', {
+                  locatario: locatarioFinal,
+                  endereco: enderecoFinal,
+                });
               } catch (error) {
                 console.error('Erro ao processar dados do contrato:', error);
               }
@@ -768,78 +765,73 @@ const AnaliseVistoria = () => {
         }
 
         // Debug: Verificar apontamentos antes da validação
-        // console.log('=== DEBUG: APONTAMENTOS ANTES DA VALIDAÇÃO ===');
-        // console.log(
-        //   'Total de apontamentos válidos:',
-        //   apontamentosValidos.length
-        // );
-        apontamentosValidos.forEach((_apontamento, _index) => {
-          // console.log(
-          //   `\n--- Apontamento ${index + 1}: ${apontamento.ambiente} ---`
-          // );
-          // console.log('Fotos Inicial:', apontamento.vistoriaInicial?.fotos);
-          // console.log('Fotos Final:', apontamento.vistoriaFinal?.fotos);
-          // console.log(
-          //   'Tipo das fotos Inicial:',
-          //   typeof apontamento.vistoriaInicial?.fotos
-          // );
-          // console.log(
-          //   'Tipo das fotos Final:',
-          //   typeof apontamento.vistoriaFinal?.fotos
-          // );
+        log.debug('Apontamentos antes da validação', {
+          totalApontamentos: apontamentosValidos.length,
+        });
+        apontamentosValidos.forEach((apontamento, index) => {
+          log.debug(`Apontamento ${index + 1}: ${apontamento.ambiente}`, {
+            fotosInicial: apontamento.vistoriaInicial?.fotos?.length || 0,
+            fotosFinal: apontamento.vistoriaFinal?.fotos?.length || 0,
+            tipoFotosInicial: typeof apontamento.vistoriaInicial?.fotos,
+            tipoFotosFinal: typeof apontamento.vistoriaFinal?.fotos,
+          });
         });
 
         // Verificar se há fotos válidas nos apontamentos
-        // console.log('\n=== INICIANDO VALIDAÇÃO DE FOTOS ===');
-        // console.log('Apontamentos válidos:', apontamentosValidos.length);
+        log.debug('Iniciando validação de fotos', {
+          apontamentosValidos: apontamentosValidos.length,
+        });
 
         const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
-          // console.log(`\n=== VALIDANDO APONTAMENTO: ${apontamento.ambiente} ===`);
-          // console.log('Fotos Inicial originais:', apontamento.vistoriaInicial?.fotos);
-          // console.log('Fotos Final originais:', apontamento.vistoriaFinal?.fotos);
+          log.debug(`Validando apontamento: ${apontamento.ambiente}`, {
+            fotosInicialOriginais:
+              apontamento.vistoriaInicial?.fotos?.length || 0,
+            fotosFinalOriginais: apontamento.vistoriaFinal?.fotos?.length || 0,
+          });
 
           // Verificar se as fotos são objetos File válidos ou imagens do banco
           const fotosInicialValidas =
             apontamento.vistoriaInicial?.fotos?.filter((foto) => {
-              // console.log('Validando foto inicial:', foto);
-              // console.log('- isFromDatabase:', foto?.isFromDatabase);
-              // console.log('- URL:', foto?.url);
-              // console.log('- É File?:', foto instanceof File);
+              log.debug('Validando foto inicial', {
+                isFromDatabase: foto?.isFromDatabase,
+                hasUrl: !!foto?.url,
+                isFile: foto instanceof File,
+                fileSize: foto instanceof File ? foto.size : 0,
+              });
 
               // Se é do banco de dados, verificar se tem URL
               if (foto?.isFromDatabase) {
                 const hasValidUrl = foto.url && foto.url.length > 0;
-                // console.log('- Foto do banco - URL válida:', hasValidUrl);
                 return hasValidUrl;
               }
               // Se é File, verificar se é válido
               const isValidFile = foto instanceof File && foto.size > 0;
-              // console.log('- Foto File - é válida:', isValidFile);
               return isValidFile;
             }) || [];
 
           const fotosFinalValidas =
             apontamento.vistoriaFinal?.fotos?.filter((foto) => {
-              // console.log('Validando foto final:', foto);
-              // console.log('- isFromDatabase:', foto?.isFromDatabase);
-              // console.log('- URL:', foto?.url);
-              // console.log('- É File?:', foto instanceof File);
+              log.debug('Validando foto final', {
+                isFromDatabase: foto?.isFromDatabase,
+                hasUrl: !!foto?.url,
+                isFile: foto instanceof File,
+                fileSize: foto instanceof File ? foto.size : 0,
+              });
 
               // Se é do banco de dados, verificar se tem URL
               if (foto?.isFromDatabase) {
                 const hasValidUrl = foto.url && foto.url.length > 0;
-                // console.log('- Foto do banco - URL válida:', hasValidUrl);
                 return hasValidUrl;
               }
               // Se é File, verificar se é válido
               const isValidFile = foto instanceof File && foto.size > 0;
-              // console.log('- Foto File - é válida:', isValidFile);
               return isValidFile;
             }) || [];
 
-          // console.log(`RESULTADO ${apontamento.ambiente}:`);
-          // console.log('- Fotos Inicial válidas:', fotosInicialValidas.length);
-          // console.log('- Fotos Final válidas:', fotosFinalValidas.length);
+          log.debug(`Resultado ${apontamento.ambiente}`, {
+            fotosInicialValidas: fotosInicialValidas.length,
+            fotosFinalValidas: fotosFinalValidas.length,
+          });
 
           return {
             ...apontamento,
@@ -927,10 +919,11 @@ const AnaliseVistoria = () => {
           images: imagesData || [],
         };
 
-        // console.log('=== FORÇANDO RECARREGAMENTO DE IMAGENS ===');
-        // console.log('Análise encontrada:', analiseData.id);
-        // console.log('Imagens encontradas:', imagesData?.length || 0);
-        // console.log('Dados das imagens:', imagesData);
+        log.debug('Forçando recarregamento de imagens', {
+          analiseId: analiseData.id,
+          imagensEncontradas: imagesData?.length || 0,
+          dadosImagens: imagesData,
+        });
 
         // Carregar automaticamente a análise completa (NÃO exibir toast)
         await loadAnalysisData(completeAnalise, false);
@@ -1308,14 +1301,14 @@ const AnaliseVistoria = () => {
   const _handleContractSelect = (contractId: string) => {
     const contract = contracts.find((c) => c.id === contractId);
     if (contract) {
-      console.log('🔍 Contrato selecionado:', contract);
-      console.log('🔍 Terms do contrato:', (contract as any).terms);
+      log.info('Contrato selecionado', { contractId: contract.id });
+      log.debug('Terms do contrato', { terms: (contract as any).terms });
       try {
         const parsed = JSON.parse((contract as any).terms || '{}');
-        console.log('🔍 Terms parseados:', parsed);
-        console.log('🔍 Campos disponíveis:', Object.keys(parsed));
+        log.debug('Terms parseados', { parsed });
+        log.debug('Campos disponíveis', { campos: Object.keys(parsed) });
       } catch (e) {
-        console.error('Erro ao parsear terms:', e);
+        log.error('Erro ao parsear terms', { error: e });
       }
       setSelectedContract(contract);
     }
@@ -1563,13 +1556,13 @@ const AnaliseVistoria = () => {
             prev.dataVistoria || new Date().toLocaleDateString('pt-BR'),
         }));
 
-        console.log('📋 Dados do contrato carregados:', {
+        log.info('Dados do contrato carregados', {
           locatario: locatarioFinal,
           endereco: enderecoFinal,
           termos: parsedTerms,
         });
       } catch (error) {
-        console.error('Erro ao processar dados do contrato:', error);
+        log.error('Erro ao processar dados do contrato', { error });
         // Definir valores padrão em caso de erro
         setDadosVistoria((prev) => ({
           locatario: prev.locatario || 'Não informado',
@@ -2196,41 +2189,45 @@ const AnaliseVistoria = () => {
         <div className="max-w-6xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-                <ClipboardList className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                <ClipboardList className="h-5 w-5 text-neutral-700" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold text-neutral-900">
-                  {isEditMode
-                    ? 'Editar Análise de Vistoria'
-                    : 'Análise de Vistoria'}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-neutral-900">
+                    {isEditMode
+                      ? 'Editar Análise de Vistoria'
+                      : 'Análise de Vistoria'}
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="text-sm border-neutral-200 text-neutral-900"
+                    >
+                      {apontamentos.length} apontamento
+                      {apontamentos.length !== 1 ? 's' : ''}
+                    </Badge>
+                    {savedAnaliseId && (
+                      <Badge
+                        variant="outline"
+                        className="text-sm border-neutral-300 text-neutral-700"
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Salva
+                      </Badge>
+                    )}
+                  </div>
+                </div>
                 <p className="text-sm text-neutral-500 mt-1">
                   Sistema de análise comparativa de vistoria de saída
                 </p>
-                <Badge
-                  variant="outline"
-                  className="text-sm border-neutral-200 text-neutral-900"
-                >
-                  {apontamentos.length} apontamento
-                  {apontamentos.length !== 1 ? 's' : ''}
-                </Badge>
-                {savedAnaliseId && (
-                  <Badge
-                    variant="default"
-                    className="text-sm bg-success-500 text-white hover:bg-success-600"
-                  >
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Salva
-                  </Badge>
-                )}
               </div>
               <div className="flex items-center space-x-2">
                 {apontamentos.length > 0 && (
                   <ActionButton
                     icon={Trash2}
                     label="Limpar Tudo"
-                    variant="danger"
+                    variant="ghost"
                     size="sm"
                     onClick={clearAllData}
                   />
@@ -2246,7 +2243,7 @@ const AnaliseVistoria = () => {
                           ? 'Atualizar Análise Existente'
                           : 'Salvar Análise'
                   }
-                  variant="success"
+                  variant="secondary"
                   size="md"
                   loading={saving}
                   disabled={apontamentos.length === 0 || !selectedContract}
@@ -2259,7 +2256,7 @@ const AnaliseVistoria = () => {
                       ? 'Visualizar Exibição'
                       : 'Gerar Link de Exibição'
                   }
-                  variant="default"
+                  variant="ghost"
                   size="md"
                   disabled={apontamentos.length === 0 || !selectedContract}
                   onClick={openViewerMode}
@@ -2267,7 +2264,7 @@ const AnaliseVistoria = () => {
                 <ActionButton
                   icon={FileText}
                   label="Gerar Documento"
-                  variant="primary"
+                  variant="secondary"
                   size="md"
                   disabled={apontamentos.length === 0 || !selectedContract}
                   onClick={generateDocument}
@@ -2328,10 +2325,10 @@ const AnaliseVistoria = () => {
                         </div>
                         {loadingExistingAnalise && (
                           <Badge
-                            variant="default"
-                            className="bg-primary-600 hover:bg-primary-700 text-white"
+                            variant="outline"
+                            className="border-neutral-300 text-neutral-700"
                           >
-                            <div className="h-3 w-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <div className="h-3 w-3 mr-1 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
                             Carregando...
                           </Badge>
                         )}
@@ -2353,7 +2350,7 @@ const AnaliseVistoria = () => {
                             >
                               {loadingExistingAnalise ? (
                                 <>
-                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent mr-1" />
+                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent mr-1" />
                                   Carregando...
                                 </>
                               ) : (
@@ -2446,7 +2443,7 @@ const AnaliseVistoria = () => {
                   >
                     <SelectTrigger
                       id="prestador-select"
-                      className="bg-white border-neutral-300 text-neutral-900 focus:border-primary-500"
+                      className="bg-white border-neutral-300 text-neutral-900 focus:border-neutral-500"
                     >
                       <SelectValue placeholder="Selecione um prestador" />
                     </SelectTrigger>
@@ -2550,7 +2547,7 @@ const AnaliseVistoria = () => {
                   </div>
                   <Button
                     onClick={handleMigrarClassificacoes}
-                    className="bg-amber-600 hover:bg-amber-700 text-white shadow-md"
+                    variant="secondary"
                     size="sm"
                   >
                     <Wand2 className="h-4 w-4 mr-2" />
@@ -2602,9 +2599,9 @@ const AnaliseVistoria = () => {
                   </Button>
 
                   {showExtractionPanel && (
-                    <div className="space-y-3 p-4 bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-lg">
+                    <div className="space-y-3 p-4 bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200 rounded-lg">
                       <div className="flex items-start space-x-2">
-                        <Wand2 className="h-5 w-5 text-primary-600 mt-0.5" />
+                        <Wand2 className="h-5 w-5 text-neutral-600 mt-0.5" />
                         <div className="flex-1">
                           <h4 className="text-sm font-semibold text-neutral-900 mb-1">
                             Extração Automática de Apontamentos
@@ -2637,18 +2634,19 @@ está suja
                             value={extractionText}
                             onChange={(e) => setExtractionText(e.target.value)}
                             rows={10}
-                            className="text-sm bg-white border-primary-300 focus:border-primary-500 mb-3 font-mono"
+                            className="text-sm bg-white border-neutral-300 focus:border-neutral-500 mb-3 font-mono"
                           />
                           <div className="flex gap-2">
                             <Button
                               onClick={handleExtractApontamentos}
                               disabled={!extractionText.trim() || isAILoading}
-                              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+                              variant="secondary"
                               size="sm"
+                              className="flex-1"
                             >
                               {isAILoading ? (
                                 <>
-                                  <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  <div className="h-4 w-4 mr-2 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
                                   Processando...
                                 </>
                               ) : (
@@ -3003,8 +3001,8 @@ está suja
 
                   {/* Input para URL externa */}
                   {showExternalUrlInput && (
-                    <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <Label className="text-xs font-medium text-blue-900">
+                    <div className="space-y-2 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
+                      <Label className="text-xs font-medium text-neutral-900">
                         URL da Imagem Externa
                       </Label>
                       <div className="flex space-x-2">
@@ -3170,7 +3168,7 @@ está suja
                         </SelectItem>
                         <SelectItem value="revisao">
                           <div className="flex items-center space-x-2">
-                            <span className="text-warning-700">■</span>
+                            <span className="text-neutral-600">■</span>
                             <span>Passível de Revisão</span>
                           </div>
                         </SelectItem>
@@ -3293,7 +3291,7 @@ está suja
                     {/* Lista de Apontamentos */}
                     <div className="space-y-4">
                       <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
-                        <Eye className="h-4 w-4 text-primary" />
+                        <Eye className="h-4 w-4 text-neutral-600" />
                         <h4 className="text-sm font-medium text-foreground">
                           Gerenciar Apontamentos ({apontamentos.length})
                         </h4>
@@ -3307,8 +3305,8 @@ está suja
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex items-center space-x-3">
-                                <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-bold text-white">
+                                <div className="w-6 h-6 bg-neutral-200 rounded-full flex items-center justify-center">
+                                  <span className="text-xs font-bold text-neutral-700">
                                     {index + 1}
                                   </span>
                                 </div>
@@ -3364,7 +3362,7 @@ está suja
                                   onClick={() =>
                                     handleEditApontamento(apontamento)
                                   }
-                                  className="text-neutral-500 hover:text-primary h-6 w-6 p-0"
+                                  className="text-neutral-500 hover:text-neutral-700 h-6 w-6 p-0"
                                   title="Editar apontamento"
                                 >
                                   <Edit className="h-3 w-3" />

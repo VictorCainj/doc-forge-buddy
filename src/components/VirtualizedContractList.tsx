@@ -1,5 +1,14 @@
-import React, { memo, useRef, useCallback, useEffect, useState } from 'react';
+import React, {
+  memo,
+  useRef,
+  useCallback,
+  useEffect,
+  useState,
+  useMemo,
+} from 'react';
 import { FixedSizeList as List } from 'react-window';
+// @ts-expect-error - react-window-infinite-loader não tem tipos TypeScript
+import InfiniteLoader from 'react-window-infinite-loader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,6 +40,10 @@ interface VirtualizedContractListProps {
     template: string,
     documentType: string
   ) => void;
+  // Novas props para scroll infinito
+  itemCount?: number;
+  isItemLoaded?: (index: number) => boolean;
+  loadMoreItems?: (startIndex: number, stopIndex: number) => Promise<unknown>;
 }
 
 /**
@@ -259,16 +272,62 @@ export const VirtualizedContractList = memo<VirtualizedContractListProps>(
     displayedCount,
     hasSearched,
     onGenerateDocument,
+    itemCount,
+    isItemLoaded,
+    loadMoreItems,
   }) => {
     // TODOS OS HOOKS DEVEM VIR ANTES DE QUALQUER EARLY RETURN
     const listRef = useRef<List>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [listWidth, setListWidth] = useState(0);
+    const [_loadedItems, _setLoadedItems] = useState<Set<number>>(new Set());
 
-    // Função de renderização de cada item
+    // Memoizar configurações para scroll infinito
+    const infiniteLoaderConfig = useMemo(() => {
+      if (!itemCount || !isItemLoaded || !loadMoreItems) {
+        return null;
+      }
+
+      return {
+        itemCount,
+        isItemLoaded,
+        loadMoreItems,
+        threshold: 5, // Carregar quando faltam 5 itens para o fim
+      };
+    }, [itemCount, isItemLoaded, loadMoreItems]);
+
+    // Função de renderização de cada item com loading state
     const Row = useCallback(
       ({ index, style }: { index: number; style: React.CSSProperties }) => {
         const contract = contracts[index];
+
+        // Se não há contrato e estamos carregando mais, mostrar skeleton
+        if (!contract && isLoadingMore) {
+          return (
+            <div style={style} className="px-3 py-3">
+              <Card className="bg-white border-neutral-200 shadow-md overflow-visible h-full">
+                <CardContent className="p-5">
+                  <div className="animate-pulse">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-8 h-8 bg-neutral-200 rounded-lg"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-3 bg-neutral-200 rounded"></div>
+                      <div className="h-3 bg-neutral-200 rounded w-5/6"></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        }
+
+        if (!contract) return null;
+
         return (
           <ContractItem
             key={contract.id}
@@ -278,7 +337,7 @@ export const VirtualizedContractList = memo<VirtualizedContractListProps>(
           />
         );
       },
-      [contracts, onGenerateDocument]
+      [contracts, onGenerateDocument, isLoadingMore]
     );
 
     useEffect(() => {
@@ -349,27 +408,47 @@ export const VirtualizedContractList = memo<VirtualizedContractListProps>(
     // Altura estimada de cada item (pode ser ajustada)
     const itemSize = 520;
 
+    // Calcular altura total da lista
+    const totalItems = infiniteLoaderConfig?.itemCount || contracts.length;
+    const listHeight = Math.min(totalItems * itemSize, 2000);
+
     return (
       <>
-        {/* Lista virtualizada */}
+        {/* Lista virtualizada com scroll infinito */}
         <div
           ref={containerRef}
           style={{
-            height: `${Math.min(contracts.length * itemSize, 2000)}px`,
+            height: `${listHeight}px`,
             width: '100%',
           }}
         >
-          {listWidth > 0 && (
-            <List
-              ref={listRef}
-              height={Math.min(contracts.length * itemSize, 2000)}
-              itemCount={contracts.length}
-              itemSize={itemSize}
-              width={listWidth}
-            >
-              {Row}
-            </List>
-          )}
+          {listWidth > 0 &&
+            (infiniteLoaderConfig ? (
+              <InfiniteLoader {...infiniteLoaderConfig} ref={listRef}>
+                {({ onItemsRendered, ref }) => (
+                  <List
+                    ref={ref}
+                    height={listHeight}
+                    itemCount={infiniteLoaderConfig.itemCount}
+                    itemSize={itemSize}
+                    width={listWidth}
+                    onItemsRendered={onItemsRendered}
+                  >
+                    {Row}
+                  </List>
+                )}
+              </InfiniteLoader>
+            ) : (
+              <List
+                ref={listRef}
+                height={listHeight}
+                itemCount={contracts.length}
+                itemSize={itemSize}
+                width={listWidth}
+              >
+                {Row}
+              </List>
+            ))}
         </div>
 
         {/* Botão Ver Mais */}

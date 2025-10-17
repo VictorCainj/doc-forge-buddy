@@ -1,12 +1,15 @@
 {
   "name": "Doc Forge Buddy",
   "short_name": "DocForge",
-  "description": "Sistema de gerenciamento de contratos e documentos imobiliários",
+  "description": "Sistema de gerenciamento de contratos e documentos imobiliários com IA",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1e40af",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -18,24 +21,122 @@
       "type": "image/svg+xml",
       "sizes": "512x512",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "badge"
+    },
+    {
+      "src": "/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
-  "categories": ["business", "productivity"],
-  "screenshots": [],
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela principal do Doc Forge Buddy"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Interface mobile do Doc Forge Buddy"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Novo Contrato",
       "short_name": "Contrato",
-      "description": "Criar novo contrato",
+      "description": "Criar novo contrato de locação",
       "url": "/cadastrar-contrato",
-      "icons": []
+      "icons": [
+        {
+          "src": "/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Contratos",
       "short_name": "Contratos",
       "description": "Ver todos os contratos",
       "url": "/contratos",
-      "icons": []
+      "icons": [
+        {
+          "src": "/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Chat IA",
+      "short_name": "Chat",
+      "description": "Assistente inteligente",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Gerar Documento",
+      "short_name": "Documento",
+      "description": "Gerar documento personalizado",
+      "url": "/gerar-documento",
+      "icons": [
+        {
+          "src": "/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }

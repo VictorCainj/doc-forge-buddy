@@ -9,24 +9,108 @@ import {
 import { toast } from 'sonner';
 
 /**
+ * Gerar hash único para logs (garantir imutabilidade)
+ */
+async function generateLogHash(data: Record<string, any>): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataString = JSON.stringify(data, Object.keys(data).sort());
+  const dataBuffer = encoder.encode(dataString);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Obter ID da sessão (ou criar um novo)
+ */
+function getSessionId(): string {
+  let sessionId = sessionStorage.getItem('audit_session_id');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    sessionStorage.setItem('audit_session_id', sessionId);
+  }
+  return sessionId;
+}
+
+/**
+ * Salvar log localmente como backup
+ */
+function saveAuditLogLocally(payload: any): void {
+  try {
+    const existingLogs = JSON.parse(
+      localStorage.getItem('audit_logs_backup') || '[]'
+    );
+    existingLogs.push({
+      ...payload,
+      backup_timestamp: new Date().toISOString(),
+    });
+
+    // Manter apenas os últimos 100 logs
+    const trimmedLogs = existingLogs.slice(-100);
+    localStorage.setItem('audit_logs_backup', JSON.stringify(trimmedLogs));
+  } catch (error) {
+    console.error('Erro ao salvar log de backup:', error);
+  }
+}
+
+/**
+ * Retenção configurável de logs (default: 1 ano)
+ */
+export const AUDIT_LOG_RETENTION_DAYS = 365;
+
+/**
+ * Eventos críticos que devem sempre ser logados
+ */
+export const CRITICAL_AUDIT_EVENTS = [
+  'LOGIN',
+  'LOGOUT',
+  'PASSWORD_CHANGE',
+  'USER_DELETE',
+  'ADMIN_ACCESS',
+  'DATA_EXPORT',
+  'SECURITY_VIOLATION',
+];
+
+/**
  * Hook para registrar ações de auditoria manualmente
  */
 export const useLogAuditEvent = () => {
   return useMutation({
     mutationFn: async (payload: CreateAuditLogPayload) => {
-      // Obter informações do navegador
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
-        .then((res) => res.json())
-        .then((data) => data.ip)
-        .catch(() => null);
+      // Obter informações do navegador de forma mais robusta
+      let ipAddress: string | null = null;
+      try {
+        // Tentar múltiplas APIs para obter IP
+        const ipResponse = await Promise.race([
+          fetch('https://api.ipify.org?format=json'),
+          fetch('https://ipapi.co/json/'),
+          fetch('https://api.myip.com'),
+        ]);
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip || ipData.query || null;
+      } catch {
+        ipAddress = 'unknown';
+      }
 
       const userAgent = navigator.userAgent;
+      const timestamp = new Date().toISOString();
+
+      // Gerar hash único para garantir imutabilidade
+      const logHash = await generateLogHash({
+        timestamp,
+        action: payload.action,
+        entityType: payload.entity_type,
+        entityId: payload.entity_id,
+        userAgent,
+        ipAddress,
+      });
 
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const { data, error } = await supabase.rpc('log_audit_event', {
+      // Criar payload com campos obrigatórios de segurança
+      const securePayload = {
         p_user_id: user?.id || null,
         p_action: payload.action,
         p_entity_type: payload.entity_type,
@@ -35,10 +119,28 @@ export const useLogAuditEvent = () => {
         p_new_data: payload.new_data || null,
         p_ip_address: ipAddress,
         p_user_agent: userAgent,
-        p_metadata: payload.metadata || {},
-      });
+        p_metadata: {
+          ...payload.metadata,
+          log_hash: logHash,
+          timestamp,
+          session_id: getSessionId(),
+          window_size: `${window.innerWidth}x${window.innerHeight}`,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          referrer: document.referrer || null,
+          url: window.location.href,
+        },
+      };
 
-      if (error) throw error;
+      const { data, error } = await supabase.rpc(
+        'log_audit_event',
+        securePayload
+      );
+
+      if (error) {
+        // Em caso de erro, tentar salvar localmente como backup
+        saveAuditLogLocally(securePayload);
+        throw error;
+      }
       return data;
     },
     onError: (error: any) => {

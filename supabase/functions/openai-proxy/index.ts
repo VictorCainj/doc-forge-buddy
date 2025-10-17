@@ -18,7 +18,12 @@ interface OpenAIRequest {
     | 'analyzeImage'
     | 'generateImage'
     | 'transcribeAudio'
-    | 'extractApontamentos';
+    | 'extractApontamentos'
+    | 'analyzeMessageContext'
+    | 'generateHumanizedResponse'
+    | 'textToSpeech'
+    | 'generateDualResponses'
+    | 'extractNames';
   data: any;
 }
 
@@ -141,63 +146,64 @@ Seja conciso e prático. NÃO contextualize demais.`,
           throw new Error('Lista de tarefas não fornecida');
         }
 
-        const tasksInfo = data.tasks
-          .map((task: any, index: number) => {
-            const createdDate = new Date(task.created_at).toLocaleDateString(
-              'pt-BR'
-            );
-            const createdTime = new Date(task.created_at).toLocaleTimeString(
-              'pt-BR',
-              {
-                hour: '2-digit',
-                minute: '2-digit',
+        {
+          const tasksInfo = data.tasks
+            .map((task: any, index: number) => {
+              const createdDate = new Date(task.created_at).toLocaleDateString(
+                'pt-BR'
+              );
+              const createdTime = new Date(task.created_at).toLocaleTimeString(
+                'pt-BR',
+                {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }
+              );
+
+              let info = `\n=== TAREFA ${index + 1} ===`;
+              info += `\n📋 Título: "${task.title}"`;
+
+              if (task.subtitle && task.subtitle.trim()) {
+                info += `\n📌 Subtítulo: "${task.subtitle}"`;
               }
-            );
 
-            let info = `\n=== TAREFA ${index + 1} ===`;
-            info += `\n📋 Título: "${task.title}"`;
+              info += `\n📝 Descrição Completa: "${task.description}"`;
 
-            if (task.subtitle && task.subtitle.trim()) {
-              info += `\n📌 Subtítulo: "${task.subtitle}"`;
-            }
+              if (task.observacao && task.observacao.trim()) {
+                info += `\n📍 OBSERVAÇÕES E ATUALIZAÇÕES (IMPORTANTE):`;
+                info += `\n${task.observacao}`;
+              }
 
-            info += `\n📝 Descrição Completa: "${task.description}"`;
+              const statusLabel =
+                task.status === 'completed'
+                  ? '✅ Concluída'
+                  : task.status === 'in_progress'
+                    ? '🔄 Em Andamento'
+                    : '⏸️ Não Iniciada';
+              info += `\n🔖 Status: ${statusLabel}`;
+              info += `\n🕐 Criada: ${createdDate} às ${createdTime}`;
 
-            if (task.observacao && task.observacao.trim()) {
-              info += `\n📍 OBSERVAÇÕES E ATUALIZAÇÕES (IMPORTANTE):`;
-              info += `\n${task.observacao}`;
-            }
+              if (task.completed_at) {
+                const completedDate = new Date(
+                  task.completed_at
+                ).toLocaleDateString('pt-BR');
+                const completedTime = new Date(
+                  task.completed_at
+                ).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                info += `\n✅ Concluída: ${completedDate} às ${completedTime}`;
+              }
 
-            const statusLabel =
-              task.status === 'completed'
-                ? '✅ Concluída'
-                : task.status === 'in_progress'
-                  ? '🔄 Em Andamento'
-                  : '⏸️ Não Iniciada';
-            info += `\n🔖 Status: ${statusLabel}`;
-            info += `\n🕐 Criada: ${createdDate} às ${createdTime}`;
+              return info;
+            })
+            .join('\n');
 
-            if (task.completed_at) {
-              const completedDate = new Date(
-                task.completed_at
-              ).toLocaleDateString('pt-BR');
-              const completedTime = new Date(
-                task.completed_at
-              ).toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              });
-              info += `\n✅ Concluída: ${completedDate} às ${completedTime}`;
-            }
-
-            return info;
-          })
-          .join('\n');
-
-        messages = [
-          {
-            role: 'system',
-            content: `Você é um assistente executivo especializado em criar resumos narrativos DETALHADOS e COMPLETOS de atividades profissionais diárias.
+          messages = [
+            {
+              role: 'system',
+              content: `Você é um assistente executivo especializado em criar resumos narrativos DETALHADOS e COMPLETOS de atividades profissionais diárias.
 
 REGRAS OBRIGATÓRIAS - NÃO PULE NENHUMA INFORMAÇÃO:
 
@@ -238,10 +244,10 @@ REGRAS OBRIGATÓRIAS - NÃO PULE NENHUMA INFORMAÇÃO:
    - SEM títulos, bullets ou formatação markdown
 
 IMPORTANTE: Este resumo será usado para documentação oficial. NENHUMA informação pode ser perdida ou omitida.`,
-          },
-          {
-            role: 'user',
-            content: `Crie um resumo narrativo COMPLETO e DETALHADO das atividades diárias do gestor ${data.userName}.
+            },
+            {
+              role: 'user',
+              content: `Crie um resumo narrativo COMPLETO e DETALHADO das atividades diárias do gestor ${data.userName}.
 
 INSTRUÇÕES ESPECÍFICAS:
 - Leia TODAS as informações de cada tarefa
@@ -254,11 +260,12 @@ DADOS DAS TAREFAS:
 ${tasksInfo}
 
 Agora crie o resumo narrativo completo:`,
-          },
-        ];
-        model = 'gpt-4o';
-        maxTokens = 4000;
-        temperature = 0.5;
+            },
+          ];
+          model = 'gpt-4o';
+          maxTokens = 4000;
+          temperature = 0.5;
+        }
         break;
 
       case 'analyzeContracts':
@@ -269,11 +276,12 @@ Agora crie o resumo narrativo completo:`,
           throw new Error('Contratos não fornecidos');
         }
 
-        let contractsContext = '';
-        if (data.completeContracts && data.completeContracts.length > 0) {
-          contractsContext = data.completeContracts
-            .map(
-              (contract: any, index: number) => `
+        {
+          let contractsContext = '';
+          if (data.completeContracts && data.completeContracts.length > 0) {
+            contractsContext = data.completeContracts
+              .map(
+                (contract: any, index: number) => `
 Contrato ${index + 1} (Dados Completos):
 - ID: ${contract.id}
 - Título: ${contract.title}
@@ -307,12 +315,12 @@ DOCUMENTOS SOLICITADOS:
 - Criado em: ${contract.created_at}
 - Atualizado em: ${contract.updated_at}
 `
-            )
-            .join('\n');
-        } else {
-          contractsContext = data.contracts
-            .map(
-              (contract: any, index: number) => `
+              )
+              .join('\n');
+          } else {
+            contractsContext = data.contracts
+              .map(
+                (contract: any, index: number) => `
 Contrato ${index + 1} (Dados Básicos):
 - ID: ${contract.id}
 - Número do Contrato: ${contract.numero_contrato}
@@ -327,14 +335,14 @@ Contrato ${index + 1} (Dados Básicos):
 - Criado em: ${contract.created_at}
 - Atualizado em: ${contract.updated_at}
 `
-            )
-            .join('\n');
-        }
+              )
+              .join('\n');
+          }
 
-        messages = [
-          {
-            role: 'system',
-            content: `Você é um assistente especializado em contratos imobiliários com acesso completo a todos os dados dos contratos. Você tem uma vasta memória e pode responder perguntas sobre qualquer aspecto dos contratos de forma natural e conversacional.
+          messages = [
+            {
+              role: 'system',
+              content: `Você é um assistente especializado em contratos imobiliários com acesso completo a todos os dados dos contratos. Você tem uma vasta memória e pode responder perguntas sobre qualquer aspecto dos contratos de forma natural e conversacional.
 
           Suas capacidades incluem:
           - Responder perguntas sobre contratos específicos
@@ -346,21 +354,22 @@ Contrato ${index + 1} (Dados Básicos):
           - Sugerir insights baseados nos dados disponíveis
 
           IMPORTANTE: Responda sempre em formato conversacional, como se estivesse conversando com uma pessoa. Seja natural, amigável e direto. Use linguagem clara e acessível. Quando fornecer informações, explique de forma que seja fácil de entender. Se não souber algo específico ou não tiver dados suficientes, seja honesto sobre isso.`,
-          },
-          {
-            role: 'user',
-            content: `Aqui estão os dados de todos os contratos disponíveis:
+            },
+            {
+              role: 'user',
+              content: `Aqui estão os dados de todos os contratos disponíveis:
 
 ${contractsContext}
 
 Pergunta: ${data.query}
 
 Por favor, responda de forma conversacional e natural, como se estivesse conversando comigo.`,
-          },
-        ];
-        model = 'gpt-4o';
-        maxTokens = 4000;
-        temperature = 0.7;
+            },
+          ];
+          model = 'gpt-4o';
+          maxTokens = 4000;
+          temperature = 0.7;
+        }
         break;
 
       case 'chatCompletion':
@@ -433,98 +442,103 @@ Por favor, responda de forma conversacional e natural, como se estivesse convers
         if (!data.prompt) {
           throw new Error('Prompt não fornecido');
         }
-        // Gerar imagem com DALL-E
-        const imageResponse = await fetch(
-          'https://api.openai.com/v1/images/generations',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${openaiApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'dall-e-3',
-              prompt: `Create a professional, high-quality image: ${data.prompt}`,
-              n: 1,
-              size: '1024x1024',
-              quality: 'standard',
+        {
+          // Gerar imagem com DALL-E
+          const imageResponse = await fetch(
+            'https://api.openai.com/v1/images/generations',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${openaiApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'dall-e-3',
+                prompt: `Create a professional, high-quality image: ${data.prompt}`,
+                n: 1,
+                size: '1024x1024',
+                quality: 'standard',
+              }),
+            }
+          );
+
+          if (!imageResponse.ok) {
+            const error = await imageResponse.text();
+            console.error('DALL-E API Error:', error);
+            throw new Error(`Erro na API DALL-E: ${imageResponse.status}`);
+          }
+
+          const imageData = await imageResponse.json();
+          const imageUrl = imageData.data[0]?.url;
+
+          if (!imageUrl) {
+            throw new Error('URL da imagem não retornada pela API');
+          }
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              content: imageUrl,
             }),
-          }
-        );
-
-        if (!imageResponse.ok) {
-          const error = await imageResponse.text();
-          console.error('DALL-E API Error:', error);
-          throw new Error(`Erro na API DALL-E: ${imageResponse.status}`);
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
         }
-
-        const imageData = await imageResponse.json();
-        const imageUrl = imageData.data[0]?.url;
-
-        if (!imageUrl) {
-          throw new Error('URL da imagem não retornada pela API');
-        }
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            content: imageUrl,
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
 
       case 'transcribeAudio':
         if (!data.audioBase64) {
           throw new Error('Áudio não fornecido');
         }
+        {
+          // Converter base64 para Blob
+          const audioBuffer = Uint8Array.from(atob(data.audioBase64), (c) =>
+            c.charCodeAt(0)
+          );
+          const audioBlob = new Blob([audioBuffer]);
 
-        // Converter base64 para Blob
-        const audioBuffer = Uint8Array.from(atob(data.audioBase64), (c) =>
-          c.charCodeAt(0)
-        );
-        const audioBlob = new Blob([audioBuffer]);
+          // Criar FormData para Whisper API
+          const formData = new FormData();
+          formData.append('file', audioBlob, data.fileName || 'audio.webm');
+          formData.append('model', 'whisper-1');
+          formData.append('language', 'pt');
+          formData.append('response_format', 'text');
 
-        // Criar FormData para Whisper API
-        const formData = new FormData();
-        formData.append('file', audioBlob, data.fileName || 'audio.webm');
-        formData.append('model', 'whisper-1');
-        formData.append('language', 'pt');
-        formData.append('response_format', 'text');
+          const transcribeResponse = await fetch(
+            'https://api.openai.com/v1/audio/transcriptions',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${openaiApiKey}`,
+              },
+              body: formData,
+            }
+          );
 
-        const transcribeResponse = await fetch(
-          'https://api.openai.com/v1/audio/transcriptions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${openaiApiKey}`,
-            },
-            body: formData,
+          if (!transcribeResponse.ok) {
+            const error = await transcribeResponse.text();
+            console.error('Whisper API Error:', error);
+            throw new Error(
+              `Erro na API Whisper: ${transcribeResponse.status}`
+            );
           }
-        );
 
-        if (!transcribeResponse.ok) {
-          const error = await transcribeResponse.text();
-          console.error('Whisper API Error:', error);
-          throw new Error(`Erro na API Whisper: ${transcribeResponse.status}`);
-        }
+          const transcription = await transcribeResponse.text();
 
-        const transcription = await transcribeResponse.text();
-
-        if (!transcription) {
-          throw new Error('Resposta vazia da API de transcrição');
-        }
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            content: transcription,
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          if (!transcription) {
+            throw new Error('Resposta vazia da API de transcrição');
           }
-        );
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              content: transcription,
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
 
       case 'extractApontamentos':
         if (!data.text) {
@@ -610,12 +624,296 @@ IMPORTANTE:
         responseFormat = { type: 'json_object' };
         break;
 
+      case 'analyzeMessageContext':
+        if (!data.message) {
+          throw new Error('Mensagem não fornecida');
+        }
+        messages = [
+          {
+            role: 'system',
+            content: `Você é um especialista em análise de comunicação e sentimentos. Analise a mensagem fornecida e retorne informações estruturadas sobre emoção, formalidade, urgência e intenção.
+
+IMPORTANTE: Retorne APENAS um JSON válido no formato especificado abaixo.
+
+FORMATO DE RESPOSTA:
+{
+  "emotion": "positive" | "negative" | "neutral" | "frustrated" | "concerned" | "grateful" | "urgent",
+  "formality": "formal" | "informal" | "neutral",
+  "urgency": "low" | "medium" | "high",
+  "intent": "question" | "complaint" | "request" | "greeting" | "gratitude" | "information",
+  "context": "string descrevendo o contexto detectado",
+  "suggestedTone": "empathetic" | "professional" | "friendly" | "direct" | "reassuring",
+  "confidence": 0.0-1.0
+}
+
+CRITÉRIOS DE ANÁLISE:
+- EMOTION: Identifique a emoção dominante na mensagem
+- FORMALITY: Avalie o nível de formalidade (formal=linguagem técnica/polida, informal=gírias/coloquial, neutral=padrão)
+- URGENCY: Detecte se há sinais de urgência (palavras como "urgente", "agora", "já", "!", etc.)
+- INTENT: Classifique a intenção principal da mensagem
+- CONTEXT: Descreva brevemente o contexto detectado (ex: "pintura", "vistoria", "contrato", "geral")
+- SUGGESTED_TONE: Sugira o tom mais apropriado para resposta
+- CONFIDENCE: Avalie sua confiança na análise (0.0-1.0)`,
+          },
+          {
+            role: 'user',
+            content: `Analise a seguinte mensagem:\n\n"${data.message}"`,
+          },
+        ];
+        model = 'gpt-4o-mini';
+        maxTokens = 500;
+        temperature = 0.3;
+        responseFormat = { type: 'json_object' };
+        break;
+
+      case 'generateHumanizedResponse':
+        if (!data.message) {
+          throw new Error('Mensagem não fornecida');
+        }
+        messages = [
+          {
+            role: 'system',
+            content: `Você é um assistente imobiliário profissional e experiente. Sua tarefa é gerar respostas formais, inteligentes e bem estruturadas para mensagens de locadores e locatários.
+
+CONTEXTO:
+- Mensagem recebida: "${data.message}"
+- Emoção detectada: ${data.analysis?.emotion || 'neutral'}
+- Formalidade: ${data.analysis?.formality || 'neutral'}
+- Urgência: ${data.analysis?.urgency || 'low'}
+- Intenção: ${data.analysis?.intent || 'information'}
+- Perfil da pessoa: ${data.profile ? JSON.stringify(data.profile) : 'N/A'}
+- Contexto do contrato: ${data.context || 'N/A'}
+
+INSTRUÇÕES OBRIGATÓRIAS PARA A RESPOSTA:
+1. TOM SEMPRE FORMAL E PROFISSIONAL:
+   - Use sempre "Prezado(a)" como saudação
+   - Linguagem técnica e precisa
+   - Estrutura completa e organizada
+   - Encerramento com "Atenciosamente"
+
+2. ADAPTE À EMOÇÃO DETECTADA:
+   - Frustrado/Preocupado: Reconheça a preocupação e demonstre comprometimento
+   - Urgente: Priorize rapidez e estabeleça prazos claros
+   - Grato/Positivo: Mantenha cordialidade e profissionalismo
+   - Neutro: Seja direto e objetivo
+
+3. SEJA INTELIGENTE E CONTEXTUAL:
+   - Use informações do contrato quando relevante
+   - Referencie dados específicos (endereço, valores, datas)
+   - Demonstre conhecimento técnico do setor imobiliário
+   - Forneça informações precisas e úteis
+
+4. ESTRUTURA PROFISSIONAL:
+   - Saudação formal
+   - Reconhecimento da questão/situação
+   - Informação técnica e precisa
+   - Compromisso de ação
+   - Encerramento formal
+
+5. LINGUAGEM TÉCNICA:
+   - Use terminologia imobiliária adequada
+   - Seja preciso em prazos e procedimentos
+   - Demonstre expertise profissional
+   - Evite linguagem coloquial
+
+EXEMPLOS DE RESPOSTAS FORMALES:
+- "Prezado(a) [nome], reconhecemos sua preocupação e lamentamos o inconveniente. Vamos analisar a situação e implementar as medidas necessárias para resolver a questão. Retornaremos em breve com uma solução adequada. Atenciosamente."
+- "Prezado(a) [nome], agradecemos seu contato. Vamos verificar as informações solicitadas e retornaremos com as respostas no menor prazo possível. Atenciosamente."
+
+IMPORTANTE: Gere uma resposta única, formal, inteligente e adequada ao contexto. Demonstre expertise profissional e comprometimento com a solução.`,
+          },
+          {
+            role: 'user',
+            content: `Gere uma resposta formal e inteligente para a mensagem: "${data.message}"`,
+          },
+        ];
+        model = 'gpt-4o';
+        maxTokens = 800;
+        temperature = 0.5;
+        break;
+
+      case 'generateDualResponses':
+        if (!data.message) {
+          throw new Error('Mensagem não fornecida');
+        }
+        messages = [
+          {
+            role: 'system',
+            content: `Você é um assistente imobiliário experiente e humano. Sua tarefa é gerar DUAS respostas inteligentes, contextuais e humanas baseadas na mensagem recebida.
+
+CONTEXTO:
+- Mensagem recebida: "${data.message}"
+- Remetente detectado: ${data.detectedSender || 'unknown'}
+- Nomes disponíveis: ${JSON.stringify(data.names || {})}
+- Saudação já usada: ${data.hasUsedGreeting ? 'Sim' : 'Não'}
+- Dados do contrato: ${data.contract ? JSON.stringify(data.contract) : 'N/A'}
+
+INSTRUÇÕES CRÍTICAS:
+
+1. SEJA INTELIGENTE E CONTEXTUAL:
+   - Analise DETALHADAMENTE o conteúdo da mensagem
+   - Identifique informações específicas solicitadas (cores, marcas, datas, valores, etc.)
+   - Gere respostas que façam sentido no contexto imobiliário
+   - NÃO use respostas genéricas - seja específico e útil
+
+2. GERAÇÃO DE RESPOSTAS INTELIGENTES:
+   - Se LOCATÁRIO pergunta sobre cor da tinta → LOCADOR deve receber pergunta específica sobre a cor da tinta
+   - Se LOCATÁRIO pede autorização → LOCADOR deve receber pergunta sobre a autorização específica
+   - Se LOCADOR aprova algo → LOCATÁRIO deve receber confirmação específica do que foi aprovado
+   - Se há problema relatado → Gere respostas que abordem o problema específico
+
+3. EXEMPLOS DE RESPOSTAS INTELIGENTES E HUMANAS:
+   - Locatário pergunta cor da tinta → Locador: "Boa tarde Sr [NOME], tudo bem? O locatário gostaria de gentilmente verificar com o senhor a cor da tinta usada nas paredes do imóvel. O senhor se recorda?"
+   - Locatário pergunta cor da tinta → Locatário: "Bom dia/Boa tarde, Sr [NOME], tudo bem obrigado. Maravilha, irei verificar com o locador e retorno assim que possível."
+   - Locatário pede autorização → Locador: "Boa tarde Sr [NOME], tudo bem? O locatário solicitou autorização para [tipo específico]. O senhor autoriza?"
+   - Locatário relata problema → Locador: "Boa tarde Sr [NOME], tudo bem? O locatário relatou um problema com [problema específico]. Como devemos proceder?"
+
+4. LINGUAGEM NATURAL E HUMANA:
+   - Use cumprimentos naturais: "Bom dia", "Boa tarde", "tudo bem?"
+   - Linguagem conversacional e respeitosa
+   - Use "Sr [NOME]" quando disponível
+   - Seja gentil e cordial
+   - Evite linguagem muito formal ou robótica
+
+5. CONTEXTUALIZAÇÃO:
+   - Use nomes quando disponíveis
+   - Referencie dados específicos da mensagem
+   - Demonstre que entendeu o contexto
+   - Faça perguntas específicas quando necessário
+
+6. DETECÇÃO INTELIGENTE:
+   - Analise palavras-chave para identificar o contexto
+   - Se contém "solicito", "peço", "gostaria" → provavelmente locatário
+   - Se contém "aprovado", "autorizado", "pode" → provavelmente locador
+   - Se contém perguntas específicas → gere respostas específicas
+
+IMPORTANTE: Seja HUMANO, NATURAL e INTELIGENTE. Use linguagem conversacional e respeitosa. Não use respostas genéricas ou robóticas. Analise o contexto e gere respostas que façam sentido e sejam úteis para ambas as partes. Use cumprimentos naturais e seja gentil.
+
+PROIBIDO: NUNCA use frases como "Obrigado pela paciência", "Obrigado pela compreensão", "Agradecemos a paciência" ou similares. Seja direto e objetivo.
+
+RESPONDA APENAS COM UM JSON no formato:
+{
+  "locadorResponse": "resposta específica e contextual para o locador",
+  "locatarioResponse": "resposta específica e contextual para o locatário",
+  "detectedSender": "locador|locatario|unknown",
+  "extractedNames": {
+    "locador": "nome do locador se encontrado",
+    "locatario": "nome do locatário se encontrado"
+  }
+}`,
+          },
+          {
+            role: 'user',
+            content: `Analise a mensagem e gere as duas respostas inteligentes e contextuais: "${data.message}"`,
+          },
+        ];
+        model = 'gpt-4o';
+        maxTokens = 1500;
+        temperature = 0.7;
+        responseFormat = { type: 'json_object' };
+        break;
+
+      case 'extractNames':
+        if (!data.message) {
+          throw new Error('Mensagem não fornecida');
+        }
+        messages = [
+          {
+            role: 'system',
+            content: `Você é um assistente especializado em extrair nomes de locadores e locatários de mensagens.
+
+Analise a mensagem e identifique:
+1. Nomes de pessoas mencionadas
+2. Se são locadores ou locatários (baseado no contexto)
+3. Padrões como "Fulano (locador)", "Ciclano (locatário)", etc.
+
+RESPONDA APENAS COM UM JSON no formato:
+{
+  "locador": "nome do locador se encontrado",
+  "locatario": "nome do locatário se encontrado"
+}
+
+Se não encontrar nomes específicos, retorne objetos vazios.`,
+          },
+          {
+            role: 'user',
+            content: `Extraia os nomes da mensagem: "${data.message}"`,
+          },
+        ];
+        model = 'gpt-4o';
+        maxTokens = 200;
+        temperature = 0.3;
+        responseFormat = { type: 'json_object' };
+        break;
+
+      case 'transcribeAudio':
+        if (!data.audio) {
+          throw new Error('Áudio não fornecido');
+        }
+
+        // Para transcrição de áudio, precisamos usar a API de áudio da OpenAI
+        // Por enquanto, retornar um placeholder
+        return {
+          transcription:
+            'Transcrição de áudio não implementada ainda. Por favor, digite a mensagem.',
+        };
+
+      case 'textToSpeech':
+        if (!data.text) {
+          throw new Error('Texto não fornecido');
+        }
+        {
+          // Gerar áudio com OpenAI TTS
+          const ttsResponse = await fetch(
+            'https://api.openai.com/v1/audio/speech',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${openaiApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'tts-1',
+                input: data.text,
+                voice: 'nova', // Voz natural em português
+                response_format: 'mp3',
+              }),
+            }
+          );
+
+          if (!ttsResponse.ok) {
+            const error = await ttsResponse.text();
+            console.error('TTS API Error:', error);
+            throw new Error(`Erro na API TTS: ${ttsResponse.status}`);
+          }
+
+          // Converter resposta para base64
+          const audioBuffer = await ttsResponse.arrayBuffer();
+          const base64Audio = btoa(
+            String.fromCharCode(...new Uint8Array(audioBuffer))
+          );
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              content: base64Audio,
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
       default:
         throw new Error(`Ação inválida: ${action}`);
     }
 
     // Fazer a chamada à OpenAI (apenas para ações que usam chat completions)
-    if (action !== 'generateImage' && action !== 'transcribeAudio') {
+    if (
+      action !== 'generateImage' &&
+      action !== 'transcribeAudio' &&
+      action !== 'textToSpeech'
+    ) {
       const response = await fetch(
         'https://api.openai.com/v1/chat/completions',
         {

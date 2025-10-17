@@ -131,7 +131,7 @@ export function getExpProgress(currentExp: number): {
 } {
   const level = calculateLevel(currentExp);
   const currentLevelMinExp = (level - 1) * 100;
-  const nextLevelExp = level * 100;
+  const _nextLevelExp = level * 100;
   const currentLevelExp = currentExp - currentLevelMinExp;
   const progress = (currentLevelExp / 100) * 100;
 

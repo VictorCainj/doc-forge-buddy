@@ -15,7 +15,10 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "optimize": "npm run lint:fix && npm run type-check && npm run build"
+    "test:security": "npm audit --audit-level=moderate",
+    "analyze": "npx vite-bundle-visualizer",
+    "optimize": "npm run lint:fix && npm run type-check && npm run build",
+    "security:audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -42,7 +45,9 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "docx": "^9.5.1",
+    "dompurify": "^3.3.0",
     "framer-motion": "^12.23.12",
+    "html2pdf.js": "^0.12.1",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.545.0",
     "openai": "^5.21.0",
@@ -52,6 +57,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.1",
     "react-window": "^2.2.0",
+    "react-window-infinite-loader": "^2.0.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sonner": "^1.7.4",

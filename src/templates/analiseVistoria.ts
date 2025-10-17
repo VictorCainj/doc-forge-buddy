@@ -1,4 +1,5 @@
 import { fileToBase64HD, urlToBase64HD } from '@/utils/imageHD';
+import { log } from '@/utils/logger';
 
 export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   locatario: string;
@@ -48,16 +49,16 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
     tipoVistoria: string = 'desconhecido'
   ) => {
     if (!fotos || fotos.length === 0) {
-      console.log(`[${tipoVistoria}] Nenhuma foto para processar`);
+      log.debug(`${tipoVistoria}: Nenhuma foto para processar`);
       return [];
     }
 
-    console.log(`[${tipoVistoria}] Processando ${fotos.length} foto(s)`);
+    log.debug(`${tipoVistoria}: Processando ${fotos.length} foto(s)`);
 
     const fotosBase64 = await Promise.all(
       fotos.map(async (foto, index) => {
         try {
-          console.log(`[${tipoVistoria}] Foto ${index + 1}:`, {
+          log.debug(`${tipoVistoria}: Foto ${index + 1}`, {
             isFromDatabase: foto.isFromDatabase,
             isExternal: foto.isExternal,
             hasUrl: !!foto.url,
@@ -68,10 +69,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
           // Se é uma imagem do banco de dados
           if (foto.isFromDatabase && foto.url) {
-            console.log(
-              `[${tipoVistoria}] Processando imagem do banco:`,
-              foto.url
-            );
+            log.debug(`${tipoVistoria}: Processando imagem do banco`, {
+              url: foto.url,
+            });
             try {
               // Tentar converter URL para base64 HD
               const base64HD = await urlToBase64HD(foto.url, {
@@ -80,8 +80,8 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                 quality: 0.95,
                 format: 'jpeg',
               });
-              console.log(
-                `[${tipoVistoria}] ✓ Imagem do banco convertida com sucesso`
+              log.debug(
+                `${tipoVistoria}: Imagem do banco convertida com sucesso`
               );
               return { nome: foto.name || 'imagem', base64: base64HD };
             } catch (error) {
@@ -96,10 +96,9 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
           // Se é uma imagem externa
           if (foto.isExternal && foto.url) {
-            console.log(
-              `[${tipoVistoria}] Processando imagem externa:`,
-              foto.url
-            );
+            log.debug(`${tipoVistoria}: Processando imagem externa`, {
+              url: foto.url,
+            });
 
             // Detectar URLs do Devolus Vistoria
             const isDevolusUrl = foto.url.includes('devolusvistoria.com.br');
@@ -123,16 +122,16 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
               };
             } else {
               // Para outras URLs externas, usar diretamente sem conversão
-              console.log(
-                `[${tipoVistoria}] ✓ Usando URL externa diretamente (evita CORS)`
+              log.debug(
+                `${tipoVistoria}: Usando URL externa diretamente (evita CORS)`
               );
 
               // Validar se a URL é válida
               try {
                 new URL(foto.url);
-                console.log(
-                  `[${tipoVistoria}] ✓ URL externa válida: ${foto.url}`
-                );
+                log.debug(`${tipoVistoria}: URL externa válida`, {
+                  url: foto.url,
+                });
               } catch (error) {
                 console.error(
                   `[${tipoVistoria}] ❌ URL externa inválida: ${foto.url}`,
@@ -157,14 +156,14 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
           }
 
           // Converter File para base64 HD
-          console.log(`[${tipoVistoria}] Processando File:`, foto.name);
+          log.debug(`${tipoVistoria}: Processando File`, { name: foto.name });
           const base64HD = await fileToBase64HD(foto, {
             maxWidth: 2560,
             maxHeight: 1440,
             quality: 0.95,
             format: 'jpeg',
           });
-          console.log(`[${tipoVistoria}] ✓ File convertido com sucesso`);
+          log.debug(`${tipoVistoria}: File convertido com sucesso`);
           return { nome: foto.name, base64: base64HD };
         } catch (error) {
           console.error(
@@ -178,9 +177,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
     // Filtrar fotos que falharam no processamento
     const fotosValidas = fotosBase64.filter((foto) => foto !== null);
-    console.log(
-      `[${tipoVistoria}] Resultado: ${fotosValidas.length} foto(s) válida(s) de ${fotos.length} total`
-    );
+    log.debug(`${tipoVistoria}: Resultado`, {
+      fotosValidas: fotosValidas.length,
+      totalFotos: fotos.length,
+    });
     return fotosValidas;
   };
 
@@ -258,8 +258,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   `;
 
   // Classificar apontamentos por tipo - APENAS MANUAL (apenas para modo análise)
-  console.log('🔍 [DEBUG] documentMode:', dados.documentMode);
-  console.log('🔍 [DEBUG] Total apontamentos:', dados.apontamentos.length);
+  log.debug('Classificando apontamentos', {
+    documentMode: dados.documentMode,
+    totalApontamentos: dados.apontamentos.length,
+  });
 
   if (dados.documentMode !== 'orcamento') {
     const responsabilidadesLocatario: Array<
@@ -270,7 +272,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
     > = [];
 
     dados.apontamentos.forEach((apontamento, index) => {
-      console.log(`🔍 [DEBUG] Apontamento ${index + 1}:`, {
+      log.debug(`Apontamento ${index + 1}`, {
         ambiente: apontamento.ambiente,
         classificacao: apontamento.classificacao,
       });
@@ -284,19 +286,16 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       // Se for 'automatico' ou não tiver classificacao, não aparece no resumo
     });
 
-    console.log(
-      '🔍 [DEBUG] Responsabilidades:',
-      responsabilidadesLocatario.length
-    );
-    console.log('🔍 [DEBUG] Revisões:', passiveisRevisao.length);
+    log.debug('Classificação concluída', {
+      responsabilidades: responsabilidadesLocatario.length,
+      revisoes: passiveisRevisao.length,
+    });
 
     // Adicionar seções de resumo visual apenas se houver apontamentos
     if (responsabilidadesLocatario.length > 0 || passiveisRevisao.length > 0) {
-      console.log('✅ [DEBUG] Gerando resumo visual...');
+      log.debug('Gerando resumo visual');
     } else {
-      console.log(
-        '⚠️ [DEBUG] Nenhum apontamento classificado - resumo não será gerado'
-      );
+      log.warn('Nenhum apontamento classificado - resumo não será gerado');
     }
 
     if (responsabilidadesLocatario.length > 0 || passiveisRevisao.length > 0) {

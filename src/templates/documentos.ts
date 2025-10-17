@@ -159,7 +159,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   <p style="margin-bottom: 20px;">{{saudacaoLocatario}}, tudo bem?</p>
   {{/if}}
   
-  <p style="margin-bottom: 20px;">Para darmos continuidade ao processo de vistoria de saída do imóvel <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>), precisamos das <strong>3 últimas contas completas e comprovantes de pagamento</strong> (dos 3 últimos meses) das contas de consumo.</p>
+  <p style="margin-bottom: 20px;">Lembre-se de entregar as <strong>3 últimas contas completas e comprovantes de pagamento</strong> (dos 3 últimos meses) das contas de consumo do imóvel situado à <strong>{{enderecoImovel}}</strong> (Contrato <strong>{{numeroContrato}}</strong>).</p>
   
   <p style="margin-bottom: 20px;">É importante enviar tanto o <strong>comprovante de pagamento</strong> quanto a <strong>conta completa (fatura)</strong> dos últimos 3 meses de cada documento solicitado.</p>
   
@@ -194,7 +194,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
   
   <div style="margin: 30px 0; padding: 20px; background-color: #F8F9FA; border-radius: 8px;">
     <p style="margin-bottom: 15px; font-weight: 600; color: #202124; font-size: 15px;">O que é a "conta completa"?</p>
-    <p style="margin-bottom: 15px; color: #5F6368;">A conta completa (fatura) contém todas as informações: dados do imóvel, histórico de consumo, valores detalhados e código de barras.</p>
+    <p style="margin-bottom: 15px; color: #5F6368;">A conta completa é a fatura que mostra todos os detalhes do consumo: endereço do imóvel, valores cobrados, histórico e o código de barras para pagamento.</p>
     
     {{#if cpfl}}
     {{#eq cpfl "SIM"}}
@@ -203,7 +203,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
       <img src="https://cdn.saocarlosagora.com.br/img/pc/780/530/dn_arquivo/2022/07/1657665165.jpg?c=1" alt="Exemplo de conta de energia completa" style="max-width: 100%; height: auto; border: 1px solid #E8EAED; border-radius: 4px; margin-bottom: 10px;" />
       <p style="font-size: 13px; color: #5F6368; font-style: italic;">Este é o modelo da fatura completa que precisa ser enviada (em formato de documento ou foto).</p>
       <div style="margin-top: 12px; padding: 12px; background-color: #FFFFFF; border: 1px solid #E8EAED; border-radius: 4px;">
-        <p style="font-size: 13px; color: #5F6368; margin: 0;"><strong style="color: #202124;">Como obter:</strong> Acesse o site ou aplicativo da CPFL, faça login e, na área "Débitos e Segunda Via", baixe sua conta.</p>
+        <p style="font-size: 13px; color: #5F6368; margin: 0;"><strong style="color: #202124;">Como obter:</strong> acesse o site ou aplicativo da CPFL, faça login e, na área "Débitos e Segunda Via", baixe as contas dos últimos 3 meses.</p>
       </div>
     </div>
     {{/eq}}
@@ -216,7 +216,7 @@ export const DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE = `
       <img src="https://www.daev.org.br/webapp/uploads/noticias/imagem_whatsapp-image-2021-12-14-at-094721jpeg.jpeg" alt="Exemplo de conta completa de água completa" style="max-width: 100%; height: auto; border: 1px solid #E8EAED; border-radius: 4px; margin-bottom: 10px;" />
       <p style="font-size: 13px; color: #5F6368; font-style: italic;">Este é o modelo da fatura completa que precisa ser enviada (em formato de documento ou foto).</p>
       <div style="margin-top: 12px; padding: 12px; background-color: #FFFFFF; border: 1px solid #E8EAED; border-radius: 4px;">
-        <p style="font-size: 13px; color: #5F6368; margin: 0;"><strong style="color: #202124;">Como obter:</strong> Para resgatar sua conta de água do DAEV, acesse o site, vá até a opção "2ª via de contas" e informe o número da conta de água e o CPF do titular para emitir a segunda via.</p>
+        <p style="font-size: 13px; color: #5F6368; margin: 0;"><strong style="color: #202124;">Como obter:</strong> acesse o site da DAEV, vá até a opção "2ª via de contas" e informe o número da conta de água e o CPF do titular para baixar as contas dos últimos 3 meses.</p>
       </div>
     </div>
     {{/eq}}
