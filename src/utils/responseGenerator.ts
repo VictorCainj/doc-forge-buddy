@@ -14,6 +14,12 @@ import {
 import { findBestTemplate, applyTemplate } from './responseTemplates';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/utils/logger';
+import {
+  analyzeAdvancedSentiment,
+  detectSenderWithSentiment,
+  extractContextualMarkers,
+} from './advancedSentimentAnalyzer';
+import { humanizeResponse } from './responseHumanizer';
 
 /**
  * Gera resposta adaptativa para uma mensagem
@@ -306,16 +312,21 @@ export const generateDualResponses = async (
       hasUsedGreeting,
     });
 
-    // 1. Detectar quem enviou a mensagem
-    const detectedSender = detectSender(message);
+    // 1. Analisar sentimento da mensagem
+    const sentimentAnalysis = analyzeAdvancedSentiment(message);
 
-    // 2. Extrair nomes se não foram fornecidos
+    // 2. Detectar quem enviou a mensagem com análise de sentimento
+    const detectionResult = detectSenderWithSentiment(message);
+    const detectedSender = detectionResult.sender;
+    const detectionConfidence = detectionResult.confidence;
+
+    // 3. Extrair nomes se não foram fornecidos
     const extractedNames =
       names.locador && names.locatario
         ? names
         : await extractNamesFromMessage(message);
 
-    // 3. Gerar respostas usando IA
+    // 4. Gerar respostas usando IA
     log.info('Chamando função openai-proxy com dados:', {
       action: 'generateDualResponses',
       message,
@@ -332,6 +343,8 @@ export const generateDualResponses = async (
           message,
           names: extractedNames,
           detectedSender,
+          sentiment: sentimentAnalysis,
+          detectionConfidence,
           hasUsedGreeting,
           contract: contract
             ? {
@@ -378,7 +391,33 @@ export const generateDualResponses = async (
       result = response.data as DualResponseResult;
     }
 
-    log.info('Respostas duais geradas com sucesso:', result);
+    // 5. Humanizar respostas baseado no sentimento
+    result.locadorResponse = humanizeResponse(
+      result.locadorResponse,
+      sentimentAnalysis,
+      'locador'
+    );
+
+    result.locatarioResponse = humanizeResponse(
+      result.locatarioResponse,
+      sentimentAnalysis,
+      'locatario'
+    );
+
+    // 6. Adicionar análises de sentimento ao resultado
+    result.locadorSentiment = {
+      ...sentimentAnalysis,
+      contextualMarkers: extractContextualMarkers(message, 'locador'),
+    };
+
+    result.locatarioSentiment = {
+      ...sentimentAnalysis,
+      contextualMarkers: extractContextualMarkers(message, 'locatario'),
+    };
+
+    result.detectionConfidence = detectionConfidence;
+
+    log.info('Respostas duais geradas e humanizadas com sucesso:', result);
     return result;
   } catch (error) {
     log.error('Erro ao gerar respostas duais:', error);
@@ -389,70 +428,11 @@ export const generateDualResponses = async (
 };
 
 /**
- * Detecta quem enviou a mensagem baseado no contexto
+ * Detecta quem enviou a mensagem baseado no contexto (versão simplificada para fallback)
  */
 const detectSender = (message: string): 'locador' | 'locatario' | 'unknown' => {
-  const lowerMessage = message.toLowerCase();
-
-  // Palavras que indicam que é locatário (pedindo algo)
-  const locatarioIndicators = [
-    'solicito',
-    'peço',
-    'gostaria de',
-    'preciso',
-    'quero',
-    'posso',
-    'autorização',
-    'permissão',
-    'pode',
-    'seria possível',
-    'tem como',
-    'vistoria',
-    'reparo',
-    'manutenção',
-    'problema',
-    'defeito',
-    'aluguel',
-    'pagamento',
-    'vencimento',
-    'atraso',
-  ];
-
-  // Palavras que indicam que é locador (respondendo/aprovando)
-  const locadorIndicators = [
-    'aprovado',
-    'autorizado',
-    'pode',
-    'liberado',
-    'aceito',
-    'concordo',
-    'está ok',
-    'pode fazer',
-    'autorizo',
-    'vistoria',
-    'reparo',
-    'manutenção',
-    'contrato',
-    'aluguel',
-    'pagamento',
-    'vencimento',
-  ];
-
-  const locatarioScore = locatarioIndicators.reduce((score, indicator) => {
-    return score + (lowerMessage.includes(indicator) ? 1 : 0);
-  }, 0);
-
-  const locadorScore = locadorIndicators.reduce((score, indicator) => {
-    return score + (lowerMessage.includes(indicator) ? 1 : 0);
-  }, 0);
-
-  if (locatarioScore > locadorScore) {
-    return 'locatario';
-  } else if (locadorScore > locatarioScore) {
-    return 'locador';
-  }
-
-  return 'unknown';
+  const detectionResult = detectSenderWithSentiment(message);
+  return detectionResult.sender;
 };
 
 /**

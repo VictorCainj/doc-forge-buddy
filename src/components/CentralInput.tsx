@@ -161,23 +161,23 @@ const CentralInput = ({
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200/60 p-6 z-10 shadow-lg">
       <div className="max-w-4xl mx-auto">
         {/* Image Previews */}
         {previewImages.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-3">
             {previewImages.map((preview, index) => (
-              <div key={index} className="relative inline-block">
+              <div key={index} className="relative inline-block group">
                 <img
                   src={preview}
                   alt={`Preview ${index + 1}`}
-                  className="max-h-32 rounded-xl border-2 border-neutral-200"
+                  className="max-h-32 rounded-xl border-2 border-slate-200 shadow-sm group-hover:shadow-md transition-shadow duration-200"
                 />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-error-500 hover:bg-error-600 text-white rounded-full"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -188,7 +188,7 @@ const CentralInput = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleRemoveAllImages}
-                className="h-8 px-3 bg-error-500/20 hover:bg-error-500/30 text-error-300 text-xs"
+                className="h-8 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg border border-red-200"
               >
                 Remover todas
               </Button>
@@ -196,7 +196,7 @@ const CentralInput = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex items-end gap-3">
+        <form onSubmit={handleSubmit} className="flex items-end gap-4">
           {/* Campo de texto */}
           <div className="flex-1 relative">
             <Textarea
@@ -206,7 +206,7 @@ const CentralInput = ({
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
               placeholder={placeholder}
-              className="min-h-[60px] max-h-[200px] resize-none pr-20"
+              className="min-h-[64px] max-h-[200px] resize-none pr-24 rounded-xl border-slate-200/60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-sm"
               disabled={isLoading}
             />
 
@@ -291,7 +291,7 @@ const CentralInput = ({
             />
 
             {/* Botões de ação */}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1">
+            <div className="absolute bottom-3 right-3 flex items-center gap-2">
               {/* Image Upload Button */}
               {onUploadImage && (
                 <Button
@@ -300,7 +300,7 @@ const CentralInput = ({
                   size="sm"
                   onClick={handleImageButtonClick}
                   disabled={isLoading}
-                  className="h-8 w-8 p-0 text-neutral-500 hover:text-neutral-600"
+                  className="h-9 w-9 p-0 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors duration-200"
                   title="Enviar imagem"
                 >
                   <ImageIcon className="h-4 w-4" />
@@ -314,7 +314,7 @@ const CentralInput = ({
                 size="sm"
                 onClick={handleAudioButtonClick}
                 disabled={isLoading}
-                className="h-8 w-8 p-0 text-neutral-500 hover:text-neutral-600"
+                className="h-9 w-9 p-0 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors duration-200"
                 title="Enviar arquivo de áudio"
               >
                 <Mic className="h-4 w-4" />
@@ -328,28 +328,48 @@ const CentralInput = ({
             disabled={
               (!inputText.trim() && selectedFiles.length === 0) || isLoading
             }
-            className="h-[60px] px-6"
+            className="h-[64px] px-8 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                <span>Gerando...</span>
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span className="font-medium">Gerando...</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Send className="h-4 w-4" />
-                <span>Enviar</span>
+              <div className="flex items-center gap-3">
+                <Send className="h-5 w-5" />
+                <span className="font-medium">Enviar</span>
               </div>
             )}
           </Button>
         </form>
 
         {/* Hint */}
-        <div className="mt-2 text-xs text-neutral-500 text-center">
-          <span className="font-medium">Enter</span> para enviar •{' '}
-          <span className="font-medium">Shift+Enter</span> para nova linha •{' '}
-          <span className="font-medium">Ctrl+V</span> para colar imagem •{' '}
-          <span className="font-medium">🎤</span> para enviar áudio
+        <div className="mt-4 text-xs text-slate-500 text-center">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-mono">
+                Enter
+              </kbd>
+              <span>para enviar</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-mono">
+                Shift+Enter
+              </kbd>
+              <span>nova linha</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-mono">
+                Ctrl+V
+              </kbd>
+              <span>colar imagem</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-sm">🎤</span>
+              <span>enviar áudio</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>

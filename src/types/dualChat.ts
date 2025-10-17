@@ -59,4 +59,7 @@ export interface DualResponseResult {
     locador?: string;
     locatario?: string;
   };
+  locadorSentiment?: import('./sentimentAnalysis').AdvancedSentimentAnalysis;
+  locatarioSentiment?: import('./sentimentAnalysis').AdvancedSentimentAnalysis;
+  detectionConfidence?: number;
 }

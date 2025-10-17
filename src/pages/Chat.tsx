@@ -1,5 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, Save, Trash2 } from '@/utils/iconMapper';
+import {
+  ArrowLeft,
+  Save,
+  Trash2,
+  MessageSquare,
+  Users,
+  Settings,
+} from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useDualChat } from '@/hooks/useDualChat';
@@ -72,23 +79,37 @@ const Chat = () => {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header minimalista */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Header profissional com Material Design 3 */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-white border-b border-slate-200/60 shadow-sm"
+      >
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(-1)}
-                className="text-neutral-600 hover:bg-neutral-100"
+                className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-200 rounded-full h-10 w-10"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="text-lg font-semibold text-neutral-900">
-                Chat Dual Locador/Locatário
-              </h1>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
+                  <MessageSquare className="h-5 w-5 text-slate-600" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
+                    Chat Dual
+                  </h1>
+                  <p className="text-sm text-slate-500 font-medium">
+                    Locador & Locatário
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -97,7 +118,8 @@ const Chat = () => {
                 size="sm"
                 onClick={saveCurrentSession}
                 disabled={dualMessages.length === 0}
-                className="text-neutral-600 hover:bg-neutral-100"
+                className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-200 rounded-full h-10 w-10 disabled:opacity-50"
+                title="Salvar conversa"
               >
                 <Save className="h-4 w-4" />
               </Button>
@@ -106,84 +128,127 @@ const Chat = () => {
                 size="sm"
                 onClick={clearDualChat}
                 disabled={dualMessages.length === 0}
-                className="text-neutral-600 hover:bg-neutral-100"
+                className="text-slate-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200 rounded-full h-10 w-10 disabled:opacity-50"
+                title="Limpar conversa"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Layout de duas colunas */}
+      {/* Layout de duas colunas com design profissional */}
       <div className="flex-1 flex">
         {/* Coluna Esquerda - Locador */}
-        <div className="flex-1 flex flex-col border-r border-neutral-200">
-          <div className="bg-white border-b border-neutral-200 px-6 py-3">
-            <h2 className="text-lg font-medium text-neutral-900 flex items-center gap-2">
-              <span className="text-neutral-600">🏠</span>
-              Locador
-            </h2>
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="flex-1 flex flex-col border-r border-slate-200/60"
+        >
+          <div className="bg-white border-b border-slate-200/60 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
+                Locador
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Proprietário do imóvel
+              </p>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
             <AnimatePresence>
-              {dualMessages.map((message) => (
-                <DualChatMessage
+              {dualMessages.map((message, index) => (
+                <motion.div
                   key={message.id}
-                  message={message}
-                  side="locador"
-                  showGreeting={!dualChatState.hasUsedGreeting}
-                />
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <DualChatMessage
+                    message={message}
+                    side="locador"
+                    showGreeting={!dualChatState.hasUsedGreeting}
+                  />
+                </motion.div>
               ))}
             </AnimatePresence>
 
             {isLoading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="flex items-center gap-3 text-neutral-600">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-                  <span>Gerando resposta para locador...</span>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center py-12"
+              >
+                <div className="flex items-center gap-4 text-slate-600 bg-white rounded-xl px-6 py-4 shadow-sm border border-slate-200/60">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500" />
+                  <span className="font-medium">
+                    Gerando resposta para locador...
+                  </span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <div ref={locadorScrollRef} />
           </div>
-        </div>
+        </motion.div>
 
         {/* Coluna Direita - Locatário */}
-        <div className="flex-1 flex flex-col">
-          <div className="bg-white border-b border-neutral-200 px-6 py-3">
-            <h2 className="text-lg font-medium text-neutral-900 flex items-center gap-2">
-              <span className="text-neutral-600">👤</span>
-              Locatário
-            </h2>
+        <motion.div
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex-1 flex flex-col"
+        >
+          <div className="bg-white border-b border-slate-200/60 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
+                Locatário
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Inquilino do imóvel
+              </p>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
             <AnimatePresence>
-              {dualMessages.map((message) => (
-                <DualChatMessage
+              {dualMessages.map((message, index) => (
+                <motion.div
                   key={message.id}
-                  message={message}
-                  side="locatario"
-                  showGreeting={!dualChatState.hasUsedGreeting}
-                />
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <DualChatMessage
+                    message={message}
+                    side="locatario"
+                    showGreeting={!dualChatState.hasUsedGreeting}
+                  />
+                </motion.div>
               ))}
             </AnimatePresence>
 
             {isLoading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="flex items-center gap-3 text-neutral-600">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-                  <span>Gerando resposta para locatário...</span>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center py-12"
+              >
+                <div className="flex items-center gap-4 text-slate-600 bg-white rounded-xl px-6 py-4 shadow-sm border border-slate-200/60">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-500" />
+                  <span className="font-medium">
+                    Gerando resposta para locatário...
+                  </span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <div ref={locatarioScrollRef} />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Campo de entrada centralizado */}
@@ -195,13 +260,24 @@ const Chat = () => {
         placeholder="Cole a mensagem ou imagem do WhatsApp..."
       />
 
-      {/* Mensagem de erro */}
+      {/* Mensagem de erro profissional */}
       {error && (
-        <div className="fixed top-4 right-4 bg-white border border-neutral-200 rounded-lg p-4 max-w-md shadow-lg">
-          <div className="text-neutral-800 text-sm">
-            <strong>Erro:</strong> {error}
+        <motion.div
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          className="fixed top-6 right-6 bg-white border border-red-200/60 rounded-xl p-4 max-w-md shadow-lg z-50"
+        >
+          <div className="flex items-start gap-3">
+            <div className="h-5 w-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-red-600 text-xs">⚠</span>
+            </div>
+            <div className="text-slate-800 text-sm">
+              <div className="font-semibold text-red-600 mb-1">Erro</div>
+              <div className="text-slate-600">{error}</div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
