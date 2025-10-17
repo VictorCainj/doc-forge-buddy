@@ -27,6 +27,7 @@ const Chat = () => {
     dualChatState,
     sendDualMessage,
     sendDualAudio,
+    sendDualImage,
     clearDualChat,
     saveCurrentSession,
     loadSession,
@@ -60,6 +61,14 @@ const Chat = () => {
       await sendDualAudio(audioBlob);
     },
     [sendDualAudio]
+  );
+
+  // Função para lidar com envio de imagem
+  const handleImageSubmit = useCallback(
+    async (file: File) => {
+      await sendDualImage(file);
+    },
+    [sendDualImage]
   );
 
   return (
@@ -181,8 +190,9 @@ const Chat = () => {
       <CentralInput
         onSendMessage={handleSubmit}
         onSendAudio={handleAudioSubmit}
+        onUploadImage={handleImageSubmit}
         isLoading={isLoading}
-        placeholder="Cole a mensagem recebida do locador/locatário..."
+        placeholder="Cole a mensagem ou imagem do WhatsApp..."
       />
 
       {/* Mensagem de erro */}

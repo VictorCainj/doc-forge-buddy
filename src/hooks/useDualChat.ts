@@ -5,10 +5,14 @@
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { log } from '@/utils/logger';
-import { generateDualResponses } from '@/utils/responseGenerator';
+import {
+  generateDualResponses,
+  analyzeWhatsAppImage,
+} from '@/utils/responseGenerator';
 import { DualMessage, DualChatState, Message } from '@/types/dualChat';
 import { Contract } from '@/types/contract';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadChatImage } from '@/utils/imageUpload';
 
 interface UseDualChatReturn {
   // Estados básicos
@@ -24,6 +28,7 @@ interface UseDualChatReturn {
   // Ações principais
   sendDualMessage: (text?: string) => Promise<void>;
   sendDualAudio: (audioBlob: Blob) => Promise<void>;
+  sendDualImage: (file: File) => Promise<void>;
   clearDualChat: () => void;
 
   // Persistência
@@ -236,6 +241,73 @@ export const useDualChat = (): UseDualChatReturn => {
     [isLoading, sendDualMessage, toast]
   );
 
+  // Enviar imagem dual
+  const sendDualImage = useCallback(
+    async (file: File) => {
+      if (isLoading) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // 1. Obter usuário atual
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          toast({
+            title: 'Erro de autenticação',
+            description: 'Você precisa estar logado para enviar imagens.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // 2. Upload para Supabase Storage
+        const uploadResult = await uploadChatImage(file, user.id);
+
+        // 3. Analisar imagem com IA (extrair texto do WhatsApp)
+        const extractedText = await analyzeWhatsAppImage(uploadResult.base64);
+
+        // 4. Enviar texto extraído como mensagem dual
+        await sendDualMessage(extractedText);
+
+        // 5. Atualizar última mensagem com referência à imagem
+        setDualMessages((prev) => {
+          const lastMsg = prev[prev.length - 1];
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMsg,
+              originalImage: {
+                url: uploadResult.url,
+                base64: uploadResult.base64,
+              },
+            },
+          ];
+        });
+
+        toast({
+          title: 'Imagem processada',
+          description: 'Texto extraído e respostas geradas com sucesso!',
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro desconhecido';
+        setError(errorMessage);
+
+        toast({
+          title: 'Erro na imagem',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, sendDualMessage, toast]
+  );
+
   // Limpar chat dual
   const clearDualChat = useCallback(() => {
     setDualMessages([]);
@@ -320,6 +392,7 @@ export const useDualChat = (): UseDualChatReturn => {
     dualChatState,
     sendDualMessage,
     sendDualAudio,
+    sendDualImage,
     clearDualChat,
     saveCurrentSession,
     loadSession,

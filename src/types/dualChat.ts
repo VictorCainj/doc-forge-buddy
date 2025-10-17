@@ -12,6 +12,8 @@ export interface Message {
   error?: string;
   audioUrl?: string;
   audioData?: string;
+  imageUrl?: string; // URL pública do Supabase Storage
+  imageData?: string; // Base64 para análise
   metadata?: {
     model?: string;
     tokens?: number;
@@ -34,6 +36,10 @@ export interface DualMessage {
     locatario?: string;
   };
   sessionGreetingUsed: boolean;
+  originalImage?: {
+    url: string;
+    base64: string;
+  };
 }
 
 export interface DualChatState {

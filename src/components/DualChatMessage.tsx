@@ -65,6 +65,20 @@ const DualChatMessage = memo(
               Mensagem original:
             </div>
             <div className="text-sm">{message.originalMessage}</div>
+
+            {/* Imagem original do WhatsApp */}
+            {message.originalImage && (
+              <div className="mt-2">
+                <img
+                  src={message.originalImage.url}
+                  alt="Mensagem do WhatsApp"
+                  className="max-w-xs rounded-lg border border-neutral-200"
+                />
+                <p className="text-xs text-neutral-500 mt-1">
+                  📷 Imagem do WhatsApp analisada
+                </p>
+              </div>
+            )}
           </div>
         )}
 

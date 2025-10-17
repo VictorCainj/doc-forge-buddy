@@ -712,6 +712,32 @@ export const validateResponse = (
 };
 
 /**
+ * Analisa imagem do WhatsApp e extrai texto
+ */
+export const analyzeWhatsAppImage = async (
+  base64Image: string
+): Promise<string> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('openai-proxy', {
+      body: {
+        action: 'analyzeImage',
+        data: {
+          imageBase64: base64Image,
+          userPrompt:
+            'Extraia todo o texto desta imagem de mensagem do WhatsApp. Retorne apenas o texto da mensagem, sem formatação adicional.',
+        },
+      },
+    });
+
+    if (error) throw error;
+    return data.content || data;
+  } catch (error) {
+    log.error('Erro ao analisar imagem do WhatsApp:', error);
+    throw new Error('Não foi possível extrair texto da imagem');
+  }
+};
+
+/**
  * Melhora resposta baseada em feedback
  */
 export const improveResponse = async (
