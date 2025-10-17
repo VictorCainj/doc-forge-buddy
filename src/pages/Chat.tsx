@@ -57,8 +57,8 @@ const Chat = () => {
 
   // Função para lidar com envio de áudio
   const handleAudioSubmit = useCallback(
-    async (audioBlob: Blob) => {
-      await sendDualAudio(audioBlob);
+    async (audioFile: File) => {
+      await sendDualAudio(audioFile);
     },
     [sendDualAudio]
   );

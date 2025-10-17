@@ -27,7 +27,7 @@ interface UseDualChatReturn {
 
   // Ações principais
   sendDualMessage: (text?: string) => Promise<void>;
-  sendDualAudio: (audioBlob: Blob) => Promise<void>;
+  sendDualAudio: (audioFile: File) => Promise<void>;
   sendDualImage: (file: File) => Promise<void>;
   clearDualChat: () => void;
 
@@ -189,34 +189,16 @@ export const useDualChat = (): UseDualChatReturn => {
 
   // Enviar áudio dual
   const sendDualAudio = useCallback(
-    async (audioBlob: Blob) => {
+    async (audioFile: File) => {
       if (isLoading) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        // 1. Transcrever áudio
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'audio.wav');
-
-        const transcriptionResponse = await supabase.functions.invoke(
-          'openai-proxy',
-          {
-            body: {
-              action: 'transcribeAudio',
-              audio: formData,
-            },
-          }
-        );
-
-        if (transcriptionResponse.error) {
-          throw new Error(
-            `Erro na transcrição: ${transcriptionResponse.error.message}`
-          );
-        }
-
-        const transcription = transcriptionResponse.data.transcription;
+        // 1. Transcrever áudio usando a função correta
+        const { transcribeAudioWithAI } = await import('@/utils/openai');
+        const transcription = await transcribeAudioWithAI(audioFile);
 
         if (!transcription) {
           throw new Error('Não foi possível transcrever o áudio');
@@ -224,6 +206,11 @@ export const useDualChat = (): UseDualChatReturn => {
 
         // 2. Enviar transcrição como mensagem
         await sendDualMessage(transcription);
+
+        toast({
+          title: 'Áudio processado',
+          description: 'Áudio transcrito e respostas geradas com sucesso!',
+        });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Erro desconhecido';

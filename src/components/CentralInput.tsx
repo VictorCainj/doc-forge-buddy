@@ -5,20 +5,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Mic,
-  MicOff,
-  Send,
-  Square,
-  Image as ImageIcon,
-  X,
-} from '@/utils/iconMapper';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Mic, Send, Image as ImageIcon, X } from '@/utils/iconMapper';
 import { useToast } from '@/hooks/use-toast';
 
 interface CentralInputProps {
   onSendMessage: (message: string) => void;
-  onSendAudio: (audioBlob: Blob) => void;
+  onSendAudio: (audioFile: File) => void;
   onUploadImage?: (file: File) => Promise<void>;
   isLoading?: boolean;
   placeholder?: string;
@@ -32,15 +24,11 @@ const CentralInput = ({
   placeholder = 'Cole a mensagem ou imagem do WhatsApp...',
 }: CentralInputProps) => {
   const [inputText, setInputText] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Handle paste events for images
@@ -164,49 +152,9 @@ const CentralInput = ({
     []
   );
 
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/wav' });
-        onSendAudio(audioBlob);
-        setAudioChunks([]);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setAudioChunks(chunks);
-    } catch (error) {
-      console.error('Erro ao iniciar gravação:', error);
-    }
-  }, [onSendAudio]);
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      setMediaRecorder(null);
-    }
-  }, [mediaRecorder, isRecording]);
-
-  const toggleRecording = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }, [isRecording, startRecording, stopRecording]);
+  const handleAudioButtonClick = useCallback(() => {
+    audioInputRef.current?.click();
+  }, []);
 
   const handleImageButtonClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -316,6 +264,32 @@ const CentralInput = ({
               className="hidden"
             />
 
+            {/* Hidden audio input */}
+            <input
+              ref={audioInputRef}
+              type="file"
+              accept="audio/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && onSendAudio) {
+                  // Validate file size (max 25MB for audio)
+                  if (file.size > 25 * 1024 * 1024) {
+                    toast({
+                      title: 'Arquivo muito grande',
+                      description: 'O tamanho máximo é 25MB.',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+
+                  // Convert File to Blob and send
+                  onSendAudio(file);
+                  e.target.value = ''; // Reset input
+                }
+              }}
+              className="hidden"
+            />
+
             {/* Botões de ação */}
             <div className="absolute bottom-2 right-2 flex items-center gap-1">
               {/* Image Upload Button */}
@@ -333,40 +307,17 @@ const CentralInput = ({
                 </Button>
               )}
 
-              {/* Botão de gravação */}
+              {/* Audio Upload Button */}
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={toggleRecording}
+                onClick={handleAudioButtonClick}
                 disabled={isLoading}
-                className={`h-8 w-8 p-0 ${
-                  isRecording
-                    ? 'text-neutral-600 hover:text-neutral-700'
-                    : 'text-neutral-500 hover:text-neutral-600'
-                }`}
+                className="h-8 w-8 p-0 text-neutral-500 hover:text-neutral-600"
+                title="Enviar arquivo de áudio"
               >
-                <AnimatePresence mode="wait">
-                  {isRecording ? (
-                    <motion.div
-                      key="stop"
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0.8 }}
-                    >
-                      <Square className="h-4 w-4" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="mic"
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0.8 }}
-                    >
-                      <Mic className="h-4 w-4" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <Mic className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -375,10 +326,7 @@ const CentralInput = ({
           <Button
             type="submit"
             disabled={
-              (!inputText.trim() &&
-                !isRecording &&
-                selectedFiles.length === 0) ||
-              isLoading
+              (!inputText.trim() && selectedFiles.length === 0) || isLoading
             }
             className="h-[60px] px-6"
           >
@@ -396,26 +344,12 @@ const CentralInput = ({
           </Button>
         </form>
 
-        {/* Indicadores */}
-        <AnimatePresence>
-          {isRecording && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="mt-2 flex items-center gap-2 text-sm text-neutral-600"
-            >
-              <div className="h-2 w-2 bg-neutral-500 rounded-full animate-pulse" />
-              <span>Gravando áudio... Clique no quadrado para parar</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Hint */}
         <div className="mt-2 text-xs text-neutral-500 text-center">
           <span className="font-medium">Enter</span> para enviar •{' '}
           <span className="font-medium">Shift+Enter</span> para nova linha •{' '}
-          <span className="font-medium">Ctrl+V</span> para colar imagem
+          <span className="font-medium">Ctrl+V</span> para colar imagem •{' '}
+          <span className="font-medium">🎤</span> para enviar áudio
         </div>
       </div>
     </div>
