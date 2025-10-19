@@ -6,17 +6,16 @@ import { memo } from 'react';
 import { DualMessage } from '@/types/dualChat';
 import ChatMessage from '@/components/ChatMessage';
 import { motion } from 'framer-motion';
-import { Copy, Check, Clock, User, Home } from '@/utils/iconMapper';
+import { Check, Clock } from '@/utils/iconMapper';
 import { AdvancedSentimentAnalysis } from '@/types/sentimentAnalysis';
 
 interface DualChatMessageProps {
   message: DualMessage;
   side: 'locador' | 'locatario';
-  showGreeting: boolean;
 }
 
 const DualChatMessage = memo(
-  ({ message, side, showGreeting }: DualChatMessageProps) => {
+  ({ message, side }: DualChatMessageProps) => {
     const responseMessage =
       side === 'locador' ? message.locadorResponse : message.locatarioResponse;
 

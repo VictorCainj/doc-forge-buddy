@@ -868,18 +868,6 @@ Se não encontrar nomes específicos, retorne objetos vazios.`,
         responseFormat = { type: 'json_object' };
         break;
 
-      case 'transcribeAudio':
-        if (!data.audio) {
-          throw new Error('Áudio não fornecido');
-        }
-
-        // Para transcrição de áudio, precisamos usar a API de áudio da OpenAI
-        // Por enquanto, retornar um placeholder
-        return {
-          transcription:
-            'Transcrição de áudio não implementada ainda. Por favor, digite a mensagem.',
-        };
-
       case 'textToSpeech':
         if (!data.text) {
           throw new Error('Texto não fornecido');

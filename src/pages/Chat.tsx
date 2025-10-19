@@ -1,11 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Save,
   Trash2,
   MessageSquare,
-  Users,
-  Settings,
 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -29,16 +27,11 @@ const Chat = () => {
     dualMessages,
     isLoading,
     error,
-    inputText,
-    setInputText,
-    dualChatState,
     sendDualMessage,
     sendDualAudio,
     sendDualImage,
     clearDualChat,
     saveCurrentSession,
-    loadSession,
-    currentSessionId,
   } = useDualChat();
 
   // Scroll automático para cada coluna
@@ -170,7 +163,6 @@ const Chat = () => {
                   <DualChatMessage
                     message={message}
                     side="locador"
-                    showGreeting={!dualChatState.hasUsedGreeting}
                   />
                 </motion.div>
               ))}
@@ -225,7 +217,6 @@ const Chat = () => {
                   <DualChatMessage
                     message={message}
                     side="locatario"
-                    showGreeting={!dualChatState.hasUsedGreeting}
                   />
                 </motion.div>
               ))}
