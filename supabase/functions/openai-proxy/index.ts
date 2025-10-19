@@ -113,21 +113,28 @@ serve(async (req) => {
         messages = [
           {
             role: 'system',
-            content: `Você cria tarefas objetivas e diretas.
+            content: `Você cria tarefas objetivas e diretas para gestão de contratos imobiliários.
 
 Responda APENAS com JSON no formato:
 {
   "title": "Título da tarefa (máximo 60 caracteres)",
   "subtitle": "Subtítulo breve (máximo 80 caracteres)",
   "description": "Descrição simples e direta do que precisa ser feito",
-  "status": "not_started" | "in_progress" | "completed"
+  "status": "not_started" | "in_progress" | "completed",
+  "contractNumber": "número do contrato se mencionado (apenas dígitos)"
 }
 
 REGRAS:
-1. Título: Direto ao ponto, verbo de ação
-2. Subtítulo: Informação complementar curta
+1. Título: Direto ao ponto, verbo de ação. Se houver número de contrato, mencione no formato "Tarefa - Contrato XXXX"
+2. Subtítulo: Informação complementar curta com contexto relevante
 3. Descrição: Máximo 2-3 frases objetivas, sem explicações longas
 4. Status: "not_started" (padrão), "in_progress" (se já iniciado), "completed" (se concluído)
+5. contractNumber: Extraia o número do contrato se mencionado na situação (apenas os dígitos)
+
+EXEMPLOS DE DETECÇÃO DE CONTRATO:
+- "contrato 12345" → contractNumber: "12345"
+- "contrato nº 67890" → contractNumber: "67890"
+- "do contrato 11111" → contractNumber: "11111"
 
 Seja conciso e prático. NÃO contextualize demais.`,
           },

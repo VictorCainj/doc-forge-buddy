@@ -283,6 +283,48 @@ export const generateTaskFromSituation = async (
       taskData.subtitle = '';
     }
 
+    // Se há número de contrato, buscar informações do contrato
+    if (taskData.contractNumber) {
+      try {
+        const { data: contracts } = await supabase
+          .from('contracts')
+          .select('form_data')
+          .ilike('form_data->>numeroContrato', `%${taskData.contractNumber}%`)
+          .limit(1);
+
+        if (contracts && contracts.length > 0) {
+          const contract = contracts[0];
+          const formData = contract.form_data as any;
+          
+          // Enriquecer o título com informações do contrato
+          const nomeLocatario = formData.nomeLocatario?.split(' ')[0] || '';
+          const enderecoResumido = formData.enderecoImovel?.split(',')[0] || '';
+          
+          // Atualizar título se não mencionar o contrato explicitamente
+          if (!taskData.title.toLowerCase().includes('contrato')) {
+            taskData.title = `${taskData.title} - Contrato ${taskData.contractNumber}`;
+          }
+          
+          // Enriquecer subtítulo com informações relevantes
+          if (nomeLocatario || enderecoResumido) {
+            const infoExtra = [nomeLocatario, enderecoResumido]
+              .filter(Boolean)
+              .join(' - ');
+            if (infoExtra && !taskData.subtitle.includes(infoExtra)) {
+              taskData.subtitle = taskData.subtitle 
+                ? `${taskData.subtitle} (${infoExtra})`
+                : infoExtra;
+            }
+          }
+          
+          log.debug(`Tarefa enriquecida com informações do contrato ${taskData.contractNumber}`);
+        }
+      } catch (error) {
+        log.warn('Erro ao buscar informações do contrato:', error);
+        // Continuar mesmo se falhar ao buscar o contrato
+      }
+    }
+
     log.debug('Tarefa gerada com sucesso pela IA');
     return taskData;
   } catch (error) {
