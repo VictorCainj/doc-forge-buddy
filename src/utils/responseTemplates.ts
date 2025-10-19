@@ -190,7 +190,7 @@ export const ALL_TEMPLATES: Record<string, ResponseTemplate[]> = {
 export const findBestTemplate = (
   analysis: MessageAnalysis,
   situation: string,
-  context?: string
+  _context?: string
 ): ResponseTemplate | null => {
   const categoryTemplates = ALL_TEMPLATES[situation];
   if (!categoryTemplates) return null;
@@ -240,8 +240,8 @@ export const applyTemplate = (
  */
 export const generateResponseSuggestions = (
   analysis: MessageAnalysis,
-  situation?: string,
-  context?: string
+  _situation?: string,
+  _context?: string
 ): string[] => {
   const suggestions: string[] = [];
 

@@ -6,7 +6,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import {
   ConversationProfile,
-  MessageAnalysis,
 } from '@/types/conversationProfile';
 import { analyzeMessageContext } from '@/utils/sentimentAnalysis';
 import { log } from '@/utils/logger';
@@ -234,11 +233,7 @@ export const useConversationProfiles = (): UseConversationProfilesReturn => {
 
         // Ajustar formalidade baseado no histórico
         const recentEmotions = profile.emotionalHistory.slice(-5);
-        const formalityScores = recentEmotions.map((e) => {
-          const analysis = {
-            emotion: e.detectedEmotion,
-            formality: 'neutral' as const,
-          };
+        const formalityScores = recentEmotions.map(() => {
           // Simular análise de formalidade baseada no padrão
           return profile.communicationStyle.formality === 'formal'
             ? 1

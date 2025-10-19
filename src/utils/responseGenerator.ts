@@ -261,7 +261,6 @@ const generateGenericResponse = (
   profile: ConversationProfile | null
 ): string => {
   const personName = profile?.personName || 'Prezado(a)';
-  const formality = analysis.formality || 'neutral';
 
   let greeting = '';
   let closing = '';
@@ -516,8 +515,6 @@ const generateFallbackDualResponses = (
     lowerMessage.includes('problema') ||
     lowerMessage.includes('defeito') ||
     lowerMessage.includes('reparo');
-  const isInspectionRelated =
-    lowerMessage.includes('vistoria') || lowerMessage.includes('inspeção');
 
   if (detectedSender === 'locatario') {
     // Locatário enviou, gerar resposta específica para locador

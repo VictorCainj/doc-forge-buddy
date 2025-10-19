@@ -2,15 +2,13 @@
  * Hook para chat dual locador/locatário
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/utils/logger';
 import {
   generateDualResponses,
   analyzeWhatsAppImage,
 } from '@/utils/responseGenerator';
 import { DualMessage, DualChatState, Message } from '@/types/dualChat';
-import { Contract } from '@/types/contract';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadChatImage } from '@/utils/imageUpload';
 

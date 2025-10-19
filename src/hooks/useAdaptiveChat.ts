@@ -10,17 +10,14 @@ import { useConversationProfiles } from '@/hooks/useConversationProfiles';
 import { useToast } from '@/hooks/use-toast';
 import { log } from '@/utils/logger';
 import { prepareInputForProcessing } from '@/utils/inputValidator';
-import { uploadChatImage, uploadMultipleChatImages } from '@/utils/imageUpload';
 import {
   generateAdaptiveResponse,
   validateResponse,
-  generateDualResponses,
 } from '@/utils/responseGenerator';
 import { MessageAnalysis } from '@/types/conversationProfile';
 import { ChatMode, CHAT_MODE_CONFIGS } from '@/types/chatModes';
 import { Contract } from '@/types/contract';
-import { DualMessage, DualChatState, Message } from '@/types/dualChat';
-import { supabase } from '@/integrations/supabase/client';
+import { Message } from '@/types/dualChat';
 
 // Removido interface Message duplicada - usando a do dualChat.ts
 
@@ -86,25 +83,15 @@ export const useAdaptiveChat = (): UseAdaptiveChatReturn => {
   // Hooks
   const { toast } = useToast();
   const {
-    chatCompletion,
-    generateImageFromPrompt,
-    analyzeImage,
-    transcribeAudio,
     isLoading: aiLoading,
     error: aiError,
   } = useOpenAI();
-  const { learnFromInteraction } = useAIMemory('default');
+  useAIMemory('default');
   const { createSession, saveMessage, loadSessionMessages } =
     useChatPersistence();
   const {
-    profiles,
     activeProfile,
-    createProfile,
-    updateProfile,
-    getProfile,
-    setActiveProfile,
     learnFromMessage,
-    getPreferredTone,
   } = useConversationProfiles();
 
   // Refs
