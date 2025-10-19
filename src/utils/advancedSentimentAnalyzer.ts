@@ -13,7 +13,6 @@ import {
 export const analyzeAdvancedSentiment = (
   message: string
 ): AdvancedSentimentAnalysis => {
-  const lowerMessage = message.toLowerCase();
   const contextualMarkers: string[] = [];
 
   // Detecção de emoção

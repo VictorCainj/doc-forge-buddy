@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FileText,
-  MessageSquare,
   LogOut,
   Home,
   Search,
@@ -77,12 +76,7 @@ const Sidebar = () => {
       path: '/prestadores',
       active: location.pathname === '/prestadores',
     },
-    {
-      name: 'Chat IA',
-      icon: MessageSquare,
-      path: '/chat',
-      active: location.pathname === '/chat',
-    },
+
   ];
 
   // Adicionar item Admin apenas para administradores

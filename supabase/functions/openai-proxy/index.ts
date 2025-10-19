@@ -23,7 +23,8 @@ interface OpenAIRequest {
     | 'generateHumanizedResponse'
     | 'textToSpeech'
     | 'generateDualResponses'
-    | 'extractNames';
+    | 'extractNames'
+    | 'compareVistoriaImages';
   data: any;
 }
 
@@ -113,21 +114,28 @@ serve(async (req) => {
         messages = [
           {
             role: 'system',
-            content: `Você cria tarefas objetivas e diretas.
+            content: `Você cria tarefas objetivas e diretas para gestão de contratos imobiliários.
 
 Responda APENAS com JSON no formato:
 {
   "title": "Título da tarefa (máximo 60 caracteres)",
   "subtitle": "Subtítulo breve (máximo 80 caracteres)",
   "description": "Descrição simples e direta do que precisa ser feito",
-  "status": "not_started" | "in_progress" | "completed"
+  "status": "not_started" | "in_progress" | "completed",
+  "contractNumber": "número do contrato se mencionado (apenas dígitos)"
 }
 
 REGRAS:
-1. Título: Direto ao ponto, verbo de ação
-2. Subtítulo: Informação complementar curta
+1. Título: Direto ao ponto, verbo de ação. Se houver número de contrato, mencione no formato "Tarefa - Contrato XXXX"
+2. Subtítulo: Informação complementar curta com contexto relevante
 3. Descrição: Máximo 2-3 frases objetivas, sem explicações longas
 4. Status: "not_started" (padrão), "in_progress" (se já iniciado), "completed" (se concluído)
+5. contractNumber: Extraia o número do contrato se mencionado na situação (apenas os dígitos)
+
+EXEMPLOS DE DETECÇÃO DE CONTRATO:
+- "contrato 12345" → contractNumber: "12345"
+- "contrato nº 67890" → contractNumber: "67890"
+- "do contrato 11111" → contractNumber: "11111"
 
 Seja conciso e prático. NÃO contextualize demais.`,
           },
@@ -868,17 +876,95 @@ Se não encontrar nomes específicos, retorne objetos vazios.`,
         responseFormat = { type: 'json_object' };
         break;
 
-      case 'transcribeAudio':
-        if (!data.audio) {
-          throw new Error('Áudio não fornecido');
+      case 'compareVistoriaImages': {
+        if (!data.fotosInicial || !Array.isArray(data.fotosInicial)) {
+          throw new Error('Imagens iniciais não fornecidas');
+        }
+        if (!data.fotosFinal || !Array.isArray(data.fotosFinal)) {
+          throw new Error('Imagens finais não fornecidas');
+        }
+        if (!data.descricao) {
+          throw new Error('Descrição do apontamento não fornecida');
         }
 
-        // Para transcrição de áudio, precisamos usar a API de áudio da OpenAI
-        // Por enquanto, retornar um placeholder
-        return {
-          transcription:
-            'Transcrição de áudio não implementada ainda. Por favor, digite a mensagem.',
-        };
+        // Validar campos opcionais mas importantes
+        if (!data.ambiente || !data.subtitulo) {
+          console.warn(
+            'Campos ambiente ou subtitulo não fornecidos, análise pode ser menos precisa'
+          );
+        }
+
+        // Preparar conteúdo das imagens para análise
+        const imageContent: any[] = [
+          {
+            type: 'text',
+            text: `ANÁLISE COMPARATIVA DE VISTORIA - LEI DO INQUILINATO 8.245/91
+
+DADOS DO APONTAMENTO:
+- Ambiente: "${data.ambiente || 'Não especificado'}"
+- Tipo de Problema: "${data.subtitulo || 'Não especificado'}"
+- Descrição do Vistoriador: "${data.descricao}"
+${data.descritivoLaudo ? `- Condição na Entrada (Laudo): "${data.descritivoLaudo}"` : '- Condição na Entrada: Não documentada'}
+${data.observacao ? `- Observações Prévias: "${data.observacao}"` : ''}
+
+IMAGENS: ${data.fotosInicial.length} inicial(is) + ${data.fotosFinal.length} final(is)
+
+INSTRUÇÕES DE ANÁLISE:
+Compare as imagens inicial vs final considerando:
+1. Estado visual inicial vs final
+2. Evidências claras do problema descrito
+3. Diferença entre dano causado vs desgaste natural do uso
+4. Coerência entre descrição do vistoriador e evidências visuais
+5. Condição documentada no laudo de entrada
+
+CONTEXTO LEGAL (Lei 8.245/91):
+- Art. 23, III: Locatário responde por danos causados por si, dependentes ou visitantes
+- Art. 35: Locatário deve devolver imóvel em estado equivalente ao recebido (salvo desgaste natural)
+- Desgaste natural: deterioração pelo tempo e uso normal
+- Dano causado: deterioração por mau uso, negligência ou dolo
+
+FORMATO DA RESPOSTA:
+Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisando as evidências visuais. Inclua obrigatoriamente: "O apontamento é pertinente ao locatário por conta de [motivo específico baseado nas evidências visuais e lei]" OU "O apontamento não é pertinente ao locatário por conta de [motivo específico baseado nas evidências visuais e lei]". Seja direto e objetivo.`,
+          },
+        ];
+
+        // Adicionar imagens iniciais
+        data.fotosInicial.forEach((foto: string, index: number) => {
+          if (!foto) {
+            throw new Error(`Imagem inicial ${index + 1} está vazia`);
+          }
+          imageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: foto,
+            },
+          });
+        });
+
+        // Adicionar imagens finais
+        data.fotosFinal.forEach((foto: string, index: number) => {
+          if (!foto) {
+            throw new Error(`Imagem final ${index + 1} está vazia`);
+          }
+          imageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: foto,
+            },
+          });
+        });
+
+        messages = [
+          {
+            role: 'user',
+            content: imageContent,
+          },
+        ];
+        model = 'gpt-4o';
+        maxTokens = 2000;
+        temperature = 0.3;
+        break;
+      }
 
       case 'textToSpeech':
         if (!data.text) {
@@ -936,63 +1022,80 @@ Se não encontrar nomes específicos, retorne objetos vazios.`,
       action !== 'transcribeAudio' &&
       action !== 'textToSpeech'
     ) {
-      const response = await fetch(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            max_tokens: maxTokens,
-            temperature,
-            ...(responseFormat && { response_format: responseFormat }),
+      // Timeout de 60 segundos para a chamada da API
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      try {
+        const response = await fetch(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${openaiApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model,
+              messages,
+              max_tokens: maxTokens,
+              temperature,
+              ...(responseFormat && { response_format: responseFormat }),
+            }),
+            signal: controller.signal,
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const error = await response.text();
+          console.error('OpenAI API Error:', error);
+          throw new Error(`Erro na API da OpenAI: ${response.status}`);
+        }
+
+        const completion = await response.json();
+        const content = completion.choices[0]?.message?.content;
+
+        if (!content) {
+          throw new Error('Resposta vazia da API');
+        }
+
+        // Processar resposta baseada na ação
+        let processedContent = content;
+
+        if (action === 'generateTask' || action === 'extractApontamentos') {
+          processedContent = JSON.parse(content);
+        } else {
+          processedContent = content.trim();
+        }
+
+        // Retornar resultado
+        return new Response(
+          JSON.stringify({
+            success: true,
+            content: processedContent,
           }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('Timeout na chamada da API da OpenAI (60s)');
         }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('OpenAI API Error:', error);
-        throw new Error(`Erro na API da OpenAI: ${response.status}`);
+        throw error;
       }
-
-      const completion = await response.json();
-      const content = completion.choices[0]?.message?.content;
-
-      if (!content) {
-        throw new Error('Resposta vazia da API');
-      }
-
-      // Processar resposta baseada na ação
-      let processedContent = content;
-
-      if (action === 'generateTask' || action === 'extractApontamentos') {
-        processedContent = JSON.parse(content);
-      } else {
-        processedContent = content.trim();
-      }
-
-      // Retornar resultado
-      return new Response(
-        JSON.stringify({
-          success: true,
-          content: processedContent,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
     }
   } catch (error) {
-    console.error('Erro:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Erro desconhecido',
+        error: errorMessage,
       }),
       {
         status: 400,

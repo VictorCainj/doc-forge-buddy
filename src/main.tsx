@@ -4,6 +4,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initMonitoring } from './lib/monitoring';
+import {
+  registerServiceWorker,
+  setupPWAInstallPrompt,
+  onConnectivityChange,
+} from './utils/pwaHelpers';
 
 // Inicializar sistema de monitoramento
 initMonitoring();
@@ -19,17 +24,29 @@ if (import.meta.env.DEV) {
     });
 }
 
-// Registrar Service Worker para PWA
+// Registrar Service Worker para PWA com gerenciamento avançado
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then((registration) => {
-        console.log('SW registered:', registration);
-      })
-      .catch((error) => {
-        console.log('SW registration failed:', error);
-      });
+  window.addEventListener('load', async () => {
+    // Registrar Service Worker
+    await registerServiceWorker();
+
+    // Configurar prompt de instalação
+    setupPWAInstallPrompt(() => {
+      console.log('✅ PWA pronto para instalação');
+      // Aqui você pode mostrar um banner ou botão de instalação
+    });
+
+    // Monitorar conectividade
+    onConnectivityChange(
+      () => {
+        console.log('🌐 Conexão restaurada');
+        // Opcional: Sincronizar dados pendentes
+      },
+      () => {
+        console.log('📡 Modo offline');
+        // Opcional: Mostrar aviso de offline
+      }
+    );
   });
 }
 

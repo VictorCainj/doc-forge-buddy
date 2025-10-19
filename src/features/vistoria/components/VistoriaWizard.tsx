@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
   ArrowRight,
-  CheckCircle,
   FileText,
   Home,
   ClipboardList,
   Calculator,
   Eye,
 } from '@/utils/iconMapper';
+import { CheckCircle } from 'lucide-react';
 import { useVistoriaWizard } from '../hooks/useVistoriaWizard';
 import { Step1DadosBasicos } from './steps/Step1DadosBasicos';
 import { Step2Ambientes } from './steps/Step2Ambientes';
@@ -171,7 +171,7 @@ export const VistoriaWizard: React.FC<VistoriaWizardProps> = ({
                     `}
                     >
                       {isCompleted ? (
-                        <CheckCircle className="h-4 w-4 text-white" />
+                        <CheckCircle className="h-4 w-4 text-white" color="white" />
                       ) : (
                         <Icon
                           className={`h-4 w-4 ${isActive ? 'text-white' : 'text-neutral-700'}`}

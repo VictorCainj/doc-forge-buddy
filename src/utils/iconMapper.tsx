@@ -22,13 +22,20 @@ import { getIconColor, getIconColorColored } from './iconConfig';
  */
 const withNeutralColor = (Icon: any, name: string) => {
   const NeutralIcon = (props: any) => {
-    const color = getIconColor(name, false); // false = neutro
+    // Permitir sobrescrita via props.color
+    const defaultColor = getIconColor(name, false);
+    const finalColor = props.color || defaultColor;
+
     return (
       <Icon
         {...props}
-        color={color}
+        color={finalColor}
         strokeWidth={props.strokeWidth || 2}
-        style={{ ...props.style }}
+        style={{
+          ...props.style,
+          // Forçar a cor quando especificada
+          ...(props.color && { color: props.color, stroke: props.color }),
+        }}
       />
     );
   };
@@ -542,3 +549,28 @@ export const iconMapper = {
 export function getIconByName(name: IconName) {
   return iconMapper[name] || File;
 }
+
+// ====================================
+// WRAPPER PARA ÍCONES EM FUNDOS ESCUROS
+// ====================================
+
+/**
+ * Wrapper para ícones em fundos escuros
+ * Garante máxima visibilidade com branco forte
+ */
+export const withDarkBackground = (IconComponent: any) => {
+  return (props: any) => (
+    <IconComponent
+      {...props}
+      color="#FFFFFF"
+      strokeWidth={props.strokeWidth || 2.5}
+      style={{
+        ...props.style,
+        color: '#FFFFFF',
+        stroke: '#FFFFFF',
+        fill: props.fill || 'none',
+        shapeRendering: 'geometricPrecision',
+      }}
+    />
+  );
+};

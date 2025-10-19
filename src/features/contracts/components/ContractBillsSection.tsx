@@ -1,12 +1,12 @@
 import React from 'react';
-import {
-  Check,
-  Zap,
-  Droplets,
-  Building2,
-  Flame,
-  Bell,
-} from '@/utils/iconMapper';
+import { 
+  Zap, 
+  Droplets, 
+  Building2, 
+  Flame, 
+  Bell 
+} from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useContractBills } from '@/hooks/useContractBills';
 import { ContractFormData, BillType } from '@/types/contract';
 import { cn } from '@/lib/utils';
@@ -71,7 +71,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
 
   return (
     <div className="overflow-visible">
-      <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">
+      <h4 className="text-sm font-bold text-neutral-800 uppercase tracking-wide mb-3 bg-gradient-to-r from-neutral-800 to-neutral-600 bg-clip-text text-transparent">
         Contas de Consumo
       </h4>
       <div className="grid grid-cols-2 gap-2 overflow-visible">
@@ -97,16 +97,16 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
               )}
             >
               <div className="flex items-center gap-1.5">
-                <Icon
-                  className={cn(
-                    'h-3.5 w-3.5 transition-colors',
-                    delivered ? 'text-success-600' : 'text-neutral-500'
-                  )}
-                />
+                <div className="p-1 rounded bg-black">
+                  <Icon
+                    className="h-3.5 w-3.5 text-white"
+                    color="white"
+                  />
+                </div>
                 <span
                   className={cn(
-                    'text-xs font-semibold transition-colors',
-                    delivered ? 'text-success-700' : 'text-neutral-700'
+                    'text-sm font-bold transition-colors',
+                    delivered ? 'text-success-700' : 'text-neutral-800'
                   )}
                 >
                   {billLabels[type]}
@@ -117,7 +117,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
                   className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 shadow-sm"
                   style={{ backgroundColor: '#34A853' }}
                 >
-                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} color="white" />
                 </div>
               )}
               {!delivered && (

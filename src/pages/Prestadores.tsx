@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,15 +30,14 @@ import {
   Mail,
   MapPin,
   Briefcase,
+  Search,
 } from '@/utils/iconMapper';
 import {
   usePrestadores,
   CreatePrestadorData,
   Prestador,
 } from '@/hooks/usePrestadores';
-import { Badge } from '@/components/ui/badge';
 import { memo } from 'react';
-import { ActionButton } from '@/components/ui/action-button';
 
 // Componente de formulário memoizado para evitar re-renders
 interface PrestadorFormProps {
@@ -60,9 +58,9 @@ const PrestadorForm = memo(
     saving,
     isEdit = false,
   }: PrestadorFormProps) => (
-    <form onSubmit={onSubmit} className="space-y-3">
-      <div className="space-y-1.5">
-        <Label htmlFor="nome" className="text-xs">
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
           Nome *
         </Label>
         <Input
@@ -71,12 +69,13 @@ const PrestadorForm = memo(
           onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
           placeholder="Nome do prestador"
           required
+          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="cnpj" className="text-xs">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cnpj" className="text-sm font-medium text-gray-700">
             CNPJ
           </Label>
           <Input
@@ -84,11 +83,15 @@ const PrestadorForm = memo(
             value={formData.cnpj}
             onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
             placeholder="00.000.000/0000-00"
+            className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="telefone" className="text-xs">
+        <div className="space-y-2">
+          <Label
+            htmlFor="telefone"
+            className="text-sm font-medium text-gray-700"
+          >
             Telefone
           </Label>
           <Input
@@ -98,12 +101,13 @@ const PrestadorForm = memo(
               setFormData({ ...formData, telefone: e.target.value })
             }
             placeholder="(00) 00000-0000"
+            className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
           />
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="email" className="text-xs">
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
           E-mail
         </Label>
         <Input
@@ -112,11 +116,12 @@ const PrestadorForm = memo(
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="email@exemplo.com"
+          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="endereco" className="text-xs">
+      <div className="space-y-2">
+        <Label htmlFor="endereco" className="text-sm font-medium text-gray-700">
           Endereço
         </Label>
         <Input
@@ -126,11 +131,15 @@ const PrestadorForm = memo(
             setFormData({ ...formData, endereco: e.target.value })
           }
           placeholder="Rua, número, bairro, cidade"
+          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="especialidade" className="text-xs">
+      <div className="space-y-2">
+        <Label
+          htmlFor="especialidade"
+          className="text-sm font-medium text-gray-700"
+        >
           Especialidade
         </Label>
         <Input
@@ -140,11 +149,15 @@ const PrestadorForm = memo(
             setFormData({ ...formData, especialidade: e.target.value })
           }
           placeholder="Ex: Pintura, Elétrica, Hidráulica"
+          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="observacoes" className="text-xs">
+      <div className="space-y-2">
+        <Label
+          htmlFor="observacoes"
+          className="text-sm font-medium text-gray-700"
+        >
           Observações
         </Label>
         <Textarea
@@ -154,20 +167,25 @@ const PrestadorForm = memo(
             setFormData({ ...formData, observacoes: e.target.value })
           }
           placeholder="Informações adicionais"
-          rows={2}
+          rows={3}
+          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg resize-none"
         />
       </div>
 
-      <div className="flex justify-end gap-1.5">
+      <div className="flex justify-end gap-3 pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="text-sm"
+          className="text-sm px-6 py-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg"
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={saving} className="text-sm">
+        <Button
+          type="submit"
+          disabled={saving}
+          className="text-sm px-6 py-2 bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-300 rounded-lg"
+        >
           {saving ? 'Salvando...' : isEdit ? 'Atualizar' : 'Criar'}
         </Button>
       </div>
@@ -192,6 +210,7 @@ const Prestadores = () => {
   const [selectedPrestador, setSelectedPrestador] = useState<Prestador | null>(
     null
   );
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<CreatePrestadorData>({
     nome: '',
     cnpj: '',
@@ -201,6 +220,16 @@ const Prestadores = () => {
     especialidade: '',
     observacoes: '',
   });
+
+  // Filtrar prestadores baseado na busca
+  const filteredPrestadores = prestadores.filter(
+    (prestador) =>
+      prestador.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prestador.especialidade
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      prestador.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,23 +294,26 @@ const Prestadores = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-neutral-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neutral-900"></div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-900"></div>
+          <p className="text-sm text-gray-500">Carregando prestadores...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="container mx-auto p-6 space-y-6 relative z-10">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Minimalista */}
-        <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-neutral-900">
+              <h1 className="text-3xl font-normal text-gray-900">
                 Prestadores
               </h1>
-              <p className="text-sm text-neutral-500 mt-1">
+              <p className="text-gray-500 mt-1">
                 Gerencie seus prestadores de serviço
               </p>
             </div>
@@ -291,127 +323,141 @@ const Prestadores = () => {
               onOpenChange={setIsCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <ActionButton
-                  icon={Plus}
-                  label="Novo Prestador"
-                  variant="primary"
-                  size="md"
-                />
+                <Button className="bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg text-sm font-medium">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Prestador
+                </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0">
-                <DialogHeader className="p-3">
-                  <DialogTitle className="text-lg">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
+                <DialogHeader className="pb-4 border-b border-gray-200">
+                  <DialogTitle className="text-xl font-medium text-gray-900">
                     Criar Novo Prestador
                   </DialogTitle>
-                  <DialogDescription className="text-xs">
+                  <DialogDescription className="text-gray-500">
                     Preencha os dados do prestador de serviço
                   </DialogDescription>
                 </DialogHeader>
-                <PrestadorForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  onSubmit={handleCreateSubmit}
-                  onCancel={() => setIsCreateDialogOpen(false)}
-                  saving={saving}
-                />
+                <div className="p-6">
+                  <PrestadorForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    onSubmit={handleCreateSubmit}
+                    onCancel={() => setIsCreateDialogOpen(false)}
+                    saving={saving}
+                  />
+                </div>
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Barra de Pesquisa */}
+          {prestadores.length > 0 && (
+            <div className="mt-6">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Buscar prestadores..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg bg-white"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {prestadores.length === 0 ? (
-          <Card className="bg-white border-neutral-200">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <div className="p-4 bg-neutral-100 rounded-lg mb-4">
-                <User className="h-8 w-8 text-neutral-400" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-neutral-900">
-                Nenhum prestador cadastrado
-              </h3>
-              <p className="text-neutral-600 text-center mb-4">
-                Comece criando seu primeiro prestador de serviço
-              </p>
-              <ActionButton
-                icon={Plus}
-                label="Criar Prestador"
-                variant="primary"
-                size="md"
-                onClick={() => setIsCreateDialogOpen(true)}
-              />
-            </CardContent>
-          </Card>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6">
+              <User className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Nenhum prestador cadastrado
+            </h3>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+              Comece criando seu primeiro prestador de serviço para organizar
+              seus fornecedores
+            </p>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="bg-gray-900 text-white hover:bg-gray-800 px-6 py-2 rounded-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Prestador
+            </Button>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {prestadores.map((prestador) => (
-              <Card
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPrestadores.map((prestador) => (
+              <div
                 key={prestador.id}
-                className="bg-white border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all"
+                className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-200 p-6"
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg text-neutral-900">
-                        {prestador.nome}
-                      </CardTitle>
-                      {prestador.especialidade && (
-                        <Badge className="mt-2 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border-neutral-200">
-                          <Briefcase className="h-3 w-3 mr-1" />
-                          {prestador.especialidade}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <ActionButton
-                        icon={Edit}
-                        variant="ghost"
-                        size="sm"
-                        iconOnly
-                        onClick={() => handleEdit(prestador)}
-                        title="Editar prestador"
-                      />
-                      <ActionButton
-                        icon={Trash2}
-                        variant="danger"
-                        size="sm"
-                        iconOnly
-                        onClick={() => {
-                          setSelectedPrestador(prestador);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                        title="Deletar prestador"
-                      />
-                    </div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {prestador.nome}
+                    </h3>
+                    {prestador.especialidade && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <Briefcase className="h-3 w-3 mr-1" />
+                        {prestador.especialidade}
+                      </span>
+                    )}
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
+                  <div className="flex gap-1 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(prestador)}
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPrestador(prestador);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
                   {prestador.cnpj && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-600">
-                      <Briefcase className="h-4 w-4 text-neutral-500" />
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <Briefcase className="h-4 w-4 text-gray-400" />
                       <span>{prestador.cnpj}</span>
                     </div>
                   )}
                   {prestador.telefone && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-600">
-                      <Phone className="h-4 w-4 text-neutral-500" />
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <Phone className="h-4 w-4 text-gray-400" />
                       <span>{prestador.telefone}</span>
                     </div>
                   )}
                   {prestador.email && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-600">
-                      <Mail className="h-4 w-4 text-neutral-500" />
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <Mail className="h-4 w-4 text-gray-400" />
                       <span className="truncate">{prestador.email}</span>
                     </div>
                   )}
                   {prestador.endereco && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-neutral-500" />
-                      <span className="text-neutral-600 line-clamp-2">
+                    <div className="flex items-start gap-3 text-sm">
+                      <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                      <span className="text-gray-600 line-clamp-2">
                         {prestador.endereco}
                       </span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -419,21 +465,25 @@ const Prestadores = () => {
 
       {/* Dialog de Edição */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-0">
-          <DialogHeader className="p-3">
-            <DialogTitle className="text-lg">Editar Prestador</DialogTitle>
-            <DialogDescription className="text-xs">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
+          <DialogHeader className="pb-4 border-b border-gray-200">
+            <DialogTitle className="text-xl font-medium text-gray-900">
+              Editar Prestador
+            </DialogTitle>
+            <DialogDescription className="text-gray-500">
               Atualize os dados do prestador de serviço
             </DialogDescription>
           </DialogHeader>
-          <PrestadorForm
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleEditSubmit}
-            onCancel={() => setIsEditDialogOpen(false)}
-            saving={saving}
-            isEdit
-          />
+          <div className="p-6">
+            <PrestadorForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleEditSubmit}
+              onCancel={() => setIsEditDialogOpen(false)}
+              saving={saving}
+              isEdit
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -442,19 +492,23 @@ const Prestadores = () => {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-lg font-medium text-gray-900">
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
               Tem certeza que deseja excluir o prestador "
               {selectedPrestador?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg">
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-neutral-900 text-white hover:bg-neutral-800"
+              className="bg-red-600 text-white hover:bg-red-700 rounded-lg"
             >
               Excluir
             </AlertDialogAction>

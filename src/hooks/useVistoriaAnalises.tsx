@@ -7,6 +7,10 @@ import {
   UpdateVistoriaData,
 } from '@/types/vistoria';
 import { useToast } from '@/hooks/use-toast';
+import {
+  toSupabaseJson,
+  UpdateVistoriaAnalisePayload,
+} from '@/types/vistoria.extended';
 
 export const useVistoriaAnalises = () => {
   const { user } = useAuth();
@@ -136,15 +140,19 @@ export const useVistoriaAnalises = () => {
         isUpdate = true;
         analiseId = existingAnalise.id;
 
+        const updatePayload: UpdateVistoriaAnalisePayload = {
+          title: data.title,
+          dados_vistoria: data.dados_vistoria
+            ? toSupabaseJson(data.dados_vistoria)
+            : undefined,
+          apontamentos: data.apontamentos
+            ? toSupabaseJson(data.apontamentos)
+            : undefined,
+        };
+
         const { error: updateError } = await supabase
           .from('vistoria_analises')
-          .update({
-            title: data.title,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            dados_vistoria: data.dados_vistoria as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            apontamentos: data.apontamentos as any,
-          })
+          .update(updatePayload)
           .eq('id', analiseId)
           .eq('user_id', user.id);
 
@@ -160,10 +168,12 @@ export const useVistoriaAnalises = () => {
           .insert({
             title: data.title,
             contract_id: data.contract_id,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            dados_vistoria: data.dados_vistoria as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            apontamentos: data.apontamentos as any,
+            dados_vistoria: data.dados_vistoria
+              ? toSupabaseJson(data.dados_vistoria)
+              : null,
+            apontamentos: data.apontamentos
+              ? toSupabaseJson(data.apontamentos)
+              : null,
             user_id: user.id,
           })
           .select()
@@ -227,16 +237,19 @@ export const useVistoriaAnalises = () => {
       setSaving(true);
 
       // Atualizar análise principal
+      const updatePayload: UpdateVistoriaAnalisePayload = {
+        title: data.title,
+        dados_vistoria: data.dados_vistoria
+          ? toSupabaseJson(data.dados_vistoria)
+          : undefined,
+        apontamentos: data.apontamentos
+          ? toSupabaseJson(data.apontamentos)
+          : undefined,
+      };
+
       const { error: analiseError } = await supabase
         .from('vistoria_analises')
-        .update({
-          title: data.title,
-          contract_id: data.contract_id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          dados_vistoria: data.dados_vistoria as any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          apontamentos: data.apontamentos as any,
-        })
+        .update(updatePayload)
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -411,8 +424,7 @@ export const useVistoriaAnalises = () => {
       }> = [];
 
       for (let i = 0; i < apontamentos.length; i++) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const apontamentoData = apontamentos[i] as any;
+        const apontamentoData = apontamentos[i] as Record<string, unknown>;
 
         // eslint-disable-next-line no-console
         console.log(

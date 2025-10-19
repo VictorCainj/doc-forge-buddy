@@ -128,7 +128,7 @@ export const DEVOLUTIVA_LOCATARIO_TEMPLATE = `
   {{/eq}}
   {{/if}}
   
-  <p style="margin-bottom: 20px;"><strong>Evite pendências de reprova na vistoria</strong> e atente-se a entregar o imóvel nas condições iniciais - <strong>a entrega de chaves com reprova de laudo enseja direito {{tratamentoLocadorGenero}} o pedido DE LUCROS CESSANTES</strong>.</p>
+  <p style="margin-bottom: 20px;"><strong>Evite pendências de reprova e o pagamento da taxa de revistoria no valor de R$ 150,00</strong>. Certifique-se de entregar o imóvel nas mesmas condições iniciais, pois <strong>a entrega de chaves com reprova de laudo enseja direito ao locador o pedido DE LUCROS CESSANTES</strong>.</p>
   
   <p style="margin-bottom: 20px;">Para sua referência, segue também o laudo de vistoria de entrada.</p>
   

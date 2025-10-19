@@ -13,19 +13,32 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
     email?: string;
   };
   apontamentos: Array<{
+    id?: string;
     ambiente: string;
     subtitulo: string;
     descricao: string;
     descricaoServico?: string;
     vistoriaInicial: {
       fotos: Array<
-        File | { name: string; url: string; isFromDatabase: boolean }
+        | File
+        | {
+            name: string;
+            url: string;
+            isFromDatabase: boolean;
+            isExternal?: boolean;
+          }
       >;
       descritivoLaudo?: string;
     };
     vistoriaFinal: {
       fotos: Array<
-        File | { name: string; url: string; isFromDatabase: boolean }
+        | File
+        | {
+            name: string;
+            url: string;
+            isFromDatabase: boolean;
+            isExternal?: boolean;
+          }
       >;
     };
     observacao: string;
@@ -45,6 +58,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       type?: string;
       url?: string;
       isFromDatabase?: boolean;
+      isExternal?: boolean;
     }>,
     tipoVistoria: string = 'desconhecido'
   ) => {
@@ -84,12 +98,8 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                 `${tipoVistoria}: Imagem do banco convertida com sucesso`
               );
               return { nome: foto.name || 'imagem', base64: base64HD };
-            } catch (error) {
+            } catch {
               // Se falhar, usar URL diretamente
-              console.warn(
-                `[${tipoVistoria}] ⚠ Erro ao converter, usando URL original:`,
-                error
-              );
               return { nome: foto.name || 'imagem', base64: foto.url };
             }
           }
@@ -104,15 +114,8 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
             const isDevolusUrl = foto.url.includes('devolusvistoria.com.br');
 
             if (isDevolusUrl) {
-              console.log(
-                `[${tipoVistoria}] 🏢 URL do Devolus Vistoria detectada`
-              );
-
               // Para URLs do Devolus, usar URL diretamente (evita CORS)
               // O template irá renderizar com headers específicos
-              console.log(
-                `[${tipoVistoria}] ✓ Usando URL do Devolus diretamente (evita CORS)`
-              );
 
               return {
                 nome: foto.name || 'imagem_devolus',
@@ -132,11 +135,8 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                 log.debug(`${tipoVistoria}: URL externa válida`, {
                   url: foto.url,
                 });
-              } catch (error) {
-                console.error(
-                  `[${tipoVistoria}] ❌ URL externa inválida: ${foto.url}`,
-                  error
-                );
+              } catch {
+                // URL inválida, continuar
               }
 
               return {
@@ -149,9 +149,6 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
 
           // Verificar se o arquivo é válido
           if (!foto || !(foto instanceof File) || foto.size === 0) {
-            console.warn(
-              `[${tipoVistoria}] ⚠ Foto ${index + 1} inválida ou vazia`
-            );
             return null;
           }
 
@@ -165,11 +162,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
           });
           log.debug(`${tipoVistoria}: File convertido com sucesso`);
           return { nome: foto.name, base64: base64HD };
-        } catch (error) {
-          console.error(
-            `[${tipoVistoria}] ✗ Erro ao processar foto ${index + 1}:`,
-            error
-          );
+        } catch {
           return null;
         }
       })
@@ -560,16 +553,17 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
             </div>
           </div>
           
-          ${
-            apontamento.observacao
-              ? `
+          <!-- Seção de Considerações -->
           <div style="background: #374151; color: #FFFFFF; padding: 16px 20px; border-top: 1px solid #E5E7EB;">
-            <h4 style="color: #FFFFFF; margin: 0 0 12px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">CONSIDERAÇÕES DEPARTAMENTO DE RESCISÃO</h4>
-            <p style="margin: 0; color: #FFFFFF; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">${apontamento.observacao}</p>
+            <div style="margin-bottom: 12px;">
+              <h4 style="color: #FFFFFF; margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">CONSIDERAÇÕES DO DEPARTAMENTO DE RESCISÃO</h4>
+            </div>
+            ${
+              apontamento.observacao
+                ? `<p style="margin: 0; color: #FFFFFF; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">${apontamento.observacao}</p>`
+                : `<p style="margin: 0; color: #E5E7EB; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic; opacity: 0.7;">Nenhuma consideração registrada.</p>`
+            }
           </div>
-          `
-              : ''
-          }
         </div>
       `;
       }
@@ -696,6 +690,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
         </p>
       </div>
     </div>
+
   `;
 
   return template;

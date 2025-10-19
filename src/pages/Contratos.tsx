@@ -527,11 +527,12 @@ const Contratos = () => {
           <div className="px-8 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-neutral-900">
+                <h1 className="text-4xl font-bold text-black mb-2">
                   Contratos
                 </h1>
-                <p className="text-sm text-neutral-500 mt-1">
-                  Gerencie todos os contratos de locação
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  Gerencie todos os contratos de locação cadastrados no sistema
+                  de forma organizada e eficiente.
                 </p>
               </div>
 

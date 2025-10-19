@@ -63,7 +63,7 @@ export const enrichContextWithContract = (
 /**
  * Extrai informações relevantes da mensagem
  */
-const extractRelevantInfoFromMessage = (message: string, formData: any) => {
+const extractRelevantInfoFromMessage = (message: string, _formData: any) => {
   const lowerMessage = message.toLowerCase();
   const relevantInfo: any = {};
 
@@ -165,8 +165,8 @@ const extractDateMentions = (message: string): string[] => {
  */
 const extractValueMentions = (message: string): string[] => {
   const valuePatterns = [
-    /\bR\$\s*\d+[\.,]?\d*\b/g,
-    /\b\d+[\.,]?\d*\s*reais?\b/g,
+    /\bR\$\s*\d+[.,]?\d*\b/g,
+    /\b\d+[.,]?\d*\s*reais?\b/g,
     /\b(aluguel|valor|preço|custo|taxa)\b/g,
   ];
 

@@ -327,4 +327,15 @@ const GerarDocumento = () => {
   );
 };
 
+// Componente para renderizar template de forma segura
+// const SafeTemplateContent = ({ html }: { html: string }) => {
+//   const safeHTML = useSafeHTML(html);
+//   return (
+//     <div
+//       dangerouslySetInnerHTML={{ __html: safeHTML }}
+//       style={{ backgroundColor: 'white', color: 'black' }}
+//     />
+//   );
+// };
+
 export default GerarDocumento;

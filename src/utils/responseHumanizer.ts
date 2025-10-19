@@ -138,7 +138,7 @@ const adjustGreeting = (
 const adjustOpeningTone = (
   response: string,
   sentiment: AdvancedSentimentAnalysis,
-  strategy: HumanizationStrategy
+  _strategy: HumanizationStrategy
 ): string => {
   const lowerResponse = response.toLowerCase();
 

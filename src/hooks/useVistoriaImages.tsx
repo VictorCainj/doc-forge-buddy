@@ -284,15 +284,29 @@ export const useVistoriaImages = () => {
   // Converter base64 para File (para recuperar dados)
   const base64ToFile = useCallback(
     (base64: string, filename: string, mimeType: string): File => {
-      const arr = base64.split(',');
-      const mime = arr[0].match(/:(.*?);/)?.[1] || mimeType;
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
+      try {
+        const arr = base64.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || mimeType;
+
+        // Verificar se o base64 é válido antes de decodificar
+        if (!arr[1] || arr[1].trim() === '') {
+          console.warn('Base64 string is empty or invalid:', base64);
+          return new File([], filename, { type: mimeType });
+        }
+
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
+      } catch (error) {
+        console.error('Erro ao converter base64 para File:', error);
+        console.error('Base64 problemático:', base64);
+        // Retornar um arquivo vazio como fallback
+        return new File([], filename, { type: mimeType });
       }
-      return new File([u8arr], filename, { type: mime });
     },
     []
   );

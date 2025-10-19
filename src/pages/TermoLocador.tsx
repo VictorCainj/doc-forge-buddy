@@ -1,7 +1,15 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentFormWizard from '../components/DocumentFormWizard';
-import { Search, ArrowLeft } from '@/utils/iconMapper';
+import {
+  Search,
+  ArrowLeft,
+  FileText,
+  User,
+  User2,
+  MapPin,
+  Key,
+} from '@/utils/iconMapper';
 import { FormStep } from '../hooks/use-form-wizard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -323,38 +331,274 @@ __________________________________________<br>
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Main Content */}
-      <div className="p-6">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/contratos')}
-            className="gap-2 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
+    <div className="min-h-screen bg-neutral-50">
+      {/* Header Minimalista */}
+      <div className="bg-white border-b border-neutral-300">
+        <div className="px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/contratos')}
+                className="gap-2 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Button>
+              <div className="h-6 w-px bg-neutral-300"></div>
+              <div>
+                <h1 className="text-4xl font-bold text-black mb-2">
+                  Termo de Recebimento de Chaves
+                </h1>
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  Preencha os dados para gerar o termo do locador
+                </p>
+              </div>
+            </div>
+
+            {/* Informações do Contrato */}
+            <div className="flex items-center gap-4">
+              <div
+                className="p-2 rounded-lg bg-black"
+                style={{
+                  imageRendering: 'crisp-edges',
+                  backfaceVisibility: 'hidden',
+                }}
+              >
+                <FileText
+                  className="h-4 w-4 text-white"
+                  color="#FFFFFF"
+                  strokeWidth={2.5}
+                  style={{
+                    color: '#FFFFFF',
+                    stroke: '#FFFFFF',
+                    fill: 'none',
+                    shapeRendering: 'geometricPrecision',
+                  }}
+                />
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-black">
+                  Contrato {contractData.numeroContrato}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {contractData.enderecoImovel}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="max-w-6xl mx-auto">
-          {/* Form Wizard */}
-          <Card className="bg-white border-neutral-200 shadow-sm">
-            <CardContent className="p-0">
-              <DocumentFormWizard
-                title="Termo de Recebimento de Chaves - Locador"
-                description="Preencha os dados para gerar o termo"
-                steps={steps}
-                template=""
-                onGenerate={handleGenerate}
-                getTemplate={getTemplate}
-                contractData={contractData}
-                initialData={autoFillData}
-                onFormDataChange={setAutoFillData}
-                hideSaveButton={true}
-              />
-            </CardContent>
-          </Card>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-8 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Sidebar com Informações do Contrato */}
+            <div className="lg:col-span-1">
+              <div className="space-y-6">
+                {/* Informações do Contrato */}
+                <Card className="bg-white border-neutral-300 shadow-md">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div
+                        className="p-2 rounded-lg bg-black"
+                        style={{
+                          imageRendering: 'crisp-edges',
+                          backfaceVisibility: 'hidden',
+                        }}
+                      >
+                        <FileText
+                          className="h-4 w-4 text-white"
+                          color="#FFFFFF"
+                          strokeWidth={2.5}
+                          style={{
+                            color: '#FFFFFF',
+                            stroke: '#FFFFFF',
+                            fill: 'none',
+                            shapeRendering: 'geometricPrecision',
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-black">
+                          Contrato{' '}
+                          <span className="font-mono text-xl text-primary-600">
+                            {contractData.numeroContrato}
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-400 font-mono">
+                          {contractData.dataFirmamentoContrato}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Separador */}
+                    <div className="border-t border-neutral-300 mb-4"></div>
+
+                    {/* PARTES ENVOLVIDAS */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
+                        Partes Envolvidas
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="p-1.5 rounded-md bg-black"
+                            style={{
+                              imageRendering: 'crisp-edges',
+                              backfaceVisibility: 'hidden',
+                            }}
+                          >
+                            <User
+                              className="h-3 w-3 text-white"
+                              color="#FFFFFF"
+                              strokeWidth={2.5}
+                              style={{
+                                color: '#FFFFFF',
+                                stroke: '#FFFFFF',
+                                fill: 'none',
+                                shapeRendering: 'geometricPrecision',
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-black uppercase tracking-wide">
+                              Proprietário
+                            </p>
+                            <p className="text-sm font-semibold text-gray-600 truncate leading-tight">
+                              {contractData.nomeProprietario}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="p-1.5 rounded-md bg-black"
+                            style={{
+                              imageRendering: 'crisp-edges',
+                              backfaceVisibility: 'hidden',
+                            }}
+                          >
+                            <User2
+                              className="h-3 w-3 text-white"
+                              color="#FFFFFF"
+                              strokeWidth={2.5}
+                              style={{
+                                color: '#FFFFFF',
+                                stroke: '#FFFFFF',
+                                fill: 'none',
+                                shapeRendering: 'geometricPrecision',
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-black uppercase tracking-wide">
+                              Locatário
+                            </p>
+                            <p className="text-sm font-semibold text-gray-600 truncate leading-tight">
+                              {contractData.nomeLocatario}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* LOCALIZAÇÃO */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
+                        Localização
+                      </h4>
+                      <div className="flex items-start gap-2 p-2 bg-neutral-50 rounded-lg">
+                        <div
+                          className="p-1 rounded bg-black"
+                          style={{
+                            imageRendering: 'crisp-edges',
+                            backfaceVisibility: 'hidden',
+                          }}
+                        >
+                          <MapPin
+                            className="h-3 w-3 text-white"
+                            color="#FFFFFF"
+                            strokeWidth={2.5}
+                            style={{
+                              color: '#FFFFFF',
+                              stroke: '#FFFFFF',
+                              fill: 'none',
+                              shapeRendering: 'geometricPrecision',
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-black uppercase tracking-wide">
+                            Endereço
+                          </p>
+                          <p className="text-sm font-medium text-gray-600 line-clamp-2 leading-relaxed">
+                            {contractData.enderecoImovel}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CHAVES */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
+                        Chaves
+                      </h4>
+                      <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+                        <div
+                          className="p-1 rounded bg-black"
+                          style={{
+                            imageRendering: 'crisp-edges',
+                            backfaceVisibility: 'hidden',
+                          }}
+                        >
+                          <Key
+                            className="h-3 w-3 text-white"
+                            color="#FFFFFF"
+                            strokeWidth={2.5}
+                            style={{
+                              color: '#FFFFFF',
+                              stroke: '#FFFFFF',
+                              fill: 'none',
+                              shapeRendering: 'geometricPrecision',
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-black uppercase tracking-wide">
+                            Quantidade
+                          </p>
+                          <p className="text-sm font-semibold text-gray-600">
+                            {contractData.quantidadeChaves || 'Não informado'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Formulário Principal */}
+            <div className="lg:col-span-2">
+              <Card className="bg-white border-neutral-300 shadow-md">
+                <CardContent className="p-0">
+                  <DocumentFormWizard
+                    title=""
+                    description=""
+                    steps={steps}
+                    template=""
+                    onGenerate={handleGenerate}
+                    getTemplate={getTemplate}
+                    contractData={contractData}
+                    initialData={autoFillData}
+                    onFormDataChange={setAutoFillData}
+                    hideSaveButton={true}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

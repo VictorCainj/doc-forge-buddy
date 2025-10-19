@@ -3,9 +3,9 @@ import {
   Upload,
   X,
   Image as ImageIcon,
-  CheckCircle2,
   AlertCircle,
 } from '@/utils/iconMapper';
+import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -205,7 +205,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 className="w-full h-full object-cover rounded-lg"
               />
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-neutral-900 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-white" />
+                <CheckCircle2 className="h-4 w-4 text-white" color="white" />
               </div>
             </div>
 

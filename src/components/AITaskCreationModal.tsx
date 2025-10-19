@@ -166,7 +166,7 @@ export const AITaskCreationModal = ({
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-600" />
+            <Sparkles className="h-5 w-5 text-neutral-600" />
             Criar Tarefa com IA
           </DialogTitle>
           <DialogDescription>
@@ -239,7 +239,7 @@ export const AITaskCreationModal = ({
               </Button>
             </>
           ) : (
-            <Card className="border-purple-200 bg-purple-50/50">
+            <Card className="border-neutral-200 bg-neutral-50">
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1 flex-1">

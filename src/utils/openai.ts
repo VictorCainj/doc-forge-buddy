@@ -5,23 +5,38 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Helper para chamar a edge function
 const callOpenAIProxy = async (action: string, data: any): Promise<any> => {
-  const { data: result, error } = await supabase.functions.invoke(
-    'openai-proxy',
-    {
-      body: { action, data },
+  try {
+    log.debug(`Chamando openai-proxy para ação: ${action}`, {
+      action,
+      dataSize: JSON.stringify(data).length,
+    });
+
+    const { data: result, error } = await supabase.functions.invoke(
+      'openai-proxy',
+      {
+        body: { action, data },
+      }
+    );
+
+    if (error) {
+      log.error(`Erro ao chamar ${action}:`, error);
+      throw new Error(`Edge Function returned a non-2xx status code`);
     }
-  );
 
-  if (error) {
-    log.error(`Erro ao chamar ${action}:`, error);
-    throw new Error(error.message || 'Erro ao comunicar com a IA');
+    if (!result) {
+      throw new Error('Resposta vazia da edge function');
+    }
+
+    if (!result.success) {
+      log.error(`Erro na resposta da edge function para ${action}:`, result);
+      throw new Error(result.error || 'Erro desconhecido');
+    }
+
+    return result.content;
+  } catch (error) {
+    log.error(`Erro na chamada callOpenAIProxy para ${action}:`, error);
+    throw error;
   }
-
-  if (!result.success) {
-    throw new Error(result.error || 'Erro desconhecido');
-  }
-
-  return result.content;
 };
 
 export const correctTextWithAI = async (text: string): Promise<string> => {
@@ -283,10 +298,129 @@ export const generateTaskFromSituation = async (
       taskData.subtitle = '';
     }
 
+    // Se há número de contrato, buscar informações do contrato
+    if (taskData.contractNumber) {
+      try {
+        const { data: contracts } = await supabase
+          .from('contracts')
+          .select('form_data')
+          .ilike('form_data->>numeroContrato', `%${taskData.contractNumber}%`)
+          .limit(1);
+
+        if (contracts && contracts.length > 0) {
+          const contract = contracts[0];
+          const formData = contract.form_data as any;
+          
+          // Enriquecer o título com informações do contrato
+          const nomeLocatario = formData.nomeLocatario?.split(' ')[0] || '';
+          const enderecoResumido = formData.enderecoImovel?.split(',')[0] || '';
+          
+          // Atualizar título se não mencionar o contrato explicitamente
+          if (!taskData.title.toLowerCase().includes('contrato')) {
+            taskData.title = `${taskData.title} - Contrato ${taskData.contractNumber}`;
+          }
+          
+          // Enriquecer subtítulo com informações relevantes
+          if (nomeLocatario || enderecoResumido) {
+            const infoExtra = [nomeLocatario, enderecoResumido]
+              .filter(Boolean)
+              .join(' - ');
+            if (infoExtra && !taskData.subtitle.includes(infoExtra)) {
+              taskData.subtitle = taskData.subtitle 
+                ? `${taskData.subtitle} (${infoExtra})`
+                : infoExtra;
+            }
+          }
+          
+          log.debug(`Tarefa enriquecida com informações do contrato ${taskData.contractNumber}`);
+        }
+      } catch (error) {
+        log.warn('Erro ao buscar informações do contrato:', error);
+        // Continuar mesmo se falhar ao buscar o contrato
+      }
+    }
+
     log.debug('Tarefa gerada com sucesso pela IA');
     return taskData;
   } catch (error) {
     log.error('Erro ao gerar tarefa com IA:', error);
     throw new Error('Erro ao gerar tarefa. Tente novamente.');
+  }
+};
+
+export const compareVistoriaImagesWithAI = async (
+  fotosInicial: string[],
+  fotosFinal: string[],
+  descricao: string,
+  descritivoLaudo?: string,
+  contextData?: {
+    ambiente?: string;
+    subtitulo?: string;
+    observacao?: string;
+  }
+): Promise<string> => {
+  try {
+    // Validar imagens iniciais
+    if (!fotosInicial || fotosInicial.length === 0) {
+      throw new Error('Imagens iniciais são obrigatórias para comparação');
+    }
+
+    // Validar imagens finais
+    if (!fotosFinal || fotosFinal.length === 0) {
+      throw new Error('Imagens finais são obrigatórias para comparação');
+    }
+
+    // Validar descrição
+    if (!descricao || descricao.trim().length === 0) {
+      throw new Error('Descrição do apontamento é obrigatória');
+    }
+
+    // Verificar se as imagens são válidas e são base64 válidos
+    fotosInicial.forEach((foto, index) => {
+      if (!foto || foto.trim().length === 0) {
+        throw new Error(`Imagem inicial ${index + 1} está vazia`);
+      }
+      // Verificar se é um base64 válido
+      if (!foto.startsWith('data:image/') || !foto.includes(',')) {
+        throw new Error(`Imagem inicial ${index + 1} não é um base64 válido`);
+      }
+    });
+
+    fotosFinal.forEach((foto, index) => {
+      if (!foto || foto.trim().length === 0) {
+        throw new Error(`Imagem final ${index + 1} está vazia`);
+      }
+      // Verificar se é um base64 válido
+      if (!foto.startsWith('data:image/') || !foto.includes(',')) {
+        throw new Error(`Imagem final ${index + 1} não é um base64 válido`);
+      }
+    });
+
+    log.info('Iniciando análise comparativa de vistoria com IA', {
+      fotosInicial: fotosInicial.length,
+      fotosFinal: fotosFinal.length,
+      descricao: descricao.substring(0, 100) + '...',
+      ambiente: contextData?.ambiente,
+      subtitulo: contextData?.subtitulo,
+    });
+
+    const analysis = await callOpenAIProxy('compareVistoriaImages', {
+      fotosInicial,
+      fotosFinal,
+      descricao,
+      descritivoLaudo: descritivoLaudo || '',
+      ambiente: contextData?.ambiente || '',
+      subtitulo: contextData?.subtitulo || '',
+      observacao: contextData?.observacao || '',
+    });
+
+    log.info('Análise comparativa concluída com sucesso');
+    return analysis;
+  } catch (error) {
+    log.error('Erro ao comparar imagens de vistoria:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Erro ao analisar imagens de vistoria. Tente novamente.');
   }
 };

@@ -1,6 +1,7 @@
 import { X } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { useSafeHTML } from '@/hooks/useSafeHTML';
 
 interface DocumentViewerProps {
   htmlContent: string;
@@ -42,9 +43,8 @@ export function DocumentViewer({ htmlContent, onClose }: DocumentViewerProps) {
 
       {/* Conteúdo do documento */}
       <div className="max-w-5xl mx-auto px-6 py-8">
-        <div
-          className="document-viewer-content"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
+        <SafeDocumentViewer
+          html={htmlContent}
           onDoubleClick={(e) => {
             const target = e.target as HTMLElement;
             if (target.tagName === 'IMG') {
@@ -113,3 +113,21 @@ export function DocumentViewer({ htmlContent, onClose }: DocumentViewerProps) {
     </div>
   );
 }
+
+// Componente para renderizar documento de forma segura
+const SafeDocumentViewer = ({
+  html,
+  onDoubleClick,
+}: {
+  html: string;
+  onDoubleClick: React.MouseEventHandler<HTMLDivElement>;
+}) => {
+  const safeHTML = useSafeHTML(html);
+  return (
+    <div
+      className="document-viewer-content"
+      dangerouslySetInnerHTML={{ __html: safeHTML }}
+      onDoubleClick={onDoubleClick}
+    />
+  );
+};

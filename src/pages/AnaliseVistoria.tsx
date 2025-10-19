@@ -65,6 +65,7 @@ import { BudgetItemType } from '@/types/orcamento';
 import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
 import { DocumentViewer } from '@/components/DocumentViewer';
+import { useSafeHTML } from '@/hooks/useSafeHTML';
 
 interface Contract {
   id: string;
@@ -80,6 +81,7 @@ const AnaliseVistoria = () => {
   const {
     correctText,
     extractApontamentos,
+    compareVistoriaImages,
     isLoading: isAILoading,
     error: aiError,
   } = useOpenAI();
@@ -134,6 +136,7 @@ const AnaliseVistoria = () => {
     null
   );
   const [hasExistingAnalise, setHasExistingAnalise] = useState(false);
+
   const [loadingExistingAnalise, setLoadingExistingAnalise] = useState(false);
   const [saving, setSaving] = useState(false);
   const [documentMode, setDocumentMode] = useState<'analise' | 'orcamento'>(
@@ -188,6 +191,7 @@ const AnaliseVistoria = () => {
     window.addEventListener('error', handleError);
     return () => window.removeEventListener('error', handleError);
   }, []);
+
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
   const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
   const [viewerMode, setViewerMode] = useState(false);
@@ -745,124 +749,126 @@ const AnaliseVistoria = () => {
     fileToBase64,
   ]);
 
-  // Atualizar pré-visualização do documento em tempo real
-  useEffect(() => {
-    const updateDocumentPreview = async () => {
-      if (apontamentos.length === 0) {
+  // Função para atualizar pré-visualização do documento
+  const updateDocumentPreview = useCallback(async () => {
+    if (apontamentos.length === 0) {
+      setDocumentPreview('');
+      return;
+    }
+
+    try {
+      // Validar se todos os apontamentos têm dados válidos
+      const apontamentosValidos = apontamentos.filter((apontamento) => {
+        return apontamento.ambiente && apontamento.descricao;
+      });
+
+      if (apontamentosValidos.length === 0) {
         setDocumentPreview('');
         return;
       }
 
-      try {
-        // Validar se todos os apontamentos têm dados válidos
-        const apontamentosValidos = apontamentos.filter((apontamento) => {
-          return apontamento.ambiente && apontamento.descricao;
+      // Debug: Verificar apontamentos antes da validação
+      log.debug('Apontamentos antes da validação', {
+        totalApontamentos: apontamentosValidos.length,
+      });
+      apontamentosValidos.forEach((apontamento, index) => {
+        log.debug(`Apontamento ${index + 1}: ${apontamento.ambiente}`, {
+          fotosInicial: apontamento.vistoriaInicial?.fotos?.length || 0,
+          fotosFinal: apontamento.vistoriaFinal?.fotos?.length || 0,
+          tipoFotosInicial: typeof apontamento.vistoriaInicial?.fotos,
+          tipoFotosFinal: typeof apontamento.vistoriaFinal?.fotos,
+        });
+      });
+
+      // Verificar se há fotos válidas nos apontamentos
+      log.debug('Iniciando validação de fotos', {
+        apontamentosValidos: apontamentosValidos.length,
+      });
+
+      const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
+        log.debug(`Validando apontamento: ${apontamento.ambiente}`, {
+          fotosInicialOriginais:
+            apontamento.vistoriaInicial?.fotos?.length || 0,
+          fotosFinalOriginais: apontamento.vistoriaFinal?.fotos?.length || 0,
         });
 
-        if (apontamentosValidos.length === 0) {
-          setDocumentPreview('');
-          return;
-        }
+        // Verificar se as fotos são objetos File válidos ou imagens do banco
+        const fotosInicialValidas =
+          apontamento.vistoriaInicial?.fotos?.filter((foto) => {
+            log.debug('Validando foto inicial', {
+              isFromDatabase: foto?.isFromDatabase,
+              hasUrl: !!foto?.url,
+              isFile: foto instanceof File,
+              fileSize: foto instanceof File ? foto.size : 0,
+            });
 
-        // Debug: Verificar apontamentos antes da validação
-        log.debug('Apontamentos antes da validação', {
-          totalApontamentos: apontamentosValidos.length,
-        });
-        apontamentosValidos.forEach((apontamento, index) => {
-          log.debug(`Apontamento ${index + 1}: ${apontamento.ambiente}`, {
-            fotosInicial: apontamento.vistoriaInicial?.fotos?.length || 0,
-            fotosFinal: apontamento.vistoriaFinal?.fotos?.length || 0,
-            tipoFotosInicial: typeof apontamento.vistoriaInicial?.fotos,
-            tipoFotosFinal: typeof apontamento.vistoriaFinal?.fotos,
-          });
-        });
+            // Se é do banco de dados, verificar se tem URL
+            if (foto?.isFromDatabase) {
+              const hasValidUrl = foto.url && foto.url.length > 0;
+              return hasValidUrl;
+            }
+            // Se é File, verificar se é válido
+            const isValidFile = foto instanceof File && foto.size > 0;
+            return isValidFile;
+          }) || [];
 
-        // Verificar se há fotos válidas nos apontamentos
-        log.debug('Iniciando validação de fotos', {
-          apontamentosValidos: apontamentosValidos.length,
-        });
+        const fotosFinalValidas =
+          apontamento.vistoriaFinal?.fotos?.filter((foto) => {
+            log.debug('Validando foto final', {
+              isFromDatabase: foto?.isFromDatabase,
+              hasUrl: !!foto?.url,
+              isFile: foto instanceof File,
+              fileSize: foto instanceof File ? foto.size : 0,
+            });
 
-        const apontamentosComFotos = apontamentosValidos.map((apontamento) => {
-          log.debug(`Validando apontamento: ${apontamento.ambiente}`, {
-            fotosInicialOriginais:
-              apontamento.vistoriaInicial?.fotos?.length || 0,
-            fotosFinalOriginais: apontamento.vistoriaFinal?.fotos?.length || 0,
-          });
+            // Se é do banco de dados, verificar se tem URL
+            if (foto?.isFromDatabase) {
+              const hasValidUrl = foto.url && foto.url.length > 0;
+              return hasValidUrl;
+            }
+            // Se é File, verificar se é válido
+            const isValidFile = foto instanceof File && foto.size > 0;
+            return isValidFile;
+          }) || [];
 
-          // Verificar se as fotos são objetos File válidos ou imagens do banco
-          const fotosInicialValidas =
-            apontamento.vistoriaInicial?.fotos?.filter((foto) => {
-              log.debug('Validando foto inicial', {
-                isFromDatabase: foto?.isFromDatabase,
-                hasUrl: !!foto?.url,
-                isFile: foto instanceof File,
-                fileSize: foto instanceof File ? foto.size : 0,
-              });
-
-              // Se é do banco de dados, verificar se tem URL
-              if (foto?.isFromDatabase) {
-                const hasValidUrl = foto.url && foto.url.length > 0;
-                return hasValidUrl;
-              }
-              // Se é File, verificar se é válido
-              const isValidFile = foto instanceof File && foto.size > 0;
-              return isValidFile;
-            }) || [];
-
-          const fotosFinalValidas =
-            apontamento.vistoriaFinal?.fotos?.filter((foto) => {
-              log.debug('Validando foto final', {
-                isFromDatabase: foto?.isFromDatabase,
-                hasUrl: !!foto?.url,
-                isFile: foto instanceof File,
-                fileSize: foto instanceof File ? foto.size : 0,
-              });
-
-              // Se é do banco de dados, verificar se tem URL
-              if (foto?.isFromDatabase) {
-                const hasValidUrl = foto.url && foto.url.length > 0;
-                return hasValidUrl;
-              }
-              // Se é File, verificar se é válido
-              const isValidFile = foto instanceof File && foto.size > 0;
-              return isValidFile;
-            }) || [];
-
-          log.debug(`Resultado ${apontamento.ambiente}`, {
-            fotosInicialValidas: fotosInicialValidas.length,
-            fotosFinalValidas: fotosFinalValidas.length,
-          });
-
-          return {
-            ...apontamento,
-            vistoriaInicial: {
-              ...apontamento.vistoriaInicial,
-              fotos: fotosInicialValidas,
-            },
-            vistoriaFinal: {
-              ...apontamento.vistoriaFinal,
-              fotos: fotosFinalValidas,
-            },
-          };
+        log.debug(`Resultado ${apontamento.ambiente}`, {
+          fotosInicialValidas: fotosInicialValidas.length,
+          fotosFinalValidas: fotosFinalValidas.length,
         });
 
-        // Gerar template do documento
-        const template = await ANALISE_VISTORIA_TEMPLATE({
-          locatario: dadosVistoria.locatario,
-          endereco: dadosVistoria.endereco,
-          dataVistoria: dadosVistoria.dataVistoria,
-          documentMode,
-          apontamentos: apontamentosComFotos,
-        });
+        return {
+          ...apontamento,
+          vistoriaInicial: {
+            ...apontamento.vistoriaInicial,
+            fotos: fotosInicialValidas,
+          },
+          vistoriaFinal: {
+            ...apontamento.vistoriaFinal,
+            fotos: fotosFinalValidas,
+          },
+        };
+      });
 
-        setDocumentPreview(template);
-      } catch {
-        setDocumentPreview('');
-      }
-    };
+      // Gerar template do documento
+      const template = await ANALISE_VISTORIA_TEMPLATE({
+        locatario: dadosVistoria.locatario,
+        endereco: dadosVistoria.endereco,
+        dataVistoria: dadosVistoria.dataVistoria,
+        documentMode,
+        apontamentos: apontamentosComFotos,
+      });
 
-    updateDocumentPreview();
+      setDocumentPreview(template);
+    } catch (error) {
+      console.error('Erro ao atualizar pré-visualização:', error);
+      setDocumentPreview('');
+    }
   }, [apontamentos, dadosVistoria, documentMode]);
+
+  // Atualizar pré-visualização do documento em tempo real
+  useEffect(() => {
+    updateDocumentPreview();
+  }, [updateDocumentPreview]);
 
   // Filtrar contratos baseado no termo de busca (removido - não é mais necessário)
 
@@ -2019,6 +2025,174 @@ const AnaliseVistoria = () => {
     }
   };
 
+  const handleAIAnalysisForCurrentApontamento = async () => {
+    console.log('Debug - handleAIAnalysisForCurrentApontamento chamada');
+    console.log('Debug - currentApontamento:', {
+      fotosInicial: currentApontamento.vistoriaInicial?.fotos?.length || 0,
+      fotosFinal: currentApontamento.vistoriaFinal?.fotos?.length || 0,
+      descricao: currentApontamento.descricao ? 'Sim' : 'Não',
+      descricaoLength: currentApontamento.descricao?.trim().length || 0,
+    });
+
+    if (
+      !currentApontamento.vistoriaInicial?.fotos?.length ||
+      !currentApontamento.vistoriaFinal?.fotos?.length ||
+      !currentApontamento.descricao?.trim()
+    ) {
+      console.log('Debug - Validação falhou');
+      toast({
+        title: 'Erro',
+        description:
+          'É necessário ter fotos inicial e final, além da descrição do apontamento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    console.log('Debug - Validação passou, iniciando análise');
+
+    try {
+      // Converter fotos para base64 se necessário
+      const fotosInicialBase64: string[] = [];
+      const fotosFinalBase64: string[] = [];
+
+      console.log('Debug - Processando imagens:', {
+        fotosInicialCount: currentApontamento.vistoriaInicial.fotos.length,
+        fotosFinalCount: currentApontamento.vistoriaFinal.fotos.length,
+      });
+
+      // Processar fotos iniciais
+      for (
+        let i = 0;
+        i < currentApontamento.vistoriaInicial.fotos.length;
+        i++
+      ) {
+        const foto = currentApontamento.vistoriaInicial.fotos[i];
+        console.log(`Debug - Processando foto inicial ${i + 1}:`, {
+          isFile: foto instanceof File,
+          isObject: typeof foto === 'object',
+          hasUrl: foto && typeof foto === 'object' && 'url' in foto,
+          url:
+            foto && typeof foto === 'object' && 'url' in foto
+              ? foto.url
+              : 'N/A',
+        });
+
+        if (foto instanceof File) {
+          const base64 = await fileToBase64(foto);
+          fotosInicialBase64.push(base64);
+        } else if (foto && typeof foto === 'object') {
+          // Foto do banco de dados - verificar se já é base64 ou se precisa converter
+          if (foto.url) {
+            // Se a URL já é base64, usar diretamente
+            if (foto.url.startsWith('data:image/')) {
+              fotosInicialBase64.push(foto.url);
+            } else {
+              // Se é uma URL normal, converter para base64
+              try {
+                const response = await fetch(foto.url);
+                const blob = await response.blob();
+                const base64 = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.readAsDataURL(blob);
+                });
+                fotosInicialBase64.push(base64);
+              } catch (error) {
+                console.error('Erro ao converter imagem do banco:', error);
+                toast({
+                  title: 'Erro',
+                  description: `Erro ao processar imagem inicial: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+                  variant: 'destructive',
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      // Processar fotos finais
+      for (const foto of currentApontamento.vistoriaFinal.fotos) {
+        if (foto instanceof File) {
+          const base64 = await fileToBase64(foto);
+          fotosFinalBase64.push(base64);
+        } else if (foto && typeof foto === 'object') {
+          // Foto do banco de dados - verificar se já é base64 ou se precisa converter
+          if (foto.url) {
+            // Se a URL já é base64, usar diretamente
+            if (foto.url.startsWith('data:image/')) {
+              fotosFinalBase64.push(foto.url);
+            } else {
+              // Se é uma URL normal, converter para base64
+              try {
+                const response = await fetch(foto.url);
+                const blob = await response.blob();
+                const base64 = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.readAsDataURL(blob);
+                });
+                fotosFinalBase64.push(base64);
+              } catch (error) {
+                console.error('Erro ao converter imagem do banco:', error);
+                toast({
+                  title: 'Erro',
+                  description: `Erro ao processar imagem final: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+                  variant: 'destructive',
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      if (fotosInicialBase64.length === 0 || fotosFinalBase64.length === 0) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível processar as imagens para análise.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Chamar IA para análise comparativa
+      const analysis = await compareVistoriaImages(
+        fotosInicialBase64,
+        fotosFinalBase64,
+        currentApontamento.descricao,
+        currentApontamento.vistoriaInicial?.descritivoLaudo,
+        {
+          ambiente: currentApontamento.ambiente,
+          subtitulo: currentApontamento.subtitulo,
+          observacao: currentApontamento.observacao,
+        }
+      );
+
+      // Atualizar a análise técnica com o resultado da IA
+      setCurrentApontamento((prev) => ({
+        ...prev,
+        observacao: analysis,
+      }));
+
+      toast({
+        title: 'Análise por IA concluída',
+        description:
+          'A análise técnica foi gerada com base nas imagens comparadas.',
+      });
+    } catch (error) {
+      console.error('Erro na análise por IA:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+      toast({
+        title: 'Erro na análise por IA',
+        description: `Ocorreu um erro durante a análise: ${errorMessage}`,
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Função para migrar/corrigir classificações de documentos antigos
   const handleMigrarClassificacoes = useCallback(() => {
     let apontamentosCorrigidos = 0;
@@ -3108,19 +3282,47 @@ está suja
                       <AlertCircle className="h-4 w-4 text-neutral-600" />
                       <span>Análise Técnica</span>
                     </Label>
-                    <Button
-                      onClick={handleCorrectText}
-                      disabled={
-                        isAILoading || !currentApontamento.observacao?.trim()
-                      }
-                      variant="ghost"
-                      size="sm"
-                      className="text-neutral-500 hover:text-foreground h-6 px-2 text-xs"
-                      title="Corrigir ortografia com IA"
-                    >
-                      <Wand2 className="h-3 w-3 mr-1" />
-                      {isAILoading ? 'Corrigindo...' : 'IA'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={handleCorrectText}
+                        disabled={
+                          isAILoading || !currentApontamento.observacao?.trim()
+                        }
+                        variant="ghost"
+                        size="sm"
+                        className="text-neutral-500 hover:text-foreground h-6 px-2 text-xs"
+                        title="Corrigir ortografia com IA"
+                      >
+                        <Wand2 className="h-3 w-3 mr-1" />
+                        {isAILoading ? 'Corrigindo...' : 'Corrigir'}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          console.log('Debug - Botão Analisar clicado');
+                          console.log('Debug - Estado atual:', {
+                            isAILoading,
+                            fotosInicial:
+                              currentApontamento.vistoriaInicial?.fotos
+                                ?.length || 0,
+                            fotosFinal:
+                              currentApontamento.vistoriaFinal?.fotos?.length ||
+                              0,
+                            descricao: currentApontamento.descricao || '',
+                            descricaoLength:
+                              currentApontamento.descricao?.trim().length || 0,
+                          });
+                          handleAIAnalysisForCurrentApontamento();
+                        }}
+                        disabled={false}
+                        variant="default"
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white h-6 px-2 text-xs"
+                        title="Clique para analisar com IA"
+                      >
+                        <Wand2 className="h-3 w-3 mr-1" />
+                        {isAILoading ? 'Analisando...' : 'Analisar'}
+                      </Button>
+                    </div>
                   </div>
                   <Textarea
                     id="observacao"
@@ -3271,10 +3473,7 @@ está suja
                           Pré-visualização do Documento Final
                         </h4>
                       </div>
-                      <div
-                        className="max-h-96 overflow-y-auto bg-white document-preview-container"
-                        dangerouslySetInnerHTML={{ __html: documentPreview }}
-                      />
+                      <DocumentPreviewContent html={documentPreview} />
                     </div>
 
                     {/* CSS para zoom nas imagens da pré-visualização */}
@@ -3537,6 +3736,17 @@ está suja
         </div>
       )}
     </div>
+  );
+};
+
+// Componente para renderizar preview de forma segura
+const DocumentPreviewContent = ({ html }: { html: string }) => {
+  const safeHTML = useSafeHTML(html);
+  return (
+    <div
+      className="max-h-96 overflow-y-auto bg-white document-preview-container"
+      dangerouslySetInnerHTML={{ __html: safeHTML }}
+    />
   );
 };
 

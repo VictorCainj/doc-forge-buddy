@@ -9,6 +9,7 @@ import { logger } from '@/utils/logger';
 import { validateHTML } from '@/utils/securityValidators';
 import html2pdf from 'html2pdf.js';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { useSafeHTML } from '@/hooks/useSafeHTML';
 
 export default function DocumentoPublico() {
   const { id } = useParams<{ id: string }>();
@@ -364,11 +365,7 @@ export default function DocumentoPublico() {
 
         {/* Conteúdo do documento */}
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <div
-            ref={contentRef}
-            className="document-public-content"
-            dangerouslySetInnerHTML={{ __html: htmlContent }}
-          />
+          <SafeDocumentContent html={htmlContent} contentRef={contentRef} />
         </div>
 
         {/* Modal de Zoom de Imagem */}
@@ -529,3 +526,21 @@ export default function DocumentoPublico() {
     </main>
   );
 }
+
+// Componente para renderizar conteúdo de forma segura
+const SafeDocumentContent = ({
+  html,
+  contentRef,
+}: {
+  html: string;
+  contentRef: React.RefObject<HTMLDivElement>;
+}) => {
+  const safeHTML = useSafeHTML(html);
+  return (
+    <div
+      ref={contentRef}
+      className="document-public-content"
+      dangerouslySetInnerHTML={{ __html: safeHTML }}
+    />
+  );
+};

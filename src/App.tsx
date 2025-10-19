@@ -31,10 +31,9 @@ const TermoLocatario = lazy(() => import('./pages/TermoLocatario'));
 const TermoRecusaAssinaturaEmail = lazy(
   () => import('./pages/TermoRecusaAssinaturaEmail')
 );
-const Chat = lazy(() => import('./pages/Chat'));
+
 const AnaliseVistoria = lazy(() => import('./pages/AnaliseVistoria'));
 const Prestadores = lazy(() => import('./pages/Prestadores'));
-const DebugImages = lazy(() => import('./pages/DebugImages'));
 const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Tarefas = lazy(() => import('./pages/Tarefas'));
@@ -195,16 +194,7 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/chat"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Chat />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
+
                   <Route
                     path="/analise-vistoria"
                     element={
@@ -235,16 +225,7 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/debug-images"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <DebugImages />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
+
                   <Route
                     path="/admin"
                     element={

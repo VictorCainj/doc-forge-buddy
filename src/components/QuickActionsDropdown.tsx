@@ -392,15 +392,15 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
             {/* Modal */}
             <div className="fixed inset-4 md:inset-8 z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
               {/* Header do modal */}
-              <div className="relative px-6 py-5 border-b border-neutral-200 bg-white">
+              <div className="relative px-6 py-5 border-b border-neutral-300 bg-white">
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold text-neutral-900">
+                  <h3 className="text-xl font-semibold text-black">
                     Ações Rápidas
                   </h3>
                   {contractNumber && (
-                    <p className="text-sm text-neutral-600 mt-1">
+                    <p className="text-sm text-gray-400 mt-1">
                       Contrato:{' '}
-                      <span className="font-medium text-neutral-900">
+                      <span className="font-medium text-black">
                         {contractNumber}
                       </span>
                     </p>
@@ -434,7 +434,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <div className="px-1 pb-2">
-                          <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                          <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
                             Chaves
                           </h4>
                         </div>
@@ -443,14 +443,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                             key={action.id}
                             onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
-                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                           >
                             {action.loading ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                             ) : (
-                              <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                              <div
+                                className="p-1 rounded bg-black"
+                                style={{
+                                  imageRendering: 'crisp-edges',
+                                  backfaceVisibility: 'hidden',
+                                }}
+                              >
+                                <action.icon
+                                  className="h-3 w-3 text-white flex-shrink-0"
+                                  color="#FFFFFF"
+                                  strokeWidth={2.5}
+                                  style={{
+                                    color: '#FFFFFF',
+                                    stroke: '#FFFFFF',
+                                    fill: 'none',
+                                    shapeRendering: 'geometricPrecision',
+                                  }}
+                                />
+                              </div>
                             )}
-                            <span className="text-sm text-neutral-700 font-medium text-left">
+                            <span className="text-sm text-gray-600 font-medium text-left">
                               {action.id === 'termo-locador'
                                 ? 'Chaves (Locador)'
                                 : action.id === 'termo-locatario'
@@ -468,7 +486,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                         {/* E-mail */}
                         <div>
                           <div className="px-1 pb-2">
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
                               E-mail
                             </h4>
                           </div>
@@ -484,14 +502,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   key={action.id}
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
-                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                                 >
                                   {action.loading ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                                   ) : (
-                                    <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                    <div
+                                      className="p-1 rounded bg-black"
+                                      style={{
+                                        imageRendering: 'crisp-edges',
+                                        backfaceVisibility: 'hidden',
+                                      }}
+                                    >
+                                      <action.icon
+                                        className="h-3 w-3 text-white flex-shrink-0"
+                                        color="#FFFFFF"
+                                        strokeWidth={2.5}
+                                        style={{
+                                          color: '#FFFFFF',
+                                          stroke: '#FFFFFF',
+                                          fill: 'none',
+                                          shapeRendering: 'geometricPrecision',
+                                        }}
+                                      />
+                                    </div>
                                   )}
-                                  <span className="text-sm text-neutral-700 font-medium text-left">
+                                  <span className="text-sm text-gray-600 font-medium text-left">
                                     {action.id === 'devolutiva-email-locador'
                                       ? 'E-mail (Locador)'
                                       : action.id ===
@@ -510,7 +546,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                         {/* WhatsApp */}
                         <div>
                           <div className="px-1 pb-2">
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
                               WhatsApp
                             </h4>
                           </div>
@@ -526,14 +562,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   key={action.id}
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
-                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                                 >
                                   {action.loading ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                                   ) : (
-                                    <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                    <div
+                                      className="p-1 rounded bg-black"
+                                      style={{
+                                        imageRendering: 'crisp-edges',
+                                        backfaceVisibility: 'hidden',
+                                      }}
+                                    >
+                                      <action.icon
+                                        className="h-3 w-3 text-white flex-shrink-0"
+                                        color="#FFFFFF"
+                                        strokeWidth={2.5}
+                                        style={{
+                                          color: '#FFFFFF',
+                                          stroke: '#FFFFFF',
+                                          fill: 'none',
+                                          shapeRendering: 'geometricPrecision',
+                                        }}
+                                      />
+                                    </div>
                                   )}
-                                  <span className="text-sm text-neutral-700 font-medium text-left">
+                                  <span className="text-sm text-gray-600 font-medium text-left">
                                     {action.id === 'whatsapp-proprietaria'
                                       ? 'Proprietária'
                                       : action.id === 'whatsapp-comercial'
@@ -552,7 +606,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                         {/* Outros */}
                         <div>
                           <div className="px-1 pb-2">
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
                               Outros
                             </h4>
                           </div>
@@ -570,14 +624,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   key={action.id}
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
-                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                                 >
                                   {action.loading ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                                   ) : (
-                                    <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                    <div
+                                      className="p-1 rounded bg-black"
+                                      style={{
+                                        imageRendering: 'crisp-edges',
+                                        backfaceVisibility: 'hidden',
+                                      }}
+                                    >
+                                      <action.icon
+                                        className="h-3 w-3 text-white flex-shrink-0"
+                                        color="#FFFFFF"
+                                        strokeWidth={2.5}
+                                        style={{
+                                          color: '#FFFFFF',
+                                          stroke: '#FFFFFF',
+                                          fill: 'none',
+                                          shapeRendering: 'geometricPrecision',
+                                        }}
+                                      />
+                                    </div>
                                   )}
-                                  <span className="text-sm text-neutral-700 font-medium text-left">
+                                  <span className="text-sm text-gray-600 font-medium text-left">
                                     {action.id === 'cobranca-consumo'
                                       ? 'Cobrança'
                                       : action.label}
@@ -618,14 +690,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                 setIsOpen(false);
                               }}
                               disabled={checkingAnalise}
-                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                             >
                               {checkingAnalise ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                               ) : (
-                                <SearchCheck className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                <div
+                                  className="p-1 rounded bg-black"
+                                  style={{
+                                    imageRendering: 'crisp-edges',
+                                    backfaceVisibility: 'hidden',
+                                  }}
+                                >
+                                  <SearchCheck
+                                    className="h-3 w-3 text-white flex-shrink-0"
+                                    color="#FFFFFF"
+                                    strokeWidth={2.5}
+                                    style={{
+                                      color: '#FFFFFF',
+                                      stroke: '#FFFFFF',
+                                      fill: 'none',
+                                      shapeRendering: 'geometricPrecision',
+                                    }}
+                                  />
+                                </div>
                               )}
-                              <span className="text-sm text-neutral-700 font-medium text-left">
+                              <span className="text-sm text-gray-600 font-medium text-left">
                                 {checkingAnalise
                                   ? 'Verificando...'
                                   : hasAnalise
@@ -644,7 +734,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <div className="px-1 pb-2">
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
                               Contratos
                             </h4>
                           </div>
@@ -653,14 +743,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                               key={action.id}
                               onClick={() => handleActionClick(action)}
                               disabled={action.disabled}
-                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                             >
                               {action.loading ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                               ) : (
-                                <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                <div
+                                  className="p-1 rounded bg-black"
+                                  style={{
+                                    imageRendering: 'crisp-edges',
+                                    backfaceVisibility: 'hidden',
+                                  }}
+                                >
+                                  <action.icon
+                                    className="h-3 w-3 text-white flex-shrink-0"
+                                    color="#FFFFFF"
+                                    strokeWidth={2.5}
+                                    style={{
+                                      color: '#FFFFFF',
+                                      stroke: '#FFFFFF',
+                                      fill: 'none',
+                                      shapeRendering: 'geometricPrecision',
+                                    }}
+                                  />
+                                </div>
                               )}
-                              <span className="text-sm text-neutral-700 font-medium text-left">
+                              <span className="text-sm text-gray-600 font-medium text-left">
                                 {action.id === 'caderninho'
                                   ? 'Caderninho'
                                   : action.id === 'distrato'
@@ -676,7 +784,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <div className="px-1 pb-2">
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
                               Assinatura
                             </h4>
                           </div>
@@ -685,14 +793,32 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                               key={action.id}
                               onClick={() => handleActionClick(action)}
                               disabled={action.disabled}
-                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
                             >
                               {action.loading ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-400" />
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                               ) : (
-                                <action.icon className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                <div
+                                  className="p-1 rounded bg-black"
+                                  style={{
+                                    imageRendering: 'crisp-edges',
+                                    backfaceVisibility: 'hidden',
+                                  }}
+                                >
+                                  <action.icon
+                                    className="h-3 w-3 text-white flex-shrink-0"
+                                    color="#FFFFFF"
+                                    strokeWidth={2.5}
+                                    style={{
+                                      color: '#FFFFFF',
+                                      stroke: '#FFFFFF',
+                                      fill: 'none',
+                                      shapeRendering: 'geometricPrecision',
+                                    }}
+                                  />
+                                </div>
                               )}
-                              <span className="text-sm text-neutral-700 font-medium text-left">
+                              <span className="text-sm text-gray-600 font-medium text-left">
                                 {action.id === 'termo-recusa-email'
                                   ? 'Recusa E-mail'
                                   : action.id === 'termo-recusa-pdf'

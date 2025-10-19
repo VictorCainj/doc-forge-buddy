@@ -9,6 +9,7 @@ import {
   transcribeAudioWithAI,
   extractApontamentosFromText,
   ExtractedApontamento,
+  compareVistoriaImagesWithAI,
 } from '@/utils/openai';
 import { Contract } from './useContractAnalysis';
 import { CompleteContractData } from './useCompleteContractData';
@@ -28,6 +29,17 @@ interface UseOpenAIReturn {
   analyzeImage: (imageBase64: string, userPrompt?: string) => Promise<string>;
   transcribeAudio: (audioFile: File) => Promise<string>;
   extractApontamentos: (text: string) => Promise<ExtractedApontamento[]>;
+  compareVistoriaImages: (
+    fotosInicial: string[],
+    fotosFinal: string[],
+    descricao: string,
+    descritivoLaudo?: string,
+    contextData?: {
+      ambiente?: string;
+      subtitulo?: string;
+      observacao?: string;
+    }
+  ) => Promise<string>;
   isLoading: boolean;
   error: string | null;
 }
@@ -50,11 +62,11 @@ export const useOpenAI = (): UseOpenAIReturn => {
 
       // Se não estiver no cache, fazer chamada para API
       const correctedText = await correctTextWithAI(text);
-      
+
       // Salvar no cache
       setCachedResponse(text, correctedText, 'normal', 0.9, {
         timestamp: new Date().toISOString(),
-        model: 'gpt-4o-mini'
+        model: 'gpt-4o-mini',
       });
 
       return correctedText;
@@ -82,11 +94,11 @@ export const useOpenAI = (): UseOpenAIReturn => {
 
       // Se não estiver no cache, fazer chamada para API
       const improvedText = await improveTextWithAI(text);
-      
+
       // Salvar no cache
       setCachedResponse(text, improvedText, 'intelligent', 0.9, {
         timestamp: new Date().toISOString(),
-        model: 'gpt-4o-mini'
+        model: 'gpt-4o-mini',
       });
 
       return improvedText;
@@ -110,9 +122,9 @@ export const useOpenAI = (): UseOpenAIReturn => {
 
     try {
       // Para análise de contratos, criar uma chave baseada na query e dados dos contratos
-      const contractsHash = contracts.map(c => c.id).join(',');
+      const contractsHash = contracts.map((c) => c.id).join(',');
       const cacheKey = `${query}:${contractsHash}`;
-      
+
       // Verificar cache primeiro
       const cachedResponse = getCachedResponse(cacheKey, 'analysis');
       if (cachedResponse) {
@@ -126,13 +138,13 @@ export const useOpenAI = (): UseOpenAIReturn => {
         contracts,
         completeContracts
       );
-      
+
       // Salvar no cache com menor confiança devido à natureza dinâmica dos dados
       setCachedResponse(cacheKey, analysis, 'analysis', 0.7, {
         timestamp: new Date().toISOString(),
         model: 'gpt-4o',
         contractCount: contracts.length,
-        queryHash: cacheKey
+        queryHash: cacheKey,
       });
 
       return analysis;
@@ -160,11 +172,11 @@ export const useOpenAI = (): UseOpenAIReturn => {
 
       // Se não estiver no cache, fazer chamada para API
       const response = await chatCompletionWithAI(prompt);
-      
+
       // Salvar no cache
       setCachedResponse(prompt, response, 'conversational', 0.85, {
         timestamp: new Date().toISOString(),
-        model: 'gpt-4o'
+        model: 'gpt-4o',
       });
 
       return response;
@@ -185,7 +197,7 @@ export const useOpenAI = (): UseOpenAIReturn => {
     try {
       // Gerar imagem não usa cache devido à natureza única de cada geração
       const imageUrl = await generateImageWithAI(prompt);
-      
+
       log.debug('Imagem gerada com sucesso');
       return imageUrl;
     } catch (err) {
@@ -198,13 +210,16 @@ export const useOpenAI = (): UseOpenAIReturn => {
     }
   };
 
-  const analyzeImage = async (imageBase64: string, userPrompt?: string): Promise<string> => {
+  const analyzeImage = async (
+    imageBase64: string,
+    userPrompt?: string
+  ): Promise<string> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const analysis = await analyzeImageWithAI(imageBase64, userPrompt);
-      
+
       log.debug('Imagem analisada com sucesso');
       return analysis;
     } catch (err) {
@@ -223,7 +238,7 @@ export const useOpenAI = (): UseOpenAIReturn => {
 
     try {
       const transcription = await transcribeAudioWithAI(audioFile);
-      
+
       log.debug('Áudio transcrito com sucesso');
       return transcription;
     } catch (err) {
@@ -236,18 +251,68 @@ export const useOpenAI = (): UseOpenAIReturn => {
     }
   };
 
-  const extractApontamentos = async (text: string): Promise<ExtractedApontamento[]> => {
+  const extractApontamentos = async (
+    text: string
+  ): Promise<ExtractedApontamento[]> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const apontamentos = await extractApontamentosFromText(text);
-      
+
       log.debug(`Extraídos ${apontamentos.length} apontamentos com sucesso`);
       return apontamentos;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erro ao extrair apontamentos';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const compareVistoriaImages = async (
+    fotosInicial: string[],
+    fotosFinal: string[],
+    descricao: string,
+    descritivoLaudo?: string,
+    contextData?: {
+      ambiente?: string;
+      subtitulo?: string;
+      observacao?: string;
+    }
+  ): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Análise comparativa não usa cache - sempre deve ser fresca
+      // Timeout de 60 segundos para a análise
+      const analysisPromise = compareVistoriaImagesWithAI(
+        fotosInicial,
+        fotosFinal,
+        descricao,
+        descritivoLaudo,
+        contextData
+      );
+
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(
+          () => reject(new Error('Timeout na análise da IA (60s)')),
+          60000
+        );
+      });
+
+      const analysis = await Promise.race([analysisPromise, timeoutPromise]);
+
+      log.debug('Análise comparativa de vistoria concluída com sucesso');
+      return analysis;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Erro ao comparar imagens de vistoria';
       setError(errorMessage);
       throw err;
     } finally {
@@ -264,6 +329,7 @@ export const useOpenAI = (): UseOpenAIReturn => {
     analyzeImage,
     transcribeAudio,
     extractApontamentos,
+    compareVistoriaImages,
     isLoading,
     error,
   };

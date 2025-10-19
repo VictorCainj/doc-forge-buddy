@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    /* Strict Mode Habilitado - Use este arquivo para novos código */
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Regras adicionais de qualidade */
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    /* Adicione aqui os arquivos/diretórios migrados para strict mode */
+    "src/hooks/useSafeHTML.ts",
+    "src/utils/securityValidators.ts"
+    /* Conforme migrar mais arquivos, adicione-os aqui */
+  ]
+}

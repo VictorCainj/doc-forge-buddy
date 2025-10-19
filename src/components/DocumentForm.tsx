@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import { calculateOptimalFontSize } from '@/utils/fontSizeCalculator';
+import { useSafeHTML } from '@/hooks/useSafeHTML';
 
 interface FormField {
   name: string;
@@ -457,11 +458,7 @@ const DocumentForm = memo<DocumentFormProps>(
                         }}
                       />
                     </div>
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: replaceTemplateVariables(template, formData),
-                      }}
-                    />
+                    <SafePreview template={template} formData={formData} />
                   </div>
                 </CardContent>
               </Card>
@@ -651,5 +648,18 @@ const DocumentForm = memo<DocumentFormProps>(
 );
 
 DocumentForm.displayName = 'DocumentForm';
+
+// Componente para renderizar preview de forma segura
+const SafePreview = ({
+  template,
+  formData,
+}: {
+  template: string;
+  formData: Record<string, string>;
+}) => {
+  const processedHTML = replaceTemplateVariables(template, formData);
+  const safeHTML = useSafeHTML(processedHTML);
+  return <div dangerouslySetInnerHTML={{ __html: safeHTML }} />;
+};
 
 export default DocumentForm;

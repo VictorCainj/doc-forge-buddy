@@ -21,7 +21,8 @@ import { PersonManager } from '@/components/ui/person-manager';
 import { splitNames } from '@/utils/nameHelpers';
 import { FormStep, FormField } from '@/hooks/use-form-wizard';
 import { useContractWizard } from '../hooks/useContractWizard';
-import { ChevronLeft, ChevronRight, Check } from '@/utils/iconMapper';
+import { ChevronLeft, ChevronRight } from '@/utils/iconMapper';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Person {
@@ -60,8 +61,6 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [fiadores, setFiadores] = useState<Person[]>([]);
 
   // Estado e ref para detectar scroll
-  const [_hasScroll, _setHasScroll] = useState(false);
-  const [_isScrolledToBottom, _setIsScrolledToBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -594,7 +593,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-3.5 w-3.5" color="white" />
                   {submitButtonText}
                 </>
               )}
