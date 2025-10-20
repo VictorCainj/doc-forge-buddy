@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   ClipboardList,
+  Calculator,
 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -76,7 +77,12 @@ const Sidebar = () => {
       path: '/prestadores',
       active: location.pathname === '/prestadores',
     },
-
+    {
+      name: 'Cálculo Aviso Prévio',
+      icon: Calculator,
+      path: '/calculo-aviso-previo',
+      active: location.pathname === '/calculo-aviso-previo',
+    },
   ];
 
   // Adicionar item Admin apenas para administradores

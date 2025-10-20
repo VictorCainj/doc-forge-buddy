@@ -37,6 +37,7 @@ const Prestadores = lazy(() => import('./pages/Prestadores'));
 const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Tarefas = lazy(() => import('./pages/Tarefas'));
+const CalculoAvisoPrevio = lazy(() => import('./pages/CalculoAvisoPrevio'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -221,6 +222,16 @@ const App = () => (
                       <ProtectedRoute>
                         <Layout>
                           <Tarefas />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/calculo-aviso-previo"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <CalculoAvisoPrevio />
                         </Layout>
                       </ProtectedRoute>
                     }

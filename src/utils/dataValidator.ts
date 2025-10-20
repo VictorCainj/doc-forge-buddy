@@ -3,13 +3,7 @@
  * Previne erros de parsing e validação de entrada
  */
 
-export interface Contract {
-  id: string;
-  title: string;
-  form_data: Record<string, string>;
-  created_at: string;
-  document_type: string;
-}
+import { Contract } from '@/types/contract';
 
 /**
  * Faz parse seguro do form_data, evitando erros de JSON inválido

@@ -5,38 +5,53 @@ import {
   ConfiguracaoDocumentos,
 } from '@/utils/documentosSolicitados';
 import { splitNames } from '@/utils/nameHelpers';
+import { ContractFormData } from '@/types/contract';
+
+/**
+ * Converte ContractFormData para Record<string, string> de forma segura
+ */
+function convertFormDataToRecord(
+  formData: ContractFormData
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(formData)) {
+    result[key] = value ?? '';
+  }
+  return result;
+}
 
 /**
  * Aplica conjunções verbais e formatações aos dados do contrato
  * Extrai lógica complexa de processamento de dados do componente principal
  */
 export function applyContractConjunctions(
-  formData: Record<string, string>
+  formData: ContractFormData
 ): Record<string, string> {
-  const enhancedData = { ...formData };
+  const safeFormData = convertFormDataToRecord(formData);
+  const enhancedData = { ...safeFormData };
 
   // Obter qualificação completa dos locatários
   enhancedData.qualificacaoCompletaLocatarios =
-    formData.qualificacaoCompletaLocatarios || '[TEXTOLIVRE]';
+    safeFormData.qualificacaoCompletaLocatarios || '[TEXTOLIVRE]';
 
   // Obter qualificação completa dos proprietários
   enhancedData.qualificacaoCompletaProprietario =
-    formData.qualificacaoCompletaLocadores || '[TEXTOLIVRE]';
+    safeFormData.qualificacaoCompletaLocadores || '[TEXTOLIVRE]';
 
   // Aplicar conjunções para locatários
   // PRIORIDADE: Gênero selecionado manualmente > Detecção automática
-  const generoLocatario = formData.generoLocatario;
+  const generoLocatario = safeFormData.generoLocatario;
 
   // Detecção automática (usado apenas como fallback)
   const hasMultipleLocatarioFields = !!(
-    formData.primeiroLocatario &&
-    (formData.segundoLocatario ||
-      formData.terceiroLocatario ||
-      formData.quartoLocatario)
+    safeFormData.primeiroLocatario &&
+    (safeFormData.segundoLocatario ||
+      safeFormData.terceiroLocatario ||
+      safeFormData.quartoLocatario)
   );
 
   const nomeLocatarioCheck =
-    formData.nomeLocatario || formData.primeiroLocatario || '';
+    safeFormData.nomeLocatario || safeFormData.primeiroLocatario || '';
   const hasMultipleNamesInField =
     nomeLocatarioCheck.includes(',') ||
     nomeLocatarioCheck.includes(' e ') ||
@@ -123,17 +138,17 @@ export function applyContractConjunctions(
   }
 
   // Usar os dados dos locatários adicionados manualmente
-  enhancedData.primeiroLocatario = formData.primeiroLocatario || '';
-  enhancedData.segundoLocatario = formData.segundoLocatario || '';
-  enhancedData.terceiroLocatario = formData.terceiroLocatario || '';
-  enhancedData.quartoLocatario = formData.quartoLocatario || '';
+  enhancedData.primeiroLocatario = safeFormData.primeiroLocatario || '';
+  enhancedData.segundoLocatario = safeFormData.segundoLocatario || '';
+  enhancedData.terceiroLocatario = safeFormData.terceiroLocatario || '';
+  enhancedData.quartoLocatario = safeFormData.quartoLocatario || '';
 
   // Aplicar conjunções para proprietários
   // PRIORIDADE: Gênero selecionado manualmente > Detecção automática
-  const generoProprietario = formData.generoProprietario;
+  const generoProprietario = safeFormData.generoProprietario;
 
   // Detecção automática (usado apenas como fallback)
-  const nomeProprietarioCheck = formData.nomeProprietario || '';
+  const nomeProprietarioCheck = safeFormData.nomeProprietario || '';
   const autoDetectedMultipleProprietarios =
     nomeProprietarioCheck.includes(' e ') ||
     nomeProprietarioCheck.includes(' E ');
@@ -209,7 +224,9 @@ export function applyContractConjunctions(
 
   // Extrair primeiro nome do locatário
   const nomeLocatarioCompleto =
-    formData.nomeLocatario || formData.primeiroLocatario || '[PRIMEIRO NOME]';
+    safeFormData.nomeLocatario ||
+    safeFormData.primeiroLocatario ||
+    '[PRIMEIRO NOME]';
   const primeiroNome =
     nomeLocatarioCompleto?.split(' ')[0] || '[PRIMEIRO NOME]';
   enhancedData.primeiroNomeLocatario =
@@ -217,8 +234,8 @@ export function applyContractConjunctions(
 
   // Extrair primeiro nome do proprietário
   const nomeProprietarioCompleto =
-    formData.nomeProprietario ||
-    formData.nomesResumidosLocadores ||
+    safeFormData.nomeProprietario ||
+    safeFormData.nomesResumidosLocadores ||
     '[PRIMEIRO NOME]';
   const primeiroNomeProprietario =
     nomeProprietarioCompleto?.split(' ')[0] || '[PRIMEIRO NOME]';
@@ -228,7 +245,7 @@ export function applyContractConjunctions(
 
   // Gerar saudação para devolutiva do proprietário
   const nomeProprietarioSaudacao =
-    formData.nomeProprietario || formData.nomesResumidosLocadores || '';
+    safeFormData.nomeProprietario || safeFormData.nomesResumidosLocadores || '';
   const hasMultipleProprietarioNames =
     nomeProprietarioSaudacao.includes(' e ') ||
     nomeProprietarioSaudacao.includes(' E ');
@@ -273,7 +290,7 @@ export function applyContractConjunctions(
 
   // Gerar saudação para devolutiva do locatário
   const nomeLocatarioSaudacao =
-    formData.nomeLocatario || formData.primeiroLocatario || '';
+    safeFormData.nomeLocatario || safeFormData.primeiroLocatario || '';
   const hasMultipleLocatarioNames =
     nomeLocatarioSaudacao.includes(' e ') ||
     nomeLocatarioSaudacao.includes(' E ');
@@ -327,8 +344,8 @@ export function applyContractConjunctions(
 
   // Formatar nomes com negrito
   const nomeLocatario =
-    formData.nomeLocatario ||
-    formData.primeiroLocatario ||
+    safeFormData.nomeLocatario ||
+    safeFormData.primeiroLocatario ||
     '[NOME DO LOCATÁRIO]';
   const nomesLocatarioArray = splitNames(nomeLocatario);
   enhancedData.nomeLocatarioFormatado =
@@ -339,8 +356,8 @@ export function applyContractConjunctions(
       : nomesLocatarioArray[0];
 
   const nomeProprietario =
-    formData.nomeProprietario ||
-    formData.nomesResumidosLocadores ||
+    safeFormData.nomeProprietario ||
+    safeFormData.nomesResumidosLocadores ||
     '[NOME DO PROPRIETÁRIO]';
   const nomesProprietarioArray = splitNames(nomeProprietario);
   enhancedData.nomeProprietarioFormatado =
@@ -356,33 +373,35 @@ export function applyContractConjunctions(
   // Adicionar variáveis de data padrão
   enhancedData.dataAtual = DateHelpers.getCurrentDateBrazilian();
   enhancedData.dataComunicacao =
-    formData.dataComunicacao || DateHelpers.getCurrentDateBrazilian();
+    safeFormData.dataComunicacao || DateHelpers.getCurrentDateBrazilian();
   enhancedData.dataInicioRescisao =
-    formData.dataInicioRescisao || DateHelpers.getCurrentDateBrazilian();
+    safeFormData.dataInicioRescisao || DateHelpers.getCurrentDateBrazilian();
   enhancedData.dataTerminoRescisao =
-    formData.dataTerminoRescisao || DateHelpers.getCurrentDateBrazilian();
-  enhancedData.prazoDias = formData.prazoDias || '30';
+    safeFormData.dataTerminoRescisao || DateHelpers.getCurrentDateBrazilian();
+  enhancedData.prazoDias = safeFormData.prazoDias || '30';
 
   // Variáveis para Termo de Recusa de Assinatura
   enhancedData.dataRealizacaoVistoria =
-    formData.dataRealizacaoVistoria || DateHelpers.getCurrentDateBrazilian();
+    safeFormData.dataRealizacaoVistoria ||
+    DateHelpers.getCurrentDateBrazilian();
   enhancedData.assinanteSelecionado =
-    formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
+    safeFormData.assinanteSelecionado || '[NOME DO ASSINANTE]';
 
   // Variáveis de endereço e contrato
   enhancedData.enderecoImovel =
-    formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
+    safeFormData.endereco || safeFormData.enderecoImovel || '[ENDEREÇO]';
   enhancedData.numeroContrato =
-    formData.numeroContrato || '[NÚMERO DO CONTRATO]';
+    safeFormData.numeroContrato || '[NÚMERO DO CONTRATO]';
   enhancedData.nomeProprietario =
-    formData.nomesResumidosLocadores ||
-    formData.nomeProprietario ||
+    safeFormData.nomesResumidosLocadores ||
+    safeFormData.nomeProprietario ||
     '[NOME DO PROPRIETÁRIO]';
-  enhancedData.nomeLocatario = formData.nomeLocatario || '[NOME DO LOCATÁRIO]';
+  enhancedData.nomeLocatario =
+    safeFormData.nomeLocatario || '[NOME DO LOCATÁRIO]';
 
   // Campos de gênero
-  enhancedData.generoProprietario = formData.generoProprietario;
-  enhancedData.generoLocatario = formData.generoLocatario;
+  enhancedData.generoProprietario = safeFormData.generoProprietario;
+  enhancedData.generoLocatario = safeFormData.generoLocatario;
 
   // Tratamento para pronomes de gênero
   // Proprietário
@@ -438,49 +457,51 @@ export function applyContractConjunctions(
   }
 
   // Nomes resumidos
-  enhancedData.nomesResumidosLocadores = formData.nomesResumidosLocadores;
+  enhancedData.nomesResumidosLocadores = safeFormData.nomesResumidosLocadores;
 
   // Variáveis específicas dos termos
   enhancedData.dataFirmamentoContrato =
-    formData.dataFirmamentoContrato || formatDateBrazilian(new Date());
+    safeFormData.dataFirmamentoContrato || formatDateBrazilian(new Date());
   enhancedData.dataVistoria =
-    formData.dataVistoria || formatDateBrazilian(new Date());
-  enhancedData.cpflDaev = formData.cpflDaev || '[CPFL/DAEV]';
+    safeFormData.dataVistoria || formatDateBrazilian(new Date());
+  enhancedData.cpflDaev = safeFormData.cpflDaev || '[CPFL/DAEV]';
   enhancedData.quantidadeChaves =
-    formData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
+    safeFormData.quantidadeChaves || '[QUANTIDADE DE CHAVES]';
 
   // Campos de energia e água
   // Energia sempre é solicitada (conforme regra de negócio)
   enhancedData.cpfl = 'SIM';
 
   // Água: usar campo solicitarAgua do cadastro
-  enhancedData.statusAgua = formData.solicitarAgua === 'sim' ? 'SIM' : 'NAO';
-  enhancedData.tipoAgua = formData.tipoAgua || 'DAEV'; // mantém default apenas se não informado
+  enhancedData.statusAgua =
+    safeFormData.solicitarAgua === 'sim' ? 'SIM' : 'NAO';
+  enhancedData.tipoAgua = safeFormData.tipoAgua || 'DAEV'; // mantém default apenas se não informado
 
   // Variáveis do distrato
   enhancedData.dataLiquidacao =
-    formData.dataLiquidacao || formatDateBrazilian(new Date());
+    safeFormData.dataLiquidacao || formatDateBrazilian(new Date());
 
   // Gerar lista de documentos solicitados
   const configDocumentos: ConfiguracaoDocumentos = {
-    solicitarCondominio: formData.solicitarCondominio || 'nao',
+    solicitarCondominio: safeFormData.solicitarCondominio || 'nao',
     // Usar somente solicitarAgua do cadastro (não mais statusAgua)
-    solicitarAgua: formData.solicitarAgua === 'sim' ? 'sim' : 'nao',
+    solicitarAgua: safeFormData.solicitarAgua === 'sim' ? 'sim' : 'nao',
     // Energia elétrica sempre é solicitada (conforme comentário no formulário)
     solicitarEnergia: 'sim',
-    solicitarGas: formData.solicitarGas || 'nao',
-    solicitarCND: formData.solicitarCND || 'nao',
+    solicitarGas: safeFormData.solicitarGas || 'nao',
+    solicitarCND: safeFormData.solicitarCND || 'nao',
   };
 
   enhancedData.documentosSolicitados =
     gerarDocumentosSolicitados(configDocumentos);
 
   // Manter campos individuais
-  enhancedData.solicitarCondominio = formData.solicitarCondominio || 'nao';
-  enhancedData.solicitarAgua = formData.solicitarAgua === 'sim' ? 'sim' : 'nao';
+  enhancedData.solicitarCondominio = safeFormData.solicitarCondominio || 'nao';
+  enhancedData.solicitarAgua =
+    safeFormData.solicitarAgua === 'sim' ? 'sim' : 'nao';
   enhancedData.solicitarEnergia = 'sim'; // Energia elétrica sempre é solicitada
-  enhancedData.solicitarGas = formData.solicitarGas || 'nao';
-  enhancedData.solicitarCND = formData.solicitarCND || 'nao';
+  enhancedData.solicitarGas = safeFormData.solicitarGas || 'nao';
+  enhancedData.solicitarCND = safeFormData.solicitarCND || 'nao';
 
   // Definir título para notificação de agendamento baseado no gênero e quantidade de locatários
   if (generoLocatario === 'femininos') {

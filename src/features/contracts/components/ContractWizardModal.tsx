@@ -60,6 +60,10 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [locatarios, setLocatarios] = useState<Person[]>([]);
   const [fiadores, setFiadores] = useState<Person[]>([]);
 
+  // Estados para detectar scroll
+  const [hasScroll, setHasScroll] = useState(false);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+
   // Estado e ref para detectar scroll
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -384,7 +388,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                       <Icon
                         className={cn(
                           'h-4 w-4',
-                          isActive && 'text-neutral-800',
+                          isActive && 'text-neutral-900',
                           !isActive && 'text-neutral-600'
                         )}
                       />

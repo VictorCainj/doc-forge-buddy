@@ -252,7 +252,7 @@ const ContractListItem = memo<{
                     }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-black font-mono">
+                <span className="text-sm font-semibold text-gray-500 font-mono">
                   {contract.form_data.dataInicioRescisao || '01/09/2026'}
                 </span>
               </div>
@@ -276,7 +276,7 @@ const ContractListItem = memo<{
                     }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-black font-mono">
+                <span className="text-sm font-semibold text-gray-500 font-mono">
                   {contract.form_data.dataTerminoRescisao || '01/10/2026'}
                 </span>
               </div>

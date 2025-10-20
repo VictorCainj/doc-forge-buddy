@@ -483,9 +483,9 @@ const DocumentForm = memo<DocumentFormProps>(
                 {isEditing ? 'Voltar aos Termos' : 'Voltar'}
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-foreground">
                   {title}
-                </h1>
+                </h2>
                 <p className="text-sm text-muted-foreground">{description}</p>
               </div>
             </div>

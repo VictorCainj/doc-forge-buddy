@@ -17,6 +17,8 @@ const EditTerm = () => {
   } | null>(null);
 
   const fetchTerm = useCallback(async () => {
+    if (!id) return;
+
     try {
       const { data, error } = await supabase
         .from('saved_terms')
@@ -79,7 +81,8 @@ const EditTerm = () => {
       'gabriela',
       'mariana',
     ];
-    const firstNameLower = text.split(' ')[0].toLowerCase();
+    const nameParts = text.split(' ');
+    const firstNameLower = nameParts[0]?.toLowerCase() || '';
     return (
       text.toLowerCase().endsWith('a') || femaleNames.includes(firstNameLower)
     );
@@ -467,10 +470,10 @@ ________________________________________<br>
     // Adiciona termos inteligentes baseados nos nomes inseridos
     const enhancedData = {
       ...data,
-      locadorTerm: getLocadorTerm(data.nomeLocador),
-      locatarioTerm: getLocatarioTerm(data.nomeLocatario),
-      locatarioFieldTitle: getLocatarioFieldTitle(data.nomeLocatario),
-      locatarioPronoun: getLocatarioPronoun(data.nomeLocatario),
+      locadorTerm: getLocadorTerm(data.nomeLocador || ''),
+      locatarioTerm: getLocatarioTerm(data.nomeLocatario || ''),
+      locatarioFieldTitle: getLocatarioFieldTitle(data.nomeLocatario || ''),
+      locatarioPronoun: getLocatarioPronoun(data.nomeLocatario || ''),
     };
     return enhancedData;
   };

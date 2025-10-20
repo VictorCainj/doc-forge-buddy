@@ -24,7 +24,8 @@ interface OpenAIRequest {
     | 'textToSpeech'
     | 'generateDualResponses'
     | 'extractNames'
-    | 'compareVistoriaImages';
+    | 'compareVistoriaImages'
+    | 'calculateAvisoPrevio';
   data: any;
 }
 
@@ -965,6 +966,59 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
         temperature = 0.3;
         break;
       }
+
+      case 'calculateAvisoPrevio':
+        if (
+          !data.dataComunicacao ||
+          !data.dataVencimentoBoleto ||
+          !data.valorAluguel ||
+          !data.tipoCobranca
+        ) {
+          throw new Error('Dados obrigatórios não fornecidos');
+        }
+
+        messages = [
+          {
+            role: 'system',
+            content: `Você é um especialista em rescisão de contratos de locação no Brasil.
+            
+            REGRAS IMPORTANTES SOBRE AVISO PRÉVIO:
+            - O locatário deve pagar o aluguel até o final dos 30 dias de aviso prévio
+            - Se ultrapassar os 30 dias, deve pagar até a entrega das chaves
+            - Mesmo que entregue as chaves antes dos 30 dias, o aluguel corre até o final dos 30 dias
+            - As contas de consumo (luz, água, gás) se encerram com a entrega das chaves
+            
+            EXEMPLO PRÁTICO:
+            Se o locatário avisou a desocupação em 11/09, o aviso prévio de 30 dias termina em 11/10.
+            O boleto de outubro, com vencimento no dia 11, deve ser pago normalmente.
+            Se as chaves forem entregues no dia 11/10, o contrato se encerra nessa data.
+            Caso entregue depois, o aluguel é cobrado proporcionalmente pelos dias extras.
+            
+            IMPORTANTE: Este texto é para uso interno da imobiliária. Você deve fornecer as informações necessárias para que a imobiliária possa explicar ao locatário sobre:
+            - Cálculo do período de aviso prévio (30 dias a partir da data de comunicação)
+            - Necessidade de pagamento do boleto durante o período
+            - Ajuste proporcional de dias (se aplicável)
+            - Regras sobre aluguel e contas de consumo conforme o tipo de cobrança
+            
+            Responda em texto corrido, sem tópicos numerados ou com marcadores. Use linguagem clara, direta e profissional.
+            Seja conciso e objetivo nas orientações.`,
+          },
+          {
+            role: 'user',
+            content: `Analise e gere orientações personalizadas:
+            
+            Data de comunicação: ${data.dataComunicacao}
+            Dia de vencimento do boleto: ${data.dataVencimentoBoleto}
+            Valor aluguel: R$ ${data.valorAluguel}
+            Data de entrega das chaves: ${data.dataEntregaChaves || 'Não informada'}
+            Tipo cobrança: ${data.tipoCobranca}
+            Locatário: ${data.nomeLocatario || 'Não informado'}
+            Endereço: ${data.enderecoImovel || 'Não informado'}`,
+          },
+        ];
+        maxTokens = 2000;
+        temperature = 0.4;
+        break;
 
       case 'textToSpeech':
         if (!data.text) {
