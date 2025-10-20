@@ -1,5 +1,6 @@
 import { fileToBase64HD, urlToBase64HD } from '@/utils/imageHD';
 import { log } from '@/utils/logger';
+import { deduplicateImagesBySerial } from '@/utils/imageSerialGenerator';
 
 export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
   locatario: string;
@@ -59,6 +60,7 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       url?: string;
       isFromDatabase?: boolean;
       isExternal?: boolean;
+      image_serial?: string;
     }>,
     tipoVistoria: string = 'desconhecido'
   ) => {
@@ -67,10 +69,29 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
       return [];
     }
 
-    log.debug(`${tipoVistoria}: Processando ${fotos.length} foto(s)`);
+    // ✅ DEDUPLICAÇÃO: Remover fotos duplicadas por serial ou URL
+    const fotosUnicas = deduplicateImagesBySerial(fotos);
+
+    // Filtro adicional por URL para capturar duplicatas que não têm serial
+    const fotosFiltradas = fotosUnicas.filter((foto, index, self) => {
+      if (!foto.url) return true;
+      return self.findIndex((f) => f.url === foto.url) === index;
+    });
+
+    if (fotosFiltradas.length < fotos.length) {
+      log.warn(`${tipoVistoria}: Duplicatas removidas`, {
+        original: fotos.length,
+        unicas: fotosFiltradas.length,
+        removidas: fotos.length - fotosFiltradas.length,
+      });
+    }
+
+    log.debug(
+      `${tipoVistoria}: Processando ${fotosFiltradas.length} foto(s) únicas`
+    );
 
     const fotosBase64 = await Promise.all(
-      fotos.map(async (foto, index) => {
+      fotosFiltradas.map(async (foto, index) => {
         try {
           log.debug(`${tipoVistoria}: Foto ${index + 1}`, {
             isFromDatabase: foto.isFromDatabase,
@@ -486,7 +507,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                                   ? '150px'
                                   : '120px';
                           return `
-                        <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+                        <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); position: relative;">
+                          <div style="position: absolute; top: 4px; right: 4px; background: #374151; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; z-index: 10;">
+                            ${fotoIndex + 1}
+                          </div>
                           <img src="${foto.base64}" 
                                style="max-width: 100%; max-height: ${alturaMaxima}; width: auto; height: auto; border-radius: 4px; object-fit: contain;" 
                                alt="Foto ${fotoIndex + 1}" />
@@ -526,7 +550,10 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
                                   ? '150px'
                                   : '120px';
                           return `
-                        <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+                        <div style="text-align: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); position: relative;">
+                          <div style="position: absolute; top: 4px; right: 4px; background: #374151; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; z-index: 10;">
+                            ${fotoIndex + 1}
+                          </div>
                           ${
                             foto.isDevolusUrl
                               ? `

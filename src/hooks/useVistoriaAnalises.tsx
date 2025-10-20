@@ -11,6 +11,10 @@ import {
   toSupabaseJson,
   UpdateVistoriaAnalisePayload,
 } from '@/types/vistoria.extended';
+import {
+  generateUniqueImageSerial,
+  deduplicateImagesBySerial,
+} from '@/utils/imageSerialGenerator';
 
 export const useVistoriaAnalises = () => {
   const { user } = useAuth();
@@ -608,20 +612,33 @@ export const useVistoriaAnalises = () => {
         }
 
         if (uniqueRefs.length > 0) {
-          const { error: insertError } = await supabase
-            .from('vistoria_images')
-            .insert(
-              uniqueRefs.map((ref) => ({
+          // Gerar seriais únicos para imagens externas
+          const refsWithSerials = await Promise.all(
+            uniqueRefs.map(async (ref, index) => {
+              const imageSerial = await generateUniqueImageSerial(
+                vistoriaId,
+                1, // Apontamento index - será ajustado quando tivermos o contexto completo
+                ref.tipo_vistoria,
+                index + 1
+              );
+
+              return {
                 vistoria_id: vistoriaId,
                 apontamento_id: ref.apontamento_id,
                 tipo_vistoria: ref.tipo_vistoria,
                 image_url: ref.image_url,
+                image_serial: imageSerial,
                 file_name: ref.file_name,
                 file_size: ref.file_size,
                 file_type: ref.file_type,
                 user_id: user?.id,
-              }))
-            );
+              };
+            })
+          );
+
+          const { error: insertError } = await supabase
+            .from('vistoria_images')
+            .insert(refsWithSerials);
 
           if (insertError) {
             // eslint-disable-next-line no-console
@@ -743,6 +760,14 @@ export const useVistoriaAnalises = () => {
         data: { publicUrl },
       } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
 
+      // Gerar número de série único para a imagem
+      const imageSerial = await generateUniqueImageSerial(
+        vistoriaId,
+        1, // Apontamento index - será ajustado quando tivermos o contexto completo
+        tipoVistoria,
+        1 // Image index - será ajustado quando tivermos o contexto completo
+      );
+
       // Salvar referência no banco
       const { error: dbError } = await supabase.from('vistoria_images').insert({
         vistoria_id: vistoriaId,
@@ -752,6 +777,7 @@ export const useVistoriaAnalises = () => {
         file_name: file.name,
         file_size: file.size,
         file_type: file.type,
+        image_serial: imageSerial,
         user_id: user.id,
       });
 

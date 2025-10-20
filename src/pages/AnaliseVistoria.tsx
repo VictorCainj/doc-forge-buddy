@@ -66,6 +66,12 @@ import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
 import { DocumentViewer } from '@/components/DocumentViewer';
 import { useSafeHTML } from '@/hooks/useSafeHTML';
+import {
+  deduplicateImagesBySerial,
+  getSimplifiedSerial,
+} from '@/utils/imageSerialGenerator';
+import { FixDuplicatesButton } from '@/components/FixDuplicatesButton';
+import { executeImageSerialMigration } from '@/utils/executeMigration';
 
 interface Contract {
   id: string;
@@ -287,11 +293,18 @@ const AnaliseVistoria = () => {
                     img.apontamento_id === apontamento.id
                 );
 
+                // ✅ DEDUPLICAÇÃO: Remover imagens duplicadas por serial
+                const uniqueImages =
+                  deduplicateImagesBySerial(apontamentoImages);
+
                 log.debug(
                   `  - Imagens encontradas para este apontamento: ${apontamentoImages.length}`
                 );
+                log.debug(
+                  `  - Imagens únicas após deduplicação: ${uniqueImages.length}`
+                );
 
-                const fotosInicial = apontamentoImages
+                const fotosInicial = uniqueImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'inicial'
@@ -309,7 +322,7 @@ const AnaliseVistoria = () => {
                     };
                   });
 
-                const fotosFinal = apontamentoImages
+                const fotosFinal = uniqueImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'final'
@@ -2534,6 +2547,36 @@ const AnaliseVistoria = () => {
                                 </>
                               )}
                             </Button>
+                            {savedAnaliseId && (
+                              <FixDuplicatesButton
+                                vistoriaId={savedAnaliseId}
+                                onFixed={(stats) => {
+                                  // Recarregar dados após correção
+                                  if (stats.duplicatesRemoved > 0) {
+                                    loadAnalysisData();
+                                  }
+                                }}
+                              />
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-xs bg-green-100 border-green-300 text-green-800"
+                              onClick={async () => {
+                                const result =
+                                  await executeImageSerialMigration();
+                                alert(result.message);
+                                if (result.details?.instructions) {
+                                  console.log(
+                                    'Instruções:',
+                                    result.details.instructions
+                                  );
+                                }
+                              }}
+                              title="Executar migration da coluna image_serial"
+                            >
+                              🔧 Migration
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -3102,6 +3145,11 @@ está suja
                                       (DB)
                                     </span>
                                   )}
+                                  {foto.image_serial && (
+                                    <span className="ml-1 text-xs font-bold bg-blue-100 text-blue-800 px-1 rounded">
+                                      {getSimplifiedSerial(foto.image_serial)}
+                                    </span>
+                                  )}
                                 </Badge>
                                 <Button
                                   variant="ghost"
@@ -3250,6 +3298,11 @@ está suja
                                   {foto.isExternal && (
                                     <span className="ml-1 text-xs opacity-70">
                                       (Link)
+                                    </span>
+                                  )}
+                                  {foto.image_serial && (
+                                    <span className="ml-1 text-xs font-bold bg-blue-100 text-blue-800 px-1 rounded">
+                                      {getSimplifiedSerial(foto.image_serial)}
                                     </span>
                                   )}
                                 </Badge>

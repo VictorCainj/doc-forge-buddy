@@ -833,6 +833,7 @@ export type Database = {
           file_type: string;
           id: string;
           image_url: string;
+          image_serial: string | null;
           tipo_vistoria: string;
           user_id: string | null;
           vistoria_id: string | null;
@@ -845,6 +846,7 @@ export type Database = {
           file_type: string;
           id?: string;
           image_url: string;
+          image_serial?: string | null;
           tipo_vistoria: string;
           user_id?: string | null;
           vistoria_id?: string | null;
@@ -857,6 +859,7 @@ export type Database = {
           file_type?: string;
           id?: string;
           image_url?: string;
+          image_serial?: string | null;
           tipo_vistoria?: string;
           user_id?: string | null;
           vistoria_id?: string | null;

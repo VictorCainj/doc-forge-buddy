@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { generateUniqueImageSerial } from '@/utils/imageSerialGenerator';
 
 export interface ImageUploadProgress {
   fileName: string;
@@ -115,6 +116,14 @@ export const useVistoriaImages = () => {
             data: { publicUrl },
           } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
 
+          // Gerar número de série único para a imagem
+          const imageSerial = await generateUniqueImageSerial(
+            vistoriaId,
+            apontamentoIndex || 1, // Fallback para 1 se não especificado
+            tipoVistoria as 'inicial' | 'final',
+            1 // Começar com índice 1
+          );
+
           // Salvar referência no banco
           const { error: dbError } = await supabase
             .from('vistoria_images')
@@ -126,6 +135,7 @@ export const useVistoriaImages = () => {
               file_name: file.name,
               file_size: file.size,
               file_type: file.type,
+              image_serial: imageSerial,
               user_id: user.id,
             });
 

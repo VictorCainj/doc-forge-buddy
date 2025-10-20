@@ -56,6 +56,7 @@ export interface VistoriaImage {
   file_name: string;
   file_size: number;
   file_type: string;
+  image_serial?: string;
   created_at?: string;
   user_id?: string | null;
 }
