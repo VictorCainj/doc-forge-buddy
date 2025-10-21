@@ -728,6 +728,93 @@ export function generateHTMLReport(data: HTMLReportData): string {
            document.addEventListener('mouseleave', removeTooltip, { once: true });
          });
        });
+
+       // Tooltips para o gráfico de pizza SVG
+       const piePaths = document.querySelectorAll('.pie-chart svg path');
+       piePaths.forEach(function(path) {
+         path.addEventListener('mouseenter', function(e) {
+           // Remover tooltip anterior se existir
+           if (currentTooltip) {
+             currentTooltip.remove();
+             currentTooltip = null;
+           }
+           
+           const tooltipText = this.getAttribute('title');
+           if (!tooltipText || tooltipText.trim() === '') return;
+           
+           // Criar tooltip dinâmico para o gráfico
+           const tooltipElement = document.createElement('div');
+           tooltipElement.className = 'dynamic-tooltip pie-tooltip';
+           tooltipElement.textContent = tooltipText;
+           
+           // Estilos específicos para tooltip do gráfico
+           tooltipElement.style.cssText = \`
+             position: fixed;
+             background: rgba(0, 0, 0, 0.95);
+             color: white;
+             padding: 12px 16px;
+             border-radius: 10px;
+             font-size: 14px;
+             font-weight: 500;
+             z-index: 99999;
+             max-width: 300px;
+             word-wrap: break-word;
+             text-align: center;
+             line-height: 1.4;
+             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+             border: 2px solid rgba(255, 255, 255, 0.2);
+             backdrop-filter: blur(10px);
+             pointer-events: none;
+             opacity: 0;
+             transition: opacity 0.3s ease-out;
+             transform: translateX(-50%);
+           \`;
+           
+           document.body.appendChild(tooltipElement);
+           currentTooltip = tooltipElement;
+           
+           // Posicionar tooltip acima do cursor
+           const rect = this.getBoundingClientRect();
+           const tooltipRect = tooltipElement.getBoundingClientRect();
+           
+           let left = e.clientX;
+           let top = e.clientY - tooltipRect.height - 15;
+           
+           // Ajustar se sair da tela
+           if (left < 20) left = 20;
+           if (left > window.innerWidth - 20) left = window.innerWidth - 20;
+           if (top < 20) {
+             top = e.clientY + 15;
+           }
+           
+           tooltipElement.style.left = left + 'px';
+           tooltipElement.style.top = top + 'px';
+           
+           // Mostrar tooltip
+           setTimeout(() => {
+             if (tooltipElement.parentNode) {
+               tooltipElement.style.opacity = '1';
+             }
+           }, 10);
+           
+           // Remover tooltip ao sair do hover
+           const removeTooltip = function() {
+             if (tooltipElement && tooltipElement.parentNode) {
+               tooltipElement.style.opacity = '0';
+               setTimeout(() => {
+                 if (tooltipElement.parentNode) {
+                   tooltipElement.parentNode.removeChild(tooltipElement);
+                   if (currentTooltip === tooltipElement) {
+                     currentTooltip = null;
+                   }
+                 }
+               }, 300);
+             }
+           };
+           
+           this.addEventListener('mouseleave', removeTooltip, { once: true });
+         });
+       });
      });
 
      function printReport() {
@@ -1133,8 +1220,7 @@ function generatePieChartHTML(
         'Z',
       ].join(' ');
 
-      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" 
-        title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)"/>`;
+      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)"/>`;
     })
     .join('');
 
