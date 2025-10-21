@@ -84,6 +84,9 @@ export interface ContractFormData {
   mesesComprovantes?: string;
   saudacaoComercial?: string;
 
+  // Motivo da desocupação
+  motivoDesocupacao?: string;
+
   // Campos flexíveis para casos especiais
   [key: string]: string | undefined;
 }
@@ -154,7 +157,12 @@ export interface WhatsAppData {
 /**
  * Tipos de contas de consumo
  */
-export type BillType = 'energia' | 'agua' | 'condominio' | 'gas' | 'notificacao_rescisao';
+export type BillType =
+  | 'energia'
+  | 'agua'
+  | 'condominio'
+  | 'gas'
+  | 'notificacao_rescisao';
 
 /**
  * Interface para conta de consumo de um contrato

@@ -38,6 +38,7 @@ const DocumentoPublico = lazy(() => import('./pages/DocumentoPublico'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Tarefas = lazy(() => import('./pages/Tarefas'));
 const CalculoAvisoPrevio = lazy(() => import('./pages/CalculoAvisoPrevio'));
+const DashboardDesocupacao = lazy(() => import('./pages/DashboardDesocupacao'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -232,6 +233,16 @@ const App = () => (
                       <ProtectedRoute>
                         <Layout>
                           <CalculoAvisoPrevio />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard-desocupacao"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <DashboardDesocupacao />
                         </Layout>
                       </ProtectedRoute>
                     }

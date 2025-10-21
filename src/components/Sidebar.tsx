@@ -12,6 +12,7 @@ import {
   X,
   ClipboardList,
   Calculator,
+  BarChart,
 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -58,6 +59,12 @@ const Sidebar = () => {
       icon: FileText,
       path: '/contratos',
       active: location.pathname === '/contratos',
+    },
+    {
+      name: 'Dashboard Desocupação',
+      icon: BarChart,
+      path: '/dashboard-desocupacao',
+      active: location.pathname === '/dashboard-desocupacao',
     },
     {
       name: 'Criar Análise',

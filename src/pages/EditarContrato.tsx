@@ -250,6 +250,13 @@ const EditarContrato = () => {
           required: true,
           placeholder: 'DD/MM/AAAA - Ex: 22/07/2025',
         },
+        {
+          name: 'motivoDesocupacao',
+          label: 'Motivo da Desocupação',
+          type: 'textarea',
+          required: false,
+          placeholder: 'Descreva o motivo da desocupação (opcional)',
+        },
       ],
     },
     {
