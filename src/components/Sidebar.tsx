@@ -84,12 +84,7 @@ const Sidebar = () => {
       path: '/prestadores',
       active: location.pathname === '/prestadores',
     },
-    {
-      name: 'Cálculo Aviso Prévio',
-      icon: Calculator,
-      path: '/calculo-aviso-previo',
-      active: location.pathname === '/calculo-aviso-previo',
-    },
+
   ];
 
   // Adicionar item Admin apenas para administradores
