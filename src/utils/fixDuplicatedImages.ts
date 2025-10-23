@@ -182,4 +182,60 @@ export class FixDuplicatedImages {
       return 0;
     }
   }
+
+  /**
+   * Retorna estatísticas detalhadas de duplicações sem remover nada
+   * @param vistoriaId ID da vistoria
+   * @returns Estatísticas de duplicação
+   */
+  static async getDuplicateStats(vistoriaId: string): Promise<{
+    totalImages: number;
+    uniqueImages: number;
+    duplicatesCount: number;
+    groupsWithDuplicates: number;
+  }> {
+    try {
+      const { data: images, error } = await supabase
+        .from('vistoria_images')
+        .select('*')
+        .eq('vistoria_id', vistoriaId);
+
+      if (error || !images) {
+        return {
+          totalImages: 0,
+          uniqueImages: 0,
+          duplicatesCount: 0,
+          groupsWithDuplicates: 0,
+        };
+      }
+
+      const groupedImages = this.groupImagesByUniqueKey(images);
+      let duplicatesCount = 0;
+      let groupsWithDuplicates = 0;
+
+      Object.values(groupedImages).forEach((group) => {
+        if (group.length > 1) {
+          duplicatesCount += group.length - 1; // -1 porque mantemos 1 original
+          groupsWithDuplicates++;
+        }
+      });
+
+      const uniqueImages = Object.keys(groupedImages).length;
+
+      return {
+        totalImages: images.length,
+        uniqueImages,
+        duplicatesCount,
+        groupsWithDuplicates,
+      };
+    } catch (error) {
+      log.error('Erro ao obter estatísticas de duplicatas:', error);
+      return {
+        totalImages: 0,
+        uniqueImages: 0,
+        duplicatesCount: 0,
+        groupsWithDuplicates: 0,
+      };
+    }
+  }
 }

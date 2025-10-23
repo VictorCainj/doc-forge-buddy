@@ -65,6 +65,7 @@ import { BudgetItemType } from '@/types/orcamento';
 import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
 import { DocumentViewer } from '@/components/DocumentViewer';
+import { removeImageFromHTML } from '@/utils/removeImageFromHTML';
 import { useSafeHTML } from '@/hooks/useSafeHTML';
 import {
   deduplicateImagesBySerial,
@@ -293,18 +294,26 @@ const AnaliseVistoria = () => {
                     img.apontamento_id === apontamento.id
                 );
 
-                // ✅ DEDUPLICAÇÃO: Remover imagens duplicadas por serial
+                // ✅ DEDUPLICAÇÃO DUPLA: Por serial E por URL
                 const uniqueImages =
                   deduplicateImagesBySerial(apontamentoImages);
+                const finalUniqueImages = uniqueImages.filter(
+                  (img, index, self) =>
+                    index ===
+                    self.findIndex((i) => i.image_url === img.image_url)
+                );
 
                 log.debug(
                   `  - Imagens encontradas para este apontamento: ${apontamentoImages.length}`
                 );
                 log.debug(
-                  `  - Imagens únicas após deduplicação: ${uniqueImages.length}`
+                  `  - Imagens únicas após deduplicação por serial: ${uniqueImages.length}`
+                );
+                log.debug(
+                  `  - Imagens únicas após deduplicação por URL: ${finalUniqueImages.length}`
                 );
 
-                const fotosInicial = uniqueImages
+                const fotosInicial = finalUniqueImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'inicial'
@@ -322,7 +331,7 @@ const AnaliseVistoria = () => {
                     };
                   });
 
-                const fotosFinal = uniqueImages
+                const fotosFinal = finalUniqueImages
                   .filter(
                     (img: Record<string, unknown>) =>
                       img.tipo_vistoria === 'final'
@@ -975,6 +984,17 @@ const AnaliseVistoria = () => {
       if (!contractId) {
         setHasExistingAnalise(false);
         setExistingAnaliseId(null);
+        // ✅ LIMPAR apontamentos quando não há contrato
+        setApontamentos([]);
+        return;
+      }
+
+      // ✅ PROTEÇÃO: Se já carregamos esta análise, não recarregar
+      if (existingAnaliseId && savedAnaliseId === existingAnaliseId) {
+        console.log(
+          '⚠️ Análise já carregada, ignorando recarga:',
+          existingAnaliseId
+        );
         return;
       }
 
@@ -1037,6 +1057,22 @@ const AnaliseVistoria = () => {
   // Atualizar dados da vistoria quando contrato for selecionado
   useEffect(() => {
     if (selectedContract) {
+      // ✅ LIMPAR ESTADO ANTERIOR ao trocar de contrato
+      setApontamentos([]);
+      setCurrentApontamento({
+        ambiente: '',
+        subtitulo: '',
+        descricao: '',
+        descricaoServico: '',
+        vistoriaInicial: { fotos: [], descritivoLaudo: '' },
+        vistoriaFinal: { fotos: [] },
+        observacao: '',
+        classificacao: undefined,
+        tipo: 'material',
+        valor: 0,
+        quantidade: 0,
+      });
+
       setDadosVistoria({
         locatario: selectedContract.form_data.numeroContrato || '',
         endereco: selectedContract.form_data.enderecoImovel || '',
@@ -1048,6 +1084,8 @@ const AnaliseVistoria = () => {
       // Verificar se já existe análise para este contrato
       checkExistingAnalise(selectedContract.id);
     } else {
+      // Também limpar quando desselecionar
+      setApontamentos([]);
       setHasExistingAnalise(false);
       setExistingAnaliseId(null);
     }
@@ -2348,7 +2386,7 @@ const AnaliseVistoria = () => {
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <Card className="max-w-md mx-auto">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-4 sm:p-6 text-center">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h2 className="text-lg font-semibold text-neutral-900 mb-2">
               Erro no Componente
@@ -2373,15 +2411,15 @@ const AnaliseVistoria = () => {
     <div className="min-h-screen bg-neutral-50">
       {/* Header Minimalista */}
       <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-6xl mx-auto px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
-                <ClipboardList className="h-5 w-5 text-neutral-700" />
+        <div className="max-w-6xl mx-auto px-3 py-3 sm:px-6 md:px-8 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-700" />
               </div>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-semibold text-neutral-900">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <h1 className="text-lg sm:text-2xl font-semibold text-neutral-900 truncate">
                     {isEditMode
                       ? 'Editar Análise de Vistoria'
                       : 'Análise de Vistoria'}
@@ -2389,7 +2427,7 @@ const AnaliseVistoria = () => {
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="outline"
-                      className="text-sm border-neutral-200 text-neutral-900"
+                      className="text-xs sm:text-sm border-neutral-200 text-neutral-900"
                     >
                       {apontamentos.length} apontamento
                       {apontamentos.length !== 1 ? 's' : ''}
@@ -2397,7 +2435,7 @@ const AnaliseVistoria = () => {
                     {savedAnaliseId && (
                       <Badge
                         variant="outline"
-                        className="text-sm border-neutral-300 text-neutral-700"
+                        className="text-xs sm:text-sm border-neutral-300 text-neutral-700"
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Salva
@@ -2405,434 +2443,434 @@ const AnaliseVistoria = () => {
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-neutral-500 mt-1">
+                <p className="text-xs sm:text-sm text-neutral-500 mt-1 hidden sm:block">
                   Sistema de análise comparativa de vistoria de saída
                 </p>
               </div>
-              <div className="flex items-center space-x-2">
-                {apontamentos.length > 0 && (
-                  <ActionButton
-                    icon={Trash2}
-                    label="Limpar Tudo"
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearAllData}
-                  />
-                )}
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              {apontamentos.length > 0 && (
                 <ActionButton
-                  icon={Save}
-                  label={
-                    saving
-                      ? 'Salvando...'
-                      : isEditMode
-                        ? 'Atualizar Análise'
-                        : hasExistingAnalise
-                          ? 'Atualizar Análise Existente'
-                          : 'Salvar Análise'
-                  }
-                  variant="secondary"
-                  size="md"
-                  loading={saving}
-                  disabled={apontamentos.length === 0 || !selectedContract}
-                  onClick={saveAnalysis}
-                />
-                <ActionButton
-                  icon={Eye}
-                  label={
-                    publicDocumentId
-                      ? 'Visualizar Exibição'
-                      : 'Gerar Link de Exibição'
-                  }
+                  icon={Trash2}
+                  label="Limpar Tudo"
                   variant="ghost"
-                  size="md"
-                  disabled={apontamentos.length === 0 || !selectedContract}
-                  onClick={openViewerMode}
+                  size="sm"
+                  onClick={clearAllData}
+                  className="w-full sm:w-auto"
                 />
-                <ActionButton
-                  icon={FileText}
-                  label="Gerar Documento"
-                  variant="secondary"
-                  size="md"
-                  disabled={apontamentos.length === 0 || !selectedContract}
-                  onClick={generateDocument}
-                />
-              </div>
+              )}
+              <ActionButton
+                icon={Save}
+                label={
+                  saving
+                    ? 'Salvando...'
+                    : isEditMode
+                      ? 'Atualizar Análise'
+                      : hasExistingAnalise
+                        ? 'Atualizar Análise Existente'
+                        : 'Salvar Análise'
+                }
+                variant="secondary"
+                size="md"
+                loading={saving}
+                disabled={apontamentos.length === 0 || !selectedContract}
+                onClick={saveAnalysis}
+                className="w-full sm:w-auto"
+              />
+              <ActionButton
+                icon={Eye}
+                label={
+                  publicDocumentId
+                    ? 'Visualizar Exibição'
+                    : 'Gerar Link de Exibição'
+                }
+                variant="ghost"
+                size="md"
+                disabled={apontamentos.length === 0 || !selectedContract}
+                onClick={openViewerMode}
+                className="w-full sm:w-auto"
+              />
+              <ActionButton
+                icon={FileText}
+                label="Gerar Documento"
+                variant="secondary"
+                size="md"
+                disabled={apontamentos.length === 0 || !selectedContract}
+                onClick={generateDocument}
+                className="w-full sm:w-auto"
+              />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Container Principal com Espaçamento Lateral */}
-        <div className="max-w-6xl mx-auto px-8 py-6">
-          {/* Validação de Contrato Carregado */}
-          {!selectedContract && (
-            <Card className="mb-6 border-neutral-200 bg-neutral-50">
-              <CardContent className="py-6">
-                <div className="flex items-center gap-3 text-neutral-900">
-                  <AlertTriangle className="h-5 w-5" />
-                  <p className="font-medium">
-                    Nenhum contrato carregado. Selecione um contrato na página
-                    de Contratos para criar uma análise.
-                  </p>
+      {/* Container Principal com Espaçamento Lateral */}
+      <div className="max-w-6xl mx-auto px-3 py-4 sm:px-6 md:px-8 sm:py-6">
+        {/* Validação de Contrato Carregado */}
+        {!selectedContract && (
+          <Card className="mb-6 border-neutral-200 bg-neutral-50">
+            <CardContent className="py-4 px-4 sm:py-6 sm:px-6">
+              <div className="flex items-center gap-3 text-neutral-900">
+                <AlertTriangle className="h-5 w-5" />
+                <p className="font-medium text-sm sm:text-base">
+                  Nenhum contrato carregado. Selecione um contrato na página de
+                  Contratos para criar uma análise.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Informações do Contrato Selecionado */}
+        {selectedContract && (
+          <Card className="mb-6 bg-white border-neutral-200">
+            <CardHeader
+              className="pb-4 border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
+              onClick={() => setIsContractInfoExpanded(!isContractInfoExpanded)}
+            >
+              <CardTitle className="flex items-center justify-between text-base sm:text-lg text-neutral-900">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-600" />
+                  <span>Contrato Selecionado</span>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Informações do Contrato Selecionado */}
-          {selectedContract && (
-            <Card className="mb-6 bg-white border-neutral-200">
-              <CardHeader
-                className="pb-4 border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
-                onClick={() =>
-                  setIsContractInfoExpanded(!isContractInfoExpanded)
-                }
-              >
-                <CardTitle className="flex items-center justify-between text-lg text-neutral-900">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="h-5 w-5 text-neutral-600" />
-                    <span>Contrato Selecionado</span>
-                  </div>
-                  {isContractInfoExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-neutral-400" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-neutral-400" />
-                  )}
-                </CardTitle>
-              </CardHeader>
-              {isContractInfoExpanded && (
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-2">
-                          <FileText className="h-5 w-5 text-neutral-600" />
-                          <h3 className="font-semibold text-neutral-900">
-                            Informações do Contrato
-                          </h3>
-                        </div>
-                        {loadingExistingAnalise && (
+                {isContractInfoExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-neutral-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-neutral-400" />
+                )}
+              </CardTitle>
+            </CardHeader>
+            {isContractInfoExpanded && (
+              <CardContent>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-5 w-5 text-neutral-600" />
+                        <h3 className="font-semibold text-neutral-900">
+                          Informações do Contrato
+                        </h3>
+                      </div>
+                      {loadingExistingAnalise && (
+                        <Badge
+                          variant="outline"
+                          className="border-neutral-300 text-neutral-700"
+                        >
+                          <div className="h-3 w-3 mr-1 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
+                          Carregando...
+                        </Badge>
+                      )}
+                      {hasExistingAnalise && !loadingExistingAnalise && (
+                        <div className="flex items-center gap-2">
                           <Badge
-                            variant="outline"
-                            className="border-neutral-300 text-neutral-700"
+                            variant="default"
+                            className="bg-neutral-600 hover:bg-neutral-700 text-white"
                           >
-                            <div className="h-3 w-3 mr-1 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
-                            Carregando...
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Análise Existente
                           </Badge>
-                        )}
-                        {hasExistingAnalise && !loadingExistingAnalise && (
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="default"
-                              className="bg-neutral-600 hover:bg-neutral-700 text-white"
-                            >
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              Análise Existente
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={forceReloadImages}
-                              disabled={loadingExistingAnalise}
-                              className="text-xs"
-                            >
-                              {loadingExistingAnalise ? (
-                                <>
-                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent mr-1" />
-                                  Carregando...
-                                </>
-                              ) : (
-                                <>
-                                  <RefreshCw className="h-3 w-3 mr-1" />
-                                  Recarregar Imagens
-                                </>
-                              )}
-                            </Button>
-                            {savedAnaliseId && (
-                              <FixDuplicatesButton
-                                vistoriaId={savedAnaliseId}
-                                onFixed={(stats) => {
-                                  // Recarregar dados após correção
-                                  if (stats.duplicatesRemoved > 0) {
-                                    loadAnalysisData();
-                                  }
-                                }}
-                              />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={forceReloadImages}
+                            disabled={loadingExistingAnalise}
+                            className="text-xs"
+                          >
+                            {loadingExistingAnalise ? (
+                              <>
+                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent mr-1" />
+                                Carregando...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                                Recarregar Imagens
+                              </>
                             )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 px-3 text-xs bg-green-100 border-green-300 text-green-800"
-                              onClick={async () => {
-                                const result =
-                                  await executeImageSerialMigration();
-                                alert(result.message);
-                                if (result.details?.instructions) {
-                                  console.log(
-                                    'Instruções:',
-                                    result.details.instructions
-                                  );
+                          </Button>
+                          {savedAnaliseId && (
+                            <FixDuplicatesButton
+                              vistoriaId={savedAnaliseId}
+                              onFixed={(stats) => {
+                                // Recarregar dados após correção
+                                if (stats.duplicatesRemoved > 0) {
+                                  loadAnalysisData();
                                 }
                               }}
-                              title="Executar migration da coluna image_serial"
-                            >
-                              🔧 Migration
-                            </Button>
-                          </div>
-                        )}
+                            />
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs bg-green-100 border-green-300 text-green-800"
+                            onClick={async () => {
+                              const result =
+                                await executeImageSerialMigration();
+                              alert(result.message);
+                              if (result.details?.instructions) {
+                                console.log(
+                                  'Instruções:',
+                                  result.details.instructions
+                                );
+                              }
+                            }}
+                            title="Executar migration da coluna image_serial"
+                          >
+                            🔧 Migration
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4 text-neutral-600" />
+                          <Label className="text-xs sm:text-sm font-medium text-neutral-900">
+                            Locatário
+                          </Label>
+                        </div>
+                        <p className="text-xs sm:text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900 break-words">
+                          {dadosVistoria.locatario}
+                        </p>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-neutral-600" />
+                          <Label className="text-xs sm:text-sm font-medium text-neutral-900">
+                            Endereço
+                          </Label>
+                        </div>
+                        <p className="text-xs sm:text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900 break-words">
+                          {dadosVistoria.endereco}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-4 w-4 text-neutral-600" />
+                          <Label className="text-xs sm:text-sm font-medium text-neutral-900">
+                            Data da Vistoria
+                          </Label>
+                        </div>
+                        <p className="text-xs sm:text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
+                          {dadosVistoria.dataVistoria}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Aviso sobre análise existente */}
+                    {hasExistingAnalise && (
+                      <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-100 border border-neutral-200 dark:border-neutral-200 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <AlertTriangle className="h-4 w-4 text-neutral-600" />
+                          <p className="text-sm text-neutral-800 dark:text-neutral-900">
+                            <strong>Atenção:</strong> Já existe uma análise de
+                            vistoria para este contrato. Ao salvar, a análise
+                            existente será atualizada em vez de criar uma nova.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* Seleção de Prestador - Apenas no modo orçamento */}
+        {documentMode === 'orcamento' && selectedContract && (
+          <Card className="mb-6 bg-white border-neutral-200">
+            <CardHeader className="pb-4 border-b border-neutral-200">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-neutral-900">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-600" />
+                <span>Selecionar Prestador</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="prestador-select"
+                  className="text-sm font-medium text-neutral-900"
+                >
+                  Prestador de Serviço *
+                </Label>
+                <Select
+                  value={selectedPrestadorId}
+                  onValueChange={setSelectedPrestadorId}
+                >
+                  <SelectTrigger
+                    id="prestador-select"
+                    className="bg-white border-neutral-300 text-neutral-900 focus:border-neutral-500"
+                  >
+                    <SelectValue placeholder="Selecione um prestador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {prestadores.length === 0 ? (
+                      <div className="p-4 text-sm text-neutral-500 text-center">
+                        <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>Nenhum prestador cadastrado</p>
+                      </div>
+                    ) : (
+                      prestadores.map((prestador) => (
+                        <SelectItem key={prestador.id} value={prestador.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {prestador.nome}
+                            </span>
+                            {prestador.especialidade && (
+                              <span className="text-xs text-neutral-500">
+                                {prestador.especialidade}
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Informações do Prestador Selecionado */}
+              {selectedPrestadorId &&
+                prestadores.find((p) => p.id === selectedPrestadorId) && (
+                  <div className="bg-gradient-to-r from-success-500/20 to-success-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
+                    {(() => {
+                      const prestador = prestadores.find(
+                        (p) => p.id === selectedPrestadorId
+                      );
+                      if (!prestador) return null;
+                      return (
+                        <>
+                          <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-neutral-600" />
-                            <Label className="text-sm font-medium text-neutral-900">
-                              Locatário
-                            </Label>
+                            <span className="text-sm font-semibold">
+                              {prestador.nome}
+                            </span>
                           </div>
-                          <p className="text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
-                            {dadosVistoria.locatario}
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4 text-neutral-600" />
-                            <Label className="text-sm font-medium text-neutral-900">
-                              Endereço
-                            </Label>
-                          </div>
-                          <p className="text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
-                            {dadosVistoria.endereco}
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="h-4 w-4 text-neutral-600" />
-                            <Label className="text-sm font-medium text-neutral-900">
-                              Data da Vistoria
-                            </Label>
-                          </div>
-                          <p className="text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
-                            {dadosVistoria.dataVistoria}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Aviso sobre análise existente */}
-                      {hasExistingAnalise && (
-                        <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-100 border border-neutral-200 dark:border-neutral-200 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <AlertTriangle className="h-4 w-4 text-neutral-600" />
-                            <p className="text-sm text-neutral-800 dark:text-neutral-900">
-                              <strong>Atenção:</strong> Já existe uma análise de
-                              vistoria para este contrato. Ao salvar, a análise
-                              existente será atualizada em vez de criar uma
-                              nova.
+                          {prestador.cnpj && (
+                            <p className="text-xs text-neutral-500">
+                              CNPJ: {prestador.cnpj}
                             </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                          )}
+                          {prestador.telefone && (
+                            <p className="text-xs text-neutral-500">
+                              Tel: {prestador.telefone}
+                            </p>
+                          )}
+                          {prestador.email && (
+                            <p className="text-xs text-neutral-500">
+                              Email: {prestador.email}
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
-                </CardContent>
-              )}
-            </Card>
-          )}
+                )}
 
-          {/* Seleção de Prestador - Apenas no modo orçamento */}
-          {documentMode === 'orcamento' && selectedContract && (
-            <Card className="mb-6 bg-white border-neutral-200">
-              <CardHeader className="pb-4 border-b border-neutral-200">
-                <CardTitle className="flex items-center space-x-2 text-lg text-neutral-900">
-                  <Users className="h-5 w-5 text-neutral-600" />
-                  <span>Selecionar Prestador</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="prestador-select"
-                    className="text-sm font-medium text-neutral-900"
-                  >
-                    Prestador de Serviço *
-                  </Label>
-                  <Select
-                    value={selectedPrestadorId}
-                    onValueChange={setSelectedPrestadorId}
-                  >
-                    <SelectTrigger
-                      id="prestador-select"
-                      className="bg-white border-neutral-300 text-neutral-900 focus:border-neutral-500"
-                    >
-                      <SelectValue placeholder="Selecione um prestador" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {prestadores.length === 0 ? (
-                        <div className="p-4 text-sm text-neutral-500 text-center">
-                          <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>Nenhum prestador cadastrado</p>
-                        </div>
-                      ) : (
-                        prestadores.map((prestador) => (
-                          <SelectItem key={prestador.id} value={prestador.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {prestador.nome}
-                              </span>
-                              {prestador.especialidade && (
-                                <span className="text-xs text-neutral-500">
-                                  {prestador.especialidade}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+              <ActionButton
+                icon={Plus}
+                label="Cadastrar Novo Prestador"
+                variant="secondary"
+                size="md"
+                className="w-full"
+                onClick={() => navigate('/prestadores')}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Banner de Alerta - Apontamentos Sem Classificação */}
+        {apontamentosSemClassificacao > 0 && documentMode === 'analise' && (
+          <Card className="mb-6 bg-gradient-to-r from-amber-50 to-warning-50 border-amber-300 shadow-md">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <AlertTriangle className="h-8 w-8 text-amber-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                      Apontamentos Sem Classificação Detectados
+                    </h4>
+                    <p className="text-xs text-amber-700">
+                      <strong>{apontamentosSemClassificacao}</strong>{' '}
+                      apontamento(s) não possuem classificação e{' '}
+                      <strong>não aparecerão no resumo visual</strong> do
+                      documento. Clique no botão ao lado para atribuir todos
+                      como responsabilidade do locatário.
+                    </p>
+                  </div>
                 </div>
-
-                {/* Informações do Prestador Selecionado */}
-                {selectedPrestadorId &&
-                  prestadores.find((p) => p.id === selectedPrestadorId) && (
-                    <div className="bg-gradient-to-r from-success-500/20 to-success-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
-                      {(() => {
-                        const prestador = prestadores.find(
-                          (p) => p.id === selectedPrestadorId
-                        );
-                        if (!prestador) return null;
-                        return (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-neutral-600" />
-                              <span className="text-sm font-semibold">
-                                {prestador.nome}
-                              </span>
-                            </div>
-                            {prestador.cnpj && (
-                              <p className="text-xs text-neutral-500">
-                                CNPJ: {prestador.cnpj}
-                              </p>
-                            )}
-                            {prestador.telefone && (
-                              <p className="text-xs text-neutral-500">
-                                Tel: {prestador.telefone}
-                              </p>
-                            )}
-                            {prestador.email && (
-                              <p className="text-xs text-neutral-500">
-                                Email: {prestador.email}
-                              </p>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                <ActionButton
-                  icon={Plus}
-                  label="Cadastrar Novo Prestador"
+                <Button
+                  onClick={handleMigrarClassificacoes}
                   variant="secondary"
-                  size="md"
-                  className="w-full"
-                  onClick={() => navigate('/prestadores')}
-                />
-              </CardContent>
-            </Card>
-          )}
+                  size="sm"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Corrigir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Banner de Alerta - Apontamentos Sem Classificação */}
-          {apontamentosSemClassificacao > 0 && documentMode === 'analise' && (
-            <Card className="mb-6 bg-gradient-to-r from-amber-50 to-warning-50 border-amber-300 shadow-md">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      <AlertTriangle className="h-8 w-8 text-amber-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-amber-900 mb-1">
-                        Apontamentos Sem Classificação Detectados
-                      </h4>
-                      <p className="text-xs text-amber-700">
-                        <strong>{apontamentosSemClassificacao}</strong>{' '}
-                        apontamento(s) não possuem classificação e{' '}
-                        <strong>não aparecerão no resumo visual</strong> do
-                        documento. Clique no botão ao lado para atribuir todos
-                        como responsabilidade do locatário.
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleMigrarClassificacoes}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Corrigir
-                  </Button>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          {/* Formulário de Novo Apontamento */}
+          <Card className="xl:col-span-1 bg-white border-neutral-200 h-fit self-start">
+            <CardHeader className="pb-4 border-b border-white/10">
+              <CardTitle className="flex items-center justify-between text-neutral-900">
+                <div className="flex items-center space-x-2">
+                  <Plus className="h-5 w-5 text-neutral-600" />
+                  <span>Novo Apontamento</span>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <Select
+                  value={documentMode}
+                  onValueChange={(value: 'analise' | 'orcamento') =>
+                    setDocumentMode(value)
+                  }
+                >
+                  <SelectTrigger className="w-32 bg-white border-neutral-300 text-neutral-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="analise">Análise</SelectItem>
+                    <SelectItem value="orcamento">Orçamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Painel de Extração Automática com IA */}
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-neutral-300 text-neutral-900 hover:bg-neutral-100"
+                  onClick={() => setShowExtractionPanel(!showExtractionPanel)}
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  {showExtractionPanel
+                    ? 'Ocultar'
+                    : 'Criar Apontamentos com IA'}
+                </Button>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            {/* Formulário de Novo Apontamento */}
-            <Card className="xl:col-span-1 bg-white border-neutral-200 h-fit self-start">
-              <CardHeader className="pb-4 border-b border-white/10">
-                <CardTitle className="flex items-center justify-between text-neutral-900">
-                  <div className="flex items-center space-x-2">
-                    <Plus className="h-5 w-5 text-neutral-600" />
-                    <span>Novo Apontamento</span>
-                  </div>
-                  <Select
-                    value={documentMode}
-                    onValueChange={(value: 'analise' | 'orcamento') =>
-                      setDocumentMode(value)
-                    }
-                  >
-                    <SelectTrigger className="w-32 bg-white border-neutral-300 text-neutral-900">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="analise">Análise</SelectItem>
-                      <SelectItem value="orcamento">Orçamento</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {/* Painel de Extração Automática com IA */}
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-neutral-300 text-neutral-900 hover:bg-neutral-100"
-                    onClick={() => setShowExtractionPanel(!showExtractionPanel)}
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    {showExtractionPanel
-                      ? 'Ocultar'
-                      : 'Criar Apontamentos com IA'}
-                  </Button>
-
-                  {showExtractionPanel && (
-                    <div className="space-y-3 p-4 bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200 rounded-lg">
-                      <div className="flex items-start space-x-2">
-                        <Wand2 className="h-5 w-5 text-neutral-600 mt-0.5" />
-                        <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-neutral-900 mb-1">
-                            Extração Automática de Apontamentos
-                          </h4>
-                          <p className="text-xs text-neutral-600 mb-3">
-                            Cole o texto completo da vistoria abaixo. A IA
-                            processará{' '}
-                            <strong>TODO o texto integralmente</strong> e
-                            identificará automaticamente cada ambiente,
-                            subtítulo e descrição - sem omitir nenhuma
-                            informação.
-                          </p>
-                          <Textarea
-                            placeholder={`Exemplo de formato (cole quantos apontamentos precisar):
+                {showExtractionPanel && (
+                  <div className="space-y-3 p-4 bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <Wand2 className="h-5 w-5 text-neutral-600 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-neutral-900 mb-1">
+                          Extração Automática de Apontamentos
+                        </h4>
+                        <p className="text-xs text-neutral-600 mb-3">
+                          Cole o texto completo da vistoria abaixo. A IA
+                          processará <strong>TODO o texto integralmente</strong>{' '}
+                          e identificará automaticamente cada ambiente,
+                          subtítulo e descrição - sem omitir nenhuma informação.
+                        </p>
+                        <Textarea
+                          placeholder={`Exemplo de formato (cole quantos apontamentos precisar):
 
 SALA
 Pintar as paredes
@@ -2848,689 +2886,688 @@ está suja
 
 ✓ Pode colar textos longos
 ✓ Todos os apontamentos serão processados`}
-                            value={extractionText}
-                            onChange={(e) => setExtractionText(e.target.value)}
-                            rows={10}
-                            className="text-sm bg-white border-neutral-300 focus:border-neutral-500 mb-3 font-mono"
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={handleExtractApontamentos}
-                              disabled={!extractionText.trim() || isAILoading}
-                              variant="secondary"
-                              size="sm"
-                              className="flex-1"
-                            >
-                              {isAILoading ? (
-                                <>
-                                  <div className="h-4 w-4 mr-2 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
-                                  Processando...
-                                </>
-                              ) : (
-                                <>
-                                  <Wand2 className="h-4 w-4 mr-2" />
-                                  Extrair Apontamentos
-                                </>
-                              )}
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                setExtractionText('');
-                                setShowExtractionPanel(false);
-                              }}
-                              variant="outline"
-                              size="sm"
-                              className="border-neutral-300"
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Cancelar
-                            </Button>
-                          </div>
+                          value={extractionText}
+                          onChange={(e) => setExtractionText(e.target.value)}
+                          rows={10}
+                          className="text-sm bg-white border-neutral-300 focus:border-neutral-500 mb-3 font-mono"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleExtractApontamentos}
+                            disabled={!extractionText.trim() || isAILoading}
+                            variant="secondary"
+                            size="sm"
+                            className="flex-1"
+                          >
+                            {isAILoading ? (
+                              <>
+                                <div className="h-4 w-4 mr-2 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
+                                Processando...
+                              </>
+                            ) : (
+                              <>
+                                <Wand2 className="h-4 w-4 mr-2" />
+                                Extrair Apontamentos
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setExtractionText('');
+                              setShowExtractionPanel(false);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="border-neutral-300"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancelar
+                          </Button>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-
-                <Separator className="bg-neutral-200" />
-
-                {/* Ambiente e Subtítulo */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="ambiente"
-                      className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
-                    >
-                      <Home className="h-4 w-4 text-neutral-600" />
-                      <span>Ambiente *</span>
-                    </Label>
-                    <Input
-                      id="ambiente"
-                      placeholder="Ex: SALA"
-                      value={currentApontamento.ambiente || ''}
-                      onChange={(e) =>
-                        setCurrentApontamento((prev) => ({
-                          ...prev,
-                          ambiente: e.target.value,
-                        }))
-                      }
-                      className="h-9 bg-white border-neutral-300"
-                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="subtitulo"
-                      className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
-                    >
-                      <Settings className="h-4 w-4 text-neutral-600" />
-                      <span>Subtítulo</span>
-                    </Label>
-                    <Input
-                      id="subtitulo"
-                      placeholder="Ex: Armário"
-                      value={currentApontamento.subtitulo || ''}
-                      onChange={(e) =>
-                        setCurrentApontamento((prev) => ({
-                          ...prev,
-                          subtitulo: e.target.value,
-                        }))
-                      }
-                      className="h-9 bg-white border-neutral-300"
-                    />
-                  </div>
-                </div>
+                )}
+              </div>
 
-                {/* Descrição do Apontamento */}
+              <Separator className="bg-neutral-200" />
+
+              {/* Ambiente e Subtítulo */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="descricao"
+                    htmlFor="ambiente"
                     className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
                   >
-                    <FileText className="h-4 w-4 text-neutral-600" />
-                    <span>
-                      {documentMode === 'orcamento'
-                        ? 'Descrição do Vistoriador *'
-                        : 'Descrição *'}
-                    </span>
+                    <Home className="h-4 w-4 text-neutral-600" />
+                    <span>Ambiente *</span>
                   </Label>
-                  <Textarea
-                    id="descricao"
-                    placeholder={
-                      documentMode === 'orcamento'
-                        ? 'Apontamento realizado pelo vistoriador...'
-                        : 'Ex: Está com lascado nas portas'
-                    }
-                    value={currentApontamento.descricao || ''}
+                  <Input
+                    id="ambiente"
+                    placeholder="Ex: SALA"
+                    value={currentApontamento.ambiente || ''}
                     onChange={(e) =>
                       setCurrentApontamento((prev) => ({
                         ...prev,
-                        descricao: e.target.value,
+                        ambiente: e.target.value,
+                      }))
+                    }
+                    className="h-9 bg-white border-neutral-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="subtitulo"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                  >
+                    <Settings className="h-4 w-4 text-neutral-600" />
+                    <span>Subtítulo</span>
+                  </Label>
+                  <Input
+                    id="subtitulo"
+                    placeholder="Ex: Armário"
+                    value={currentApontamento.subtitulo || ''}
+                    onChange={(e) =>
+                      setCurrentApontamento((prev) => ({
+                        ...prev,
+                        subtitulo: e.target.value,
+                      }))
+                    }
+                    className="h-9 bg-white border-neutral-300"
+                  />
+                </div>
+              </div>
+
+              {/* Descrição do Apontamento */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="descricao"
+                  className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                >
+                  <FileText className="h-4 w-4 text-neutral-600" />
+                  <span>
+                    {documentMode === 'orcamento'
+                      ? 'Descrição do Vistoriador *'
+                      : 'Descrição *'}
+                  </span>
+                </Label>
+                <Textarea
+                  id="descricao"
+                  placeholder={
+                    documentMode === 'orcamento'
+                      ? 'Apontamento realizado pelo vistoriador...'
+                      : 'Ex: Está com lascado nas portas'
+                  }
+                  value={currentApontamento.descricao || ''}
+                  onChange={(e) =>
+                    setCurrentApontamento((prev) => ({
+                      ...prev,
+                      descricao: e.target.value,
+                    }))
+                  }
+                  rows={2}
+                  className="text-sm bg-white border-neutral-300"
+                />
+              </div>
+
+              {/* Descrição do Serviço - Apenas no modo orçamento */}
+              {documentMode === 'orcamento' && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="descricaoServico"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                  >
+                    <FileText className="h-4 w-4 text-neutral-600" />
+                    <span>Descrição do Serviço *</span>
+                  </Label>
+                  <Textarea
+                    id="descricaoServico"
+                    placeholder="Descrição detalhada do serviço a ser executado..."
+                    value={currentApontamento.descricaoServico || ''}
+                    onChange={(e) =>
+                      setCurrentApontamento((prev) => ({
+                        ...prev,
+                        descricaoServico: e.target.value,
                       }))
                     }
                     rows={2}
                     className="text-sm bg-white border-neutral-300"
                   />
                 </div>
+              )}
 
-                {/* Descrição do Serviço - Apenas no modo orçamento */}
-                {documentMode === 'orcamento' && (
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="descricaoServico"
-                      className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
-                    >
-                      <FileText className="h-4 w-4 text-neutral-600" />
-                      <span>Descrição do Serviço *</span>
-                    </Label>
-                    <Textarea
-                      id="descricaoServico"
-                      placeholder="Descrição detalhada do serviço a ser executado..."
-                      value={currentApontamento.descricaoServico || ''}
-                      onChange={(e) =>
-                        setCurrentApontamento((prev) => ({
-                          ...prev,
-                          descricaoServico: e.target.value,
-                        }))
-                      }
-                      rows={2}
-                      className="text-sm bg-white border-neutral-300"
-                    />
-                  </div>
-                )}
+              {/* Campos de Orçamento - Apenas no modo orçamento */}
+              {documentMode === 'orcamento' && (
+                <>
+                  <Separator className="bg-neutral-200" />
 
-                {/* Campos de Orçamento - Apenas no modo orçamento */}
-                {documentMode === 'orcamento' && (
-                  <>
-                    <Separator className="bg-neutral-200" />
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium text-neutral-900">
-                          Tipo
-                        </Label>
-                        <Select
-                          value={currentApontamento.tipo || 'material'}
-                          onValueChange={(value: BudgetItemType) =>
-                            setCurrentApontamento((prev) => ({
-                              ...prev,
-                              tipo: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="h-8 bg-white border-neutral-300 text-neutral-900">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="material">
-                              <div className="flex items-center space-x-2">
-                                <Package className="h-4 w-4" />
-                                <span>Material</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="mao_de_obra">
-                              <div className="flex items-center space-x-2">
-                                <Wrench className="h-4 w-4" />
-                                <span>Mão de Obra</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="ambos">
-                              <div className="flex items-center space-x-2">
-                                <Package className="h-4 w-4" />
-                                <Wrench className="h-4 w-4 ml-1" />
-                                <span className="ml-1">Ambos</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium text-neutral-900">
-                          Valor Unit.
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={currentApontamento.valor || ''}
-                          onChange={(e) =>
-                            setCurrentApontamento((prev) => ({
-                              ...prev,
-                              valor: parseFloat(e.target.value) || 0,
-                            }))
-                          }
-                          className="h-8 text-sm bg-white border-neutral-300"
-                          placeholder="0,00"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium text-neutral-900">
-                          Quantidade
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={currentApontamento.quantidade || ''}
-                          onChange={(e) =>
-                            setCurrentApontamento((prev) => ({
-                              ...prev,
-                              quantidade: parseFloat(e.target.value) || 0,
-                            }))
-                          }
-                          className="h-8 text-sm bg-white border-neutral-300"
-                          placeholder="0"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium text-neutral-900">
-                          Subtotal
-                        </Label>
-                        <div className="flex items-center space-x-1 h-8 px-2 bg-white rounded border border-neutral-300 text-sm font-medium text-neutral-900">
-                          <span>
-                            {(
-                              (currentApontamento.valor || 0) *
-                              (currentApontamento.quantidade || 0)
-                            ).toLocaleString('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL',
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <Separator className="bg-neutral-200" />
-
-                {/* Vistoria Inicial */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
-                    <CheckCircle className="h-4 w-4 text-neutral-600" />
-                    <span>Vistoria Inicial</span>
-                  </h3>
-                  <div
-                    className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
-                    onPaste={(e) => handlePaste(e.nativeEvent, 'inicial')}
-                    tabIndex={0}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-100 rounded-full flex items-center justify-center">
-                        <Upload className="h-5 w-5 text-neutral-600 dark:text-neutral-600" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-neutral-900">
-                          Cole imagens com Ctrl+V
-                        </p>
-                        <p className="text-xs text-neutral-500 mt-1">
-                          Estado inicial do ambiente
-                        </p>
-                      </div>
-                    </div>
-                    {currentApontamento.vistoriaInicial?.fotos &&
-                      currentApontamento.vistoriaInicial.fotos.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {currentApontamento.vistoriaInicial.fotos.map(
-                            (foto, index) => (
-                              <div key={index} className="relative group">
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-600 border-neutral-200 dark:border-neutral-200 pr-6"
-                                >
-                                  <ImageIcon className="h-3 w-3 mr-1" />
-                                  {foto.name}
-                                  {foto.isFromDatabase && (
-                                    <span className="ml-1 text-xs opacity-70">
-                                      (DB)
-                                    </span>
-                                  )}
-                                  {foto.image_serial && (
-                                    <span className="ml-1 text-xs font-bold bg-blue-100 text-blue-800 px-1 rounded">
-                                      {getSimplifiedSerial(foto.image_serial)}
-                                    </span>
-                                  )}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveFotoInicial(index)}
-                                  className="absolute -top-1 -right-1 h-4 w-4 p-0 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Remover foto"
-                                >
-                                  <Trash2 className="h-2 w-2" />
-                                </Button>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      )}
-                  </div>
-
-                  {/* Descritivo do Laudo de Entrada */}
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="descritivoLaudo"
-                      className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
-                    >
-                      <FileText className="h-4 w-4 text-neutral-600" />
-                      <span>Descritivo do Laudo de Entrada (Opcional)</span>
-                    </Label>
-                    <Textarea
-                      id="descritivoLaudo"
-                      placeholder="Ex: Laudo técnico indicando estado inicial do ambiente..."
-                      value={
-                        currentApontamento.vistoriaInicial?.descritivoLaudo ||
-                        ''
-                      }
-                      onChange={(e) =>
-                        setCurrentApontamento((prev) => ({
-                          ...prev,
-                          vistoriaInicial: {
-                            ...prev.vistoriaInicial,
-                            fotos: prev.vistoriaInicial?.fotos || [],
-                            descritivoLaudo: e.target.value,
-                          },
-                        }))
-                      }
-                      rows={2}
-                      className="text-sm bg-white border-neutral-300"
-                    />
-                  </div>
-                </div>
-
-                <Separator className="bg-neutral-200" />
-
-                {/* Vistoria Final */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
-                      <AlertTriangle className="h-4 w-4 text-neutral-600" />
-                      <span>Vistoria Final</span>
-                    </h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setShowExternalUrlInput(!showExternalUrlInput)
-                      }
-                      className="text-xs h-7 px-2"
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Link Externo
-                    </Button>
-                  </div>
-
-                  {/* Input para URL externa */}
-                  {showExternalUrlInput && (
-                    <div className="space-y-2 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    <div className="space-y-1">
                       <Label className="text-xs font-medium text-neutral-900">
-                        URL da Imagem Externa
+                        Tipo
                       </Label>
-                      <div className="flex space-x-2">
-                        <Input
-                          placeholder="https://exemplo.com/imagem.jpg"
-                          value={externalImageUrl}
-                          onChange={(e) => setExternalImageUrl(e.target.value)}
-                          className="text-xs h-8"
-                        />
-                        <Button
-                          onClick={handleAddExternalImage}
-                          size="sm"
-                          className="h-8 px-3 text-xs"
-                        >
-                          Adicionar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setShowExternalUrlInput(false);
-                            setExternalImageUrl('');
-                          }}
-                          size="sm"
-                          className="h-8 px-3 text-xs"
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
+                      <Select
+                        value={currentApontamento.tipo || 'material'}
+                        onValueChange={(value: BudgetItemType) =>
+                          setCurrentApontamento((prev) => ({
+                            ...prev,
+                            tipo: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 bg-white border-neutral-300 text-neutral-900">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="material">
+                            <div className="flex items-center space-x-2">
+                              <Package className="h-4 w-4" />
+                              <span>Material</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="mao_de_obra">
+                            <div className="flex items-center space-x-2">
+                              <Wrench className="h-4 w-4" />
+                              <span>Mão de Obra</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="ambos">
+                            <div className="flex items-center space-x-2">
+                              <Package className="h-4 w-4" />
+                              <Wrench className="h-4 w-4 ml-1" />
+                              <span className="ml-1">Ambos</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
 
-                  <div
-                    className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
-                    onPaste={(e) => handlePaste(e.nativeEvent, 'final')}
-                    tabIndex={0}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-100 rounded-full flex items-center justify-center">
-                        <Upload className="h-5 w-5 text-neutral-600 dark:text-neutral-600" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-neutral-900">
-                          Cole imagens com Ctrl+V
-                        </p>
-                        <p className="text-xs text-neutral-500 mt-1">
-                          Estado atual do ambiente
-                        </p>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Valor Unit.
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={currentApontamento.valor || ''}
+                        onChange={(e) =>
+                          setCurrentApontamento((prev) => ({
+                            ...prev,
+                            valor: parseFloat(e.target.value) || 0,
+                          }))
+                        }
+                        className="h-8 text-sm bg-white border-neutral-300"
+                        placeholder="0,00"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Quantidade
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={currentApontamento.quantidade || ''}
+                        onChange={(e) =>
+                          setCurrentApontamento((prev) => ({
+                            ...prev,
+                            quantidade: parseFloat(e.target.value) || 0,
+                          }))
+                        }
+                        className="h-8 text-sm bg-white border-neutral-300"
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-neutral-900">
+                        Subtotal
+                      </Label>
+                      <div className="flex items-center space-x-1 h-8 px-2 bg-white rounded border border-neutral-300 text-sm font-medium text-neutral-900">
+                        <span>
+                          {(
+                            (currentApontamento.valor || 0) *
+                            (currentApontamento.quantidade || 0)
+                          ).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          })}
+                        </span>
                       </div>
                     </div>
-                    {currentApontamento.vistoriaFinal?.fotos &&
-                      currentApontamento.vistoriaFinal.fotos.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {currentApontamento.vistoriaFinal.fotos.map(
-                            (foto, index) => (
-                              <div key={index} className="relative group">
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-900 border-neutral-200 pr-6"
-                                >
-                                  {foto.isExternal ? (
-                                    <Copy className="h-3 w-3 mr-1" />
-                                  ) : (
-                                    <ImageIcon className="h-3 w-3 mr-1" />
-                                  )}
-                                  {foto.name}
-                                  {foto.isFromDatabase && (
-                                    <span className="ml-1 text-xs opacity-70">
-                                      (DB)
-                                    </span>
-                                  )}
-                                  {foto.isExternal && (
-                                    <span className="ml-1 text-xs opacity-70">
-                                      (Link)
-                                    </span>
-                                  )}
-                                  {foto.image_serial && (
-                                    <span className="ml-1 text-xs font-bold bg-blue-100 text-blue-800 px-1 rounded">
-                                      {getSimplifiedSerial(foto.image_serial)}
-                                    </span>
-                                  )}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveFotoFinal(index)}
-                                  className="absolute -top-1 -right-1 h-4 w-4 p-0 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Remover foto"
-                                >
-                                  <Trash2 className="h-2 w-2" />
-                                </Button>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      )}
                   </div>
+                </>
+              )}
+
+              <Separator className="bg-neutral-200" />
+
+              {/* Vistoria Inicial */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
+                  <CheckCircle className="h-4 w-4 text-neutral-600" />
+                  <span>Vistoria Inicial</span>
+                </h3>
+                <div
+                  className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
+                  onPaste={(e) => handlePaste(e.nativeEvent, 'inicial')}
+                  tabIndex={0}
+                >
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-neutral-600 dark:text-neutral-600" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-neutral-900">
+                        Cole imagens com Ctrl+V
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Estado inicial do ambiente
+                      </p>
+                    </div>
+                  </div>
+                  {currentApontamento.vistoriaInicial?.fotos &&
+                    currentApontamento.vistoriaInicial.fotos.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {currentApontamento.vistoriaInicial.fotos.map(
+                          (foto, index) => (
+                            <div key={index} className="relative group">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-600 border-neutral-200 dark:border-neutral-200 pr-6"
+                              >
+                                <ImageIcon className="h-3 w-3 mr-1" />
+                                {foto.name}
+                                {foto.isFromDatabase && (
+                                  <span className="ml-1 text-xs opacity-70">
+                                    (DB)
+                                  </span>
+                                )}
+                                {foto.image_serial && (
+                                  <span className="ml-1 text-xs font-bold bg-blue-100 text-blue-800 px-1 rounded">
+                                    {getSimplifiedSerial(foto.image_serial)}
+                                  </span>
+                                )}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFotoInicial(index)}
+                                className="absolute -top-1 -right-1 h-4 w-4 p-0 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remover foto"
+                              >
+                                <Trash2 className="h-2 w-2" />
+                              </Button>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
                 </div>
 
-                <Separator className="bg-neutral-200" />
-
-                {/* Observação */}
+                {/* Descritivo do Laudo de Entrada */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="observacao"
-                      className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
-                    >
-                      <AlertCircle className="h-4 w-4 text-neutral-600" />
-                      <span>Análise Técnica</span>
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={handleCorrectText}
-                        disabled={
-                          isAILoading || !currentApontamento.observacao?.trim()
-                        }
-                        variant="ghost"
-                        size="sm"
-                        className="text-neutral-500 hover:text-foreground h-6 px-2 text-xs"
-                        title="Corrigir ortografia com IA"
-                      >
-                        <Wand2 className="h-3 w-3 mr-1" />
-                        {isAILoading ? 'Corrigindo...' : 'Corrigir'}
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          console.log('Debug - Botão Analisar clicado');
-                          console.log('Debug - Estado atual:', {
-                            isAILoading,
-                            fotosInicial:
-                              currentApontamento.vistoriaInicial?.fotos
-                                ?.length || 0,
-                            fotosFinal:
-                              currentApontamento.vistoriaFinal?.fotos?.length ||
-                              0,
-                            descricao: currentApontamento.descricao || '',
-                            descricaoLength:
-                              currentApontamento.descricao?.trim().length || 0,
-                          });
-                          handleAIAnalysisForCurrentApontamento();
-                        }}
-                        disabled={false}
-                        variant="default"
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white h-6 px-2 text-xs"
-                        title="Clique para analisar com IA"
-                      >
-                        <Wand2 className="h-3 w-3 mr-1" />
-                        {isAILoading ? 'Analisando...' : 'Analisar'}
-                      </Button>
-                    </div>
-                  </div>
+                  <Label
+                    htmlFor="descritivoLaudo"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                  >
+                    <FileText className="h-4 w-4 text-neutral-600" />
+                    <span>Descritivo do Laudo de Entrada (Opcional)</span>
+                  </Label>
                   <Textarea
-                    id="observacao"
-                    placeholder="Sua análise sobre a contestação do locatário..."
-                    value={currentApontamento.observacao || ''}
+                    id="descritivoLaudo"
+                    placeholder="Ex: Laudo técnico indicando estado inicial do ambiente..."
+                    value={
+                      currentApontamento.vistoriaInicial?.descritivoLaudo || ''
+                    }
                     onChange={(e) =>
                       setCurrentApontamento((prev) => ({
                         ...prev,
-                        observacao: e.target.value,
+                        vistoriaInicial: {
+                          ...prev.vistoriaInicial,
+                          fotos: prev.vistoriaInicial?.fotos || [],
+                          descritivoLaudo: e.target.value,
+                        },
                       }))
                     }
-                    rows={3}
+                    rows={2}
                     className="text-sm bg-white border-neutral-300"
                   />
                 </div>
+              </div>
 
-                {/* Classificação de Responsabilidade (apenas modo análise) */}
-                {documentMode === 'analise' && (
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="classificacao"
-                      className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
-                    >
-                      <ClipboardList className="h-4 w-4 text-neutral-600" />
-                      <span>Classificação do Item *</span>
+              <Separator className="bg-neutral-200" />
+
+              {/* Vistoria Final */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium flex items-center space-x-2 text-neutral-900 bg-neutral-100 p-2 rounded-lg border border-neutral-200">
+                    <AlertTriangle className="h-4 w-4 text-neutral-600" />
+                    <span>Vistoria Final</span>
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setShowExternalUrlInput(!showExternalUrlInput)
+                    }
+                    className="text-xs h-7 px-2"
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    Link Externo
+                  </Button>
+                </div>
+
+                {/* Input para URL externa */}
+                {showExternalUrlInput && (
+                  <div className="space-y-2 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
+                    <Label className="text-xs font-medium text-neutral-900">
+                      URL da Imagem Externa
                     </Label>
-                    <Select
-                      value={currentApontamento.classificacao}
-                      onValueChange={(value: 'responsabilidade' | 'revisao') =>
-                        setCurrentApontamento((prev) => ({
-                          ...prev,
-                          classificacao: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="bg-white border-neutral-300 text-neutral-900">
-                        <SelectValue placeholder="Selecione a classificação" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="responsabilidade">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-neutral-700">■</span>
-                            <span>Responsabilidade do Locatário</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="revisao">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-neutral-600">■</span>
-                            <span>Passível de Revisão</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-neutral-500 italic">
-                      {currentApontamento.classificacao === 'responsabilidade'
-                        ? 'Este item será marcado como responsabilidade do locatário no documento'
-                        : currentApontamento.classificacao === 'revisao'
-                          ? 'Este item será marcado como passível de revisão no documento'
-                          : 'Escolha se este item é responsabilidade do locatário ou se necessita revisão'}
-                    </p>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="https://exemplo.com/imagem.jpg"
+                        value={externalImageUrl}
+                        onChange={(e) => setExternalImageUrl(e.target.value)}
+                        className="text-xs h-8"
+                      />
+                      <Button
+                        onClick={handleAddExternalImage}
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                      >
+                        Adicionar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowExternalUrlInput(false);
+                          setExternalImageUrl('');
+                        }}
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
                   </div>
                 )}
 
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={
-                      editingApontamento ? handleSaveEdit : handleAddApontamento
-                    }
-                    className="flex-1 h-9 text-sm"
-                    disabled={
-                      !currentApontamento.ambiente ||
-                      !currentApontamento.descricao
+                <div
+                  className="border-2 border-dashed border-neutral-200 rounded-lg p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors"
+                  onPaste={(e) => handlePaste(e.nativeEvent, 'final')}
+                  tabIndex={0}
+                >
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-neutral-600 dark:text-neutral-600" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-neutral-900">
+                        Cole imagens com Ctrl+V
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Estado atual do ambiente
+                      </p>
+                    </div>
+                  </div>
+                  {currentApontamento.vistoriaFinal?.fotos &&
+                    currentApontamento.vistoriaFinal.fotos.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {currentApontamento.vistoriaFinal.fotos.map(
+                          (foto, index) => (
+                            <div key={index} className="relative group">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs bg-neutral-100 dark:bg-neutral-100 text-neutral-900 dark:text-neutral-900 border-neutral-200 pr-6"
+                              >
+                                {foto.isExternal ? (
+                                  <Copy className="h-3 w-3 mr-1" />
+                                ) : (
+                                  <ImageIcon className="h-3 w-3 mr-1" />
+                                )}
+                                {foto.name}
+                                {foto.isFromDatabase && (
+                                  <span className="ml-1 text-xs opacity-70">
+                                    (DB)
+                                  </span>
+                                )}
+                                {foto.isExternal && (
+                                  <span className="ml-1 text-xs opacity-70">
+                                    (Link)
+                                  </span>
+                                )}
+                                {foto.image_serial && (
+                                  <span className="ml-1 text-xs font-bold bg-blue-100 text-blue-800 px-1 rounded">
+                                    {getSimplifiedSerial(foto.image_serial)}
+                                  </span>
+                                )}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFotoFinal(index)}
+                                className="absolute -top-1 -right-1 h-4 w-4 p-0 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remover foto"
+                              >
+                                <Trash2 className="h-2 w-2" />
+                              </Button>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              <Separator className="bg-neutral-200" />
+
+              {/* Observação */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="observacao"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                  >
+                    <AlertCircle className="h-4 w-4 text-neutral-600" />
+                    <span>Análise Técnica</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleCorrectText}
+                      disabled={
+                        isAILoading || !currentApontamento.observacao?.trim()
+                      }
+                      variant="ghost"
+                      size="sm"
+                      className="text-neutral-500 hover:text-foreground h-6 px-2 text-xs"
+                      title="Corrigir ortografia com IA"
+                    >
+                      <Wand2 className="h-3 w-3 mr-1" />
+                      {isAILoading ? 'Corrigindo...' : 'Corrigir'}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        console.log('Debug - Botão Analisar clicado');
+                        console.log('Debug - Estado atual:', {
+                          isAILoading,
+                          fotosInicial:
+                            currentApontamento.vistoriaInicial?.fotos?.length ||
+                            0,
+                          fotosFinal:
+                            currentApontamento.vistoriaFinal?.fotos?.length ||
+                            0,
+                          descricao: currentApontamento.descricao || '',
+                          descricaoLength:
+                            currentApontamento.descricao?.trim().length || 0,
+                        });
+                        handleAIAnalysisForCurrentApontamento();
+                      }}
+                      disabled={false}
+                      variant="default"
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white h-6 px-2 text-xs"
+                      title="Clique para analisar com IA"
+                    >
+                      <Wand2 className="h-3 w-3 mr-1" />
+                      {isAILoading ? 'Analisando...' : 'Analisar'}
+                    </Button>
+                  </div>
+                </div>
+                <Textarea
+                  id="observacao"
+                  placeholder="Sua análise sobre a contestação do locatário..."
+                  value={currentApontamento.observacao || ''}
+                  onChange={(e) =>
+                    setCurrentApontamento((prev) => ({
+                      ...prev,
+                      observacao: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="text-sm bg-white border-neutral-300"
+                />
+              </div>
+
+              {/* Classificação de Responsabilidade (apenas modo análise) */}
+              {documentMode === 'analise' && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="classificacao"
+                    className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
+                  >
+                    <ClipboardList className="h-4 w-4 text-neutral-600" />
+                    <span>Classificação do Item *</span>
+                  </Label>
+                  <Select
+                    value={currentApontamento.classificacao}
+                    onValueChange={(value: 'responsabilidade' | 'revisao') =>
+                      setCurrentApontamento((prev) => ({
+                        ...prev,
+                        classificacao: value,
+                      }))
                     }
                   >
-                    {editingApontamento ? (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar Alterações
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Apontamento
-                      </>
-                    )}
-                  </Button>
-                  {editingApontamento && (
-                    <Button
-                      onClick={handleCancelEdit}
-                      variant="outline"
-                      className="h-9 text-sm"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancelar
-                    </Button>
-                  )}
+                    <SelectTrigger className="bg-white border-neutral-300 text-neutral-900">
+                      <SelectValue placeholder="Selecione a classificação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="responsabilidade">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-neutral-700">■</span>
+                          <span>Responsabilidade do Locatário</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="revisao">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-neutral-600">■</span>
+                          <span>Passível de Revisão</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-neutral-500 italic">
+                    {currentApontamento.classificacao === 'responsabilidade'
+                      ? 'Este item será marcado como responsabilidade do locatário no documento'
+                      : currentApontamento.classificacao === 'revisao'
+                        ? 'Este item será marcado como passível de revisão no documento'
+                        : 'Escolha se este item é responsabilidade do locatário ou se necessita revisão'}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              )}
 
-            {/* Visualização do Documento em Tempo Real */}
-            <Card className="xl:col-span-2 bg-white border-neutral-200">
-              <CardHeader className="pb-4 border-b border-white/10">
-                <CardTitle className="flex items-center space-x-2 text-lg text-neutral-900">
-                  <FileText className="h-5 w-5 text-neutral-600" />
-                  <span>Pré-visualização do Documento</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {apontamentos.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-600">
-                    <div className="w-16 h-16 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FileText className="h-8 w-8 text-neutral-600 opacity-50" />
-                    </div>
-                    <h3 className="font-medium text-neutral-900 mb-2">
-                      Nenhum apontamento
-                    </h3>
-                    <p className="text-sm">
-                      Adicione apontamentos para ver a pré-visualização do
-                      documento
-                    </p>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={
+                    editingApontamento ? handleSaveEdit : handleAddApontamento
+                  }
+                  className="flex-1 h-9 text-sm"
+                  disabled={
+                    !currentApontamento.ambiente ||
+                    !currentApontamento.descricao
+                  }
+                >
+                  {editingApontamento ? (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Alterações
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Apontamento
+                    </>
+                  )}
+                </Button>
+                {editingApontamento && (
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                    className="h-9 text-sm"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Visualização do Documento em Tempo Real */}
+          <Card className="xl:col-span-2 bg-white border-neutral-200">
+            <CardHeader className="pb-4 border-b border-white/10">
+              <CardTitle className="flex items-center space-x-2 text-lg text-neutral-900">
+                <FileText className="h-5 w-5 text-neutral-600" />
+                <span>Pré-visualização do Documento</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {apontamentos.length === 0 ? (
+                <div className="text-center py-12 text-neutral-600">
+                  <div className="w-16 h-16 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="h-8 w-8 text-neutral-600 opacity-50" />
                   </div>
-                ) : documentPreview ? (
-                  <div className="space-y-4">
-                    {/* Controles da Pré-visualização */}
-                    <div className="flex items-center justify-between p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle2 className="h-4 w-4 text-neutral-600" />
-                        <span className="text-sm font-medium text-neutral-900">
-                          Documento Atualizado
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge
-                          variant="outline"
-                          className="text-xs border-neutral-200 text-neutral-900"
-                        >
-                          {apontamentos.length} apontamento
-                          {apontamentos.length !== 1 ? 's' : ''}
-                        </Badge>
-                      </div>
+                  <h3 className="font-medium text-neutral-900 mb-2">
+                    Nenhum apontamento
+                  </h3>
+                  <p className="text-sm">
+                    Adicione apontamentos para ver a pré-visualização do
+                    documento
+                  </p>
+                </div>
+              ) : documentPreview ? (
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Controles da Pré-visualização */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="h-4 w-4 text-neutral-600" />
+                      <span className="text-sm font-medium text-neutral-900">
+                        Documento Atualizado
+                      </span>
                     </div>
-
-                    {/* Pré-visualização do Documento Real */}
-                    <div className="border border-white/10 rounded-lg overflow-hidden">
-                      <div className="bg-white/5 backdrop-blur-sm p-3 border-b border-white/10">
-                        <h4 className="text-sm font-medium text-neutral-900">
-                          Pré-visualização do Documento Final
-                        </h4>
-                      </div>
-                      <DocumentPreviewContent html={documentPreview} />
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-neutral-200 text-neutral-900"
+                      >
+                        {apontamentos.length} apontamento
+                        {apontamentos.length !== 1 ? 's' : ''}
+                      </Badge>
                     </div>
+                  </div>
 
-                    {/* CSS para zoom nas imagens da pré-visualização */}
-                    <style>{`
+                  {/* Pré-visualização do Documento Real */}
+                  <div className="border border-white/10 rounded-lg overflow-hidden">
+                    <div className="bg-white/5 backdrop-blur-sm p-3 border-b border-white/10">
+                      <h4 className="text-sm font-medium text-neutral-900">
+                        Pré-visualização do Documento Final
+                      </h4>
+                    </div>
+                    <DocumentPreviewContent html={documentPreview} />
+                  </div>
+
+                  {/* CSS para zoom nas imagens da pré-visualização */}
+                  <style>{`
                     .document-preview-container img {
                       cursor: zoom-in;
                       transition: opacity 0.2s ease;
@@ -3540,127 +3577,137 @@ está suja
                     }
                   `}</style>
 
-                    {/* Lista de Apontamentos */}
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
-                        <Eye className="h-4 w-4 text-neutral-600" />
-                        <h4 className="text-sm font-medium text-foreground">
-                          Gerenciar Apontamentos ({apontamentos.length})
-                        </h4>
-                      </div>
+                  {/* Lista de Apontamentos */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
+                      <Eye className="h-4 w-4 text-neutral-600" />
+                      <h4 className="text-sm font-medium text-foreground">
+                        Gerenciar Apontamentos ({apontamentos.length})
+                      </h4>
+                    </div>
 
-                      <div className="space-y-3">
-                        {apontamentos.map((apontamento, index) => (
-                          <div
-                            key={apontamento.id}
-                            className="bg-card border border-border rounded-lg p-4 hover:shadow-sm transition-shadow"
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-6 h-6 bg-neutral-200 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-bold text-neutral-700">
-                                    {index + 1}
-                                  </span>
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-sm text-foreground">
-                                    {apontamento.ambiente}
-                                    {apontamento.subtitulo && (
-                                      <span className="text-neutral-500 ml-2">
-                                        - {apontamento.subtitulo}
-                                      </span>
-                                    )}
-                                  </h4>
-                                  <p className="text-xs text-neutral-500 mt-1">
-                                    {apontamento.descricao}
-                                  </p>
-                                  {/* Exibir valores de orçamento se existirem */}
-                                  {documentMode === 'orcamento' &&
-                                    apontamento.valor !== undefined &&
-                                    apontamento.quantidade !== undefined && (
-                                      <div className="mt-2 flex items-center gap-2 text-xs">
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          {apontamento.tipo === 'material'
-                                            ? 'Material'
-                                            : apontamento.tipo === 'mao_de_obra'
-                                              ? 'Mão de Obra'
-                                              : 'Material + M.O.'}
-                                        </Badge>
-                                        <span className="text-neutral-500">
-                                          {apontamento.quantidade}x R${' '}
-                                          {(apontamento.valor || 0).toFixed(2)}
-                                        </span>
-                                        <span className="font-semibold text-neutral-600">
-                                          ={' '}
-                                          {(
-                                            (apontamento.valor || 0) *
-                                            (apontamento.quantidade || 0)
-                                          ).toLocaleString('pt-BR', {
-                                            style: 'currency',
-                                            currency: 'BRL',
-                                          })}
-                                        </span>
-                                      </div>
-                                    )}
-                                </div>
+                    <div className="space-y-3">
+                      {apontamentos.map((apontamento, index) => (
+                        <div
+                          key={apontamento.id}
+                          className="bg-card border border-border rounded-lg p-4 hover:shadow-sm transition-shadow"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-6 h-6 bg-neutral-200 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-neutral-700">
+                                  {index + 1}
+                                </span>
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleEditApontamento(apontamento)
-                                  }
-                                  className="text-neutral-500 hover:text-neutral-700 h-6 w-6 p-0"
-                                  title="Editar apontamento"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleRemoveApontamento(apontamento.id)
-                                  }
-                                  className="text-neutral-500 hover:text-destructive h-6 w-6 p-0"
-                                  title="Remover apontamento"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                              <div>
+                                <h4 className="font-semibold text-sm text-foreground">
+                                  {apontamento.ambiente}
+                                  {apontamento.subtitulo && (
+                                    <span className="text-neutral-500 ml-2">
+                                      - {apontamento.subtitulo}
+                                    </span>
+                                  )}
+                                </h4>
+                                <p className="text-xs text-neutral-500 mt-1">
+                                  {apontamento.descricao}
+                                </p>
+                                {/* Exibir valores de orçamento se existirem */}
+                                {documentMode === 'orcamento' &&
+                                  apontamento.valor !== undefined &&
+                                  apontamento.quantidade !== undefined && (
+                                    <div className="mt-2 flex items-center gap-2 text-xs">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {apontamento.tipo === 'material'
+                                          ? 'Material'
+                                          : apontamento.tipo === 'mao_de_obra'
+                                            ? 'Mão de Obra'
+                                            : 'Material + M.O.'}
+                                      </Badge>
+                                      <span className="text-neutral-500">
+                                        {apontamento.quantidade}x R${' '}
+                                        {(apontamento.valor || 0).toFixed(2)}
+                                      </span>
+                                      <span className="font-semibold text-neutral-600">
+                                        ={' '}
+                                        {(
+                                          (apontamento.valor || 0) *
+                                          (apontamento.quantidade || 0)
+                                        ).toLocaleString('pt-BR', {
+                                          style: 'currency',
+                                          currency: 'BRL',
+                                        })}
+                                      </span>
+                                    </div>
+                                  )}
                               </div>
                             </div>
+                            <div className="flex items-center space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleEditApontamento(apontamento)
+                                }
+                                className="text-neutral-500 hover:text-neutral-700 h-6 w-6 p-0"
+                                title="Editar apontamento"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveApontamento(apontamento.id)
+                                }
+                                className="text-neutral-500 hover:text-destructive h-6 w-6 p-0"
+                                title="Remover apontamento"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-neutral-500">
-                    <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <AlertCircle className="h-6 w-6 opacity-50" />
-                    </div>
-                    <h3 className="font-medium text-foreground mb-2">
-                      Processando documento...
-                    </h3>
-                    <p className="text-sm">
-                      Aguarde enquanto o documento é gerado
-                    </p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-neutral-500">
+                  <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="h-6 w-6 opacity-50" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  <h3 className="font-medium text-foreground mb-2">
+                    Processando documento...
+                  </h3>
+                  <p className="text-sm">
+                    Aguarde enquanto o documento é gerado
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Modo de Exibição em Tela Cheia */}
       {viewerMode && (
         <DocumentViewer
-          htmlContent={viewerHtml}
+          htmlContent={documentPreview}
           onClose={() => setViewerMode(false)}
+          onImageDelete={(imageSrc) => {
+            // Remover imagem do HTML do documento
+            const updatedHtml = removeImageFromHTML(documentPreview, imageSrc);
+            setDocumentPreview(updatedHtml);
+
+            // Mostrar notificação de sucesso
+            toast({
+              title: 'Imagem removida',
+              description: 'A imagem foi removida do documento com sucesso.',
+            });
+          }}
         />
       )}
 
@@ -3678,21 +3725,23 @@ está suja
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header com controles */}
-            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent">
+            <div className="absolute top-0 left-0 right-0 z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-2 sm:p-4 bg-gradient-to-b from-black/70 to-transparent">
               <div className="text-white">
-                <p className="text-sm font-medium">Visualização da Imagem</p>
-                <p className="text-xs opacity-70">
+                <p className="text-xs sm:text-sm font-medium">
+                  Visualização da Imagem
+                </p>
+                <p className="text-xs opacity-70 hidden sm:block">
                   Clique para ampliar/reduzir ou use os botões
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {/* Botão Zoom Out */}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setImageZoom(Math.max(0.5, imageZoom - 0.25))}
-                  className="text-white hover:bg-white/20 h-9 w-9 p-0"
+                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
                   disabled={imageZoom <= 0.5}
                   title="Reduzir zoom"
                 >
@@ -3700,7 +3749,7 @@ está suja
                 </Button>
 
                 {/* Indicador de Zoom */}
-                <span className="text-white text-sm font-medium min-w-[60px] text-center">
+                <span className="text-white text-xs sm:text-sm font-medium min-w-[50px] sm:min-w-[60px] text-center">
                   {Math.round(imageZoom * 100)}%
                 </span>
 
@@ -3709,7 +3758,7 @@ está suja
                   variant="ghost"
                   size="sm"
                   onClick={() => setImageZoom(Math.min(4, imageZoom + 0.25))}
-                  className="text-white hover:bg-white/20 h-9 w-9 p-0"
+                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
                   disabled={imageZoom >= 4}
                   title="Aumentar zoom"
                 >
@@ -3721,7 +3770,7 @@ está suja
                   variant="ghost"
                   size="sm"
                   onClick={() => setImageZoom(1)}
-                  className="text-white hover:bg-white/20 h-9 px-3"
+                  className="text-white hover:bg-white/20 h-8 sm:h-9 px-2 sm:px-3"
                   title="Resetar zoom (100%)"
                 >
                   <span className="text-xs">100%</span>
@@ -3737,7 +3786,7 @@ está suja
                     link.download = `imagem-vistoria-${Date.now()}.png`;
                     link.click();
                   }}
-                  className="text-white hover:bg-white/20 h-9 w-9 p-0"
+                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
                   title="Baixar imagem"
                 >
                   <Download className="h-4 w-4" />
@@ -3751,7 +3800,7 @@ está suja
                     setPreviewImageModal(null);
                     setImageZoom(1);
                   }}
-                  className="text-white hover:bg-white/20 h-9 w-9 p-0"
+                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
                   title="Fechar"
                 >
                   <X className="h-4 w-4" />

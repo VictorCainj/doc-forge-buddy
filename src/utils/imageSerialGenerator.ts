@@ -140,30 +140,47 @@ export async function generateMultipleImageSerials(
  * @param images Array de imagens com seriais
  * @returns Array de imagens únicas (mantém apenas a primeira ocorrência de cada serial)
  */
-export function deduplicateImagesBySerial<T extends { image_serial?: string }>(
-  images: T[]
-): T[] {
+export function deduplicateImagesBySerial<
+  T extends { image_serial?: string; image_url?: string },
+>(images: T[]): T[] {
   const seenSerials = new Set<string>();
+  const seenUrls = new Set<string>();
   const uniqueImages: T[] = [];
   let duplicatesRemoved = 0;
 
   for (const image of images) {
-    if (!image.image_serial) {
-      // Se não tem serial, adiciona mesmo assim (para compatibilidade)
+    // ✅ NOVA LÓGICA: Verificar por serial OU por URL
+    const hasSerial = image.image_serial && image.image_serial.length > 0;
+    const hasUrl = image.image_url && image.image_url.length > 0;
+
+    if (hasSerial) {
+      // Deduplicar por serial
+      if (seenSerials.has(image.image_serial!)) {
+        duplicatesRemoved++;
+        log.warn('Imagem duplicada removida por serial:', {
+          serial: image.image_serial,
+          totalDuplicates: duplicatesRemoved,
+        });
+        continue;
+      }
+      seenSerials.add(image.image_serial!);
+    } else if (hasUrl) {
+      // Fallback: deduplicar por URL se não tem serial
+      if (seenUrls.has(image.image_url!)) {
+        duplicatesRemoved++;
+        log.warn('Imagem duplicada removida por URL:', {
+          url: image.image_url,
+          totalDuplicates: duplicatesRemoved,
+        });
+        continue;
+      }
+      seenUrls.add(image.image_url!);
+    } else {
+      // Se não tem serial nem URL, adicionar mesmo assim
       uniqueImages.push(image);
       continue;
     }
 
-    if (seenSerials.has(image.image_serial)) {
-      duplicatesRemoved++;
-      log.warn('Imagem duplicada removida:', {
-        serial: image.image_serial,
-        totalDuplicates: duplicatesRemoved,
-      });
-      continue;
-    }
-
-    seenSerials.add(image.image_serial);
     uniqueImages.push(image);
   }
 

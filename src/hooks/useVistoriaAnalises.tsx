@@ -27,6 +27,9 @@ export const useVistoriaAnalises = () => {
     new Set()
   );
 
+  // ✅ Cache de imagens processadas para evitar reprocessamento
+  const [processedImagesCache] = useState<Map<string, Set<string>>>(new Map());
+
   // Carregar todas as análises do usuário
   const fetchAnalises = useCallback(async () => {
     if (!user) {
@@ -417,6 +420,13 @@ export const useVistoriaAnalises = () => {
         );
       }
 
+      // ✅ Cache de imagens processadas para esta vistoria
+      const cacheKey = vistoriaId;
+      if (!processedImagesCache.has(cacheKey)) {
+        processedImagesCache.set(cacheKey, new Set());
+      }
+      const processedUrls = processedImagesCache.get(cacheKey)!;
+
       const imagePromises: Promise<unknown>[] = [];
       const externalImageRefs: Array<{
         apontamento_id: string;
@@ -466,6 +476,8 @@ export const useVistoriaAnalises = () => {
               );
             } else if (foto?.isFromDatabase && foto?.url) {
               // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
+              // Registrar no cache
+              processedUrls.add(foto.url);
               // eslint-disable-next-line no-console
               console.log(
                 '  ✓ Imagem do banco preservada (não será re-inserida):',
@@ -533,6 +545,8 @@ export const useVistoriaAnalises = () => {
               );
             } else if (foto?.isFromDatabase && foto?.url) {
               // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
+              // Registrar no cache
+              processedUrls.add(foto.url);
               // eslint-disable-next-line no-console
               console.log(
                 '  ✓ Imagem do banco preservada (não será re-inserida):',

@@ -6,6 +6,7 @@ import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
 import { Reports } from '@/components/admin/Reports';
 import { DataIntegrityChecker } from '@/components/admin/DataIntegrityChecker';
 import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
+import { CleanupDuplicatesPanel } from '@/components/admin/CleanupDuplicatesPanel';
 import {
   Users,
   FileText,
@@ -15,6 +16,7 @@ import {
   BarChart3,
   Database,
   Search,
+  Trash2,
 } from '@/utils/iconMapper';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -152,7 +154,7 @@ const Admin = () => {
 
         {/* Tabs de Funcionalidades */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
             <TabsTrigger value="users">
               <Users className="h-4 w-4 mr-2" />
               Usuários
@@ -164,6 +166,10 @@ const Admin = () => {
             <TabsTrigger value="vistorias">
               <Search className="h-4 w-4 mr-2" />
               Vistorias
+            </TabsTrigger>
+            <TabsTrigger value="cleanup">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Limpeza
             </TabsTrigger>
             <TabsTrigger value="audit">
               <Shield className="h-4 w-4 mr-2" />
@@ -189,6 +195,10 @@ const Admin = () => {
 
           <TabsContent value="vistorias" className="space-y-4">
             <VistoriaAnalisesPanel />
+          </TabsContent>
+
+          <TabsContent value="cleanup" className="space-y-4">
+            <CleanupDuplicatesPanel />
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-4">

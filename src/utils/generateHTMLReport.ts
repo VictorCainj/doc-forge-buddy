@@ -170,35 +170,43 @@ export function generateHTMLReport(data: HTMLReportData): string {
     /* Dashboard */
     .dashboard {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin-bottom: 30px;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 40px;
+      margin-bottom: 40px;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
 
     /* Gráfico de Pizza */
     .pie-section {
       background: white;
       border: 1px solid #E8EAED;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      text-align: center;
     }
 
     .pie-section h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 20px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 30px;
       color: ${colors.text};
+      text-align: center;
+      border-bottom: 3px solid ${colors.primary};
+      padding-bottom: 15px;
     }
 
      .pie-chart {
-       width: 200px;
-       height: 200px;
+       width: 400px;
+       height: 400px;
        border-radius: 50%;
-       margin: 20px auto;
+       margin: 30px auto;
        position: relative;
        background: #E8EAED;
-       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
      }
 
      .pie-chart svg path {
@@ -243,16 +251,19 @@ export function generateHTMLReport(data: HTMLReportData): string {
     .legend {
       background: white;
       border: 1px solid #E8EAED;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     }
 
     .legend h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 20px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 30px;
       color: ${colors.text};
+      text-align: center;
+      border-bottom: 3px solid ${colors.primary};
+      padding-bottom: 15px;
     }
 
     .legend-item {
@@ -300,6 +311,11 @@ export function generateHTMLReport(data: HTMLReportData): string {
       padding: 24px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       margin-bottom: 30px;
+    }
+
+    /* Quebra de página */
+    .page-break-before {
+      page-break-before: always;
     }
 
     .contracts-section h3 {
@@ -504,14 +520,14 @@ export function generateHTMLReport(data: HTMLReportData): string {
        }
 
        .pie-chart {
-         width: 150px !important;
-         height: 150px !important;
+         width: 280px !important;
+         height: 280px !important;
          margin: 10px auto !important;
        }
 
        .pie-chart svg {
-         width: 150px !important;
-         height: 150px !important;
+         width: 280px !important;
+         height: 280px !important;
        }
 
        .legend-item {
@@ -614,6 +630,16 @@ export function generateHTMLReport(data: HTMLReportData): string {
 
       .dashboard {
         grid-template-columns: 1fr;
+      }
+
+      .pie-chart {
+        width: 350px;
+        height: 350px;
+      }
+
+      .pie-chart svg {
+        width: 350px;
+        height: 350px;
       }
 
       .header h1 {
@@ -931,14 +957,14 @@ export function generateHTMLReport(data: HTMLReportData): string {
              }
              
              .pie-chart {
-               width: 150px;
-               height: 150px;
+               width: 280px;
+               height: 280px;
                margin: 10px auto;
              }
              
              .pie-chart svg {
-               width: 150px;
-               height: 150px;
+               width: 280px;
+               height: 280px;
              }
              
              .legend-item {
@@ -986,6 +1012,10 @@ export function generateHTMLReport(data: HTMLReportData): string {
                padding: 15px;
                margin-bottom: 20px;
                page-break-inside: auto;
+             }
+
+             .page-break-before {
+               page-break-before: always !important;
              }
              
              .contracts-section h3 {
@@ -1099,7 +1129,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
              </div>
            </div>
 
-           <div class="contracts-section">
+           <div class="contracts-section page-break-before">
              <h3>Contratos em Desocupação</h3>
              ${contractsTableHTML}
            </div>
@@ -1159,7 +1189,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
   </div>
 
   <!-- Contratos -->
-  <div class="contracts-section">
+  <div class="contracts-section page-break-before">
     <h3>Contratos em Desocupação</h3>
     ${contractsTableHTML}
   </div>
@@ -1198,9 +1228,9 @@ function generatePieChartHTML(
       const endAngle = (endPercent / 100) * 360;
 
       // Calcular coordenadas do arco
-      const radius = 90; // 90px (metade de 180px)
-      const centerX = 100;
-      const centerY = 100;
+      const radius = 180; // 180px (metade de 360px)
+      const centerX = 200;
+      const centerY = 200;
 
       const startX =
         centerX + radius * Math.cos(((startAngle - 90) * Math.PI) / 180);
@@ -1220,13 +1250,23 @@ function generatePieChartHTML(
         'Z',
       ].join(' ');
 
-      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)"/>`;
+      // Calcular posição do label no centro do segmento
+      const midAngle = (startAngle + endAngle) / 2;
+      const labelRadius = radius * 0.6; // Posição mais próxima do centro
+      const labelX =
+        centerX + labelRadius * Math.cos(((midAngle - 90) * Math.PI) / 180);
+      const labelY =
+        centerY + labelRadius * Math.sin(((midAngle - 90) * Math.PI) / 180);
+
+      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)">
+        <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="bold" fill="white" stroke="black" stroke-width="1">${motivo.count.toString().padStart(2, '0')} (${motivo.percentage.toFixed(0)}%)</text>
+      </path>`;
     })
     .join('');
 
   return `
     <div class="pie-chart">
-      <svg width="200" height="200" viewBox="0 0 200 200">
+      <svg width="400" height="400" viewBox="0 0 400 400">
         ${segments}
       </svg>
     </div>
