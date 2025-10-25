@@ -1,0 +1,14 @@
+---
+description: Orientações gerais de arquitetura para o projeto Doc Forge Buddy.
+---
+
+# 📘 Arquitetura do Projeto
+- O projeto segue o padrão **React 18 + TypeScript** com estrutura modular em pastas.
+- Priorizar **componentes funcionais** com hooks.
+- Cada módulo deve ter subpastas: `components/`, `hooks/`, `services/`, `types/`, e `utils/`.
+- **Tailwind + shadcn/ui** são as únicas libs de estilo — evitar CSS puro ou libs adicionais.
+- O estado global deve ser gerenciado exclusivamente via **TanStack React Query**.
+- **React Hook Form + Zod** são obrigatórios para validação de formulários.
+- Navegação deve usar **React Router v6**.
+- Backend e autenticação usam **Supabase**, evitando chamadas diretas a APIs externas sem proxy.
+- Evite lógica de negócio no componente — preferir hooks e services.

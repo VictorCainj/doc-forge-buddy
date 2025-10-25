@@ -1,0 +1,14 @@
+---
+description: Regras para geração de documentos e PDFs.
+---
+
+# 📜 Documentos e PDFs
+- Utilizar **Handlebars** para templates dinâmicos de documentos.
+- Gerar PDFs usando **html2pdf.js** apenas após renderização completa do template.
+- Usar **docx** apenas quando for necessária exportação editável (Word).
+- Templates devem ficar em `/src/templates/` e seguir padrão:
+  - `contrato.handlebars`
+  - `vistoria.handlebars`
+  - `relatorio.handlebars`
+- Validar todos os placeholders antes da renderização.
+- Evitar inline styles dentro dos templates — usar classes Tailwind sempre que possível.

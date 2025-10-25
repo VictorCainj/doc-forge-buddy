@@ -1,0 +1,12 @@
+---
+description: Regras para comunicação com o backend Supabase.
+---
+
+# 🛠 Supabase Backend
+- Toda comunicação deve ser feita via hooks ou services específicos (ex: `useContracts()`, `useVistorias()`).
+- **Nunca expor chaves públicas sensíveis.**
+- Consultas devem ser tipadas com `Database` types gerados pelo Supabase.
+- Usar `from('tabela').select('*').eq(...)` apenas dentro de funções reutilizáveis.
+- Sempre tratar erros (`.throwOnError()` ou `try/catch`).
+- Armazenar arquivos de vistorias e contratos no **Supabase Storage** com nomeação padronizada:
+  - `${userId}_${tipo}_${timestamp}.pdf`

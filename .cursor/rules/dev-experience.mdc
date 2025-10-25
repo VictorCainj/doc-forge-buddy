@@ -1,0 +1,11 @@
+---
+description: Regras para experiência de desenvolvimento no Cursor.
+---
+
+# 💡 Boas Práticas no Cursor
+- Quando pedir código, **sempre solicitar em TypeScript e com comentários explicativos.**
+- Pedir exemplos *reais* com base no contexto do projeto (ex: “formulário de vistoria”, “contrato locatício”).
+- Pedir que o Cursor sempre crie código **com validação Zod** e **estilo Tailwind**.
+- Pedir que o Cursor adicione **tratamento de erros e estados de carregamento** por padrão.
+- Ao refatorar, priorizar clareza e tipagem, não micro-otimização.
+- O Cursor deve **manter a arquitetura existente**, não reinventar o padrão de pastas.

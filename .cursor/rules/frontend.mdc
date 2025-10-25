@@ -1,0 +1,14 @@
+---
+description: Regras para o desenvolvimento frontend (React + Tailwind + shadcn/ui)
+---
+
+# 💅 Frontend Guidelines
+- Sempre usar **TypeScript** fortemente tipado.
+- Componentes devem ser **pequenos, reutilizáveis** e **autoexplicativos**.
+- Evitar *prop drilling* — usar contextos ou React Query quando necessário.
+- **Nomeclatura:** PascalCase para componentes, camelCase para funções e variáveis.
+- UI deve seguir estilo clean: bordas `rounded-2xl`, sombras suaves e espaçamento adequado.
+- Sempre preferir componentes do **shadcn/ui** antes de criar do zero.
+- Evitar lógica complexa dentro do JSX.
+- **Evite estados locais desnecessários**; priorize React Query ou Form State.
+- Utilizar **lazy loading** para rotas e módulos pesados.
