@@ -9,7 +9,6 @@ import {
   Calendar,
   FileText,
   Edit,
-  Sparkles,
 } from '@/utils/iconMapper';
 import { useState } from 'react';
 import { ModalEditarMotivo } from './ModalEditarMotivo';

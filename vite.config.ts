@@ -1,32 +1,109 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Sentry plugin apenas em produção
+    mode === 'production' &&
+      sentryVitePlugin({
+        org: process.env.VITE_SENTRY_ORG,
+        project: process.env.VITE_SENTRY_PROJECT,
+        authToken: process.env.VITE_SENTRY_AUTH_TOKEN,
+        sourcemaps: {
+          assets: './dist/**',
+        },
+      }),
+  ].filter(Boolean) as any,
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-          ],
-          utils: ['date-fns', 'clsx', 'tailwind-merge'],
-          supabase: ['@supabase/supabase-js'],
-          openai: ['openai'],
-          pdf: ['jspdf', 'docx'],
-          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-          markdown: ['react-markdown', 'remark-gfm', 'rehype-raw'],
+        manualChunks: (id) => {
+          // Vendor chunk para React e React DOM
+          if (
+            id.includes('node_modules/react') ||
+            id.includes('node_modules/react-dom')
+          ) {
+            return 'vendor';
+          }
+
+          // UI components (Radix UI)
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'ui';
+          }
+
+          // PDF e documentação - chunks separados mais granulares
+          if (id.includes('html2pdf')) {
+            return 'html2pdf';
+          }
+
+          if (id.includes('html2canvas')) {
+            return 'html2canvas';
+          }
+
+          if (id.includes('jspdf')) {
+            return 'jspdf';
+          }
+
+          if (id.includes('docx')) {
+            return 'docx';
+          }
+
+          // Supabase
+          if (id.includes('@supabase')) {
+            return 'supabase';
+          }
+
+          // OpenAI
+          if (id.includes('openai')) {
+            return 'openai';
+          }
+
+          // Forms
+          if (
+            id.includes('react-hook-form') ||
+            id.includes('@hookform') ||
+            id.includes('zod')
+          ) {
+            return 'forms';
+          }
+
+          // Markdown
+          if (
+            id.includes('react-markdown') ||
+            id.includes('remark') ||
+            id.includes('rehype')
+          ) {
+            return 'markdown';
+          }
+
+          // Utils
+          if (
+            id.includes('date-fns') ||
+            id.includes('clsx') ||
+            id.includes('tailwind-merge')
+          ) {
+            return 'utils';
+          }
+
+          // Charts
+          if (id.includes('chart.js') || id.includes('chartjs')) {
+            return 'charts';
+          }
+
+          // Framer Motion
+          if (id.includes('framer-motion')) {
+            return 'framer';
+          }
         },
       },
     },

@@ -69,11 +69,34 @@ export function useContractBills({
 
     setIsLoading(true);
     try {
-      // Buscar bills existentes
+      // Primeiro, buscar o ID real do contrato na tabela saved_terms
+      // Usar ilike para busca mais flexível e evitar problemas com caracteres especiais
+      const { data: contractDataFromDB, error: contractError } = await supabase
+        .from('saved_terms')
+        .select('id')
+        .eq('document_type', 'contrato')
+        .ilike('form_data->>numeroContrato', contractId)
+        .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
+
+      if (contractError) {
+        console.error('Erro ao buscar contrato:', contractError);
+        toast.error('Erro ao carregar dados do contrato');
+        return;
+      }
+
+      if (!contractDataFromDB?.id) {
+        console.warn('Contrato não encontrado:', contractId);
+        // Não mostrar erro para o usuário, apenas log
+        return;
+      }
+
+      const realContractId = contractDataFromDB.id;
+
+      // Buscar bills existentes usando o ID correto
       const { data: existingBills, error } = await supabase
         .from('contract_bills')
         .select('*')
-        .eq('contract_id', contractId);
+        .eq('contract_id', realContractId);
 
       if (error) throw error;
 
@@ -88,7 +111,7 @@ export function useContractBills({
       // Criar bills faltantes
       if (missingBillTypes.length > 0) {
         const newBills = missingBillTypes.map((billType) => ({
-          contract_id: contractId,
+          contract_id: realContractId,
           bill_type: billType,
           delivered: false,
         }));

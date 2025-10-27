@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContratoDesocupacao } from '@/types/dashboardDesocupacao';
 import {
   analisarMotivo,
-  sugerirMotivo,
   gerarSugestoesKeyword,
   MOTIVO_KEYWORDS,
 } from '@/utils/motivoKeywords';

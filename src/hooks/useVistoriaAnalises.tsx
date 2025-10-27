@@ -11,10 +11,7 @@ import {
   toSupabaseJson,
   UpdateVistoriaAnalisePayload,
 } from '@/types/vistoria.extended';
-import {
-  generateUniqueImageSerial,
-  deduplicateImagesBySerial,
-} from '@/utils/imageSerialGenerator';
+import { generateUniqueImageSerial } from '@/utils/imageSerialGenerator';
 
 export const useVistoriaAnalises = () => {
   const { user } = useAuth();
@@ -446,8 +443,9 @@ export const useVistoriaAnalises = () => {
         );
 
         // Processar fotos da vistoria inicial
-        if (apontamentoData.vistoriaInicial?.fotos) {
-          const fotosIniciais = apontamentoData.vistoriaInicial.fotos;
+        const vistoriaInicial = apontamentoData.vistoriaInicial as any;
+        if (vistoriaInicial?.fotos && Array.isArray(vistoriaInicial.fotos)) {
+          const fotosIniciais = vistoriaInicial.fotos;
           // eslint-disable-next-line no-console
           console.log('Fotos vistoria inicial:', fotosIniciais.length);
 
@@ -466,13 +464,12 @@ export const useVistoriaAnalises = () => {
               // ✅ Nova imagem - fazer upload
               // eslint-disable-next-line no-console
               console.log('  → Upload de nova imagem:', foto.name);
+              const apontamentoId =
+                typeof apontamentoData.id === 'string'
+                  ? apontamentoData.id
+                  : String(apontamentoData.id);
               imagePromises.push(
-                uploadImageToStorage(
-                  foto,
-                  vistoriaId,
-                  apontamentoData.id,
-                  'inicial'
-                )
+                uploadImageToStorage(foto, vistoriaId, apontamentoId, 'inicial')
               );
             } else if (foto?.isFromDatabase && foto?.url) {
               // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
@@ -495,8 +492,12 @@ export const useVistoriaAnalises = () => {
               if (!alreadyExists) {
                 // eslint-disable-next-line no-console
                 console.log('  → Salvando imagem externa:', foto.url);
+                const apontamentoId =
+                  typeof apontamentoData.id === 'string'
+                    ? apontamentoData.id
+                    : String(apontamentoData.id);
                 externalImageRefs.push({
-                  apontamento_id: apontamentoData.id,
+                  apontamento_id: apontamentoId,
                   tipo_vistoria: 'inicial',
                   image_url: foto.url,
                   file_name: foto.name || 'imagem_externa',
@@ -515,8 +516,9 @@ export const useVistoriaAnalises = () => {
         }
 
         // Processar fotos da vistoria final
-        if (apontamentoData.vistoriaFinal?.fotos) {
-          const fotosFinais = apontamentoData.vistoriaFinal.fotos;
+        const vistoriaFinal = apontamentoData.vistoriaFinal as any;
+        if (vistoriaFinal?.fotos && Array.isArray(vistoriaFinal.fotos)) {
+          const fotosFinais = vistoriaFinal.fotos;
           // eslint-disable-next-line no-console
           console.log('Fotos vistoria final:', fotosFinais.length);
 
@@ -535,13 +537,12 @@ export const useVistoriaAnalises = () => {
               // ✅ Nova imagem - fazer upload
               // eslint-disable-next-line no-console
               console.log('  → Upload de nova imagem:', foto.name);
+              const apontamentoId =
+                typeof apontamentoData.id === 'string'
+                  ? apontamentoData.id
+                  : String(apontamentoData.id);
               imagePromises.push(
-                uploadImageToStorage(
-                  foto,
-                  vistoriaId,
-                  apontamentoData.id,
-                  'final'
-                )
+                uploadImageToStorage(foto, vistoriaId, apontamentoId, 'final')
               );
             } else if (foto?.isFromDatabase && foto?.url) {
               // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
@@ -564,8 +565,12 @@ export const useVistoriaAnalises = () => {
               if (!alreadyExists) {
                 // eslint-disable-next-line no-console
                 console.log('  → Salvando imagem externa:', foto.url);
+                const apontamentoId =
+                  typeof apontamentoData.id === 'string'
+                    ? apontamentoData.id
+                    : String(apontamentoData.id);
                 externalImageRefs.push({
-                  apontamento_id: apontamentoData.id,
+                  apontamento_id: apontamentoId,
                   tipo_vistoria: 'final',
                   image_url: foto.url,
                   file_name: foto.name || 'imagem_externa',

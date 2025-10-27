@@ -16,6 +16,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useTermoLocatario } from '@/features/documents/hooks';
 import { ContactModal } from '@/features/documents/components';
 import { splitNames } from '@/utils/nameHelpers';
+import { useContractBillsSync } from '@/hooks/useContractBillsSync';
+import { supabase } from '@/integrations/supabase/client';
+import { ContractBillsStatus } from '@/components/ContractBillsStatus';
 
 interface ContractData {
   numeroContrato: string;
@@ -49,6 +52,100 @@ const TermoLocatario: React.FC = () => {
     validateContactFields,
     handleSaveContactData,
   } = useTermoLocatario(contractData);
+
+  // Sincronizar contas de consumo do banco de dados
+  const {
+    billStatus,
+    isLoading: loadingBills,
+    refreshBillStatus,
+  } = useContractBillsSync({
+    contractId: contractData.numeroContrato,
+  });
+
+  // Sincronizar billStatus com autoFillData
+  React.useEffect(() => {
+    if (!loadingBills) {
+      setAutoFillData((prev) => ({
+        ...prev,
+        tipoTermo: 'locatario', // Definir tipo de termo para exibir campos corretos
+        cpfl: billStatus.energia ? 'SIM' : 'NÃO',
+        statusAgua: billStatus.agua ? 'SIM' : 'NÃO',
+      }));
+    }
+  }, [billStatus, loadingBills]);
+
+  // Callback para sincronizar mudanças de volta ao banco
+  const handleFormDataChange = React.useCallback(
+    async (data: Record<string, string>) => {
+      setAutoFillData(data);
+
+      // Buscar o ID real do contrato primeiro
+      try {
+        const { data: contractDataFromDB, error: contractError } =
+          await supabase
+            .from('saved_terms')
+            .select('id')
+            .eq('document_type', 'contrato')
+            .ilike('form_data->>numeroContrato', contractData.numeroContrato)
+            .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
+
+        if (contractError) {
+          console.error(
+            'Erro ao buscar contrato para sincronização:',
+            contractError
+          );
+          return;
+        }
+
+        if (!contractDataFromDB?.id) {
+          console.warn(
+            'Contrato não encontrado para sincronização:',
+            contractData.numeroContrato
+          );
+          return;
+        }
+
+        const realContractId = contractDataFromDB.id;
+
+        // Sincronizar CPFL (Energia)
+        if (data.cpfl && data.cpfl !== autoFillData.cpfl) {
+          const delivered = data.cpfl === 'SIM';
+          try {
+            await supabase
+              .from('contract_bills')
+              .update({
+                delivered,
+                delivered_at: delivered ? new Date().toISOString() : null,
+              })
+              .eq('contract_id', realContractId)
+              .eq('bill_type', 'energia');
+          } catch (error) {
+            console.error('Erro ao sincronizar CPFL:', error);
+          }
+        }
+
+        // Sincronizar Água
+        if (data.statusAgua && data.statusAgua !== autoFillData.statusAgua) {
+          const delivered = data.statusAgua === 'SIM';
+          try {
+            await supabase
+              .from('contract_bills')
+              .update({
+                delivered,
+                delivered_at: delivered ? new Date().toISOString() : null,
+              })
+              .eq('contract_id', realContractId)
+              .eq('bill_type', 'agua');
+          } catch (error) {
+            console.error('Erro ao sincronizar Água:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Erro geral na sincronização:', error);
+      }
+    },
+    [autoFillData, contractData.numeroContrato]
+  );
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
@@ -611,39 +708,44 @@ Foi entregue {{tipoQuantidadeChaves}}
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header Minimalista */}
-      <div className="bg-white border-b border-neutral-300">
-        <div className="px-8 py-6">
+      <div className="bg-white border-b border-neutral-200 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 onClick={() => navigate('/contratos')}
-                className="gap-2 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 border border-transparent transition-all duration-200"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
               <div className="h-6 w-px bg-neutral-300"></div>
-              <div>
-                <h1 className="text-4xl font-bold text-black mb-2">
-                  Termo de Recebimento de Chaves
-                </h1>
-                <p className="text-lg text-gray-600 leading-relaxed">
-                  Preencha os dados para gerar o termo do locatário
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Key className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-semibold text-neutral-900 tracking-tight mb-1">
+                    Termo de Recebimento de Chaves
+                  </h1>
+                  <p className="text-base text-neutral-600">
+                    Preencha os dados para gerar o termo do locatário
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Informações do Contrato */}
-            <div className="flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-black">
-                <FileText className="h-4 w-4 text-white" color="white" />
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neutral-100 to-white border border-neutral-200 shadow-sm">
+                <FileText className="h-5 w-5 text-neutral-700" />
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-black">
+                <p className="text-sm font-semibold text-neutral-900">
                   Contrato {contractData.numeroContrato}
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-neutral-600">
                   {contractData.enderecoImovel}
                 </p>
               </div>
@@ -659,6 +761,12 @@ Foi entregue {{tipoQuantidadeChaves}}
             {/* Sidebar com Informações do Contrato */}
             <div className="lg:col-span-1">
               <div className="space-y-6">
+                {/* Status das Contas de Consumo */}
+                <ContractBillsStatus
+                  contractId={contractData.numeroContrato}
+                  formData={contractData}
+                />
+
                 {/* Informações do Contrato */}
                 <Card className="bg-white border-neutral-300 shadow-md">
                   <CardContent className="p-5">
@@ -854,7 +962,7 @@ Foi entregue {{tipoQuantidadeChaves}}
                     getTemplate={getTemplate}
                     contractData={contractData as Record<string, string>}
                     initialData={autoFillData}
-                    onFormDataChange={setAutoFillData}
+                    onFormDataChange={handleFormDataChange}
                     hideSaveButton={true}
                   />
                 </CardContent>

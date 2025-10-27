@@ -26,36 +26,28 @@ import {
   RotateCcw,
   Loader2,
   TrendingUp,
+  Download,
+  Building2,
 } from '@/utils/iconMapper';
 import { generateHTMLReport } from '@/utils/generateHTMLReport';
 
-/**
- * Dashboard de Desocupação
- * Exibe todas as desocupações do período selecionado com estatísticas e motivos
- */
 const DashboardDesocupacao = () => {
   const queryClient = useQueryClient();
 
-  // Estado dos filtros
   const [filters, setFilters] = useState<DashboardFilters>({
     periodo: 'mes-atual',
   });
 
-  // Estado para período personalizado
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
 
-  // Estado para mês específico
   const [ano, setAno] = useState(new Date().getFullYear());
   const [mes, setMes] = useState(new Date().getMonth() + 1);
 
-  // Estado para geração de relatório
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Buscar dados usando o hook
   const { data, isLoading, error, refetch } = useDashboardDesocupacao(filters);
 
-  // Aplicar filtros
   const handleApplyFilters = () => {
     const newFilters: DashboardFilters = {
       periodo: filters.periodo,
@@ -63,7 +55,7 @@ const DashboardDesocupacao = () => {
 
     if (filters.periodo === 'periodo-personalizado') {
       if (!dataInicio || !dataFim) {
-        return; // Não aplicar se datas não estão preenchidas
+        return;
       }
       newFilters.dataInicio = dataInicio;
       newFilters.dataFim = dataFim;
@@ -75,7 +67,6 @@ const DashboardDesocupacao = () => {
     setFilters(newFilters);
   };
 
-  // Limpar filtros
   const handleClearFilters = () => {
     setFilters({ periodo: 'mes-atual' });
     setDataInicio('');
@@ -84,14 +75,12 @@ const DashboardDesocupacao = () => {
     setMes(new Date().getMonth() + 1);
   };
 
-  // Gerar Relatório HTML
   const handleGenerateReport = async () => {
     if (!data) return;
 
     setIsGenerating(true);
 
     try {
-      // Gerar HTML
       const htmlContent = generateHTMLReport({
         contratos: data.contratos,
         motivosStats: data.motivosStats,
@@ -99,7 +88,6 @@ const DashboardDesocupacao = () => {
         periodo: stats?.periodo || 'Período não definido',
       });
 
-      // Abrir em nova aba
       const newWindow = window.open('', '_blank');
       if (newWindow) {
         newWindow.document.write(htmlContent);
@@ -116,7 +104,6 @@ const DashboardDesocupacao = () => {
     }
   };
 
-  // Estatísticas calculadas
   const stats = useMemo(() => {
     if (!data) return null;
 
@@ -132,27 +119,28 @@ const DashboardDesocupacao = () => {
     <>
       {isGenerating && <LoadingOverlay message="Gerando relatório..." />}
 
-      <div className="min-h-screen bg-neutral-50">
-        {/* Header */}
-        <div className="bg-white border-b border-neutral-200">
-          <div className="px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-black mb-2">
-                  Dashboard Desocupação
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+        <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          {/* Header Moderno */}
+          <div className="mb-10">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
+                <Building2 className="h-7 w-7 text-white" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight mb-2">
+                  Dashboard de Desocupação
                 </h1>
-                <p className="text-lg text-gray-600 leading-relaxed">
-                  Visualize todos os contratos e analise os motivos de
-                  desocupação
+                <p className="text-neutral-600 text-sm sm:text-base">
+                  Visualize contratos e analise os motivos de desocupação
                 </p>
               </div>
-
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <Button
-                  variant="outline"
-                  size="sm"
                   onClick={() => refetch()}
                   disabled={isLoading}
+                  variant="outline"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -164,152 +152,184 @@ const DashboardDesocupacao = () => {
 
                 {data && data.contratos.length > 0 && (
                   <Button
-                    variant="default"
-                    size="sm"
                     onClick={handleGenerateReport}
                     disabled={isGenerating}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50"
                   >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Ver Relatório
+                    <Download className="h-4 w-4" />
+                    Relatório
                   </Button>
                 )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Filtros */}
-        <div className="px-8 py-6">
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Filter className="h-5 w-5" />
-                <span>Filtros</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Período */}
-                <div className="space-y-2">
-                  <Label htmlFor="periodo">Período</Label>
-                  <Select
-                    value={filters.periodo}
-                    onValueChange={(
-                      value: 'mes-atual' | 'periodo-personalizado'
-                    ) => setFilters({ ...filters, periodo: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mes-atual">Mês Atual</SelectItem>
-                      <SelectItem value="mes-especifico">
-                        Mês Específico
-                      </SelectItem>
-                      <SelectItem value="periodo-personalizado">
-                        Período Personalizado
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Ano (apenas se mês específico) */}
-                {filters.periodo === 'mes-especifico' && (
+            {/* Filtros Modernos */}
+            <Card className="border-neutral-200 shadow-sm">
+              <CardHeader className="border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5 text-neutral-700" />
+                  <span className="text-neutral-900">Filtros</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="ano">Ano</Label>
-                    <Input
-                      type="number"
-                      id="ano"
-                      value={ano}
-                      onChange={(e) => setAno(parseInt(e.target.value))}
-                      min="2020"
-                      max="2030"
-                    />
-                  </div>
-                )}
-
-                {/* Mês (apenas se mês específico) */}
-                {filters.periodo === 'mes-especifico' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="mes">Mês</Label>
-                    <Select
-                      value={mes.toString()}
-                      onValueChange={(value) => setMes(parseInt(value))}
+                    <Label
+                      htmlFor="periodo"
+                      className="text-sm font-medium text-neutral-700"
                     >
-                      <SelectTrigger>
+                      Período
+                    </Label>
+                    <Select
+                      value={filters.periodo}
+                      onValueChange={(value: any) =>
+                        setFilters({ ...filters, periodo: value })
+                      }
+                    >
+                      <SelectTrigger className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">Janeiro</SelectItem>
-                        <SelectItem value="2">Fevereiro</SelectItem>
-                        <SelectItem value="3">Março</SelectItem>
-                        <SelectItem value="4">Abril</SelectItem>
-                        <SelectItem value="5">Maio</SelectItem>
-                        <SelectItem value="6">Junho</SelectItem>
-                        <SelectItem value="7">Julho</SelectItem>
-                        <SelectItem value="8">Agosto</SelectItem>
-                        <SelectItem value="9">Setembro</SelectItem>
-                        <SelectItem value="10">Outubro</SelectItem>
-                        <SelectItem value="11">Novembro</SelectItem>
-                        <SelectItem value="12">Dezembro</SelectItem>
+                        <SelectItem value="mes-atual">Mês Atual</SelectItem>
+                        <SelectItem value="mes-especifico">
+                          Mês Específico
+                        </SelectItem>
+                        <SelectItem value="periodo-personalizado">
+                          Período Personalizado
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                {/* Data Início (apenas se período personalizado) */}
-                {filters.periodo === 'periodo-personalizado' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="dataInicio">Data Início</Label>
-                    <Input
-                      type="date"
-                      value={dataInicio}
-                      onChange={(e) => setDataInicio(e.target.value)}
-                    />
+                  {filters.periodo === 'mes-especifico' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="ano"
+                          className="text-sm font-medium text-neutral-700"
+                        >
+                          Ano
+                        </Label>
+                        <Input
+                          type="number"
+                          id="ano"
+                          value={ano}
+                          onChange={(e) => setAno(parseInt(e.target.value))}
+                          min="2020"
+                          max="2030"
+                          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="mes"
+                          className="text-sm font-medium text-neutral-700"
+                        >
+                          Mês
+                        </Label>
+                        <Select
+                          value={mes.toString()}
+                          onValueChange={(value) => setMes(parseInt(value))}
+                        >
+                          <SelectTrigger className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              'Janeiro',
+                              'Fevereiro',
+                              'Março',
+                              'Abril',
+                              'Maio',
+                              'Junho',
+                              'Julho',
+                              'Agosto',
+                              'Setembro',
+                              'Outubro',
+                              'Novembro',
+                              'Dezembro',
+                            ].map((mes, index) => (
+                              <SelectItem
+                                key={index}
+                                value={(index + 1).toString()}
+                              >
+                                {mes}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+
+                  {filters.periodo === 'periodo-personalizado' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="dataInicio"
+                          className="text-sm font-medium text-neutral-700"
+                        >
+                          Data Início
+                        </Label>
+                        <Input
+                          type="date"
+                          value={dataInicio}
+                          onChange={(e) => setDataInicio(e.target.value)}
+                          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="dataFim"
+                          className="text-sm font-medium text-neutral-700"
+                        >
+                          Data Fim
+                        </Label>
+                        <Input
+                          type="date"
+                          value={dataFim}
+                          onChange={(e) => setDataFim(e.target.value)}
+                          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex items-end gap-2">
+                    <Button
+                      onClick={handleApplyFilters}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200"
+                    >
+                      Aplicar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      className="border-neutral-300 hover:bg-neutral-50"
+                    >
+                      Limpar
+                    </Button>
                   </div>
-                )}
-
-                {/* Data Fim (apenas se período personalizado) */}
-                {filters.periodo === 'periodo-personalizado' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="dataFim">Data Fim</Label>
-                    <Input
-                      type="date"
-                      value={dataFim}
-                      onChange={(e) => setDataFim(e.target.value)}
-                    />
-                  </div>
-                )}
-
-                {/* Botões */}
-                <div className="flex items-end space-x-2">
-                  <Button onClick={handleApplyFilters} className="flex-1">
-                    Aplicar Filtros
-                  </Button>
-                  <Button variant="outline" onClick={handleClearFilters}>
-                    Limpar
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Loading */}
           {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                <p className="text-neutral-600">Carregando dados...</p>
+            <div className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-600 mx-auto mb-4" />
+                <p className="text-neutral-600 text-sm">Carregando dados...</p>
               </div>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <Card className="mb-6 border-red-200 bg-red-50">
+            <Card className="mb-6 border-red-200 bg-red-50 animate-in fade-in-50 duration-300">
               <CardContent className="pt-6">
-                <div className="flex items-center space-x-2 text-red-700">
+                <div className="flex items-center gap-2 text-red-700">
                   <AlertCircle className="h-5 w-5" />
                   <p>Erro ao carregar dados: {error.message}</p>
                 </div>
@@ -319,127 +339,125 @@ const DashboardDesocupacao = () => {
 
           {/* Conteúdo Principal */}
           {data && stats && (
-            <>
+            <div className="space-y-6">
               {/* Cards de Estatísticas */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Users className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-neutral-600">
-                          Total Desocupações
-                        </p>
-                        <p className="text-2xl font-bold text-neutral-900">
-                          {stats.total}
-                        </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-300 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-xl bg-blue-100 group-hover:scale-110 transition-transform duration-300">
+                        <Users className="h-6 w-6 text-blue-700" />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm text-neutral-500 mb-1">
+                      Total Desocupações
+                    </p>
+                    <p className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
+                      {stats.total}
+                    </p>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-amber-100 rounded-lg">
-                        <TrendingUp className="h-6 w-6 text-amber-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-neutral-600">
-                          Motivo Mais Comum
-                        </p>
-                        <p className="text-sm font-medium text-neutral-900 truncate">
-                          {stats.motivoMaisComum}
-                        </p>
+                <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-amber-300 transition-all duration-300 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-xl bg-amber-100 group-hover:scale-110 transition-transform duration-300">
+                        <TrendingUp className="h-6 w-6 text-amber-700" />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm text-neutral-500 mb-1">
+                      Motivo Mais Comum
+                    </p>
+                    <p className="text-lg font-semibold text-neutral-900 group-hover:text-amber-600 transition-colors truncate">
+                      {stats.motivoMaisComum}
+                    </p>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Calendar className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-neutral-600">Período</p>
-                        <p className="text-sm font-medium text-neutral-900">
-                          {stats.periodo}
-                        </p>
+                <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-green-300 transition-all duration-300 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-xl bg-green-100 group-hover:scale-110 transition-transform duration-300">
+                        <Calendar className="h-6 w-6 text-green-700" />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm text-neutral-500 mb-1">Período</p>
+                    <p className="text-lg font-semibold text-neutral-900 group-hover:text-green-600 transition-colors">
+                      {stats.periodo}
+                    </p>
+                  </div>
+                </div>
               </div>
 
+              {/* Gráfico e Lista */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Gráfico de Motivos */}
-                <div className="lg:col-span-1">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <BarChart3 className="h-5 w-5" />
-                        <span>Estatísticas</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {stats.topMotivos.length > 0 ? (
-                        <MotivoDesocupacaoChart
-                          motivosStats={stats.topMotivos}
-                        />
-                      ) : (
-                        <div className="text-center py-8 text-neutral-500">
+                <Card className="border-neutral-200 shadow-sm lg:col-span-1">
+                  <CardHeader className="border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-neutral-700" />
+                      <span className="text-neutral-900">Estatísticas</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {stats.topMotivos.length > 0 ? (
+                      <MotivoDesocupacaoChart motivosStats={stats.topMotivos} />
+                    ) : (
+                      <div className="text-center py-12">
+                        <BarChart3 className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
+                        <p className="text-neutral-500 text-sm">
                           Nenhum motivo encontrado
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                {/* Lista de Contratos */}
-                <div className="lg:col-span-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>Contratos em Desocupação</span>
-                        <Badge variant="secondary">
-                          {data.contratos.length} contratos
-                        </Badge>
+                <Card className="border-neutral-200 shadow-sm lg:col-span-2">
+                  <CardHeader className="border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-neutral-900">
+                        Contratos em Desocupação
                       </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {data.contratos.length > 0 ? (
-                        <div className="space-y-4">
-                          {data.contratos.map((contrato) => (
-                            <ContratoDesocupacaoCard
-                              key={contrato.id}
-                              contrato={contrato}
-                              onMotivoUpdated={() => {
-                                // Invalidar cache para recarregar dados atualizados
-                                queryClient.invalidateQueries({
-                                  queryKey: ['dashboard-desocupacao'],
-                                });
-                              }}
-                            />
-                          ))}
+                      <Badge
+                        variant="outline"
+                        className="border-blue-300 bg-blue-50 text-blue-700"
+                      >
+                        {data.contratos.length} contratos
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {data.contratos.length > 0 ? (
+                      <div className="space-y-4">
+                        {data.contratos.map((contrato) => (
+                          <ContratoDesocupacaoCard
+                            key={contrato.id}
+                            contrato={contrato}
+                            onMotivoUpdated={() => {
+                              queryClient.invalidateQueries({
+                                queryKey: ['dashboard-desocupacao'],
+                              });
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-16">
+                        <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Building2 className="h-8 w-8 text-neutral-400" />
                         </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <AlertCircle className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
-                          <p className="text-neutral-600">
-                            Nenhum contrato encontrado para o período
-                            selecionado
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                        <p className="text-neutral-600">
+                          Nenhum contrato encontrado para o período selecionado
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

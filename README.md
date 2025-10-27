@@ -1,18 +1,23 @@
 # Doc Forge Buddy
 
+![CI](https://github.com/seu-usuario/doc-forge-buddy/workflows/CI/badge.svg)
+![Codecov](https://codecov.io/gh/seu-usuario/doc-forge-buddy/branch/main/graph/badge.svg)
+![License](https://img.shields.io/badge/license-Proprietary-red)
+
 Sistema completo de gestão de contratos imobiliários com geração automatizada de documentos, vistorias detalhadas e análise inteligente via IA.
 
 ## 🚀 Stack Tecnológico
 
 - **Frontend**: React 18 + TypeScript
 - **Build**: Vite 7
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **State Management**: TanStack React Query
-- **Routing**: React Router v6
+- **Styling**: Tailwind CSS + shadcn/ui (Material Design 3)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
+- **State Management**: TanStack React Query + Context API
+- **Routing**: React Router v6 (lazy loading)
 - **Forms**: React Hook Form + Zod
-- **Documents**: Handlebars + html2pdf.js + docx
-- **AI**: OpenAI API
+- **Documents**: Handlebars + html2pdf.js + jspdf + docx
+- **AI**: OpenAI API (via Supabase Edge Functions)
+- **Testing**: Vitest + Testing Library
 
 ## 📦 Instalação
 
@@ -22,9 +27,9 @@ npm install
 
 # Configurar variáveis de ambiente
 # Criar arquivo .env na raiz com:
-# VITE_SUPABASE_URL=sua_url
-# VITE_SUPABASE_ANON_KEY=sua_chave
-# VITE_OPENAI_API_KEY=sua_chave_openai
+VITE_SUPABASE_URL=sua_url
+VITE_SUPABASE_PUBLISHABLE_KEY=sua_chave
+VITE_OPENAI_API_KEY=sua_chave_openai
 
 # Executar em desenvolvimento
 npm run dev
@@ -32,11 +37,14 @@ npm run dev
 # Build para produção
 npm run build
 
+# Build em modo desenvolvimento
+npm run build:dev
+
 # Preview do build
 npm run preview
 
-# Lint
-npm run lint
+# Otimização completa
+npm run optimize
 ```
 
 ## 🏗️ Estrutura do Projeto
@@ -52,10 +60,11 @@ src/
 │   ├── documents/      # Geração de documentos
 │   ├── vistoria/       # Sistema de vistorias
 │   └── reports/        # Relatórios e analytics
-├── hooks/              # Hooks customizados
-├── pages/              # Páginas (lazy loaded)
+├── hooks/              # Hooks customizados (40+ hooks)
+├── pages/              # Páginas (lazy loaded - 17 páginas)
 ├── types/              # Tipos TypeScript
 ├── utils/              # Utilitários
+├── templates/          # Templates de documentos (TypeScript)
 └── integrations/       # Integrações (Supabase, OpenAI)
 ```
 
@@ -70,7 +79,7 @@ src/
 
 ### Geração de Documentos
 
-- Templates Handlebars
+- Templates Handlebars em TypeScript
 - Geração de PDF de alta qualidade
 - Ajuste automático de fonte
 - Preview em tempo real
@@ -98,17 +107,55 @@ src/
 
 ## 🔧 Scripts Disponíveis
 
+### Desenvolvimento
+
 - `npm run dev` - Inicia servidor de desenvolvimento
 - `npm run build` - Build para produção
 - `npm run build:dev` - Build em modo desenvolvimento
 - `npm run preview` - Preview do build de produção
+
+### Qualidade e Testes
+
 - `npm run lint` - Executa ESLint
+- `npm run lint:fix` - Corrige problemas de linting
+- `npm run type-check` - Verificação de tipos TypeScript
+- `npm run test` - Executa testes
+- `npm run test:watch` - Testes em modo watch
+- `npm run test:ui` - Interface de testes
+- `npm run test:coverage` - Cobertura de testes
+
+### Análise e Otimização
+
+- `npm run analyze` - Análise do bundle
+- `npm run optimize` - Otimização completa (lint + type-check + build)
+- `npm run security:audit` - Auditoria de segurança
+
+## 🧪 Testes
+
+O projeto possui configuração completa de testes com Vitest:
+
+```bash
+# Executar todos os testes
+npm run test
+
+# Executar com cobertura
+npm run test:coverage
+
+# Interface visual de testes
+npm run test:ui
+
+# Testes em modo watch
+npm run test:watch
+```
+
+**Cobertura mínima**: 80% statements, 75% branches, 80% functions, 80% lines
 
 ## 📖 Documentação Técnica
 
 Para detalhes sobre a arquitetura do sistema, padrões de código e decisões técnicas, consulte:
 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitetura completa do sistema
+- **[Rules](./.cursor/rules/)** - Guias de desenvolvimento específicos
 
 ## 🔐 Configuração do Supabase
 
@@ -117,7 +164,7 @@ O projeto requer configuração do Supabase com:
 - Autenticação (Email/Password)
 - Database (PostgreSQL com RLS)
 - Storage (Upload de imagens)
-- Edge Functions (opcional)
+- Edge Functions (OpenAI proxy)
 
 ### Migrations
 
@@ -151,29 +198,43 @@ Para mais detalhes, consulte: `supabase/migrations/README_RLS_OPTIMIZATION.md`
 
 ## 🎨 Design System
 
-Baseado em shadcn/ui com componentes customizados:
+Baseado em **Google Material Design 3** com componentes customizados:
 
-- Tema consistente (Tailwind)
-- Componentes acessíveis (a11y)
-- Responsivo (mobile-first)
-- Dark mode ready
+- **Paleta de cores**: `primary`, `success`, `warning`, `error`, `info`, `neutral`
+- **Sistema de bordas**: 4px, 8px, 12px, 16px, 20px
+- **Elevations**: `elevation-1` a `elevation-5`
+- **Componentes acessíveis** (a11y)
+- **Responsivo** (mobile-first)
+- **Dark mode** ready
 
 ## 📈 Performance
 
-- Lazy loading de todas as páginas
-- Code splitting automático
-- React Query para cache inteligente
-- Otimização de imagens
-- Bundle size otimizado
+- **Lazy loading** de todas as páginas (17 páginas)
+- **Code splitting** automático e manual
+- **React Query** para cache inteligente
+- **Bundle otimizado** com chunks específicos
+- **Otimização de imagens**
+- **Service Worker** para cache offline
 
-## 🧪 Testes
+## 🚀 Deploy
+
+### Vercel (Recomendado)
 
 ```bash
-# Executar testes (quando configurado)
-npm run test
+# Deploy automático via Git
+vercel --prod
 
-# Executar com cobertura
-npm run test:coverage
+# Ou usar vercel.json configurado
+```
+
+### Build Manual
+
+```bash
+# Build otimizado
+npm run optimize
+
+# Preview local
+npm run preview
 ```
 
 ## 📝 Convenções de Código
@@ -186,9 +247,10 @@ npm run test:coverage
 ## 🤝 Contribuindo
 
 1. Leia `ARCHITECTURE.md` para entender a estrutura
-2. Siga os padrões de código estabelecidos
+2. Siga os padrões de código estabelecidos nas [Rules](./.cursor/rules/)
 3. Mantenha componentes pequenos e testáveis
 4. Use TypeScript de forma explícita
+5. Execute testes antes de commitar: `npm run test`
 
 ## 📄 Licença
 
@@ -196,5 +258,5 @@ Proprietary - Todos os direitos reservados
 
 ---
 
-**Última atualização**: Outubro de 2025  
+**Última atualização**: Janeiro de 2025  
 **Versão**: 2.0.0

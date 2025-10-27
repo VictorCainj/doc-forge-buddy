@@ -33,43 +33,11 @@ export interface UpdateUserPayload {
 }
 
 /**
- * Tipos para edição em massa
- */
-export type EntityType =
-  | 'contracts'
-  | 'prestadores'
-  | 'vistoria_analises'
-  | 'saved_terms';
-
-export interface MassEditOperation {
-  entity: EntityType;
-  selectedIds: string[];
-  updates: Record<string, any>;
-}
-
-export interface BulkUpdatePayload {
-  table: EntityType;
-  ids: string[];
-  data: Record<string, any>;
-}
-
-export interface BulkUpdateResult {
-  success: boolean;
-  updated: number;
-  failed: number;
-  errors?: Array<{
-    id: string;
-    error: string;
-  }>;
-}
-
-/**
  * Tipos para estatísticas do sistema
  */
 export interface SystemStats {
   totalUsers: number;
   activeUsers: number;
-  totalContracts: number;
   totalPrestadores: number;
   totalVistorias: number;
   totalDocuments: number;

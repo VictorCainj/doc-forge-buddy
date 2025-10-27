@@ -14,7 +14,7 @@ export async function executeImageSerialMigration(): Promise<{
     log.info('🚀 Iniciando migration para adicionar coluna image_serial...');
 
     // 1. Verificar se a coluna já existe
-    const { data: existingColumns, error: columnCheckError } = await supabase
+    const { data: _existingColumns, error: columnCheckError } = await supabase
       .from('vistoria_images')
       .select('image_serial')
       .limit(1);

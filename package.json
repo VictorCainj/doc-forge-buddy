@@ -16,9 +16,23 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:security": "npm audit --audit-level=moderate",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "lighthouse": "lhci autorun",
     "analyze": "npx vite-bundle-visualizer",
     "optimize": "npm run lint:fix && npm run type-check && npm run build",
-    "security:audit": "npm audit --audit-level=moderate"
+    "security:audit": "npm audit --audit-level=moderate",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -37,13 +51,13 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@sentry/react": "^10.22.0",
+    "@sentry/vite-plugin": "^4.5.0",
     "@supabase/supabase-js": "^2.57.0",
     "@tanstack/react-query": "^5.83.0",
     "@types/react-window": "^1.8.8",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
-    "chartjs-node-canvas": "^5.0.0",
-    "chartjs-to-image": "^1.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -73,6 +87,8 @@
   "devDependencies": {
     "@axe-core/react": "^4.10.2",
     "@eslint/js": "^9.32.0",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -88,7 +104,9 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.0.0",
+    "lint-staged": "^16.2.6",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17",

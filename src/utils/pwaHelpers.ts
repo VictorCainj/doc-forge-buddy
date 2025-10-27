@@ -52,7 +52,7 @@ export const registerServiceWorker =
             console.log('🔄 Nova versão disponível!');
 
             // Notificar o usuário
-            // eslint-disable-next-line no-alert, no-restricted-globals
+            // eslint-disable-next-line no-alert
             if (confirm('Nova versão disponível! Deseja atualizar agora?')) {
               newWorker.postMessage({ type: 'SKIP_WAITING' });
               window.location.reload();

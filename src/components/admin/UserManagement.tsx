@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -55,81 +55,87 @@ export const UserManagement = () => {
   return (
     <div className="space-y-6">
       {/* Cabeçalho e Filtros */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-neutral-900">
-            Gestão de Usuários
-          </h2>
-          <p className="text-sm text-neutral-500 mt-1">
-            Gerencie usuários e suas permissões no sistema
-          </p>
-        </div>
-        <Button onClick={handleCreateUser}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Novo Usuário
-        </Button>
-      </div>
-
-      {/* Filtros */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-          <Input
-            placeholder="Buscar por email ou nome..."
-            value={filters.search || ''}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="pl-9"
-          />
+      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-neutral-900">
+              Gestão de Usuários
+            </h2>
+            <p className="text-sm text-neutral-600 mt-1">
+              Gerencie usuários e suas permissões no sistema
+            </p>
+          </div>
+          <button
+            onClick={handleCreateUser}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium"
+          >
+            <UserPlus className="h-4 w-4" />
+            Novo Usuário
+          </button>
         </div>
 
-        <Select
-          value={filters.role || 'all'}
-          onValueChange={(value) =>
-            setFilters({
-              ...filters,
-              role: value === 'all' ? undefined : (value as 'admin' | 'user'),
-            })
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por cargo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os cargos</SelectItem>
-            <SelectItem value="admin">Administradores</SelectItem>
-            <SelectItem value="user">Usuários</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Filtros */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Buscar por email ou nome..."
+              value={filters.search || ''}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            />
+          </div>
 
-        <Select
-          value={
-            filters.is_active === undefined
-              ? 'all'
-              : filters.is_active
-                ? 'active'
-                : 'inactive'
-          }
-          onValueChange={(value) =>
-            setFilters({
-              ...filters,
-              is_active:
-                value === 'all' ? undefined : value === 'active' ? true : false,
-            })
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="inactive">Inativos</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select
+            value={filters.role || 'all'}
+            onValueChange={(value) =>
+              setFilters({
+                ...filters,
+                role: value === 'all' ? undefined : (value as 'admin' | 'user'),
+              })
+            }
+          >
+            <SelectTrigger className="w-[180px] border-neutral-300">
+              <SelectValue placeholder="Filtrar por cargo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os cargos</SelectItem>
+              <SelectItem value="admin">Administradores</SelectItem>
+              <SelectItem value="user">Usuários</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={
+              filters.is_active === undefined
+                ? 'all'
+                : filters.is_active
+                  ? 'active'
+                  : 'inactive'
+            }
+            onValueChange={(value) =>
+              setFilters({
+                ...filters,
+                is_active:
+                  value === 'all' ? undefined : value === 'active' ? true : false,
+              })
+            }
+          >
+            <SelectTrigger className="w-[180px] border-neutral-300">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="inactive">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Tabela de Usuários */}
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -186,27 +192,25 @@ export const UserManagement = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => handleEditUser(user)}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-200"
+                        title="Editar usuário"
                       >
                         <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={() => handleToggleStatus(user)}
                         disabled={toggleStatus.isPending}
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-200 ${
+                          user.is_active
+                            ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:border-red-300'
+                            : 'border-green-200 bg-green-50 text-green-600 hover:bg-green-100 hover:border-green-300'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        title={user.is_active ? 'Desativar usuário' : 'Ativar usuário'}
                       >
-                        <Power
-                          className={`h-4 w-4 ${
-                            user.is_active
-                              ? 'text-error-600'
-                              : 'text-success-600'
-                          }`}
-                        />
-                      </Button>
+                        <Power className="h-4 w-4" />
+                      </button>
                     </div>
                   </TableCell>
                 </TableRow>

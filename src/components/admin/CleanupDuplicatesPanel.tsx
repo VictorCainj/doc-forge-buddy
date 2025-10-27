@@ -107,7 +107,7 @@ export function CleanupDuplicatesPanel() {
             description: `${result.totalImagesRemoved} imagens ${dryRun ? 'seriam removidas' : 'foram removidas'} em ${result.duration}s`,
           });
         }
-      } catch (error) {
+      } catch {
         toast({
           title: 'Erro',
           description: 'Não foi possível processar a limitação',

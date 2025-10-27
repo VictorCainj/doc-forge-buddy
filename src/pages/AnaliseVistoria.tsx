@@ -21,17 +21,14 @@ import {
   ImageIcon,
   CheckCircle,
   AlertTriangle,
-  Eye,
   FileText,
   Edit,
   User,
   MapPin,
   Calendar,
   ClipboardList,
-  Settings,
   Save,
   X,
-  Home,
   AlertCircle,
   CheckCircle2,
   Wand2,
@@ -42,9 +39,8 @@ import {
   Package,
   Wrench,
   Copy,
-  ZoomIn,
-  ZoomOut,
-  Download,
+  Home,
+  Settings,
 } from '@/utils/iconMapper';
 import { useToast } from '@/hooks/use-toast';
 import { useOpenAI } from '@/hooks/useOpenAI';
@@ -64,15 +60,23 @@ import {
 import { BudgetItemType } from '@/types/orcamento';
 import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
-import { DocumentViewer } from '@/components/DocumentViewer';
 import { removeImageFromHTML } from '@/utils/removeImageFromHTML';
-import { useSafeHTML } from '@/hooks/useSafeHTML';
 import {
   deduplicateImagesBySerial,
   getSimplifiedSerial,
 } from '@/utils/imageSerialGenerator';
 import { FixDuplicatesButton } from '@/components/FixDuplicatesButton';
 import { executeImageSerialMigration } from '@/utils/executeMigration';
+import {
+  ClassificationWarningBanner,
+  NoContractAlert,
+  DocumentPreviewContent,
+  AnaliseHeader,
+  ContractInfoCard,
+  PrestadorSelector,
+  ImagePreviewModal,
+  DocumentPreviewCard,
+} from '@/features/analise-vistoria';
 
 interface Contract {
   id: string;
@@ -201,7 +205,6 @@ const AnaliseVistoria = () => {
 
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
   const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
-  const [viewerMode, setViewerMode] = useState(false);
   const [extractionText, setExtractionText] = useState('');
   const [showExtractionPanel, setShowExtractionPanel] = useState(false);
   const [publicDocumentId, setPublicDocumentId] = useState<string | null>(null);
@@ -1649,148 +1652,6 @@ const AnaliseVistoria = () => {
     updatePublicDocument,
   ]);
 
-  // Gerar ou visualizar link público
-  const openViewerMode = async () => {
-    if (apontamentos.length === 0) {
-      toast({
-        title: 'Nenhum apontamento',
-        description:
-          'Adicione pelo menos um apontamento antes de gerar o link.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!selectedContract) {
-      toast({
-        title: 'Contrato não selecionado',
-        description: 'Selecione um contrato antes de gerar o link.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Sempre regenerar o documento com os dados mais recentes
-    try {
-      toast({
-        title: publicDocumentId
-          ? 'Atualizando visualização...'
-          : 'Gerando link público...',
-        description: publicDocumentId
-          ? 'Aguarde enquanto atualizamos o documento com as alterações mais recentes.'
-          : 'Aguarde enquanto criamos o link de visualização.',
-      });
-
-      // Gerar template com dados atuais
-      const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: dadosVistoria.locatario,
-        endereco: dadosVistoria.endereco,
-        dataVistoria: dadosVistoria.dataVistoria,
-        documentMode,
-        prestador:
-          documentMode === 'orcamento' && selectedPrestadorId
-            ? prestadores.find((p) => p.id === selectedPrestadorId)
-            : undefined,
-        apontamentos: apontamentos,
-      });
-
-      let docId: string;
-      let publicUrl: string;
-
-      // Se já existe documento público, atualizar; senão, criar novo
-      if (publicDocumentId) {
-        // Atualizar documento existente
-        const { error: updateError } = await supabase
-          .from('public_documents')
-          .update({
-            html_content: template,
-            title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
-          })
-          .eq('id', publicDocumentId);
-
-        if (updateError) {
-          console.error('Erro ao atualizar documento:', updateError);
-          throw updateError;
-        }
-
-        docId = publicDocumentId;
-        publicUrl = publicDocumentUrl!;
-      } else {
-        // Criar novo documento
-        const { data, error } = await supabase
-          .from('public_documents')
-          .insert({
-            html_content: template,
-            title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
-            contract_id: selectedContract?.id || null,
-            created_by: user?.id,
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Erro ao salvar documento:', error);
-          throw error;
-        }
-
-        docId = data.id;
-        publicUrl = `${window.location.origin}/documento-publico/${data.id}`;
-
-        // Salvar ID e URL no estado
-        setPublicDocumentId(docId);
-        setPublicDocumentUrl(publicUrl);
-
-        // Atualizar vistoria_analises com o public_document_id
-        if (savedAnaliseId) {
-          await supabase
-            .from('vistoria_analises')
-            .update({ public_document_id: docId })
-            .eq('id', savedAnaliseId);
-        }
-      }
-
-      // Copiar para clipboard
-      let copiado = false;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(publicUrl);
-          copiado = true;
-        } else {
-          const textArea = document.createElement('textarea');
-          textArea.value = publicUrl;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-          copiado = true;
-        }
-      } catch (clipboardError) {
-        console.warn('Erro ao copiar para clipboard:', clipboardError);
-      }
-
-      // Abrir em nova aba
-      window.open(publicUrl, '_blank', 'noopener,noreferrer');
-
-      toast({
-        title: publicDocumentId
-          ? 'Visualização atualizada! ✅'
-          : 'Link gerado com sucesso! 🎉',
-        description: copiado
-          ? 'Link copiado para a área de transferência.'
-          : 'Documento aberto em nova aba.',
-      });
-    } catch (error) {
-      console.error('Erro ao processar documento público:', error);
-      toast({
-        title: 'Erro ao processar documento',
-        description: 'Não foi possível processar o documento de visualização.',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const generateDocument = async () => {
     if (apontamentos.length === 0) {
       toast({
@@ -2409,421 +2270,59 @@ const AnaliseVistoria = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      {/* Header Minimalista */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-6xl mx-auto px-3 py-3 sm:px-6 md:px-8 sm:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <h1 className="text-lg sm:text-2xl font-semibold text-neutral-900 truncate">
-                    {isEditMode
-                      ? 'Editar Análise de Vistoria'
-                      : 'Análise de Vistoria'}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="text-xs sm:text-sm border-neutral-200 text-neutral-900"
-                    >
-                      {apontamentos.length} apontamento
-                      {apontamentos.length !== 1 ? 's' : ''}
-                    </Badge>
-                    {savedAnaliseId && (
-                      <Badge
-                        variant="outline"
-                        className="text-xs sm:text-sm border-neutral-300 text-neutral-700"
-                      >
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Salva
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <p className="text-xs sm:text-sm text-neutral-500 mt-1 hidden sm:block">
-                  Sistema de análise comparativa de vistoria de saída
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              {apontamentos.length > 0 && (
-                <ActionButton
-                  icon={Trash2}
-                  label="Limpar Tudo"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllData}
-                  className="w-full sm:w-auto"
-                />
-              )}
-              <ActionButton
-                icon={Save}
-                label={
-                  saving
-                    ? 'Salvando...'
-                    : isEditMode
-                      ? 'Atualizar Análise'
-                      : hasExistingAnalise
-                        ? 'Atualizar Análise Existente'
-                        : 'Salvar Análise'
-                }
-                variant="secondary"
-                size="md"
-                loading={saving}
-                disabled={apontamentos.length === 0 || !selectedContract}
-                onClick={saveAnalysis}
-                className="w-full sm:w-auto"
-              />
-              <ActionButton
-                icon={Eye}
-                label={
-                  publicDocumentId
-                    ? 'Visualizar Exibição'
-                    : 'Gerar Link de Exibição'
-                }
-                variant="ghost"
-                size="md"
-                disabled={apontamentos.length === 0 || !selectedContract}
-                onClick={openViewerMode}
-                className="w-full sm:w-auto"
-              />
-              <ActionButton
-                icon={FileText}
-                label="Gerar Documento"
-                variant="secondary"
-                size="md"
-                disabled={apontamentos.length === 0 || !selectedContract}
-                onClick={generateDocument}
-                className="w-full sm:w-auto"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <AnaliseHeader
+        isEditMode={isEditMode}
+        apontamentosCount={apontamentos.length}
+        savedAnaliseId={savedAnaliseId}
+        saving={saving}
+        hasExistingAnalise={hasExistingAnalise}
+        selectedContract={selectedContract}
+        onClearAll={clearAllData}
+        onSave={saveAnalysis}
+        onGenerateDocument={generateDocument}
+      />
 
       {/* Container Principal com Espaçamento Lateral */}
-      <div className="max-w-6xl mx-auto px-3 py-4 sm:px-6 md:px-8 sm:py-6">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Validação de Contrato Carregado */}
-        {!selectedContract && (
-          <Card className="mb-6 border-neutral-200 bg-neutral-50">
-            <CardContent className="py-4 px-4 sm:py-6 sm:px-6">
-              <div className="flex items-center gap-3 text-neutral-900">
-                <AlertTriangle className="h-5 w-5" />
-                <p className="font-medium text-sm sm:text-base">
-                  Nenhum contrato carregado. Selecione um contrato na página de
-                  Contratos para criar uma análise.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {!selectedContract && <NoContractAlert />}
 
         {/* Informações do Contrato Selecionado */}
         {selectedContract && (
-          <Card className="mb-6 bg-white border-neutral-200">
-            <CardHeader
-              className="pb-4 border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
-              onClick={() => setIsContractInfoExpanded(!isContractInfoExpanded)}
-            >
-              <CardTitle className="flex items-center justify-between text-base sm:text-lg text-neutral-900">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-600" />
-                  <span>Contrato Selecionado</span>
-                </div>
-                {isContractInfoExpanded ? (
-                  <ChevronUp className="h-5 w-5 text-neutral-400" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-neutral-400" />
-                )}
-              </CardTitle>
-            </CardHeader>
-            {isContractInfoExpanded && (
-              <CardContent>
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 sm:p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-5 w-5 text-neutral-600" />
-                        <h3 className="font-semibold text-neutral-900">
-                          Informações do Contrato
-                        </h3>
-                      </div>
-                      {loadingExistingAnalise && (
-                        <Badge
-                          variant="outline"
-                          className="border-neutral-300 text-neutral-700"
-                        >
-                          <div className="h-3 w-3 mr-1 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
-                          Carregando...
-                        </Badge>
-                      )}
-                      {hasExistingAnalise && !loadingExistingAnalise && (
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="default"
-                            className="bg-neutral-600 hover:bg-neutral-700 text-white"
-                          >
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            Análise Existente
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={forceReloadImages}
-                            disabled={loadingExistingAnalise}
-                            className="text-xs"
-                          >
-                            {loadingExistingAnalise ? (
-                              <>
-                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent mr-1" />
-                                Carregando...
-                              </>
-                            ) : (
-                              <>
-                                <RefreshCw className="h-3 w-3 mr-1" />
-                                Recarregar Imagens
-                              </>
-                            )}
-                          </Button>
-                          {savedAnaliseId && (
-                            <FixDuplicatesButton
-                              vistoriaId={savedAnaliseId}
-                              onFixed={(stats) => {
-                                // Recarregar dados após correção
-                                if (stats.duplicatesRemoved > 0) {
-                                  loadAnalysisData();
-                                }
-                              }}
-                            />
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 px-3 text-xs bg-green-100 border-green-300 text-green-800"
-                            onClick={async () => {
-                              const result =
-                                await executeImageSerialMigration();
-                              alert(result.message);
-                              if (result.details?.instructions) {
-                                console.log(
-                                  'Instruções:',
-                                  result.details.instructions
-                                );
-                              }
-                            }}
-                            title="Executar migration da coluna image_serial"
-                          >
-                            🔧 Migration
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-neutral-600" />
-                          <Label className="text-xs sm:text-sm font-medium text-neutral-900">
-                            Locatário
-                          </Label>
-                        </div>
-                        <p className="text-xs sm:text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900 break-words">
-                          {dadosVistoria.locatario}
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-neutral-600" />
-                          <Label className="text-xs sm:text-sm font-medium text-neutral-900">
-                            Endereço
-                          </Label>
-                        </div>
-                        <p className="text-xs sm:text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900 break-words">
-                          {dadosVistoria.endereco}
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-neutral-600" />
-                          <Label className="text-xs sm:text-sm font-medium text-neutral-900">
-                            Data da Vistoria
-                          </Label>
-                        </div>
-                        <p className="text-xs sm:text-sm bg-white p-2 rounded border border-neutral-200 text-neutral-900">
-                          {dadosVistoria.dataVistoria}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Aviso sobre análise existente */}
-                    {hasExistingAnalise && (
-                      <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-100 border border-neutral-200 dark:border-neutral-200 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <AlertTriangle className="h-4 w-4 text-neutral-600" />
-                          <p className="text-sm text-neutral-800 dark:text-neutral-900">
-                            <strong>Atenção:</strong> Já existe uma análise de
-                            vistoria para este contrato. Ao salvar, a análise
-                            existente será atualizada em vez de criar uma nova.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            )}
-          </Card>
+          <ContractInfoCard
+            selectedContract={selectedContract}
+            dadosVistoria={dadosVistoria}
+            hasExistingAnalise={hasExistingAnalise}
+            loadingExistingAnalise={loadingExistingAnalise}
+            onReloadImages={forceReloadImages}
+            onMigration={executeImageSerialMigration}
+            savedAnaliseId={savedAnaliseId}
+          />
         )}
 
         {/* Seleção de Prestador - Apenas no modo orçamento */}
         {documentMode === 'orcamento' && selectedContract && (
-          <Card className="mb-6 bg-white border-neutral-200">
-            <CardHeader className="pb-4 border-b border-neutral-200">
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-neutral-900">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-600" />
-                <span>Selecionar Prestador</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="prestador-select"
-                  className="text-sm font-medium text-neutral-900"
-                >
-                  Prestador de Serviço *
-                </Label>
-                <Select
-                  value={selectedPrestadorId}
-                  onValueChange={setSelectedPrestadorId}
-                >
-                  <SelectTrigger
-                    id="prestador-select"
-                    className="bg-white border-neutral-300 text-neutral-900 focus:border-neutral-500"
-                  >
-                    <SelectValue placeholder="Selecione um prestador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {prestadores.length === 0 ? (
-                      <div className="p-4 text-sm text-neutral-500 text-center">
-                        <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>Nenhum prestador cadastrado</p>
-                      </div>
-                    ) : (
-                      prestadores.map((prestador) => (
-                        <SelectItem key={prestador.id} value={prestador.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {prestador.nome}
-                            </span>
-                            {prestador.especialidade && (
-                              <span className="text-xs text-neutral-500">
-                                {prestador.especialidade}
-                              </span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Informações do Prestador Selecionado */}
-              {selectedPrestadorId &&
-                prestadores.find((p) => p.id === selectedPrestadorId) && (
-                  <div className="bg-gradient-to-r from-success-500/20 to-success-600/20 border border-neutral-200 rounded-lg p-4 space-y-2 backdrop-blur-sm">
-                    {(() => {
-                      const prestador = prestadores.find(
-                        (p) => p.id === selectedPrestadorId
-                      );
-                      if (!prestador) return null;
-                      return (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-neutral-600" />
-                            <span className="text-sm font-semibold">
-                              {prestador.nome}
-                            </span>
-                          </div>
-                          {prestador.cnpj && (
-                            <p className="text-xs text-neutral-500">
-                              CNPJ: {prestador.cnpj}
-                            </p>
-                          )}
-                          {prestador.telefone && (
-                            <p className="text-xs text-neutral-500">
-                              Tel: {prestador.telefone}
-                            </p>
-                          )}
-                          {prestador.email && (
-                            <p className="text-xs text-neutral-500">
-                              Email: {prestador.email}
-                            </p>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-
-              <ActionButton
-                icon={Plus}
-                label="Cadastrar Novo Prestador"
-                variant="secondary"
-                size="md"
-                className="w-full"
-                onClick={() => navigate('/prestadores')}
-              />
-            </CardContent>
-          </Card>
+          <PrestadorSelector
+            selectedPrestadorId={selectedPrestadorId}
+            prestadores={prestadores}
+            onSelectPrestador={setSelectedPrestadorId}
+          />
         )}
 
         {/* Banner de Alerta - Apontamentos Sem Classificação */}
-        {apontamentosSemClassificacao > 0 && documentMode === 'analise' && (
-          <Card className="mb-6 bg-gradient-to-r from-amber-50 to-warning-50 border-amber-300 shadow-md">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <AlertTriangle className="h-8 w-8 text-amber-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-amber-900 mb-1">
-                      Apontamentos Sem Classificação Detectados
-                    </h4>
-                    <p className="text-xs text-amber-700">
-                      <strong>{apontamentosSemClassificacao}</strong>{' '}
-                      apontamento(s) não possuem classificação e{' '}
-                      <strong>não aparecerão no resumo visual</strong> do
-                      documento. Clique no botão ao lado para atribuir todos
-                      como responsabilidade do locatário.
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleMigrarClassificacoes}
-                  variant="secondary"
-                  size="sm"
-                >
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  Corrigir
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {documentMode === 'analise' && <ClassificationWarningBanner />}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Formulário de Novo Apontamento */}
-          <Card className="xl:col-span-1 bg-white border-neutral-200 h-fit self-start">
-            <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="flex items-center justify-between text-neutral-900">
-                <div className="flex items-center space-x-2">
-                  <Plus className="h-5 w-5 text-neutral-600" />
-                  <span>Novo Apontamento</span>
-                </div>
+          <Card className="xl:col-span-1 bg-white border-neutral-100 shadow-sm h-fit self-start">
+            <CardHeader className="pb-4 border-b border-neutral-100">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3 text-neutral-900">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <Plus className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <span className="text-lg font-medium">Novo Apontamento</span>
+                </CardTitle>
                 <Select
                   value={documentMode}
                   onValueChange={(value: 'analise' | 'orcamento') =>
@@ -2838,22 +2337,20 @@ const AnaliseVistoria = () => {
                     <SelectItem value="orcamento">Orçamento</SelectItem>
                   </SelectContent>
                 </Select>
-              </CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="space-y-5">
               {/* Painel de Extração Automática com IA */}
               <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-neutral-300 text-neutral-900 hover:bg-neutral-100"
+                <button
+                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all duration-200 text-sm font-medium"
                   onClick={() => setShowExtractionPanel(!showExtractionPanel)}
                 >
-                  <Wand2 className="h-4 w-4 mr-2" />
+                  <Wand2 className="h-4 w-4" />
                   {showExtractionPanel
                     ? 'Ocultar'
                     : 'Criar Apontamentos com IA'}
-                </Button>
+                </button>
 
                 {showExtractionPanel && (
                   <div className="space-y-3 p-4 bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200 rounded-lg">
@@ -2892,37 +2389,33 @@ está suja
                           className="text-sm bg-white border-neutral-300 focus:border-neutral-500 mb-3 font-mono"
                         />
                         <div className="flex gap-2">
-                          <Button
+                          <button
                             onClick={handleExtractApontamentos}
                             disabled={!extractionText.trim() || isAILoading}
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1"
+                            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isAILoading ? (
                               <>
-                                <div className="h-4 w-4 mr-2 border-2 border-neutral-600 border-t-transparent rounded-full animate-spin" />
+                                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                 Processando...
                               </>
                             ) : (
                               <>
-                                <Wand2 className="h-4 w-4 mr-2" />
+                                <Wand2 className="h-4 w-4" />
                                 Extrair Apontamentos
                               </>
                             )}
-                          </Button>
-                          <Button
+                          </button>
+                          <button
                             onClick={() => {
                               setExtractionText('');
                               setShowExtractionPanel(false);
                             }}
-                            variant="outline"
-                            size="sm"
-                            className="border-neutral-300"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all duration-200 text-sm font-medium"
                           >
-                            <X className="h-4 w-4 mr-2" />
+                            <X className="h-4 w-4" />
                             Cancelar
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -3373,20 +2866,27 @@ está suja
                     <span>Análise Técnica</span>
                   </Label>
                   <div className="flex items-center gap-2">
-                    <Button
+                    <button
                       onClick={handleCorrectText}
                       disabled={
                         isAILoading || !currentApontamento.observacao?.trim()
                       }
-                      variant="ghost"
-                      size="sm"
-                      className="text-neutral-500 hover:text-foreground h-6 px-2 text-xs"
+                      className="inline-flex items-center gap-1 px-3 h-6 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all duration-200 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Corrigir ortografia com IA"
                     >
-                      <Wand2 className="h-3 w-3 mr-1" />
-                      {isAILoading ? 'Corrigindo...' : 'Corrigir'}
-                    </Button>
-                    <Button
+                      {isAILoading ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          <span>Corrigindo...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-3 w-3" />
+                          <span>Corrigir</span>
+                        </>
+                      )}
+                    </button>
+                    <button
                       onClick={() => {
                         console.log('Debug - Botão Analisar clicado');
                         console.log('Debug - Estado atual:', {
@@ -3404,14 +2904,12 @@ está suja
                         handleAIAnalysisForCurrentApontamento();
                       }}
                       disabled={false}
-                      variant="default"
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white h-6 px-2 text-xs"
+                      className="inline-flex items-center gap-1 px-3 h-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 text-xs font-medium"
                       title="Clique para analisar com IA"
                     >
-                      <Wand2 className="h-3 w-3 mr-1" />
+                      <Wand2 className="h-3 w-3" />
                       {isAILoading ? 'Analisando...' : 'Analisar'}
-                    </Button>
+                    </button>
                   </div>
                 </div>
                 <Textarea
@@ -3514,341 +3012,27 @@ está suja
           </Card>
 
           {/* Visualização do Documento em Tempo Real */}
-          <Card className="xl:col-span-2 bg-white border-neutral-200">
-            <CardHeader className="pb-4 border-b border-white/10">
-              <CardTitle className="flex items-center space-x-2 text-lg text-neutral-900">
-                <FileText className="h-5 w-5 text-neutral-600" />
-                <span>Pré-visualização do Documento</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {apontamentos.length === 0 ? (
-                <div className="text-center py-12 text-neutral-600">
-                  <div className="w-16 h-16 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="h-8 w-8 text-neutral-600 opacity-50" />
-                  </div>
-                  <h3 className="font-medium text-neutral-900 mb-2">
-                    Nenhum apontamento
-                  </h3>
-                  <p className="text-sm">
-                    Adicione apontamentos para ver a pré-visualização do
-                    documento
-                  </p>
-                </div>
-              ) : documentPreview ? (
-                <div className="space-y-3 sm:space-y-4">
-                  {/* Controles da Pré-visualização */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle2 className="h-4 w-4 text-neutral-600" />
-                      <span className="text-sm font-medium text-neutral-900">
-                        Documento Atualizado
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        variant="outline"
-                        className="text-xs border-neutral-200 text-neutral-900"
-                      >
-                        {apontamentos.length} apontamento
-                        {apontamentos.length !== 1 ? 's' : ''}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Pré-visualização do Documento Real */}
-                  <div className="border border-white/10 rounded-lg overflow-hidden">
-                    <div className="bg-white/5 backdrop-blur-sm p-3 border-b border-white/10">
-                      <h4 className="text-sm font-medium text-neutral-900">
-                        Pré-visualização do Documento Final
-                      </h4>
-                    </div>
-                    <DocumentPreviewContent html={documentPreview} />
-                  </div>
-
-                  {/* CSS para zoom nas imagens da pré-visualização */}
-                  <style>{`
-                    .document-preview-container img {
-                      cursor: zoom-in;
-                      transition: opacity 0.2s ease;
-                    }
-                    .document-preview-container img:hover {
-                      opacity: 0.8;
-                    }
-                  `}</style>
-
-                  {/* Lista de Apontamentos */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
-                      <Eye className="h-4 w-4 text-neutral-600" />
-                      <h4 className="text-sm font-medium text-foreground">
-                        Gerenciar Apontamentos ({apontamentos.length})
-                      </h4>
-                    </div>
-
-                    <div className="space-y-3">
-                      {apontamentos.map((apontamento, index) => (
-                        <div
-                          key={apontamento.id}
-                          className="bg-card border border-border rounded-lg p-4 hover:shadow-sm transition-shadow"
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-6 h-6 bg-neutral-200 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-neutral-700">
-                                  {index + 1}
-                                </span>
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-sm text-foreground">
-                                  {apontamento.ambiente}
-                                  {apontamento.subtitulo && (
-                                    <span className="text-neutral-500 ml-2">
-                                      - {apontamento.subtitulo}
-                                    </span>
-                                  )}
-                                </h4>
-                                <p className="text-xs text-neutral-500 mt-1">
-                                  {apontamento.descricao}
-                                </p>
-                                {/* Exibir valores de orçamento se existirem */}
-                                {documentMode === 'orcamento' &&
-                                  apontamento.valor !== undefined &&
-                                  apontamento.quantidade !== undefined && (
-                                    <div className="mt-2 flex items-center gap-2 text-xs">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {apontamento.tipo === 'material'
-                                          ? 'Material'
-                                          : apontamento.tipo === 'mao_de_obra'
-                                            ? 'Mão de Obra'
-                                            : 'Material + M.O.'}
-                                      </Badge>
-                                      <span className="text-neutral-500">
-                                        {apontamento.quantidade}x R${' '}
-                                        {(apontamento.valor || 0).toFixed(2)}
-                                      </span>
-                                      <span className="font-semibold text-neutral-600">
-                                        ={' '}
-                                        {(
-                                          (apontamento.valor || 0) *
-                                          (apontamento.quantidade || 0)
-                                        ).toLocaleString('pt-BR', {
-                                          style: 'currency',
-                                          currency: 'BRL',
-                                        })}
-                                      </span>
-                                    </div>
-                                  )}
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleEditApontamento(apontamento)
-                                }
-                                className="text-neutral-500 hover:text-neutral-700 h-6 w-6 p-0"
-                                title="Editar apontamento"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleRemoveApontamento(apontamento.id)
-                                }
-                                className="text-neutral-500 hover:text-destructive h-6 w-6 p-0"
-                                title="Remover apontamento"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-neutral-500">
-                  <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="h-6 w-6 opacity-50" />
-                  </div>
-                  <h3 className="font-medium text-foreground mb-2">
-                    Processando documento...
-                  </h3>
-                  <p className="text-sm">
-                    Aguarde enquanto o documento é gerado
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <DocumentPreviewCard
+            apontamentos={apontamentos}
+            documentPreview={documentPreview}
+            documentMode={documentMode}
+            onEdit={handleEditApontamento}
+            onRemove={handleRemoveApontamento}
+          />
         </div>
       </div>
 
-      {/* Modo de Exibição em Tela Cheia */}
-      {viewerMode && (
-        <DocumentViewer
-          htmlContent={documentPreview}
-          onClose={() => setViewerMode(false)}
-          onImageDelete={(imageSrc) => {
-            // Remover imagem do HTML do documento
-            const updatedHtml = removeImageFromHTML(documentPreview, imageSrc);
-            setDocumentPreview(updatedHtml);
-
-            // Mostrar notificação de sucesso
-            toast({
-              title: 'Imagem removida',
-              description: 'A imagem foi removida do documento com sucesso.',
-            });
-          }}
-        />
-      )}
-
       {/* Modal de Imagem da Pré-visualização */}
       {previewImageModal && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black bg-opacity-95 flex items-center justify-center"
-          onClick={() => {
+        <ImagePreviewModal
+          imageUrl={previewImageModal}
+          onClose={() => {
             setPreviewImageModal(null);
             setImageZoom(1);
           }}
-        >
-          <div
-            className="relative w-full h-full flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header com controles */}
-            <div className="absolute top-0 left-0 right-0 z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-2 sm:p-4 bg-gradient-to-b from-black/70 to-transparent">
-              <div className="text-white">
-                <p className="text-xs sm:text-sm font-medium">
-                  Visualização da Imagem
-                </p>
-                <p className="text-xs opacity-70 hidden sm:block">
-                  Clique para ampliar/reduzir ou use os botões
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1 sm:gap-2">
-                {/* Botão Zoom Out */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImageZoom(Math.max(0.5, imageZoom - 0.25))}
-                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
-                  disabled={imageZoom <= 0.5}
-                  title="Reduzir zoom"
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-
-                {/* Indicador de Zoom */}
-                <span className="text-white text-xs sm:text-sm font-medium min-w-[50px] sm:min-w-[60px] text-center">
-                  {Math.round(imageZoom * 100)}%
-                </span>
-
-                {/* Botão Zoom In */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImageZoom(Math.min(4, imageZoom + 0.25))}
-                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
-                  disabled={imageZoom >= 4}
-                  title="Aumentar zoom"
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-
-                {/* Botão Reset Zoom */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImageZoom(1)}
-                  className="text-white hover:bg-white/20 h-8 sm:h-9 px-2 sm:px-3"
-                  title="Resetar zoom (100%)"
-                >
-                  <span className="text-xs">100%</span>
-                </Button>
-
-                {/* Botão Download */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = previewImageModal;
-                    link.download = `imagem-vistoria-${Date.now()}.png`;
-                    link.click();
-                  }}
-                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
-                  title="Baixar imagem"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-
-                {/* Botão Fechar */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setPreviewImageModal(null);
-                    setImageZoom(1);
-                  }}
-                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 p-0"
-                  title="Fechar"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Imagem */}
-            <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-              <img
-                src={previewImageModal}
-                alt="Visualização em tamanho ampliado"
-                className="object-contain transition-transform duration-200 cursor-move shadow-2xl rounded-lg"
-                style={{
-                  transform: `scale(${imageZoom})`,
-                  maxWidth: imageZoom === 1 ? '100%' : 'none',
-                  maxHeight: imageZoom === 1 ? '100%' : 'none',
-                  imageRendering: imageZoom > 1.5 ? 'crisp-edges' : 'auto',
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Toggle entre zoom 1 e 2
-                  setImageZoom(imageZoom === 1 ? 2 : 1);
-                }}
-              />
-            </div>
-
-            {/* Dica de uso */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-4 py-2 rounded-full">
-              <p>
-                Clique na imagem para ampliar/reduzir ou use os controles acima
-              </p>
-            </div>
-          </div>
-        </div>
+        />
       )}
     </div>
-  );
-};
-
-// Componente para renderizar preview de forma segura
-const DocumentPreviewContent = ({ html }: { html: string }) => {
-  const safeHTML = useSafeHTML(html);
-  return (
-    <div
-      className="max-h-96 overflow-y-auto bg-white document-preview-container"
-      dangerouslySetInnerHTML={{ __html: safeHTML }}
-    />
   );
 };
 

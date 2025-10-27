@@ -21,7 +21,7 @@ import { PersonManager } from '@/components/ui/person-manager';
 import { splitNames } from '@/utils/nameHelpers';
 import { FormStep, FormField } from '@/hooks/use-form-wizard';
 import { useContractWizard } from '../hooks/useContractWizard';
-import { ChevronLeft, ChevronRight } from '@/utils/iconMapper';
+import { ChevronLeft, ChevronRight, Building2 } from '@/utils/iconMapper';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -61,8 +61,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
   const [fiadores, setFiadores] = useState<Person[]>([]);
 
   // Estados para detectar scroll
-  const [hasScroll, setHasScroll] = useState(false);
-  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+  const [_hasScroll, setHasScroll] = useState(false);
+  const [_isScrolledToBottom, setIsScrolledToBottom] = useState(false);
 
   // Estado e ref para detectar scroll
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -295,34 +295,41 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl p-0 bg-white border border-neutral-200 shadow-elevation-4 overflow-visible rounded-xl">
-        {/* Header Google Material Design 3 - Ultra Compacto */}
-        <DialogHeader className="relative p-3 border-b border-neutral-200 bg-white">
-          <DialogTitle className="text-xl font-medium text-neutral-900 text-center relative z-10">
-            {title}
-          </DialogTitle>
+      <DialogContent className="max-w-4xl p-0 bg-gradient-to-br from-neutral-50 via-white to-neutral-50 border border-neutral-200 shadow-2xl overflow-visible rounded-2xl">
+        {/* Header Google Material Design 3 - Professional */}
+        <DialogHeader className="relative px-6 py-5 border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Building2 className="h-5 w-5 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-semibold text-neutral-900 tracking-tight">
+              {title}
+            </DialogTitle>
+          </div>
 
-          {/* Progress bar - Tons Neutros */}
-          <div className="mt-2 relative">
-            <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+          {/* Progress bar - Tons Neutros com gradiente */}
+          <div className="mt-3 relative">
+            <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-neutral-700"
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-600"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
               />
             </div>
-            <div className="flex justify-between mt-1.5 text-xs text-neutral-700">
+            <div className="flex justify-between mt-2 text-sm text-neutral-600">
               <span className="font-medium">
                 Etapa {currentStep + 1} de {steps.length}
               </span>
-              <span className="font-medium">{Math.round(progress)}%</span>
+              <span className="font-semibold text-blue-600">
+                {Math.round(progress)}%
+              </span>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Stage indicators - Google Material Design - Ultra Compacto */}
-        <div className="flex items-center justify-center gap-1 p-2 bg-neutral-50 border-b border-neutral-200">
+        {/* Stage indicators - Google Material Design - Professional */}
+        <div className="flex items-center justify-center gap-2 px-6 py-4 bg-white border-b border-neutral-200">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
@@ -340,15 +347,6 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                   return value !== undefined && value.trim() !== '';
                 });
 
-                // Debug log
-                if (index <= currentStep) {
-                  console.log(`Etapa ${step.title}:`, {
-                    requiredFields: requiredFields.length,
-                    allFieldsFilled,
-                    isCompleted: index < currentStep || allFieldsFilled,
-                  });
-                }
-
                 return allFieldsFilled;
               })();
 
@@ -358,37 +356,33 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 onClick={() => handleStepClick(index)}
                 className={cn(
                   'relative group transition-all duration-200',
-                  'flex flex-col items-center gap-0.5 p-1.5 rounded-md',
-                  isActive && 'bg-neutral-50 border border-neutral-300',
-                  !isActive &&
-                    'border border-transparent hover:border-neutral-300 hover:bg-white',
-                  isCompleted && 'opacity-70'
+                  'flex flex-col items-center gap-1.5 p-2 rounded-lg',
+                  isActive && 'bg-blue-50',
+                  !isActive && 'hover:bg-neutral-50'
                 )}
               >
                 {/* Ícone */}
                 <div
                   className={cn(
-                    'relative w-7 h-7 flex items-center justify-center transition-all duration-200 shadow-sm',
+                    'relative w-9 h-9 flex items-center justify-center transition-all duration-200',
                     isActive &&
-                      'bg-white border-2 border-neutral-800 rounded-md',
-                    !isActive && isCompleted && 'bg-green-500 rounded-full',
+                      'bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg shadow-blue-500/20',
+                    !isActive &&
+                      isCompleted &&
+                      'bg-green-500 rounded-full shadow-md',
                     !isActive &&
                       !isCompleted &&
-                      'bg-white border border-neutral-300 rounded-md'
+                      'bg-white border-2 border-neutral-300 rounded-lg hover:border-neutral-400'
                   )}
-                  style={{
-                    backgroundColor:
-                      !isActive && isCompleted ? '#34A853' : undefined,
-                  }}
                 >
-                  {isCompleted ? (
-                    <Check className="h-4 w-4 text-white stroke-2" />
+                  {isCompleted && !isActive ? (
+                    <Check className="h-5 w-5 text-white stroke-2" />
                   ) : (
                     Icon && (
                       <Icon
                         className={cn(
-                          'h-4 w-4',
-                          isActive && 'text-neutral-900',
+                          'h-5 w-5',
+                          isActive && 'text-white',
                           !isActive && 'text-neutral-600'
                         )}
                       />
@@ -399,9 +393,9 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 {/* Label */}
                 <span
                   className={cn(
-                    'text-[10px] font-medium transition-colors duration-200',
-                    isActive && 'text-neutral-900',
-                    !isActive && 'text-neutral-700'
+                    'text-xs font-medium transition-colors duration-200',
+                    isActive && 'text-blue-600',
+                    !isActive && 'text-neutral-600'
                   )}
                 >
                   {step.title.split(' ')[0]}
@@ -411,12 +405,9 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 {index < steps.length - 1 && (
                   <div
                     className={cn(
-                      'absolute top-5 left-full w-7 h-0.5 transition-all duration-200',
-                      isCompleted ? 'bg-green-500' : 'bg-neutral-300'
+                      'absolute top-[25px] left-full w-8 h-0.5 transition-all duration-200 -z-10',
+                      index < currentStep ? 'bg-green-500' : 'bg-neutral-300'
                     )}
-                    style={{
-                      backgroundColor: isCompleted ? '#34A853' : '#DADCE0',
-                    }}
                   />
                 )}
               </button>
@@ -440,12 +431,12 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               }}
               className="p-3 space-y-3"
             >
-              {/* Step info - Google Material Design - Ultra Compacto */}
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-medium text-neutral-900">
+              {/* Step info - Google Material Design - Professional */}
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-semibold text-neutral-900">
                   {currentStepData.title}
                 </h3>
-                <p className="text-xs text-neutral-700 mt-0.5">
+                <p className="text-sm text-neutral-600 mt-1">
                   {currentStepData.description}
                 </p>
               </div>
@@ -552,52 +543,52 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Footer Google Material Design - Ultra Compacto */}
-        <div className="flex items-center justify-between p-3 border-t border-neutral-200 bg-white">
-          {/* Botão Anterior - Ultra Compacto */}
+        {/* Footer Google Material Design - Professional */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 bg-white">
+          {/* Botão Anterior - Professional */}
           <Button
             onClick={handlePrevious}
             disabled={!canGoPrevious}
             variant="ghost"
             className={cn(
-              'gap-1.5 text-neutral-700 text-sm px-2 py-1.5',
-              'hover:bg-neutral-100',
+              'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-neutral-700 text-sm font-medium',
+              'border border-neutral-300 bg-white hover:bg-neutral-50 hover:border-neutral-400',
               'disabled:opacity-0 disabled:pointer-events-none',
               'transition-all duration-200'
             )}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-4 w-4" />
             Anterior
           </Button>
 
           {/* Indicador de progresso no centro */}
-          <div className="flex items-center gap-1.5 text-xs text-neutral-700">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <span className="font-medium">
               {currentStep + 1} / {steps.length}
             </span>
           </div>
 
-          {/* Botão Próximo ou Finalizar - Tons Neutros - Ultra Compacto */}
+          {/* Botão Próximo ou Finalizar - Professional */}
           {currentStep === steps.length - 1 ? (
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid || isSubmitting}
               className={cn(
-                'gap-1.5 bg-neutral-800 text-white px-3 py-1.5 text-sm',
-                'hover:bg-neutral-900',
-                'shadow-elevation-1 hover:shadow-elevation-2',
+                'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium',
+                'bg-blue-600 hover:bg-blue-700',
+                'shadow-sm hover:shadow-md',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'transition-all duration-200'
               )}
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Processando...
                 </>
               ) : (
                 <>
-                  <Check className="h-3.5 w-3.5" color="white" />
+                  <Check className="h-4 w-4" color="white" />
                   {submitButtonText}
                 </>
               )}
@@ -607,15 +598,15 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               onClick={handleNext}
               disabled={!isStepValid}
               className={cn(
-                'gap-1.5 bg-neutral-800 text-white px-3 py-1.5 text-sm',
-                'hover:bg-neutral-900',
-                'shadow-elevation-1 hover:shadow-elevation-2',
+                'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium',
+                'bg-blue-600 hover:bg-blue-700',
+                'shadow-sm hover:shadow-md',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'transition-all duration-200'
               )}
             >
               Próximo
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           )}
         </div>

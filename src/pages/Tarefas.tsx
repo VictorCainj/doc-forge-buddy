@@ -14,7 +14,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, FileText, Loader2, Wand2, Search } from '@/utils/iconMapper';
+import {
+  Plus,
+  FileText,
+  Loader2,
+  Wand2,
+  Search,
+  ClipboardList,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+} from '@/utils/iconMapper';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskModal } from '@/components/TaskModal';
 import { AITaskCreationModal } from '@/components/AITaskCreationModal';
@@ -191,7 +201,6 @@ const Tarefas = () => {
   };
 
   const handleEditAITask = (taskData: CreateTaskInput) => {
-    // Simular uma tarefa editável com os dados gerados pela IA
     const mockTask: Task = {
       id: 'temp',
       user_id: '',
@@ -208,12 +217,14 @@ const Tarefas = () => {
   };
 
   const handleGenerateSummary = async () => {
-    const todayTasks = getTodayTasks();
+    const pendingTasks = tasks.filter(
+      (task) => task.status === 'not_started' || task.status === 'in_progress'
+    );
 
-    if (todayTasks.length === 0) {
+    if (pendingTasks.length === 0) {
       toast({
-        title: 'Nenhuma tarefa hoje',
-        description: 'Não há tarefas registradas para hoje.',
+        title: 'Nenhuma tarefa pendente',
+        description: 'Não há tarefas pendentes para resumir.',
         variant: 'destructive',
       });
       return;
@@ -225,13 +236,14 @@ const Tarefas = () => {
 
     try {
       const userName = profile?.full_name || 'Gestor';
-      const summary = await generateDailySummary(todayTasks, userName);
+      const summary = await generateDailySummary(pendingTasks, userName);
       setDailySummary(summary);
     } catch (error) {
       console.error('Erro ao gerar resumo:', error);
       toast({
         title: 'Erro ao gerar resumo',
-        description: 'Não foi possível gerar o resumo do dia. Tente novamente.',
+        description:
+          'Não foi possível gerar o resumo das tarefas pendentes. Tente novamente.',
         variant: 'destructive',
       });
       setIsSummaryModalOpen(false);
@@ -242,9 +254,9 @@ const Tarefas = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary-500 mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-sm text-neutral-600">Carregando tarefas...</p>
         </div>
       </div>
@@ -252,50 +264,64 @@ const Tarefas = () => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Header */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-semibold text-neutral-900">
-                Tarefas
-              </h1>
-              <p className="text-sm text-neutral-500 mt-1">
-                Gerencie suas tarefas e acompanhe o progresso das atividades
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header Moderno */}
+        <div className="mb-10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <ClipboardList className="h-7 w-7 text-white" />
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleGenerateSummary}>
-                <FileText className="h-4 w-4 mr-2" />
-                Resumir Dia
-              </Button>
-              <Button variant="secondary" onClick={handleAITask}>
-                <Wand2 className="h-4 w-4 mr-2" />
-                Criar com IA
-              </Button>
-              <Button onClick={handleNewTask}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Tarefa
-              </Button>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
+                Minhas Tarefas
+              </h1>
+              <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
+                Organize e acompanhe suas atividades diárias
+              </p>
             </div>
           </div>
 
           {/* Barra de busca */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+          <div className="relative max-w-2xl mb-6">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
             <Input
               type="text"
               placeholder="Buscar tarefas por título, descrição, subtítulo ou observação..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 rounded-xl border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
             />
           </div>
-        </div>
-      </div>
 
-      <div className="px-8 py-6">
+          {/* Botões de Ação */}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={handleNewTask}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <Plus className="h-4 w-4" />
+              Nova Tarefa
+            </Button>
+            <Button
+              onClick={handleAITask}
+              variant="outline"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+            >
+              <Wand2 className="h-4 w-4" />
+              Criar com IA
+            </Button>
+            <Button
+              onClick={handleGenerateSummary}
+              variant="outline"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+            >
+              <FileText className="h-4 w-4" />
+              Resumir Pendentes
+            </Button>
+          </div>
+        </div>
+
         {/* Card de Progresso e Conquistas */}
         <div className="mb-6">
           <UserStatsCard />
@@ -303,89 +329,136 @@ const Tarefas = () => {
 
         {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-500">Total</p>
-                  <p className="text-2xl font-semibold text-neutral-900">
-                    {taskCounts.all}
-                  </p>
+          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-neutral-100 group-hover:scale-110 transition-transform duration-300">
+                  <ClipboardList className="h-5 w-5 text-neutral-700" />
                 </div>
-                <Badge variant="default">Todas</Badge>
+                <Badge variant="outline" className="border-neutral-300">
+                  Todas
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-sm text-neutral-500 mb-1">Total</p>
+              <p className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
+                {taskCounts.all}
+              </p>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-500">Não Iniciadas</p>
-                  <p className="text-2xl font-semibold text-neutral-900">
-                    {taskCounts.not_started}
-                  </p>
+          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-neutral-100 group-hover:scale-110 transition-transform duration-300">
+                  <Clock className="h-5 w-5 text-neutral-700" />
                 </div>
-                <Badge variant="default">Pendentes</Badge>
+                <Badge variant="outline" className="border-neutral-300">
+                  Pendentes
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-sm text-neutral-500 mb-1">Não Iniciadas</p>
+              <p className="text-3xl font-bold text-neutral-900 group-hover:text-neutral-700 transition-colors">
+                {taskCounts.not_started}
+              </p>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-500">Em Andamento</p>
-                  <p className="text-2xl font-semibold text-neutral-900">
-                    {taskCounts.in_progress}
-                  </p>
+          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-blue-100 group-hover:scale-110 transition-transform duration-300">
+                  <AlertCircle className="h-5 w-5 text-blue-700" />
                 </div>
-                <Badge variant="warning">Ativas</Badge>
+                <Badge
+                  variant="outline"
+                  className="border-blue-300 bg-blue-50 text-blue-700"
+                >
+                  Ativas
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-sm text-neutral-500 mb-1">Em Andamento</p>
+              <p className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
+                {taskCounts.in_progress}
+              </p>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-500">Concluídas</p>
-                  <p className="text-2xl font-semibold text-neutral-900">
-                    {taskCounts.completed}
-                  </p>
+          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-green-100 group-hover:scale-110 transition-transform duration-300">
+                  <CheckCircle2 className="h-5 w-5 text-green-700" />
                 </div>
-                <Badge variant="success">Finalizadas</Badge>
+                <Badge
+                  variant="outline"
+                  className="border-green-300 bg-green-50 text-green-700"
+                >
+                  Finalizadas
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-sm text-neutral-500 mb-1">Concluídas</p>
+              <p className="text-3xl font-bold text-neutral-900 group-hover:text-green-600 transition-colors">
+                {taskCounts.completed}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Tabs e Lista de Tarefas */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList>
-            <TabsTrigger value="all">Todas ({taskCounts.all})</TabsTrigger>
-            <TabsTrigger value="not_started">
-              Não Iniciadas ({taskCounts.not_started})
-            </TabsTrigger>
-            <TabsTrigger value="in_progress">
-              Em Andamento ({taskCounts.in_progress})
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Concluídas ({taskCounts.completed})
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white border border-neutral-200 rounded-xl p-2 shadow-sm mb-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent h-auto">
+              <TabsTrigger
+                value="all"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                Todas ({taskCounts.all})
+              </TabsTrigger>
+              <TabsTrigger
+                value="not_started"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                Não Iniciadas ({taskCounts.not_started})
+              </TabsTrigger>
+              <TabsTrigger
+                value="in_progress"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                Em Andamento ({taskCounts.in_progress})
+              </TabsTrigger>
+              <TabsTrigger
+                value="completed"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                Concluídas ({taskCounts.completed})
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value={selectedTab} className="mt-6">
+          <TabsContent
+            value={selectedTab}
+            className="mt-6 animate-in fade-in-50 duration-300"
+          >
             {filteredTasks.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-neutral-500">
+              <Card className="border-neutral-200 shadow-sm">
+                <CardContent className="py-16 text-center">
+                  <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <ClipboardList className="h-8 w-8 text-neutral-400" />
+                  </div>
+                  <p className="text-neutral-500 mb-6">
                     {selectedTab === 'all'
                       ? 'Nenhuma tarefa cadastrada ainda.'
                       : 'Nenhuma tarefa encontrada com este status.'}
                   </p>
-                  <Button onClick={handleNewTask} className="mt-4">
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button
+                    onClick={handleNewTask}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <Plus className="h-4 w-4" />
                     Criar Primeira Tarefa
                   </Button>
                 </CardContent>

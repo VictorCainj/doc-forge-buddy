@@ -130,10 +130,12 @@ src/
 │       ├── types/
 │       └── utils/
 │
-├── hooks/              # Hooks globais
-├── pages/              # Páginas (lazy loaded)
-├── types/              # Tipos TypeScript
-└── utils/              # Utilitários globais
+├── hooks/              # Hooks globais (40+ hooks)
+├── pages/              # Páginas (lazy loaded - 17 páginas)
+├── types/              # Tipos TypeScript globais
+├── utils/              # Utilitários globais
+├── templates/          # Templates de documentos (TypeScript)
+└── integrations/       # Integrações (Supabase, OpenAI)
 ```
 
 ## 🎯 Princípios Arquiteturais
@@ -334,5 +336,5 @@ UI Components (Base)
 
 ---
 
-**Última atualização**: 2025-10-05
+**Última atualização**: Janeiro de 2025
 **Versão**: 2.0.0

@@ -27,31 +27,36 @@ export function MotivoDesocupacaoChart({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-neutral-700">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm font-semibold text-neutral-900">
           Top {topMotivos.length} Motivos de Desocupação
         </p>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs font-medium text-neutral-500 bg-neutral-100 px-2 py-1 rounded-full">
           {topMotivos.reduce((sum, m) => sum + m.count, 0)} total
         </span>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {topMotivos.map((motivo, index) => (
-          <div key={motivo.motivo} className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-neutral-600 truncate flex-1 mr-2">
+          <div key={motivo.motivo} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-neutral-900 truncate flex-1 mr-3">
                 {motivo.motivo}
               </span>
-              <span className="text-neutral-500 font-medium whitespace-nowrap">
-                {motivo.count} ({motivo.percentage}%)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-neutral-700 bg-blue-50 px-2 py-0.5 rounded">
+                  {motivo.count}
+                </span>
+                <span className="text-xs font-bold text-blue-600">
+                  {motivo.percentage.toFixed(0)}%
+                </span>
+              </div>
             </div>
 
-            {/* Barra de progresso */}
-            <div className="w-full bg-neutral-200 rounded-full h-2">
+            {/* Barra de progresso com porcentagem visual */}
+            <div className="relative w-full bg-neutral-200 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                className="h-2.5 rounded-full transition-all duration-500 ease-out relative flex items-center justify-end pr-1"
                 style={{
                   width: `${(motivo.count / maxCount) * 100}%`,
                   backgroundColor: getBarColor(index),
@@ -60,7 +65,14 @@ export function MotivoDesocupacaoChart({
                 aria-valuenow={motivo.count}
                 aria-valuemax={maxCount}
                 aria-label={`${motivo.motivo}: ${motivo.count} ocorrências`}
-              />
+              >
+                {/* Indicador de porcentagem dentro da barra */}
+                {(motivo.count / maxCount) * 100 > 15 && (
+                  <span className="text-[8px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                    {motivo.percentage.toFixed(0)}%
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

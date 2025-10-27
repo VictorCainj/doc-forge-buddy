@@ -3,10 +3,37 @@ description: Regras para comunicação com o backend Supabase.
 ---
 
 # 🛠 Supabase Backend
-- Toda comunicação deve ser feita via hooks ou services específicos (ex: `useContracts()`, `useVistorias()`).
-- **Nunca expor chaves públicas sensíveis.**
-- Consultas devem ser tipadas com `Database` types gerados pelo Supabase.
-- Usar `from('tabela').select('*').eq(...)` apenas dentro de funções reutilizáveis.
-- Sempre tratar erros (`.throwOnError()` ou `try/catch`).
-- Armazenar arquivos de vistorias e contratos no **Supabase Storage** com nomeação padronizada:
-  - `${userId}_${tipo}_${timestamp}.pdf`
+
+## Configuração
+- **Variáveis de ambiente obrigatórias**:
+  - `VITE_SUPABASE_URL` - URL do projeto Supabase
+  - `VITE_SUPABASE_PUBLISHABLE_KEY` - Chave pública do Supabase
+- Cliente tipado em `src/integrations/supabase/client.ts`
+- Types gerados automaticamente em `src/integrations/supabase/types.ts`
+
+## Padrões de Comunicação
+- Usar **hooks customizados** para operações específicas (`useContracts()`, `useVistoria()`)
+- Consultas tipadas com `Database` types do Supabase
+- Sempre usar `.throwOnError()` ou `try/catch` para tratamento de erros
+- Evitar chamadas diretas - preferir abstrações em hooks/services
+
+## Supabase Storage
+- **Buckets utilizados**: `vistorias`, `documentos`, `contratos`
+- **Padrão de nomeação**: `${userId}_${tipo}_${timestamp}.${extensao}`
+- **Políticas RLS** configuradas para acesso baseado em usuário
+- Upload via `supabase.storage.from(bucket).upload()`
+
+## Migrations Disponíveis
+- `20241220000000_add_notificacao_rescisao_to_existing_contracts.sql`
+- `20250115000000_optimize_rls_policies.sql` (29 políticas otimizadas)
+
+## Edge Functions
+- `openai-proxy` - Integração com OpenAI API
+- `upscale-image` - Otimização de imagens
+- Chamadas via `supabase.functions.invoke('function-name')`
+
+## Segurança
+- **Nunca expor chaves sensíveis** no frontend
+- Usar RLS (Row Level Security) em todas as tabelas
+- Validação de dados com Zod antes de inserir/atualizar
+- Logs de auditoria para operações críticas

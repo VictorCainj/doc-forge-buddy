@@ -91,9 +91,6 @@ export const validatePhone = (phone: string): boolean => {
   // Verifica se tem 10 ou 11 dígitos
   if (cleanPhone.length < 10 || cleanPhone.length > 11) return false;
 
-  // Verifica se começa com 0 (código de área)
-  if (cleanPhone.length === 11 && !cleanPhone.startsWith('0')) return false;
-
   return true;
 };
 

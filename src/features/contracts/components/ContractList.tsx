@@ -338,7 +338,9 @@ const ContractListItem = memo<{
         {/* CONTAS DE CONSUMO */}
         <div className="mb-4 pb-2">
           <ContractBillsSection
-            contractId={contract.id}
+            contractId={
+              contract.form_data.numeroContrato || '[NÚMERO NÃO DEFINIDO]'
+            }
             formData={contract.form_data}
           />
         </div>

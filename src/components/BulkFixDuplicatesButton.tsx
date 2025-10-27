@@ -3,9 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Trash2,
   CheckCircle,
-  AlertTriangle,
   Loader2,
   Database,
 } from '@/utils/iconMapper';

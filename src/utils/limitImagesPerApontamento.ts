@@ -149,7 +149,7 @@ export class LimitImagesPerApontamento {
 
       if (groupImages.length > maxImages) {
         // Manter apenas as primeiras (mais antigas)
-        const toKeep = groupImages.slice(0, maxImages);
+        const _toKeep = groupImages.slice(0, maxImages);
         const toRemove = groupImages.slice(maxImages);
 
         log.info(

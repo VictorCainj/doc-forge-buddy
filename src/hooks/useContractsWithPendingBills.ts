@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { validateContractsList, type Contract } from '@/utils/dataValidator';
+import { validateContractsList } from '@/utils/dataValidator';
+import { Contract } from '@/types/contract';
 import { dbLogger } from '@/utils/logger';
 import { toast } from 'sonner';
 

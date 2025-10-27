@@ -212,8 +212,8 @@ const GerarDocumento = () => {
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header Minimalista */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-6xl mx-auto px-8 py-4">
+      <div className="bg-white border-b border-neutral-200 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
@@ -226,31 +226,36 @@ const GerarDocumento = () => {
                     navigate('/contratos');
                   }
                 }}
-                className="gap-2"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 border border-transparent transition-all duration-200"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
-              <div className="h-6 w-px bg-neutral-200" />
-              <div>
-                <h1 className="text-lg font-semibold text-neutral-900">
-                  {getDocumentTitle()}
-                </h1>
-                <p className="text-sm text-neutral-500">
-                  {isWhatsAppMessage
-                    ? 'Mensagem para WhatsApp'
-                    : 'Visualização do documento gerado'}
-                </p>
+              <div className="h-6 w-px bg-neutral-300" />
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight mb-0.5">
+                    {getDocumentTitle()}
+                  </h1>
+                  <p className="text-sm text-neutral-600">
+                    {isWhatsAppMessage
+                      ? 'Mensagem para WhatsApp'
+                      : 'Visualização do documento gerado'}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               {documentType === 'Análise de Vistoria' && (
                 <Button
                   onClick={() => navigate('/analise-vistoria')}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
                   title="Continuar editando a análise"
                 >
                   <FileText className="h-4 w-4" />
@@ -261,7 +266,7 @@ const GerarDocumento = () => {
                 onClick={handleDecreaseFont}
                 variant="ghost"
                 size="sm"
-                className="gap-2"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200"
                 title="Diminuir tamanho da fonte"
               >
                 <Minimize2 className="h-4 w-4" />
@@ -270,17 +275,21 @@ const GerarDocumento = () => {
                 onClick={handleIncreaseFont}
                 variant="ghost"
                 size="sm"
-                className="gap-2"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200"
                 title="Aumentar tamanho da fonte"
               >
                 <Maximize2 className="h-4 w-4" />
               </Button>
-              <CopyButton content={template} size="sm" className="gap-2" />
+              <CopyButton
+                content={template}
+                size="sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+              />
               <Button
                 onClick={handlePrint}
                 variant="primary"
                 size="sm"
-                className="gap-2"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50"
                 disabled={isPrinting}
               >
                 {isPrinting ? (
@@ -291,8 +300,12 @@ const GerarDocumento = () => {
                 {isPrinting ? 'Preparando...' : 'Imprimir'}
               </Button>
               {!isDevolutiva && (
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                >
+                  <Download className="h-4 w-4" />
                   Exportar
                 </Button>
               )}
@@ -302,7 +315,7 @@ const GerarDocumento = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-8 py-6">
+      <div className="max-w-[1400px] mx-auto px-8 py-6">
         {/* Document Preview - Minimalista */}
         <Card className="shadow-sm">
           <CardContent className="p-0">

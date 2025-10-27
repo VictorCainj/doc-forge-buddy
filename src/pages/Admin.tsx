@@ -1,20 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserManagement } from '@/components/admin/UserManagement';
-import { BulkEditPanel } from '@/components/admin/BulkEditPanel';
 import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
-import { Reports } from '@/components/admin/Reports';
-import { DataIntegrityChecker } from '@/components/admin/DataIntegrityChecker';
 import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
 import { CleanupDuplicatesPanel } from '@/components/admin/CleanupDuplicatesPanel';
 import {
   Users,
   FileText,
   FolderOpen,
-  File,
   Shield,
-  BarChart3,
-  Database,
   Search,
   Trash2,
 } from '@/utils/iconMapper';
@@ -30,7 +24,6 @@ const Admin = () => {
       const [
         { count: totalUsers },
         { count: activeUsers },
-        { count: totalContracts },
         { count: totalPrestadores },
         { count: totalVistorias },
         { count: totalDocuments },
@@ -40,7 +33,6 @@ const Admin = () => {
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('is_active', true),
-        supabase.from('contracts').select('*', { count: 'exact', head: true }),
         supabase
           .from('prestadores')
           .select('*', { count: 'exact', head: true }),
@@ -55,7 +47,6 @@ const Admin = () => {
       return {
         totalUsers: totalUsers || 0,
         activeUsers: activeUsers || 0,
-        totalContracts: totalContracts || 0,
         totalPrestadores: totalPrestadores || 0,
         totalVistorias: totalVistorias || 0,
         totalDocuments: totalDocuments || 0,
@@ -74,9 +65,9 @@ const Admin = () => {
     },
     {
       title: 'Contratos',
-      value: stats?.totalContracts || 0,
+      value: stats?.totalDocuments || 0,
       icon: FileText,
-      description: 'Total de contratos',
+      description: 'Contratos salvos',
       color: 'text-success-600',
       bgColor: 'bg-success-50',
     },
@@ -96,124 +87,151 @@ const Admin = () => {
       color: 'text-warning-600',
       bgColor: 'bg-warning-50',
     },
-    {
-      title: 'Documentos',
-      value: stats?.totalDocuments || 0,
-      icon: File,
-      description: 'Documentos salvos',
-      color: 'text-info-600',
-      bgColor: 'bg-info-50',
-    },
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Cabeçalho */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900">
-            Painel de Administração
-          </h1>
-          <p className="text-neutral-500 mt-2">
-            Gerencie usuários, permissões e realize edições em massa
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {/* Cabeçalho Moderno */}
+        <div className="mb-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Shield className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
+                Painel de Administração
+              </h1>
+              <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
+                Gerencie usuários, permissões e análises de vistoria
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          {statsCards.map((stat) => {
+        {/* Cards de Estatísticas Modernos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                    <Icon className={`h-4 w-4 ${stat.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="h-8 bg-neutral-200 rounded animate-pulse" />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold text-neutral-900">
+              <div
+                key={stat.title}
+                className="group relative bg-white border border-neutral-200 rounded-xl p-5 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {/* Efeito de brilho no hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <Icon className={`h-5 w-5 ${stat.color}`} />
+                    </div>
+                    {isLoading ? (
+                      <div className="w-12 h-4 bg-neutral-200 rounded animate-pulse" />
+                    ) : (
+                      <div className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
                         {stat.value}
                       </div>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        {stat.description}
-                      </p>
-                    </>
+                    )}
+                  </div>
+                  <h3 className="text-sm font-semibold text-neutral-900 mb-1">
+                    {stat.title}
+                  </h3>
+                  {!isLoading && (
+                    <p className="text-xs text-neutral-500">
+                      {stat.description}
+                    </p>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
 
-        {/* Tabs de Funcionalidades */}
+        {/* Tabs de Funcionalidades Modernizadas */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-            <TabsTrigger value="users">
-              <Users className="h-4 w-4 mr-2" />
-              Usuários
-            </TabsTrigger>
-            <TabsTrigger value="bulk">
-              <FileText className="h-4 w-4 mr-2" />
-              Edição em Massa
-            </TabsTrigger>
-            <TabsTrigger value="vistorias">
-              <Search className="h-4 w-4 mr-2" />
-              Vistorias
-            </TabsTrigger>
-            <TabsTrigger value="cleanup">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Limpeza
-            </TabsTrigger>
-            <TabsTrigger value="audit">
-              <Shield className="h-4 w-4 mr-2" />
-              Auditoria
-            </TabsTrigger>
-            <TabsTrigger value="reports">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Relatórios
-            </TabsTrigger>
-            <TabsTrigger value="integrity">
-              <Database className="h-4 w-4 mr-2" />
-              Integridade
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white border border-neutral-200 rounded-xl p-2 shadow-sm">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 bg-transparent h-auto">
+              <TabsTrigger
+                value="users"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Usuários</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="vistorias"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Vistorias</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="cleanup"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Limpeza</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="audit"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Auditoria</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="users" className="space-y-4">
+          <TabsContent
+            value="users"
+            className="space-y-4 animate-in fade-in-50 duration-300"
+          >
             <UserManagement />
           </TabsContent>
 
-          <TabsContent value="bulk" className="space-y-4">
-            <BulkEditPanel />
-          </TabsContent>
-
-          <TabsContent value="vistorias" className="space-y-4">
+          <TabsContent
+            value="vistorias"
+            className="space-y-4 animate-in fade-in-50 duration-300"
+          >
             <VistoriaAnalisesPanel />
           </TabsContent>
 
-          <TabsContent value="cleanup" className="space-y-4">
+          <TabsContent
+            value="cleanup"
+            className="space-y-4 animate-in fade-in-50 duration-300"
+          >
             <CleanupDuplicatesPanel />
           </TabsContent>
 
-          <TabsContent value="audit" className="space-y-4">
+          <TabsContent
+            value="audit"
+            className="space-y-4 animate-in fade-in-50 duration-300"
+          >
             <AuditLogsViewer />
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-4">
-            <Reports />
-          </TabsContent>
-
-          <TabsContent value="integrity" className="space-y-4">
-            <DataIntegrityChecker />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Estilos personalizados para animações */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-in {
+          animation: fadeInUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

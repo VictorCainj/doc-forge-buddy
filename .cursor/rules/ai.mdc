@@ -3,9 +3,38 @@ description: Regras para integração com IA (OpenAI API)
 ---
 
 # 🤖 Regras de Integração de IA
-- Toda integração com IA deve estar isolada em `services/ai/`.
-- Usar **OpenAI API** apenas via funções utilitárias tipadas.
-- O retorno deve ser sempre validado e tratado.
-- Logs e prompts devem ser armazenados apenas em ambiente seguro (nunca no cliente).
-- Evitar gerar texto diretamente no frontend — preferir requisições assíncronas com loading state.
-- Toda função de IA deve ter **tratamento de erro robusto** e *fallbacks* definidos.
+
+## Arquitetura de Integração
+- Integração via **Supabase Edge Functions** (`supabase/functions/openai-proxy/`)
+- Chamadas através de `supabase.functions.invoke('openai-proxy')`
+- Utilitários tipados em `src/utils/openai.ts`
+- Hooks customizados em `src/hooks/useOpenAI.tsx`
+
+## Padrões de Implementação
+- **Nunca expor chaves da OpenAI** no frontend
+- Todas as chamadas devem passar pela Edge Function
+- Usar **tipagem forte** para requests e responses
+- Implementar **cache inteligente** com React Query
+- **Fallbacks obrigatórios** para todas as operações de IA
+
+## Tratamento de Erros
+- Sempre tratar erros com try/catch
+- Implementar fallbacks para operações críticas
+- Logs detalhados apenas no servidor (Edge Function)
+- Estados de loading consistentes no frontend
+
+## Casos de Uso Implementados
+- Correção de texto (`correctText`)
+- Melhoria de texto (`improveText`)
+- Análise de contratos (`analyzeContracts`)
+- Geração de imagens (`generateImage`)
+- Chat conversacional (`chatCompletion`)
+- Análise de imagens (`analyzeImage`)
+- Geração de tarefas (`generateTask`)
+- Extração de apontamentos (`extractApontamentos`)
+
+## Performance
+- Cache de respostas com React Query
+- Timeout de 60 segundos para chamadas
+- Debounce em operações de texto
+- Otimização de tokens por operação

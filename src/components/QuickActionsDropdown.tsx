@@ -142,11 +142,22 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
         if (error) throw error;
         if (!data) throw new Error('Contrato não encontrado');
 
-        return {
-          ...((data.form_data as Record<string, string>) || {}),
-          id: data.id,
+        const formData = (data.form_data as Record<string, string>) || {};
+
+        // Garantir que numeroContrato seja uma string válida, não UUID
+        const contractData = {
+          ...formData,
+          // Não incluir o id da tabela saved_terms como numeroContrato
+          // O numeroContrato deve vir do form_data
           title: data.title,
         };
+
+        // Se não há numeroContrato no form_data, usar um placeholder
+        if (!contractData.numeroContrato) {
+          contractData.numeroContrato = '[NÚMERO NÃO DEFINIDO]';
+        }
+
+        return contractData;
       } catch {
         toast.error('Erro ao carregar dados do contrato');
         return null;
@@ -365,16 +376,16 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 border',
+            'inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 border text-sm font-medium',
             isOpen
-              ? 'bg-neutral-100 text-neutral-900 border-neutral-300 shadow-md'
-              : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 hover:shadow-sm'
+              ? 'bg-blue-50 text-blue-700 border-blue-300 shadow-sm'
+              : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50 hover:border-neutral-400 hover:shadow-sm'
           )}
         >
-          <span className="text-xs font-semibold">Ações Rápidas</span>
+          <span>Ações Rápidas</span>
           <ChevronRight
             className={cn(
-              'h-4 w-4 transition-transform text-neutral-500',
+              'h-4 w-4 transition-transform',
               isOpen && 'rotate-90'
             )}
           />
@@ -392,15 +403,15 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
             {/* Modal */}
             <div className="fixed inset-4 md:inset-8 z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
               {/* Header do modal */}
-              <div className="relative px-6 py-5 border-b border-neutral-300 bg-white">
+              <div className="relative px-6 py-5 border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold text-black">
+                  <h3 className="text-2xl font-semibold text-neutral-900 tracking-tight">
                     Ações Rápidas
                   </h3>
                   {contractNumber && (
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-sm text-neutral-600 mt-1.5">
                       Contrato:{' '}
-                      <span className="font-medium text-black">
+                      <span className="font-medium text-neutral-900">
                         {contractNumber}
                       </span>
                     </p>
@@ -408,7 +419,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 transition-colors p-2 rounded-full hover:bg-neutral-100"
+                  className="absolute top-4 right-4 p-2 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-all duration-200"
                 >
                   <svg
                     className="w-5 h-5"
@@ -443,7 +454,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                             key={action.id}
                             onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
-                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                            className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                           >
                             {action.loading ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -502,7 +513,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   key={action.id}
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
-                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                                 >
                                   {action.loading ? (
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -562,7 +573,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   key={action.id}
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
-                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                                 >
                                   {action.loading ? (
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -624,7 +635,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   key={action.id}
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
-                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                                  className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                                 >
                                   {action.loading ? (
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -690,7 +701,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                 setIsOpen(false);
                               }}
                               disabled={checkingAnalise}
-                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                             >
                               {checkingAnalise ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -743,7 +754,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                               key={action.id}
                               onClick={() => handleActionClick(action)}
                               disabled={action.disabled}
-                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                             >
                               {action.loading ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -793,7 +804,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                               key={action.id}
                               onClick={() => handleActionClick(action)}
                               disabled={action.disabled}
-                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-300 hover:border-neutral-400 hover:shadow-sm"
+                              className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
                             >
                               {action.loading ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />

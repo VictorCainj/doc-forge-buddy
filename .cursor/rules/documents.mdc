@@ -3,12 +3,33 @@ description: Regras para geração de documentos e PDFs.
 ---
 
 # 📜 Documentos e PDFs
-- Utilizar **Handlebars** para templates dinâmicos de documentos.
-- Gerar PDFs usando **html2pdf.js** apenas após renderização completa do template.
-- Usar **docx** apenas quando for necessária exportação editável (Word).
-- Templates devem ficar em `/src/templates/` e seguir padrão:
-  - `contrato.handlebars`
-  - `vistoria.handlebars`
-  - `relatorio.handlebars`
-- Validar todos os placeholders antes da renderização.
-- Evitar inline styles dentro dos templates — usar classes Tailwind sempre que possível.
+
+## Estrutura de Templates
+- Templates são **constantes TypeScript** exportadas em `src/templates/`
+- Sintaxe **Handlebars** embutida nas strings (`{{variavel}}`, `{{#if}}`)
+- Processamento via regex customizado em `DocumentForm.tsx` e `templateProcessor.ts`
+- **Não usar arquivos .handlebars** separados
+
+## Bibliotecas de Geração
+- **html2pdf.js**: Geração de PDF a partir de HTML renderizado
+- **jspdf**: Geração de PDF programática para casos específicos
+- **html2canvas**: Captura de elementos DOM para conversão
+- **docx**: Exportação editável para Microsoft Word
+
+## Padrões de Implementação
+- Renderizar template completo antes de gerar PDF
+- Validar todos os placeholders antes da renderização
+- Usar **classes Tailwind** em vez de inline styles nos templates
+- Implementar fallbacks para dados ausentes
+
+## Casos de Uso
+- **Contratos**: Templates dinâmicos com dados do locador/locatário
+- **Vistorias**: Relatórios com imagens e apontamentos
+- **Termos**: Documentos legais com assinaturas
+- **Relatórios**: Análises e estatísticas
+
+## Otimização
+- Lazy loading de templates pesados
+- Cache de templates processados
+- Compressão de imagens antes da inclusão
+- Preview em tempo real durante edição

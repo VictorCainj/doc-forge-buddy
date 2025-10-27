@@ -31,6 +31,13 @@ import {
   MapPin,
   Briefcase,
   Search,
+  Building2,
+  Users,
+  FileText,
+  Calendar,
+  Clock,
+  Copy,
+  Check,
 } from '@/utils/iconMapper';
 import {
   usePrestadores,
@@ -60,7 +67,7 @@ const PrestadorForm = memo(
   }: PrestadorFormProps) => (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="nome" className="text-sm font-medium text-neutral-700">
           Nome *
         </Label>
         <Input
@@ -69,13 +76,16 @@ const PrestadorForm = memo(
           onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
           placeholder="Nome do prestador"
           required
-          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
+          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="cnpj" className="text-sm font-medium text-gray-700">
+          <Label
+            htmlFor="cnpj"
+            className="text-sm font-medium text-neutral-700"
+          >
             CNPJ
           </Label>
           <Input
@@ -83,14 +93,14 @@ const PrestadorForm = memo(
             value={formData.cnpj}
             onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
             placeholder="00.000.000/0000-00"
-            className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
+            className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg"
           />
         </div>
 
         <div className="space-y-2">
           <Label
             htmlFor="telefone"
-            className="text-sm font-medium text-gray-700"
+            className="text-sm font-medium text-neutral-700"
           >
             Telefone
           </Label>
@@ -101,13 +111,13 @@ const PrestadorForm = memo(
               setFormData({ ...formData, telefone: e.target.value })
             }
             placeholder="(00) 00000-0000"
-            className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
+            className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="email" className="text-sm font-medium text-neutral-700">
           E-mail
         </Label>
         <Input
@@ -116,12 +126,15 @@ const PrestadorForm = memo(
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="email@exemplo.com"
-          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
+          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="endereco" className="text-sm font-medium text-gray-700">
+        <Label
+          htmlFor="endereco"
+          className="text-sm font-medium text-neutral-700"
+        >
           Endereço
         </Label>
         <Input
@@ -131,14 +144,14 @@ const PrestadorForm = memo(
             setFormData({ ...formData, endereco: e.target.value })
           }
           placeholder="Rua, número, bairro, cidade"
-          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
+          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
         <Label
           htmlFor="especialidade"
-          className="text-sm font-medium text-gray-700"
+          className="text-sm font-medium text-neutral-700"
         >
           Especialidade
         </Label>
@@ -149,14 +162,14 @@ const PrestadorForm = memo(
             setFormData({ ...formData, especialidade: e.target.value })
           }
           placeholder="Ex: Pintura, Elétrica, Hidráulica"
-          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg"
+          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
         <Label
           htmlFor="observacoes"
-          className="text-sm font-medium text-gray-700"
+          className="text-sm font-medium text-neutral-700"
         >
           Observações
         </Label>
@@ -168,7 +181,7 @@ const PrestadorForm = memo(
           }
           placeholder="Informações adicionais"
           rows={3}
-          className="border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg resize-none"
+          className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg resize-none"
         />
       </div>
 
@@ -177,14 +190,14 @@ const PrestadorForm = memo(
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="text-sm px-6 py-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
         >
           Cancelar
         </Button>
         <Button
           type="submit"
           disabled={saving}
-          className="text-sm px-6 py-2 bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-300 rounded-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Salvando...' : isEdit ? 'Atualizar' : 'Criar'}
         </Button>
@@ -211,6 +224,9 @@ const Prestadores = () => {
     null
   );
   const [searchTerm, setSearchTerm] = useState('');
+  const [copiedPrestadorId, setCopiedPrestadorId] = useState<string | null>(
+    null
+  );
   const [formData, setFormData] = useState<CreatePrestadorData>({
     nome: '',
     cnpj: '',
@@ -230,6 +246,29 @@ const Prestadores = () => {
         .includes(searchTerm.toLowerCase()) ||
       prestador.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Função para copiar informações do prestador
+  const handleCopyPrestadorInfo = async (prestador: Prestador) => {
+    // Construir mensagem com informações do prestador
+    const info = [
+      `Prestador de Serviço: ${prestador.nome}`,
+      prestador.especialidade ? `Serviços: ${prestador.especialidade}` : null,
+      prestador.telefone ? `Telefone: ${prestador.telefone}` : null,
+      prestador.email ? `E-mail: ${prestador.email}` : null,
+      prestador.cnpj ? `CNPJ: ${prestador.cnpj}` : null,
+      prestador.endereco ? `Endereço: ${prestador.endereco}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    try {
+      await navigator.clipboard.writeText(info);
+      setCopiedPrestadorId(prestador.id);
+      setTimeout(() => setCopiedPrestadorId(null), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar informação:', err);
+    }
+  };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,28 +333,35 @@ const Prestadores = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-900"></div>
-          <p className="text-sm text-gray-500">Carregando prestadores...</p>
+          <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-neutral-600 font-medium">
+            Carregando prestadores...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Minimalista */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-normal text-gray-900">
-                Prestadores
-              </h1>
-              <p className="text-gray-500 mt-1">
-                Gerencie seus prestadores de serviço
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header Moderno */}
+        <div className="mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
+                <Building2 className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
+                  Prestadores
+                </h1>
+                <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
+                  Gerencie seus prestadores de serviço de forma eficiente
+                </p>
+              </div>
             </div>
 
             <Dialog
@@ -323,17 +369,17 @@ const Prestadores = () => {
               onOpenChange={setIsCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button className="bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-lg text-sm font-medium">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200">
+                  <Plus className="h-4 w-4" />
                   Novo Prestador
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-                <DialogHeader className="pb-4 border-b border-gray-200">
-                  <DialogTitle className="text-xl font-medium text-gray-900">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-neutral-200 shadow-xl">
+                <DialogHeader className="pb-4 border-b border-neutral-200">
+                  <DialogTitle className="text-xl font-semibold text-neutral-900">
                     Criar Novo Prestador
                   </DialogTitle>
-                  <DialogDescription className="text-gray-500">
+                  <DialogDescription className="text-neutral-600">
                     Preencha os dados do prestador de serviço
                   </DialogDescription>
                 </DialogHeader>
@@ -350,112 +396,137 @@ const Prestadores = () => {
             </Dialog>
           </div>
 
-          {/* Barra de Pesquisa */}
+          {/* Barra de Pesquisa Modernizada */}
           {prestadores.length > 0 && (
-            <div className="mt-6">
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Buscar prestadores..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-gray-200 focus:border-gray-400 focus:ring-0 rounded-lg bg-white"
-                />
-              </div>
+            <div className="relative max-w-md">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
+              <Input
+                type="text"
+                placeholder="Buscar prestadores..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-4 h-12 border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-white shadow-sm"
+              />
             </div>
           )}
         </div>
 
         {prestadores.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6">
-              <User className="h-8 w-8 text-gray-400" />
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl mb-6 shadow-sm">
+              <Users className="h-10 w-10 text-blue-600" />
             </div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
+            <h3 className="text-2xl font-semibold text-neutral-900 mb-2">
               Nenhum prestador cadastrado
             </h3>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+            <p className="text-neutral-600 mb-8 max-w-md mx-auto">
               Comece criando seu primeiro prestador de serviço para organizar
               seus fornecedores
             </p>
             <Button
               onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-gray-900 text-white hover:bg-gray-800 px-6 py-2 rounded-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-5 w-5" />
               Criar Prestador
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPrestadores.map((prestador) => (
+            {filteredPrestadores.map((prestador, index) => (
               <div
                 key={prestador.id}
-                className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-200 p-6"
+                className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden animate-in fade-in-50"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {prestador.nome}
-                    </h3>
+                {/* Efeito de brilho no hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-neutral-900 mb-2 group-hover:text-blue-600 transition-colors truncate">
+                        {prestador.nome}
+                      </h3>
+                    </div>
+                    <div className="flex gap-1 ml-3">
+                      <button
+                        onClick={() => handleCopyPrestadorInfo(prestador)}
+                        className="p-2 rounded-lg text-neutral-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200"
+                        title="Copiar informações"
+                      >
+                        {copiedPrestadorId === prestador.id ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleEdit(prestador)}
+                        className="p-2 rounded-lg text-neutral-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                        title="Editar"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedPrestador(prestador);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        className="p-2 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mt-4">
                     {prestador.especialidade && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        <Briefcase className="h-3 w-3 mr-1" />
-                        {prestador.especialidade}
-                      </span>
+                      <div className="flex items-center gap-3 text-sm text-neutral-600">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <span className="font-medium">
+                          {prestador.especialidade}
+                        </span>
+                      </div>
+                    )}
+                    {prestador.cnpj && (
+                      <div className="flex items-center gap-3 text-sm text-neutral-600">
+                        <div className="flex-shrink-0 w-8 h-8 bg-neutral-50 rounded-lg flex items-center justify-center">
+                          <FileText className="h-4 w-4 text-neutral-400" />
+                        </div>
+                        <span className="truncate">{prestador.cnpj}</span>
+                      </div>
+                    )}
+                    {prestador.telefone && (
+                      <div className="flex items-center gap-3 text-sm text-neutral-600">
+                        <div className="flex-shrink-0 w-8 h-8 bg-neutral-50 rounded-lg flex items-center justify-center">
+                          <Phone className="h-4 w-4 text-neutral-400" />
+                        </div>
+                        <span>{prestador.telefone}</span>
+                      </div>
+                    )}
+                    {prestador.email && (
+                      <div className="flex items-center gap-3 text-sm text-neutral-600">
+                        <div className="flex-shrink-0 w-8 h-8 bg-neutral-50 rounded-lg flex items-center justify-center">
+                          <Mail className="h-4 w-4 text-neutral-400" />
+                        </div>
+                        <span className="truncate">{prestador.email}</span>
+                      </div>
+                    )}
+                    {prestador.endereco && (
+                      <div className="flex items-start gap-3 text-sm">
+                        <div className="flex-shrink-0 w-8 h-8 bg-neutral-50 rounded-lg flex items-center justify-center mt-0.5">
+                          <MapPin className="h-4 w-4 text-neutral-400" />
+                        </div>
+                        <span className="text-neutral-600 line-clamp-2">
+                          {prestador.endereco}
+                        </span>
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-1 ml-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(prestador)}
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedPrestador(prestador);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {prestador.cnpj && (
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <Briefcase className="h-4 w-4 text-gray-400" />
-                      <span>{prestador.cnpj}</span>
-                    </div>
-                  )}
-                  {prestador.telefone && (
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      <span>{prestador.telefone}</span>
-                    </div>
-                  )}
-                  {prestador.email && (
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="truncate">{prestador.email}</span>
-                    </div>
-                  )}
-                  {prestador.endereco && (
-                    <div className="flex items-start gap-3 text-sm">
-                      <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                      <span className="text-gray-600 line-clamp-2">
-                        {prestador.endereco}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -465,12 +536,12 @@ const Prestadores = () => {
 
       {/* Dialog de Edição */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader className="pb-4 border-b border-gray-200">
-            <DialogTitle className="text-xl font-medium text-gray-900">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-neutral-200 shadow-xl">
+          <DialogHeader className="pb-4 border-b border-neutral-200">
+            <DialogTitle className="text-xl font-semibold text-neutral-900">
               Editar Prestador
             </DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogDescription className="text-neutral-600">
               Atualize os dados do prestador de serviço
             </DialogDescription>
           </DialogHeader>
@@ -492,29 +563,46 @@ const Prestadores = () => {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
-        <AlertDialogContent className="bg-white">
+        <AlertDialogContent className="bg-white border-neutral-200 shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-medium text-gray-900">
+            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">
               Confirmar Exclusão
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-500">
+            <AlertDialogDescription className="text-neutral-600">
               Tem certeza que deseja excluir o prestador "
               {selectedPrestador?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg">
+            <AlertDialogCancel className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-red-600 text-white hover:bg-red-700 rounded-lg"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
             >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Estilos personalizados para animações */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-in {
+          animation: fadeInUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

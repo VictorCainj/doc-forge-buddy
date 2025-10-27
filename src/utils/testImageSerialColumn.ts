@@ -13,7 +13,7 @@ export async function testImageSerialColumn(): Promise<{
     log.info('🔍 Testando se a coluna image_serial existe...');
 
     // 1. Tentar fazer uma consulta simples na coluna
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('vistoria_images')
       .select('id, image_serial')
       .limit(1);

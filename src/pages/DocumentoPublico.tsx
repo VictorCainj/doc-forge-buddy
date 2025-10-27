@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { validateHTML } from '@/utils/securityValidators';
-import html2pdf from 'html2pdf.js';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
+// Lazy load heavy libraries
+const html2pdf = () => import('html2pdf.js');
+const loadDocx = () => import('docx');
 import { useSafeHTML } from '@/hooks/useSafeHTML';
 
 export default function DocumentoPublico() {
@@ -155,6 +156,10 @@ export default function DocumentoPublico() {
         documentId: id,
       });
 
+      // Lazy load html2pdf
+      const html2pdfModule = await html2pdf();
+      const html2pdfLib = html2pdfModule.default;
+
       const opt = {
         margin: 1,
         filename: `documento-${id}-${new Date().toISOString().split('T')[0]}.pdf`,
@@ -167,7 +172,7 @@ export default function DocumentoPublico() {
         },
       };
 
-      await html2pdf().set(opt).from(contentRef.current).save();
+      await html2pdfLib().set(opt).from(contentRef.current).save();
 
       toast.success('PDF baixado com sucesso!');
       logger.info('DocumentoPublico: PDF baixado com sucesso', {
@@ -193,6 +198,10 @@ export default function DocumentoPublico() {
       logger.info('DocumentoPublico: Iniciando download DOCX', {
         documentId: id,
       });
+
+      // Lazy load docx
+      const docxModule = await loadDocx();
+      const { Document, Packer, Paragraph, TextRun } = docxModule;
 
       // Extrair texto do HTML
       const tempDiv = document.createElement('div');

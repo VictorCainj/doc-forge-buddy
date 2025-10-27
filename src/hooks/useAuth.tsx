@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { data, error } = await Promise.race([
         profilePromise,
         timeoutPromise
-      ]) as any;
+      ]) as { data: unknown; error: unknown };
 
       if (error) {
         authLogger.error('Erro ao carregar profile:', error);

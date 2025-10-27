@@ -4,11 +4,15 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initMonitoring } from './lib/monitoring';
+import { initSentry } from './lib/sentry';
 import {
   registerServiceWorker,
   setupPWAInstallPrompt,
   onConnectivityChange,
 } from './utils/pwaHelpers';
+
+// Inicializar Sentry para error tracking (apenas em produção)
+initSentry();
 
 // Inicializar sistema de monitoramento
 initMonitoring();

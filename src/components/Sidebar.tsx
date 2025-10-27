@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FileText,
   LogOut,
   Home,
   Search,
   Users,
-  ChevronRight,
   Settings,
-  Menu,
-  X,
   ClipboardList,
-  Calculator,
   BarChart,
 } from '@/utils/iconMapper';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -24,6 +21,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AnimatedSidebar,
+  SidebarBody,
+  SidebarLink,
+} from '@/components/ui/animated-sidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { cn } from '@/lib/utils';
@@ -35,7 +37,7 @@ const Sidebar = () => {
   const { user, profile, isAdmin, signOut } = useAuth();
   const { title, level, exp, progress, currentLevelExp, nextLevelExp } =
     useUserLevel();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -55,44 +57,90 @@ const Sidebar = () => {
 
   const menuItems = [
     {
-      name: 'Contratos',
-      icon: FileText,
-      path: '/contratos',
-      active: location.pathname === '/contratos',
+      label: 'Contratos',
+      href: '/contratos',
+      icon: (
+        <FileText
+          className={cn(
+            'h-5 w-5 flex-shrink-0',
+            location.pathname === '/contratos'
+              ? 'text-neutral-900 dark:text-neutral-100'
+              : 'text-neutral-700 dark:text-neutral-200'
+          )}
+        />
+      ),
     },
     {
-      name: 'Dashboard Desocupação',
-      icon: BarChart,
-      path: '/dashboard-desocupacao',
-      active: location.pathname === '/dashboard-desocupacao',
+      label: 'Dashboard Desocupação',
+      href: '/dashboard-desocupacao',
+      icon: (
+        <BarChart
+          className={cn(
+            'h-5 w-5 flex-shrink-0',
+            location.pathname === '/dashboard-desocupacao'
+              ? 'text-neutral-900 dark:text-neutral-100'
+              : 'text-neutral-700 dark:text-neutral-200'
+          )}
+        />
+      ),
     },
     {
-      name: 'Criar Análise',
-      icon: Search,
-      path: '/analise-vistoria',
-      active: location.pathname === '/analise-vistoria',
+      label: 'Criar Análise',
+      href: '/analise-vistoria',
+      icon: (
+        <Search
+          className={cn(
+            'h-5 w-5 flex-shrink-0',
+            location.pathname === '/analise-vistoria'
+              ? 'text-neutral-900 dark:text-neutral-100'
+              : 'text-neutral-700 dark:text-neutral-200'
+          )}
+        />
+      ),
     },
     {
-      name: 'Tarefas',
-      icon: ClipboardList,
-      path: '/tarefas',
-      active: location.pathname === '/tarefas',
+      label: 'Tarefas',
+      href: '/tarefas',
+      icon: (
+        <ClipboardList
+          className={cn(
+            'h-5 w-5 flex-shrink-0',
+            location.pathname === '/tarefas'
+              ? 'text-neutral-900 dark:text-neutral-100'
+              : 'text-neutral-700 dark:text-neutral-200'
+          )}
+        />
+      ),
     },
     {
-      name: 'Prestadores',
-      icon: Users,
-      path: '/prestadores',
-      active: location.pathname === '/prestadores',
+      label: 'Prestadores',
+      href: '/prestadores',
+      icon: (
+        <Users
+          className={cn(
+            'h-5 w-5 flex-shrink-0',
+            location.pathname === '/prestadores'
+              ? 'text-neutral-900 dark:text-neutral-100'
+              : 'text-neutral-700 dark:text-neutral-200'
+          )}
+        />
+      ),
     },
-
   ];
 
-  // Adicionar item Admin apenas para administradores
   const adminMenuItem = {
-    name: 'Administrador',
-    icon: Settings,
-    path: '/admin',
-    active: location.pathname === '/admin',
+    label: 'Administrador',
+    href: '/admin',
+    icon: (
+      <Settings
+        className={cn(
+          'h-5 w-5 flex-shrink-0',
+          location.pathname === '/admin'
+            ? 'text-neutral-900 dark:text-neutral-100'
+            : 'text-neutral-700 dark:text-neutral-200'
+        )}
+      />
+    ),
   };
 
   const allMenuItems = isAdmin ? [...menuItems, adminMenuItem] : menuItems;
@@ -100,149 +148,100 @@ const Sidebar = () => {
   if (!user) return null;
 
   return (
-    <>
-      {/* Botão de Toggle - Sempre visível */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={cn(
-          'fixed top-4 z-50 p-2 bg-neutral-900 text-white rounded-r-lg shadow-lg hover:bg-neutral-800 transition-all duration-300',
-          isExpanded ? 'left-64' : 'left-0'
-        )}
-        aria-label={isExpanded ? 'Fechar menu' : 'Abrir menu'}
-      >
-        {isExpanded ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
+    <AnimatedSidebar open={open} setOpen={setOpen}>
+      <SidebarBody className="justify-between gap-10">
+        {/* Seção Superior: Logo e Menu */}
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+          {/* Logo */}
+          <div className="mb-8">
+            {open ? <Logo /> : <LogoIcon />}
+          </div>
 
-      {/* Overlay quando expandido */}
-      {isExpanded && (
-        <div
-          className="fixed inset-0 bg-black/20 z-30 backdrop-blur-sm"
-          onClick={() => setIsExpanded(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed left-0 top-0 h-screen flex flex-col bg-white border-r border-neutral-200 z-40 transition-transform duration-300 ease-in-out',
-          isExpanded ? 'translate-x-0' : '-translate-x-full',
-          'w-64'
-        )}
-      >
-        {/* Minimalista Header */}
-        <div className="p-6 border-b border-neutral-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-primary-500 rounded-lg flex items-center justify-center">
-              <Home className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-neutral-900">
-                DocForge
-              </h1>
-              <p className="text-xs text-neutral-500">Gestão Imobiliária</p>
-            </div>
+          {/* Menu Items */}
+          <div className="flex flex-col gap-2">
+            {allMenuItems.map((link, idx) => (
+              <SidebarLink
+                key={idx}
+                link={link}
+                className={cn(
+                  'rounded-md px-2',
+                  location.pathname === link.href &&
+                    'bg-neutral-200 dark:bg-neutral-700'
+                )}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Navigation Menu - Minimalista */}
-        <nav
-          role="navigation"
-          aria-label="Menu principal"
-          className="flex-1 px-4 py-6 overflow-y-auto"
-        >
-          <div className="space-y-1">
-            <h3 className="text-xs font-medium text-neutral-600 uppercase tracking-wider mb-3 px-3">
-              Menu
-            </h3>
-            <ul className="space-y-1">
-              {allMenuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.name}>
-                    <Link
-                      to={item.path}
-                      onClick={() => setIsExpanded(false)}
-                      className={cn(
-                        'flex items-center px-3 py-2 rounded-md transition-all duration-200 group',
-                        item.active
-                          ? 'bg-neutral-100 text-neutral-900'
-                          : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
-                      )}
-                    >
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 mr-3',
-                          item.active
-                            ? 'text-neutral-700'
-                            : 'text-neutral-400 group-hover:text-neutral-600'
-                        )}
-                      />
-                      <span className="text-sm font-medium">{item.name}</span>
-                      {item.active && (
-                        <ChevronRight className="h-3 w-3 ml-auto text-neutral-400" />
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </nav>
-
-        {/* Profile Section - Minimalista */}
-        <div className="p-4 border-t border-neutral-200">
+        {/* Seção Inferior: Perfil do Usuário */}
+        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-start h-auto p-2 hover:bg-neutral-50 rounded-md transition-all duration-200"
+                className="w-full justify-start h-auto p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-md"
               >
-                <Avatar className="h-8 w-8 mr-3">
-                  <AvatarFallback className="bg-neutral-200 text-neutral-600 text-xs font-medium">
+                <Avatar className="h-7 w-7 flex-shrink-0">
+                  <AvatarFallback className="bg-neutral-300 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-200 text-xs font-medium">
                     {getUserInitials(user.email || '')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col items-start text-left flex-1 min-w-0">
-                  <span className="text-sm font-medium text-neutral-900 truncate w-full">
+                <motion.div
+                  className="flex flex-col items-start text-left flex-1 min-w-0 ml-2"
+                  animate={{
+                    display: open ? 'flex' : 'none',
+                    opacity: open ? 1 : 0,
+                  }}
+                >
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate w-full">
                     {profile?.full_name ||
                       user.email?.split('@')[0] ||
                       'Usuário'}
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-neutral-500">Nv.{level}</span>
+                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                      Nv.{level}
+                    </span>
                     <span className="text-xs text-neutral-400">•</span>
-                    <span className="text-xs text-neutral-500">{title}</span>
+                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                      {title}
+                    </span>
                   </div>
-                </div>
+                </motion.div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuContent
+              className="w-56 ml-2"
+              align="end"
+              side="right"
+              forceMount
+            >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-2">
                   <div>
-                    <p className="text-sm font-medium leading-none text-neutral-900">
+                    <p className="text-sm font-medium leading-none text-neutral-900 dark:text-neutral-100">
                       {profile?.full_name || user.email}
                     </p>
-                    <p className="text-xs leading-none text-neutral-500 mt-1">
+                    <p className="text-xs leading-none text-neutral-500 dark:text-neutral-400 mt-1">
                       {profile?.role === 'admin' ? 'Administrador' : 'Usuário'}
                     </p>
                   </div>
-                  <div className="pt-2 border-t border-neutral-100">
+                  <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-neutral-600">
+                      <span className="text-xs text-neutral-700 dark:text-neutral-300">
                         Nível {level} • {title}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-neutral-500">
+                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
                         {currentLevelExp}/{nextLevelExp} EXP
                       </span>
-                      <span className="text-xs text-neutral-400">
+                      <span className="text-xs text-neutral-500 dark:text-neutral-500">
                         {Math.round(progress)}%
                       </span>
                     </div>
                     <Progress value={progress} className="h-1.5" />
-                    <p className="text-xs text-neutral-400 mt-1">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
                       {exp} EXP total
                     </p>
                   </div>
@@ -251,7 +250,7 @@ const Sidebar = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleSignOut}
-                className="cursor-pointer text-neutral-700 hover:text-neutral-900"
+                className="cursor-pointer text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sair</span>
@@ -259,8 +258,42 @@ const Sidebar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </aside>
-    </>
+      </SidebarBody>
+    </AnimatedSidebar>
+  );
+};
+
+// Logo completo (quando sidebar está expandido)
+const Logo = () => {
+  return (
+    <div className="flex items-center space-x-2 px-2">
+      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Home className="h-4 w-4 text-white" />
+      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col"
+      >
+        <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+          DocForge
+        </span>
+        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+          Gestão Imobiliária
+        </span>
+      </motion.div>
+    </div>
+  );
+};
+
+// Logo icon (quando sidebar está colapsado)
+const LogoIcon = () => {
+  return (
+    <div className="flex items-center justify-center px-2">
+      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Home className="h-4 w-4 text-white" />
+      </div>
+    </div>
   );
 };
 

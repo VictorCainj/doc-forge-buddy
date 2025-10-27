@@ -11,7 +11,7 @@ import {
   formatDateBrazilian,
   convertDateToBrazilian,
 } from '@/utils/dateFormatter';
-import { AlertCircle } from '@/utils/iconMapper';
+import { AlertCircle, Building2, Plus } from '@/utils/iconMapper';
 import { TemplateProcessor } from '@/utils/templateProcessor';
 import { Contract } from '@/types/contract';
 import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
@@ -521,63 +521,77 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-neutral-50">
-        {/* Header Minimalista */}
-        <div className="bg-white border-b border-neutral-200">
-          <div className="px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-black mb-2">
-                  Contratos
-                </h1>
-                <p className="text-lg text-gray-600 leading-relaxed">
-                  Gerencie todos os contratos de locação cadastrados no sistema
-                  de forma organizada e eficiente.
-                </p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+        {/* Header Moderno */}
+        <div className="bg-white border-b border-neutral-200 shadow-sm">
+          <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
+                    <Building2 className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
+                      Contratos
+                    </h1>
+                    <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
+                      Gerencie todos os contratos de locação
+                    </p>
+                  </div>
+                </div>
 
-              <div className="flex items-center space-x-3">
-                <OptimizedSearch
-                  onSearch={performSearch}
-                  placeholder="Buscar contratos..."
-                  showResultsCount={true}
-                  resultsCount={totalResults}
-                  isLoading={isSearching}
-                  className="w-80"
-                />
+                <div className="flex items-center gap-3">
+                  <OptimizedSearch
+                    onSearch={performSearch}
+                    placeholder="Buscar contratos..."
+                    showResultsCount={true}
+                    resultsCount={totalResults}
+                    isLoading={isSearching}
+                    className="w-80"
+                  />
 
-                {/* Botão Toggle para Filtro de Pendências */}
-                <Button
-                  variant={showPendingOnly ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={handleTogglePendingFilter}
-                  className="gap-2"
-                  disabled={loadingPending}
-                >
-                  <AlertCircle className="h-4 w-4" />
-                  Pendentes
-                  {showPendingOnly && pendingContracts.length > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 text-xs bg-white/20 rounded">
-                      {pendingContracts.length}
-                    </span>
-                  )}
-                </Button>
-
-                {hasSearched && (
-                  <Button variant="outline" size="sm" onClick={clearSearch}>
-                    Limpar
+                  <Button
+                    variant={showPendingOnly ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={handleTogglePendingFilter}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                    disabled={loadingPending}
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    Pendentes
+                    {showPendingOnly && pendingContracts.length > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 text-xs bg-neutral-100 rounded">
+                        {pendingContracts.length}
+                      </span>
+                    )}
                   </Button>
-                )}
-                <Link to="/cadastrar-contrato">
-                  <Button variant="primary">Novo Contrato</Button>
-                </Link>
+
+                  {hasSearched && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                    >
+                      Limpar
+                    </Button>
+                  )}
+
+                  <Link to="/cadastrar-contrato">
+                    <Button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200">
+                      <Plus className="h-4 w-4" />
+                      Novo Contrato
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="px-8 py-6">
+        <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
           {/* Lista de Contratos */}
           <ContractList
             contracts={displayedContracts}

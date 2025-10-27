@@ -40,7 +40,7 @@ export const ModalEditarMotivo: React.FC<ModalEditarMotivoProps> = ({
       toast.success('Motivo da desocupação atualizado com sucesso!');
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch {
       toast.error('Erro ao atualizar motivo da desocupação.');
     }
   };
@@ -57,7 +57,7 @@ export const ModalEditarMotivo: React.FC<ModalEditarMotivoProps> = ({
         setMotivo(motivoGerado);
         toast.success('Motivo da desocupação resumido com IA!');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao resumir motivo com IA.');
     } finally {
       setIsGenerating(false);

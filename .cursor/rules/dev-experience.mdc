@@ -3,9 +3,37 @@ description: Regras para experiência de desenvolvimento no Cursor.
 ---
 
 # 💡 Boas Práticas no Cursor
-- Quando pedir código, **sempre solicitar em TypeScript e com comentários explicativos.**
-- Pedir exemplos *reais* com base no contexto do projeto (ex: “formulário de vistoria”, “contrato locatício”).
-- Pedir que o Cursor sempre crie código **com validação Zod** e **estilo Tailwind**.
-- Pedir que o Cursor adicione **tratamento de erros e estados de carregamento** por padrão.
-- Ao refatorar, priorizar clareza e tipagem, não micro-otimização.
-- O Cursor deve **manter a arquitetura existente**, não reinventar o padrão de pastas.
+
+## Solicitação de Código
+- **Sempre solicitar em TypeScript** com comentários explicativos
+- Pedir exemplos **reais** baseados no contexto do projeto
+- Solicitar código com **validação Zod** e **estilo Tailwind**
+- Adicionar **tratamento de erros e estados de carregamento** por padrão
+- Manter **arquitetura existente** (features, hooks, componentes)
+
+## Qualidade e Testes
+- **ESLint** configurado com regras de segurança e qualidade
+- **TypeScript strict mode** habilitado
+- **Vitest** para testes unitários com coverage
+- Scripts disponíveis: `lint`, `type-check`, `test`, `test:coverage`
+- **Prettier** para formatação consistente
+
+## Refatoração
+- Priorizar **clareza e tipagem** sobre micro-otimização
+- Manter **padrão de pastas** existente (features, hooks, utils)
+- Usar **hooks customizados** para lógica de negócio
+- Aplicar **React.memo()** quando apropriado
+- Documentar mudanças significativas
+
+## Debugging e Performance
+- Usar **React DevTools** para análise de re-renders
+- Implementar **logging** estruturado com `src/utils/logger.ts`
+- Monitorar **bundle size** com `npm run analyze`
+- Otimizar **code splitting** manual quando necessário
+- Validar **performance** com Lighthouse
+
+## Padrões de Commit
+- Commits descritivos e atômicos
+- Usar **conventional commits** quando possível
+- Testar mudanças antes de commitar
+- Documentar breaking changes

@@ -74,8 +74,8 @@ export function generateHTMLReport(data: HTMLReportData): string {
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #fff;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
       color: ${colors.text};
       padding: 40px;
       max-width: 1200px;
@@ -86,27 +86,47 @@ export function generateHTMLReport(data: HTMLReportData): string {
     .header {
       background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%);
       color: white;
-      padding: 30px;
-      border-radius: 12px;
+      padding: 40px;
+      border-radius: 16px;
       margin-bottom: 30px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px rgba(66, 133, 244, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      pointer-events: none;
     }
 
     .header h1 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
       margin-bottom: 8px;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 1;
     }
 
     .header p {
       font-size: 16px;
       opacity: 0.95;
+      position: relative;
+      z-index: 1;
     }
 
     .header-info {
       margin-top: 12px;
       font-size: 14px;
       opacity: 0.9;
+      position: relative;
+      z-index: 1;
     }
 
     /* Card de Total */
@@ -171,12 +191,13 @@ export function generateHTMLReport(data: HTMLReportData): string {
     .dashboard {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
-      gap: 40px;
+      gap: 32px;
       margin-bottom: 40px;
-      padding: 20px;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      border-radius: 16px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e8eaed;
     }
 
     /* Gráfico de Pizza */
