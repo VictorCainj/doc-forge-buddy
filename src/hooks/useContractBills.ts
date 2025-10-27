@@ -18,6 +18,7 @@ interface UseContractBillsReturn {
   billStatus: BillStatus;
   isLoading: boolean;
   toggleBillDelivery: (billType: BillType) => Promise<void>;
+  updateBillWithDate: (billType: BillType, deliveryDate: Date) => Promise<void>;
   refreshBills: () => Promise<void>;
 }
 
@@ -57,6 +58,9 @@ export function useContractBills({
 
     // Notificação de Rescisão: sempre obrigatória
     required.push('notificacao_rescisao');
+
+    // Entrega de Chaves: sempre obrigatória
+    required.push('entrega_chaves');
 
     return required;
   }, [formData]);
@@ -189,6 +193,7 @@ export function useContractBills({
           condominio: 'Condomínio',
           gas: 'Gás',
           notificacao_rescisao: 'Notificação de Rescisão',
+          entrega_chaves: 'Entrega de Chaves',
         }[billType];
 
         toast.success(
@@ -199,6 +204,63 @@ export function useContractBills({
       } catch (error) {
         console.error('Erro ao atualizar conta:', error);
         toast.error('Erro ao atualizar status da conta');
+      }
+    },
+    [bills]
+  );
+
+  /**
+   * Atualiza uma conta com data de entrega específica
+   */
+  const updateBillWithDate = useCallback(
+    async (billType: BillType, deliveryDate: Date) => {
+      try {
+        const bill = bills.find((b) => b.bill_type === billType);
+
+        if (!bill) {
+          toast.error('Conta não encontrada');
+          return;
+        }
+
+        // Atualizar no Supabase
+        const { error } = await supabase
+          .from('contract_bills')
+          .update({
+            delivered: true,
+            delivered_at: deliveryDate.toISOString(),
+          })
+          .eq('id', bill.id);
+
+        if (error) throw error;
+
+        // Atualizar estado local
+        setBills((prevBills) =>
+          prevBills.map((b) =>
+            b.id === bill.id
+              ? {
+                  ...b,
+                  delivered: true,
+                  delivered_at: deliveryDate.toISOString(),
+                }
+              : b
+          )
+        );
+
+        // Feedback visual
+        const billName = {
+          energia: 'Energia',
+          agua: 'Água',
+          condominio: 'Condomínio',
+          gas: 'Gás',
+          notificacao_rescisao: 'Notificação de Rescisão',
+          entrega_chaves: 'Entrega de Chaves',
+        }[billType];
+
+        toast.success(`${billName} concluída`);
+      } catch (error) {
+        console.error('Erro ao atualizar conta:', error);
+        toast.error('Erro ao atualizar status da conta');
+        throw error;
       }
     },
     [bills]
@@ -222,6 +284,8 @@ export function useContractBills({
     notificacao_rescisao: bills.find(
       (b) => b.bill_type === 'notificacao_rescisao'
     )?.delivered,
+    entrega_chaves: bills.find((b) => b.bill_type === 'entrega_chaves')
+      ?.delivered,
   };
 
   // Carregar bills quando o componente monta ou contractId muda
@@ -234,6 +298,7 @@ export function useContractBills({
     billStatus,
     isLoading,
     toggleBillDelivery,
+    updateBillWithDate,
     refreshBills,
   };
 }

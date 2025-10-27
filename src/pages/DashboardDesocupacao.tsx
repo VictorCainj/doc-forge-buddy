@@ -81,11 +81,69 @@ const DashboardDesocupacao = () => {
     setIsGenerating(true);
 
     try {
+      // Calcular datas do período
+      const getPeriodDates = (filters: DashboardFilters) => {
+        if (
+          filters.periodo === 'periodo-personalizado' &&
+          filters.dataInicio &&
+          filters.dataFim
+        ) {
+          return {
+            startDate: filters.dataInicio,
+            endDate: filters.dataFim,
+          };
+        }
+
+        if (
+          filters.periodo === 'mes-especifico' &&
+          filters.ano &&
+          filters.mes
+        ) {
+          const startOfMonth = new Date(filters.ano, filters.mes - 1, 1);
+          const endOfMonth = new Date(filters.ano, filters.mes, 0);
+          return {
+            startDate: startOfMonth.toISOString().split('T')[0],
+            endDate: endOfMonth.toISOString().split('T')[0],
+          };
+        }
+
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        return {
+          startDate: startOfMonth.toISOString().split('T')[0],
+          endDate: endOfMonth.toISOString().split('T')[0],
+        };
+      };
+
+      const { startDate, endDate } = getPeriodDates(filters);
+
+      // Função auxiliar para parsear datas
+      const parseDate = (dateString: string): Date => {
+        if (!dateString) return new Date(0); // Retorna uma data muito antiga se não tiver data
+
+        if (dateString.includes('/')) {
+          const [dia, mes, ano] = dateString.split('/');
+          return new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+        }
+
+        return new Date(dateString);
+      };
+
+      // Ordenar contratos por data de início (maior para menor)
+      const contratosOrdenados = [...data.contratos].sort((a, b) => {
+        const dataA = parseDate(a.dataInicioRescisao);
+        const dataB = parseDate(b.dataInicioRescisao);
+        return dataB.getTime() - dataA.getTime(); // Maior data primeiro
+      });
+
       const htmlContent = generateHTMLReport({
-        contratos: data.contratos,
+        contratos: contratosOrdenados,
         motivosStats: data.motivosStats,
         stats: data.stats,
         periodo: stats?.periodo || 'Período não definido',
+        dataInicio: startDate,
+        dataFim: endDate,
       });
 
       const newWindow = window.open('', '_blank');

@@ -9,40 +9,71 @@ interface HTMLReportData {
   motivosStats: MotivoStats[];
   stats: DashboardStats;
   periodo: string;
+  dataInicio?: string;
+  dataFim?: string;
 }
 
 /**
  * Gera relatório HTML profissional para impressão
  */
 export function generateHTMLReport(data: HTMLReportData): string {
-  const { contratos, motivosStats, stats, periodo } = data;
+  const { contratos, motivosStats, stats, periodo, dataInicio, dataFim } = data;
 
-  // Cores do aplicativo
+  // Formatar período no formato DD/MM/YYYY até DD/MM/YYYY
+  let periodoFormatado = periodo;
+  if (dataInicio && dataFim) {
+    try {
+      const inicio = new Date(dataInicio);
+      const fim = new Date(dataFim);
+      if (!isNaN(inicio.getTime()) && !isNaN(fim.getTime())) {
+        periodoFormatado = `${inicio.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        })} até ${fim.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        })}`;
+      }
+    } catch (error) {
+      console.error('Erro ao formatar período:', error);
+    }
+  }
+
+  // Cores Material Design - Google Style (neutras e claras)
   const colors = {
-    primary: '#4285F4',
-    accent: '#34A853',
-    warning: '#FBBC04',
-    danger: '#EA4335',
-    background: '#F8F9FA',
-    text: '#202124',
-    textSecondary: '#5F6368',
+    primary: '#1976D2', // Azul Google Material
+    primaryLight: '#42A5F5',
+    accent: '#00BCD4', // Cyan
+    success: '#4CAF50', // Verde Google
+    warning: '#FF9800', // Laranja
+    danger: '#F44336', // Vermelho
+    background: '#FFFFFF', // Branco puro
+    surface: '#FAFAFA', // Cinza muito claro
+    text: '#212121', // Cinza escuro
+    textSecondary: '#757575', // Cinza médio
+    divider: '#E0E0E0', // Linha divisória
   };
 
-  // Gerar cores do gráfico
+  // Cores do gráfico - Material Design harmonioso
   const chartColors = [
-    colors.primary,
-    colors.accent,
-    colors.warning,
-    colors.danger,
-    '#8E24AA',
-    '#00ACC1',
+    '#1976D2', // Azul principal
+    '#00BCD4', // Cyan
+    '#4CAF50', // Verde
+    '#FF9800', // Laranja
+    '#9C27B0', // Roxo
+    '#00ACC1', // Teal
   ];
 
-  // Gerar HTML do gráfico de pizza
-  const pieChartHTML = generatePieChartHTML(motivosStats, chartColors);
+  // Gerar HTML do gráfico de barras
+  const barChartHTML = generateBarChartHTML(motivosStats, chartColors, colors);
 
   // Gerar HTML da tabela de contratos
   const contractsTableHTML = generateContractsTableHTML(contratos);
+
+  // Gerar HTML do relatório de entrega de chaves
+  const keyDeliveryTableHTML = generateKeyDeliveryReportHTML(contratos);
 
   // Data de geração
   const dataGeracao = new Date().toLocaleDateString('pt-BR', {
@@ -62,7 +93,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
   <title>Relatório de Desocupações - ${periodo}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4;
@@ -76,161 +107,153 @@ export function generateHTMLReport(data: HTMLReportData): string {
       box-sizing: border-box;
     }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-      color: ${colors.text};
-      padding: 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+     body {
+       font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+       background: ${colors.background};
+       color: ${colors.text};
+       padding: 20px;
+       max-width: 1200px;
+       margin: 0 auto;
+       line-height: 1.6;
+       -webkit-font-smoothing: antialiased;
+       -moz-osx-font-smoothing: grayscale;
+       text-rendering: optimizeLegibility;
+     }
 
     /* Header */
     .header {
-      background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%);
+      background: ${colors.primary};
       color: white;
-      padding: 40px;
-      border-radius: 16px;
-      margin-bottom: 30px;
-      box-shadow: 0 8px 32px rgba(66, 133, 244, 0.25);
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.08);
       position: relative;
-      overflow: hidden;
     }
 
-    .header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
 
     .header h1 {
-      font-size: 32px;
+      font-size: 24px;
       font-weight: 700;
       margin-bottom: 8px;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
       position: relative;
       z-index: 1;
+      line-height: 1.3;
     }
 
     .header p {
-      font-size: 16px;
+      font-size: 13px;
       opacity: 0.95;
       position: relative;
       z-index: 1;
+      margin-bottom: 6px;
+      font-weight: 400;
     }
 
     .header-info {
-      margin-top: 12px;
-      font-size: 14px;
+      margin-top: 8px;
+      font-size: 12px;
       opacity: 0.9;
       position: relative;
       z-index: 1;
+      font-weight: 400;
     }
 
-    /* Card de Total */
-     .total-card {
-       background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%);
-       border: none;
-       border-radius: 16px;
-       padding: 32px;
-       margin-bottom: 30px;
+    .header-periodo {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      z-index: 1;
+      letter-spacing: 0.2px;
+    }
+
+     /* Card de Total */
+      .total-card {
+       background: ${colors.surface};
+       border: 1px solid ${colors.divider};
+       border-radius: 8px;
+       padding: 24px;
+       margin-bottom: 20px;
        text-align: center;
-       box-shadow: 0 8px 32px rgba(66, 133, 244, 0.3);
+       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
        position: relative;
-       overflow: hidden;
-     }
-
-     .total-card::before {
-       content: '';
-       position: absolute;
-       top: -50%;
-       left: -50%;
-       width: 200%;
-       height: 200%;
-       background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-       animation: shimmer 3s ease-in-out infinite;
-     }
-
-     @keyframes shimmer {
-       0%, 100% { transform: translateX(-100%) translateY(-100%); }
-       50% { transform: translateX(100%) translateY(100%); }
      }
 
      .total-card h2 {
-       font-size: 20px;
-       color: white;
-       margin-bottom: 12px;
+       font-size: 12px;
+       color: ${colors.textSecondary};
+       margin-bottom: 10px;
        font-weight: 600;
-       opacity: 0.95;
        position: relative;
        z-index: 1;
+       text-transform: uppercase;
+       letter-spacing: 0.8px;
      }
 
      .total-card .value {
-       font-size: 64px;
+       font-size: 52px;
        font-weight: 800;
-       color: white;
-       text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+       color: ${colors.primary};
        position: relative;
        z-index: 1;
-       letter-spacing: -2px;
+       letter-spacing: -1.5px;
+       margin: 12px 0;
+       line-height: 1;
      }
 
      .total-card .subtitle {
-       font-size: 14px;
-       color: white;
-       opacity: 0.8;
-       margin-top: 8px;
+       font-size: 13px;
+       color: ${colors.textSecondary};
+       margin-top: 6px;
        position: relative;
        z-index: 1;
+       font-weight: 400;
+       line-height: 1.4;
      }
 
-    /* Dashboard */
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 32px;
-      margin-bottom: 40px;
-      padding: 32px;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-      border: 1px solid #e8eaed;
-    }
+     /* Dashboard */
+     .dashboard {
+       display: block;
+       margin-bottom: 20px;
+       padding: 15px;
+       background: white;
+       border-radius: 12px;
+       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+       border: 1px solid #e8eaed;
+     }
 
     /* Gráfico de Pizza */
     .pie-section {
       background: white;
       border: 1px solid #E8EAED;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
 
     .pie-section h3 {
-      font-size: 22px;
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
       color: ${colors.text};
       text-align: center;
-      border-bottom: 3px solid ${colors.primary};
-      padding-bottom: 15px;
+      border-bottom: 2px solid ${colors.primary};
+      padding-bottom: 8px;
     }
 
      .pie-chart {
-       width: 400px;
-       height: 400px;
+       width: 300px;
+       height: 300px;
        border-radius: 50%;
-       margin: 30px auto;
+       margin: 15px auto;
        position: relative;
        background: #E8EAED;
-       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
      }
 
      .pie-chart svg {
@@ -302,26 +325,26 @@ export function generateHTMLReport(data: HTMLReportData): string {
     .legend {
       background: white;
       border: 1px solid #E8EAED;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .legend h3 {
-      font-size: 22px;
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 30px;
+      margin-bottom: 12px;
       color: ${colors.text};
       text-align: center;
-      border-bottom: 3px solid ${colors.primary};
-      padding-bottom: 15px;
+      border-bottom: 2px solid ${colors.primary};
+      padding-bottom: 8px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 6px 0;
       border-bottom: 1px solid ${colors.background};
     }
 
@@ -337,24 +360,35 @@ export function generateHTMLReport(data: HTMLReportData): string {
     }
 
     .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
       flex-shrink: 0;
     }
 
     .legend-text {
-      font-size: 14px;
+      font-size: 11px;
       color: ${colors.text};
+      display: inline;
     }
 
     .legend-value {
-      font-size: 14px;
+      font-size: 11px;
       font-weight: 600;
       color: ${colors.primary};
-      font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+      font-family: 'Roboto Mono', 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.02em;
+      margin-left: 6px;
+      display: inline;
+    }
+
+    .legend-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: ${colors.text};
+      margin-left: 2px;
+      display: inline;
     }
 
     /* Seção de Contratos */
@@ -362,9 +396,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
       background: white;
       border: 1px solid #E8EAED;
       border-radius: 12px;
-      padding: 24px;
+      padding: 15px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
 
     /* Quebra de página */
@@ -372,13 +406,155 @@ export function generateHTMLReport(data: HTMLReportData): string {
       page-break-before: always;
     }
 
+    /* Sistema de paginação inteligente */
+    @media print {
+      .print-page {
+        page-break-after: always;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        min-height: calc(100vh - 2cm);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      .print-page:last-child {
+        page-break-after: auto;
+      }
+
+      .page-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 40px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      /* Ajuste dinâmico para Página 1 */
+      .print-page-1 .header {
+        margin-bottom: 50px;
+      }
+
+      .print-page-1 .total-card {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+
+      .print-page-1 .total-card .value {
+        font-size: 85px;
+      }
+
+      .print-page-1 .total-card h2 {
+        margin-bottom: 20px;
+      }
+
+      .print-page-1 .total-card .subtitle {
+        margin-top: 20px;
+      }
+
+      /* Ajuste dinâmico para Página 2 (Dashboard) */
+      .print-page-2 .dashboard h3 {
+        font-size: 18px;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 700;
+        color: ${colors.text};
+        border-bottom: 2px solid ${colors.primary};
+        padding-bottom: 12px;
+      }
+
+      .print-page-2 .dashboard {
+        height: auto;
+        min-height: 400px;
+      }
+
+      .print-page-2 .bar-chart {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 20px;
+      }
+
+      /* Ajuste dinâmico para Página 3 e 4 (Tabelas) */
+      .print-page-3 h3 {
+        font-size: 18px;
+        margin: 20px auto 24px auto;
+        text-align: center !important;
+        font-weight: 700;
+        color: ${colors.text};
+        border-bottom: 2px solid ${colors.primary};
+        padding-bottom: 12px;
+        display: block;
+        width: 100%;
+      }
+
+      .print-page-4 h3 {
+        font-size: 18px;
+        margin: 60px auto 24px auto;
+        text-align: center !important;
+        font-weight: 700;
+        color: ${colors.text};
+        border-bottom: 2px solid ${colors.primary};
+        padding-bottom: 12px;
+        display: block;
+        width: 100%;
+      }
+
+      .print-page-3 table,
+      .print-page-4 table {
+        width: 100%;
+        font-size: clamp(7px, 1vw, 10px);
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .print-page-3 thead th,
+      .print-page-4 thead th {
+        font-size: clamp(8px, 1.2vw, 12px);
+        padding: 6px 4px;
+      }
+
+      .print-page-3 tbody td,
+      .print-page-4 tbody td {
+        font-size: clamp(7px, 0.9vw, 10px);
+        padding: 6px 4px;
+      }
+
+      .print-page-3 tbody tr,
+      .print-page-4 tbody tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      /* Evitar que dashboard quebre */
+      .print-page-2 .dashboard {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .print-page-2 .bar-chart {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+
+    @media screen {
+      .print-page {
+        min-height: auto;
+      }
+    }
+
     .contracts-section h3 {
-      font-size: 20px;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       color: ${colors.text};
       border-bottom: 2px solid ${colors.primary};
-      padding-bottom: 10px;
+      padding-bottom: 6px;
+      text-align: center;
     }
 
     /* Tabela */
@@ -392,12 +568,13 @@ export function generateHTMLReport(data: HTMLReportData): string {
       color: white;
     }
 
-     th {
-       padding: 8px;
-       text-align: left;
-       font-size: 12px;
-       font-weight: 600;
-     }
+      th {
+        padding: 8px 6px;
+        text-align: left;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
 
      tbody tr {
        border-bottom: 1px solid #E8EAED;
@@ -411,18 +588,18 @@ export function generateHTMLReport(data: HTMLReportData): string {
        background: #E8F0FE;
      }
 
-     td {
-       padding: 8px;
-       font-size: 12px;
-       color: ${colors.text};
-       max-width: 120px;
-       overflow: hidden;
-       text-overflow: ellipsis;
-       white-space: normal;
-       word-wrap: break-word;
-       hyphens: manual;
-       line-height: 1.4;
-     }
+      td {
+        padding: 8px 6px;
+        font-size: 10px;
+        color: ${colors.text};
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+        word-wrap: break-word;
+        hyphens: manual;
+        line-height: 1.5;
+      }
 
      td:first-child {
        max-width: 100px;
@@ -562,6 +739,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
          display: block !important;
          page-break-inside: avoid !important;
          margin-bottom: 20px !important;
+         grid-template-columns: 1fr !important;
        }
 
        .pie-section, .legend {
@@ -634,6 +812,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
          margin-bottom: 15px !important;
          border-bottom: 2px solid ${colors.primary} !important;
          padding-bottom: 8px !important;
+         text-align: center !important;
        }
 
        table {
@@ -937,9 +1116,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Relatório de Desocupações - Impressão</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+             <link rel="preconnect" href="https://fonts.googleapis.com">
+             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
             <style>
              @page {
                size: A4;
@@ -974,16 +1153,24 @@ export function generateHTMLReport(data: HTMLReportData): string {
                font-weight: 700;
              }
              
-             .header p {
-               font-size: 14px;
-               opacity: 0.95;
-             }
-             
-             .header-info {
-               font-size: 12px;
-               opacity: 0.9;
-               margin-top: 8px;
-             }
+              .header p {
+                font-size: 12px;
+                opacity: 0.95;
+              }
+
+              .header-periodo {
+                font-size: 12px;
+                font-weight: 600;
+                margin: 4px 0;
+                padding-bottom: 6px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+              }
+              
+              .header-info {
+                font-size: 11px;
+                opacity: 0.9;
+                margin-top: 6px;
+              }
              
                            .total-card {
                 background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%) !important;
@@ -999,34 +1186,34 @@ export function generateHTMLReport(data: HTMLReportData): string {
                 max-height: none !important;
               }
              
-                           .total-card h2 {
-                font-size: 18px !important;
-                color: white !important;
-                margin-bottom: 8px !important;
-                font-weight: 600 !important;
-                opacity: 0.95 !important;
-                position: relative !important;
-                z-index: 1 !important;
-              }
-              
-              .total-card .value {
-                font-size: 48px !important;
-                font-weight: 800 !important;
-                color: white !important;
-                text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-                letter-spacing: -1px !important;
-                position: relative !important;
-                z-index: 1 !important;
-              }
-
-              .total-card .subtitle {
-                font-size: 12px !important;
-                color: white !important;
-                opacity: 0.8 !important;
-                margin-top: 6px !important;
-                position: relative !important;
-                z-index: 1 !important;
-              }
+               .total-card h2 {
+                 font-size: 14px !important;
+                 color: white !important;
+                 margin-bottom: 6px !important;
+                 font-weight: 600 !important;
+                 opacity: 0.95 !important;
+                 position: relative !important;
+                 z-index: 1 !important;
+               }
+               
+               .total-card .value {
+                 font-size: 36px !important;
+                 font-weight: 800 !important;
+                 color: white !important;
+                 text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+                 letter-spacing: -1px !important;
+                 position: relative !important;
+                 z-index: 1 !important;
+               }
+ 
+               .total-card .subtitle {
+                 font-size: 10px !important;
+                 color: white !important;
+                 opacity: 0.8 !important;
+                 margin-top: 4px !important;
+                 position: relative !important;
+                 z-index: 1 !important;
+               }
              
              .dashboard {
                display: block;
@@ -1034,37 +1221,37 @@ export function generateHTMLReport(data: HTMLReportData): string {
                margin-bottom: 20px;
              }
              
-             .pie-section, .legend {
-               background: white !important;
-               border: 1px solid #E8EAED;
-               border-radius: 8px;
-               padding: 15px;
-               margin-bottom: 15px;
-               width: 100%;
-               display: block;
-             }
-             
-             .pie-section h3, .legend h3 {
-               font-size: 16px;
-               font-weight: 600;
-               margin-bottom: 15px;
-               color: ${colors.text};
-             }
-             
-             .pie-chart {
-               width: 280px;
-               height: 280px;
-               margin: 10px auto;
-               page-break-inside: avoid;
-               break-inside: avoid;
-             }
-             
-             .pie-chart svg {
-               width: 280px;
-               height: 280px;
-               page-break-inside: avoid;
-               break-inside: avoid;
-             }
+              .pie-section, .legend {
+                background: white !important;
+                border: 1px solid #E8EAED;
+                border-radius: 8px;
+                padding: 10px;
+                margin-bottom: 10px;
+                width: 100%;
+                display: block;
+              }
+              
+              .pie-section h3, .legend h3 {
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 10px;
+                color: ${colors.text};
+              }
+              
+              .pie-chart {
+                width: 200px;
+                height: 200px;
+                margin: 8px auto;
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
+              
+              .pie-chart svg {
+                width: 200px;
+                height: 200px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
 
              .pie-chart svg path,
              .pie-chart svg text {
@@ -1073,53 +1260,63 @@ export function generateHTMLReport(data: HTMLReportData): string {
                color-adjust: exact !important;
              }
              
-             .legend-item {
-               display: flex;
-               align-items: center;
-               justify-content: space-between;
-               padding: 5px 0;
-               border-bottom: 1px solid ${colors.background};
-               font-size: 12px;
-             }
-             
-             .legend-item:last-child {
-               border-bottom: none;
-             }
-             
-             .legend-label {
-               display: flex;
-               align-items: center;
-               gap: 8px;
-               flex: 1;
-             }
-             
-             .legend-color {
-               width: 12px;
-               height: 12px;
-               border-radius: 2px;
-               flex-shrink: 0;
-             }
-             
-             .legend-text {
-               font-size: 12px;
-               color: ${colors.text};
-             }
-             
-             .legend-value {
-               font-size: 12px;
-               font-weight: 600;
-               color: ${colors.primary};
-               font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
-               font-variant-numeric: tabular-nums;
-               letter-spacing: -0.02em;
-             }
+              .legend-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 3px 0;
+                border-bottom: 1px solid ${colors.background};
+                font-size: 9px;
+              }
+              
+              .legend-item:last-child {
+                border-bottom: none;
+              }
+              
+              .legend-label {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex: 1;
+              }
+              
+              .legend-color {
+                width: 10px;
+                height: 10px;
+                border-radius: 2px;
+                flex-shrink: 0;
+              }
+              
+              .legend-text {
+                font-size: 9px;
+                color: ${colors.text};
+              }
+              
+              .legend-value {
+                font-size: 9px;
+                font-weight: 600;
+                color: ${colors.primary};
+                font-family: 'Roboto Mono', 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: -0.02em;
+                margin-left: 2px;
+                display: inline;
+              }
+
+              .legend-count {
+                font-size: 9px;
+                font-weight: 600;
+                color: ${colors.text};
+                margin-left: 2px;
+                display: inline;
+              }
              
              .contracts-section {
                background: white !important;
                border: 1px solid #E8EAED;
                border-radius: 8px;
-               padding: 15px;
-               margin-bottom: 20px;
+               padding: 10px;
+               margin-bottom: 15px;
                page-break-inside: auto;
              }
 
@@ -1128,18 +1325,19 @@ export function generateHTMLReport(data: HTMLReportData): string {
              }
              
              .contracts-section h3 {
-               font-size: 18px;
+               font-size: 12px;
                font-weight: 600;
-               margin-bottom: 15px;
+               margin-bottom: 8px;
                color: ${colors.text};
                border-bottom: 2px solid ${colors.primary};
-               padding-bottom: 8px;
+               padding-bottom: 4px;
+               text-align: center;
              }
              
              table {
                width: 100%;
                border-collapse: collapse;
-               font-size: 10px;
+               font-size: 7px;
                page-break-inside: auto;
              }
              
@@ -1150,8 +1348,8 @@ export function generateHTMLReport(data: HTMLReportData): string {
              }
              
              th {
-               padding: 6px;
-               font-size: 10px;
+               padding: 3px;
+               font-size: 7px;
                font-weight: 600;
                text-align: left;
                border: 1px solid #ddd;
@@ -1167,8 +1365,8 @@ export function generateHTMLReport(data: HTMLReportData): string {
              }
              
              td {
-               padding: 6px;
-               font-size: 10px;
+               padding: 3px;
+               font-size: 7px;
                color: ${colors.text};
                border: 1px solid #ddd;
                max-width: none;
@@ -1178,7 +1376,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
                word-wrap: break-word;
                hyphens: manual;
                text-align: left;
-               line-height: 1.4;
+               line-height: 1.2;
              }
              
              .footer {
@@ -1208,46 +1406,50 @@ export function generateHTMLReport(data: HTMLReportData): string {
              }
            </style>
          </head>
-         <body onload="setTimeout(function(){ window.print(); setTimeout(function(){ window.close(); }, 1000); }, 500);">
-           <div class="header">
-             <h1>RELATÓRIO DE DESOCUPAÇÕES</h1>
-             <p>Período: ${periodo}</p>
-             <div class="header-info">Gerado em: ${dataGeracao}</div>
-           </div>
+          <body onload="setTimeout(function(){ window.print(); setTimeout(function(){ window.close(); }, 1000); }, 500);">
+            <!-- Página 1: Header + Total -->
+            <div class="print-page print-page-1">
+              <div class="page-content">
+                <div class="header">
+                  <h1>RELATÓRIO DE DESOCUPAÇÕES</h1>
+                  <div class="header-periodo">Período: ${periodoFormatado}</div>
+                  <div class="header-info">Gerado em: ${dataGeracao}</div>
+                </div>
 
-           <div class="total-card">
-             <h2>Total de Desocupações</h2>
-             <div class="value">${stats.totalDesocupacoes}</div>
-             <div class="subtitle">Contratos em processo de desocupação no período</div>
-           </div>
+                <div class="total-card">
+                  <h2>Total de Desocupações</h2>
+                  <div class="value">${stats.totalDesocupacoes}</div>
+                  <div class="subtitle">Contratos em processo de desocupação no período</div>
+                </div>
+              </div>
+            </div>
 
-           <div class="dashboard">
-             <div class="pie-section">
-               <h3>Distribuição dos Motivos</h3>
-               ${pieChartHTML}
-             </div>
-
-             <div class="legend">
-               <h3>Motivos de Desocupação</h3>
-               ${motivosStats
-                 .map(
-                   (motivo, index) => `
-                 <div class="legend-item">
-                   <div class="legend-label">
-                     <div class="legend-color" style="background: ${chartColors[index % chartColors.length]}"></div>
-                     <span class="legend-text">${motivo.motivo}</span>
-                   </div>
-                   <span class="legend-value">${motivo.count} (${motivo.percentage}%)</span>
+           <!-- Página 2: Dashboard com Gráfico -->
+           <div class="print-page print-page-2">
+             <div class="page-content">
+               <div class="dashboard">
+                 <div class="pie-section">
+                   <h3>Motivos de Desocupação</h3>
+                   ${barChartHTML}
                  </div>
-               `
-                 )
-                 .join('')}
+               </div>
              </div>
            </div>
 
-           <div class="contracts-section page-break-before">
-             <h3>Contratos em Desocupação</h3>
-             ${contractsTableHTML}
+           <!-- Página 3: Contratos em Desocupação -->
+           <div class="print-page print-page-3">
+             <div class="page-content">
+               <h3>Contratos em Desocupação</h3>
+               ${contractsTableHTML}
+             </div>
+           </div>
+
+           <!-- Página 4: Relatório de Entrega de Chaves -->
+           <div class="print-page print-page-4">
+             <div class="page-content">
+               <h3>Relatório de Entrega de Chaves</h3>
+               ${keyDeliveryTableHTML}
+             </div>
            </div>
 
            <div class="footer">
@@ -1263,51 +1465,49 @@ export function generateHTMLReport(data: HTMLReportData): string {
      }
    </script>
 
-  <!-- Header -->
-  <div class="header">
-    <h1>RELATÓRIO DE DESOCUPAÇÕES</h1>
-    <p>Período: ${periodo}</p>
-    <div class="header-info">Gerado em: ${dataGeracao}</div>
-  </div>
+  <!-- Página 1: Header + Total -->
+  <div class="print-page print-page-1">
+    <div class="page-content">
+      <div class="header">
+        <h1>RELATÓRIO DE DESOCUPAÇÕES</h1>
+        <div class="header-periodo">Período: ${periodoFormatado}</div>
+        <div class="header-info">Gerado em: ${dataGeracao}</div>
+      </div>
 
-  <!-- Card de Total -->
-  <div class="total-card">
-    <h2>Total de Desocupações</h2>
-    <div class="value">${stats.totalDesocupacoes}</div>
-    <div class="subtitle">Contratos em processo de desocupação no período</div>
-  </div>
-
-  <!-- Dashboard com Gráfico e Legenda -->
-  <div class="dashboard">
-    <!-- Gráfico de Pizza -->
-    <div class="pie-section">
-      <h3>Distribuição dos Motivos</h3>
-      ${pieChartHTML}
+      <div class="total-card">
+        <h2>Total de Desocupações</h2>
+        <div class="value">${stats.totalDesocupacoes}</div>
+        <div class="subtitle">Contratos em processo de desocupação no período</div>
+      </div>
     </div>
+  </div>
 
-    <!-- Legenda -->
-    <div class="legend">
-      <h3>Motivos de Desocupação</h3>
-      ${motivosStats
-        .map(
-          (motivo, index) => `
-        <div class="legend-item">
-          <div class="legend-label">
-            <div class="legend-color" style="background: ${chartColors[index % chartColors.length]}"></div>
-            <span class="legend-text">${motivo.motivo}</span>
-          </div>
-          <span class="legend-value">${motivo.count} (${motivo.percentage}%)</span>
+  <!-- Página 2: Dashboard com Gráfico -->
+  <div class="print-page print-page-2">
+    <div class="page-content">
+      <div class="dashboard">
+        <div class="pie-section">
+          <h3>Motivos de Desocupação</h3>
+          ${barChartHTML}
         </div>
-      `
-        )
-        .join('')}
+      </div>
     </div>
   </div>
 
-  <!-- Contratos -->
-  <div class="contracts-section page-break-before">
-    <h3>Contratos em Desocupação</h3>
-    ${contractsTableHTML}
+  <!-- Página 3: Contratos em Desocupação -->
+  <div class="print-page print-page-3">
+    <div class="page-content">
+      <h3>Contratos em Desocupação</h3>
+      ${contractsTableHTML}
+    </div>
+  </div>
+
+  <!-- Página 4: Relatório de Entrega de Chaves -->
+  <div class="print-page print-page-4">
+    <div class="page-content">
+      <h3>Relatório de Entrega de Chaves</h3>
+      ${keyDeliveryTableHTML}
+    </div>
   </div>
 
   <!-- Footer -->
@@ -1321,73 +1521,55 @@ export function generateHTMLReport(data: HTMLReportData): string {
 }
 
 /**
- * Gera HTML do gráfico de pizza
+ * Gera HTML do gráfico de barras otimizado para impressão
  */
-function generatePieChartHTML(
+function generateBarChartHTML(
   motivosStats: MotivoStats[],
-  chartColors: string[]
+  chartColors: string[],
+  colors: {
+    primary: string;
+    text: string;
+    background: string;
+    textSecondary: string;
+  }
 ): string {
   if (motivosStats.length === 0) {
-    return '<div class="pie-chart" style="background: #E8EAED;"></div>';
+    return '<div class="bar-chart" style="background: #E8EAED; height: 300px; display: flex; align-items: center; justify-content: center; border-radius: 12px;"><p style="color: #5F6368;">Nenhum dado disponível</p></div>';
   }
 
-  // Gerar segmentos usando SVG para melhor compatibilidade
-  const segments = motivosStats
+  const maxValue = Math.max(...motivosStats.map((m) => m.count));
+
+  const bars = motivosStats
     .map((motivo, index) => {
-      const startPercent = motivosStats
-        .slice(0, index)
-        .reduce((sum, m) => sum + m.percentage, 0);
-      const endPercent = startPercent + motivo.percentage;
+      const barWidth = (motivo.count / maxValue) * 100;
 
-      // Converter percentuais para ângulos
-      const startAngle = (startPercent / 100) * 360;
-      const endAngle = (endPercent / 100) * 360;
-
-      // Calcular coordenadas do arco
-      const radius = 180; // 180px (metade de 360px)
-      const centerX = 200;
-      const centerY = 200;
-
-      const startX =
-        centerX + radius * Math.cos(((startAngle - 90) * Math.PI) / 180);
-      const startY =
-        centerY + radius * Math.sin(((startAngle - 90) * Math.PI) / 180);
-      const endX =
-        centerX + radius * Math.cos(((endAngle - 90) * Math.PI) / 180);
-      const endY =
-        centerY + radius * Math.sin(((endAngle - 90) * Math.PI) / 180);
-
-      const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-
-      const pathData = [
-        `M ${centerX} ${centerY}`,
-        `L ${startX} ${startY}`,
-        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-        'Z',
-      ].join(' ');
-
-      // Calcular posição do label no centro do segmento
-      const midAngle = (startAngle + endAngle) / 2;
-      const labelRadius = radius * 0.6; // Posição mais próxima do centro
-      const labelX =
-        centerX + labelRadius * Math.cos(((midAngle - 90) * Math.PI) / 180);
-      const labelY =
-        centerY + labelRadius * Math.sin(((midAngle - 90) * Math.PI) / 180);
-
-      // Verificar se o segmento é grande o suficiente para mostrar label
-      const segmentSize = endAngle - startAngle;
-      const showLabel = segmentSize > 10; // Mostrar label se o segmento for maior que 10 graus
-
-      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)"></path>
-        ${showLabel ? `<text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="white" font-family="'Roboto Mono', 'Courier New', monospace" style="pointer-events: none; text-rendering: geometricPrecision; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.8));">${motivo.percentage.toFixed(0)}%</text>` : ''}`;
+      return `
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 12px; color: ${colors.text}; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.1px;">
+            ${motivo.motivo}
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="flex: 1; height: 40px; background: ${colors.surface}; border-radius: 8px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);">
+              <div style="width: ${barWidth}%; height: 100%; background: ${chartColors[index % chartColors.length]}; position: relative; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; box-shadow: inset 0 1px 2px rgba(255,255,255,0.25);">
+                <span style="font-size: 11px; font-weight: 700; color: white; font-family: 'Inter', 'Roboto', monospace; text-shadow: 0 1px 3px rgba(0,0,0,0.3); letter-spacing: 0.2px;">
+                  ${motivo.percentage.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+            <div style="min-width: 70px; height: 40px; background: ${colors.surface}; border: 1px solid ${colors.divider}; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              <span style="font-size: 13px; font-weight: 700; color: ${colors.text}; font-family: 'Inter', 'Roboto', monospace; letter-spacing: 0.1px;">
+                ${motivo.count}
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
     })
     .join('');
 
   return `
-    <div class="pie-chart">
-      <svg width="400" height="400" viewBox="0 0 400 400">
-        ${segments}
-      </svg>
+    <div class="bar-chart" style="padding: 15px;">
+      ${bars}
     </div>
   `;
 }
@@ -1442,17 +1624,24 @@ function generateContractsTableHTML(contratos: ContratoDesocupacao[]): string {
     return '<p style="text-align: center; color: #5F6368; padding: 40px;">Nenhum contrato em desocupação no período selecionado.</p>';
   }
 
+  // Calcular tamanhos dinâmicos baseado na quantidade de contratos
+  const rowsCount = contratos.length;
+  const dynamicFontSize =
+    rowsCount > 20 ? '9px' : rowsCount > 15 ? '10px' : '11px';
+  const dynamicPadding =
+    rowsCount > 20 ? '6px' : rowsCount > 15 ? '8px' : '10px';
+
   return `
-    <table>
+    <table style="font-size: ${dynamicFontSize};">
        <thead>
          <tr>
-           <th>Nº Contrato</th>
-           <th>Locador</th>
-           <th>Locatário</th>
-           <th>Endereço</th>
-           <th>Data Início</th>
-           <th>Data Fim</th>
-           <th>Motivo</th>
+           <th style="padding: ${dynamicPadding};">Nº Contrato</th>
+           <th style="padding: ${dynamicPadding};">Locador</th>
+           <th style="padding: ${dynamicPadding};">Locatário</th>
+           <th style="padding: ${dynamicPadding};">Endereço</th>
+           <th style="padding: ${dynamicPadding};">Data Início</th>
+           <th style="padding: ${dynamicPadding};">Data Fim</th>
+           <th style="padding: ${dynamicPadding};">Motivo</th>
          </tr>
        </thead>
        <tbody>
@@ -1460,18 +1649,107 @@ function generateContractsTableHTML(contratos: ContratoDesocupacao[]): string {
            .map(
              (contrato) => `
            <tr>
-             <td><strong>${contrato.numeroContrato}</strong></td>
-             <td class="tooltip" data-tooltip="${contrato.nomeLocador || 'Não informado'}">${getPrimeiroNome(contrato.nomeLocador) || 'Não informado'}</td>
-             <td class="tooltip" data-tooltip="${contrato.nomeLocatario || 'Não informado'}">${getPrimeiroNome(contrato.nomeLocatario) || 'Não informado'}</td>
-             <td class="tooltip" data-tooltip="${contrato.enderecoImovel || 'Não informado'}">${simplificarEndereco(contrato.enderecoImovel)}</td>
-             <td>${contrato.dataInicioRescisao || 'Não informada'}</td>
-             <td>${contrato.dataTerminoRescisao || 'Não informada'}</td>
-             <td class="tooltip" data-tooltip="${contrato.motivoDesocupacao || 'Não informado'}">${contrato.motivoDesocupacao || 'Não informado'}</td>
+             <td style="padding: ${dynamicPadding};"><strong>${contrato.numeroContrato}</strong></td>
+             <td class="tooltip" data-tooltip="${contrato.nomeLocador || 'Não informado'}" style="padding: ${dynamicPadding};">${getPrimeiroNome(contrato.nomeLocador) || 'Não informado'}</td>
+             <td class="tooltip" data-tooltip="${contrato.nomeLocatario || 'Não informado'}" style="padding: ${dynamicPadding};">${getPrimeiroNome(contrato.nomeLocatario) || 'Não informado'}</td>
+             <td class="tooltip" data-tooltip="${contrato.enderecoImovel || 'Não informado'}" style="padding: ${dynamicPadding};">${simplificarEndereco(contrato.enderecoImovel)}</td>
+             <td style="padding: ${dynamicPadding};">${contrato.dataInicioRescisao || 'Não informada'}</td>
+             <td style="padding: ${dynamicPadding};">${contrato.dataTerminoRescisao || 'Não informada'}</td>
+             <td class="tooltip" data-tooltip="${contrato.motivoDesocupacao || 'Não informado'}" style="padding: ${dynamicPadding};">${contrato.motivoDesocupacao || 'Não informado'}</td>
            </tr>
          `
            )
            .join('')}
        </tbody>
     </table>
+  `;
+}
+
+/**
+ * Gera HTML do relatório de entrega de chaves
+ */
+function generateKeyDeliveryReportHTML(
+  contratos: ContratoDesocupacao[]
+): string {
+  if (contratos.length === 0) {
+    return '<p style="text-align: center; color: #5F6368; padding: 40px;">Nenhum contrato no período selecionado.</p>';
+  }
+
+  // Calcular tamanhos dinâmicos baseado na quantidade de contratos
+  const rowsCount = contratos.length;
+  const dynamicFontSize =
+    rowsCount > 20 ? '9px' : rowsCount > 15 ? '10px' : '11px';
+  const dynamicPadding =
+    rowsCount > 20 ? '6px' : rowsCount > 15 ? '8px' : '10px';
+
+  // Contar chaves entregues e pendentes
+  let chavesEntregues = 0;
+  let chavesPendentes = 0;
+
+  const rows = contratos
+    .map((contrato) => {
+      const { entregaChaves } = contrato;
+
+      // Contar estatísticas
+      if (!entregaChaves || !entregaChaves.entregue) {
+        chavesPendentes++;
+      } else {
+        chavesEntregues++;
+      }
+
+      // Se não tem informação de entrega de chaves, mostrar como "Pendente"
+      let statusHTML: string;
+      let infoHTML: string;
+
+      if (!entregaChaves) {
+        statusHTML = `<span style="background: #FFEBEE; color: #C62828; padding: 6px 12px; border-radius: 16px; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Pendente</span>`;
+        infoHTML = '-';
+      } else if (entregaChaves.entregue) {
+        statusHTML = `<span style="background: #E8F5E9; color: #2E7D32; padding: 6px 12px; border-radius: 16px; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Entregue</span>`;
+        infoHTML = entregaChaves.dataEntrega || '-';
+      } else {
+        statusHTML = `<span style="background: #FFEBEE; color: #C62828; padding: 6px 12px; border-radius: 16px; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Pendente</span>`;
+        infoHTML = '-';
+      }
+
+      return `
+        <tr>
+          <td style="padding: ${dynamicPadding};"><strong>${contrato.numeroContrato}</strong></td>
+          <td class="tooltip" data-tooltip="${contrato.nomeLocatario || 'Não informado'}" style="padding: ${dynamicPadding};">${getPrimeiroNome(contrato.nomeLocatario) || 'Não informado'}</td>
+          <td class="tooltip" data-tooltip="${contrato.enderecoImovel || 'Não informado'}" style="padding: ${dynamicPadding};">${simplificarEndereco(contrato.enderecoImovel)}</td>
+          <td style="text-align: center; padding: ${dynamicPadding};">${statusHTML}</td>
+          <td style="text-align: center; font-family: 'Roboto Mono', monospace; font-size: 10px; padding: ${dynamicPadding};">${infoHTML}</td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  // Gerar estatísticas minimalistas
+  const statsHTML = `
+    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #E0E0E0; text-align: center;">
+      <span style="font-size: 12px; color: #5F6368; font-weight: 500; letter-spacing: 0.3px;">
+        Chaves Entregues: <strong style="color: #2E7D32; font-weight: 700;">${chavesEntregues}</strong>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        Chaves Pendentes: <strong style="color: #C62828; font-weight: 700;">${chavesPendentes}</strong>
+      </span>
+    </div>
+  `;
+
+  return `
+    <table style="font-size: ${dynamicFontSize};">
+      <thead>
+        <tr>
+          <th style="padding: ${dynamicPadding};">Nº Contrato</th>
+          <th style="padding: ${dynamicPadding};">Locatário</th>
+          <th style="padding: ${dynamicPadding};">Endereço</th>
+          <th style="padding: ${dynamicPadding};">Status</th>
+          <th style="padding: ${dynamicPadding};">Data de Entrega de Chaves</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+    ${statsHTML}
   `;
 }

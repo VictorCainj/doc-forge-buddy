@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Clock, Zap, Droplets, Building2, Flame, Bell } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { BillType, ContractFormData } from '@/types/contract';
 import { useContractBills } from '@/hooks/useContractBills';
 import { cn } from '@/lib/utils';
@@ -31,6 +30,7 @@ export const ContractBillsStatus: React.FC<ContractBillsStatusProps> = ({
     condominio: 'Condomínio',
     gas: 'Gás',
     notificacao_rescisao: 'Notificação de Rescisão',
+    entrega_chaves: 'Entrega de Chaves',
   };
 
   const billIcons: Record<BillType, React.ElementType> = {
@@ -39,6 +39,7 @@ export const ContractBillsStatus: React.FC<ContractBillsStatusProps> = ({
     condominio: Building2,
     gas: Flame,
     notificacao_rescisao: Bell,
+    entrega_chaves: Key,
   };
 
   // Ordenar bills na ordem padrão
@@ -48,6 +49,7 @@ export const ContractBillsStatus: React.FC<ContractBillsStatusProps> = ({
     'condominio',
     'gas',
     'notificacao_rescisao',
+    'entrega_chaves',
   ];
 
   const visibleBills = orderedBillTypes
@@ -68,7 +70,10 @@ export const ContractBillsStatus: React.FC<ContractBillsStatusProps> = ({
         <CardContent className="space-y-3">
           <div className="animate-pulse space-y-2">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 rounded-lg border border-neutral-200 min-h-[2.5rem]">
+              <div
+                key={i}
+                className="flex items-center justify-between p-2.5 rounded-lg border border-neutral-200 min-h-[2.5rem]"
+              >
                 <div className="flex items-center gap-1.5">
                   <div className="p-1 rounded bg-black w-5 h-5"></div>
                   <div className="h-4 bg-gray-200 rounded w-20"></div>
@@ -106,10 +111,7 @@ export const ContractBillsStatus: React.FC<ContractBillsStatusProps> = ({
               >
                 <div className="flex items-center gap-1.5">
                   <div className="p-1 rounded bg-black">
-                    <Icon
-                      className="h-3.5 w-3.5 text-white"
-                      color="white"
-                    />
+                    <Icon className="h-3.5 w-3.5 text-white" color="white" />
                   </div>
                   <span
                     className={cn(
@@ -122,10 +124,7 @@ export const ContractBillsStatus: React.FC<ContractBillsStatusProps> = ({
                 </div>
                 {delivered && (
                   <div className="p-1 rounded-full bg-success-600">
-                    <CheckCircle
-                      className="h-3 w-3 text-white"
-                      color="white"
-                    />
+                    <CheckCircle className="h-3 w-3 text-white" color="white" />
                   </div>
                 )}
               </div>

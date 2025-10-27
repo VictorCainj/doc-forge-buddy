@@ -2,6 +2,12 @@
  * Tipos para o Dashboard de Desocupação
  */
 
+export interface EntregaChaves {
+  entregue: boolean;
+  dataEntrega?: string;
+  diasPendentes?: number;
+}
+
 export interface ContratoDesocupacao {
   id: string;
   numeroContrato: string;
@@ -12,6 +18,7 @@ export interface ContratoDesocupacao {
   dataInicioRescisao: string; // Alterado de dataComunicacao
   dataTerminoRescisao?: string;
   dataNotificacao: string;
+  entregaChaves?: EntregaChaves;
 }
 
 export interface DashboardStats {

@@ -6,3 +6,4 @@ export { ContractList } from './ContractList';
 export { ContractModals } from './ContractModals';
 export { ContractWizardModal } from './ContractWizardModal';
 export { ContractBillsSection } from './ContractBillsSection';
+export { KeyDeliveryDateModal } from './KeyDeliveryDateModal';

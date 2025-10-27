@@ -140,9 +140,28 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
         );
       }
 
+      // Buscar informações de entrega de chaves para todos os contratos
+      const contratosComBillsPromises = contratosData.map(async (item) => {
+        try {
+          const { data: billsData } = await supabase
+            .from('contract_bills')
+            .select('bill_type, delivered, delivered_at')
+            .eq('contract_id', item.id)
+            .eq('bill_type', 'entrega_chaves')
+            .maybeSingle();
+
+          return { item, billsData };
+        } catch (error) {
+          console.error('Erro ao buscar bills para contrato:', item.id, error);
+          return { item, billsData: null };
+        }
+      });
+
+      const contratosComBills = await Promise.all(contratosComBillsPromises);
+
       // Transformar dados para o formato esperado
-      const contratos: ContratoDesocupacao[] = (contratosData || []).map(
-        (item) => {
+      const contratos: ContratoDesocupacao[] = contratosComBills.map(
+        ({ item, billsData }) => {
           const dataInicioRescisao = item.form_data?.dataInicioRescisao || '';
 
           // Validar se a data de início da rescisão é válida
@@ -172,6 +191,47 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
             }
           }
 
+          // Processar informações de entrega de chaves
+          let entregaChaves;
+          if (billsData) {
+            const entregue = billsData.delivered || false;
+            const dataEntrega = billsData.delivered_at
+              ? new Date(billsData.delivered_at).toLocaleDateString('pt-BR')
+              : undefined;
+
+            // Calcular dias pendentes se as chaves não foram entregues
+            let diasPendentes: number | undefined;
+            if (!entregue && dataInicioRescisaoValida) {
+              try {
+                let dataInicio: Date;
+                if (dataInicioRescisaoValida.includes('/')) {
+                  const [dia, mes, ano] = dataInicioRescisaoValida.split('/');
+                  dataInicio = new Date(
+                    parseInt(ano),
+                    parseInt(mes) - 1,
+                    parseInt(dia)
+                  );
+                } else {
+                  dataInicio = new Date(dataInicioRescisaoValida);
+                }
+
+                if (!isNaN(dataInicio.getTime())) {
+                  const hoje = new Date();
+                  const diffTime = hoje.getTime() - dataInicio.getTime();
+                  diasPendentes = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                }
+              } catch (error) {
+                console.error('Erro ao calcular dias pendentes:', error);
+              }
+            }
+
+            entregaChaves = {
+              entregue,
+              dataEntrega,
+              diasPendentes,
+            };
+          }
+
           return {
             id: item.id,
             numeroContrato: item.form_data?.numeroContrato || '',
@@ -182,6 +242,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
             dataInicioRescisao: dataInicioRescisaoValida, // Data de início da rescisão
             dataTerminoRescisao: item.form_data?.dataTerminoRescisao || '',
             dataNotificacao: item.created_at, // Data de criação do registro
+            entregaChaves,
           };
         }
       );

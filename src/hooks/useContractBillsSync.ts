@@ -18,8 +18,8 @@ interface UseContractBillsSyncReturn {
  * - Usado para sincronizar dados entre páginas
  * - Fonte única de verdade para status das contas
  */
-export function useContractBillsSync({ 
-  contractId 
+export function useContractBillsSync({
+  contractId,
 }: UseContractBillsSyncProps): UseContractBillsSyncReturn {
   const [billStatus, setBillStatus] = useState<BillStatus>({
     energia: false,
@@ -27,6 +27,7 @@ export function useContractBillsSync({
     condominio: false,
     gas: false,
     notificacao_rescisao: false,
+    entrega_chaves: false,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -77,6 +78,7 @@ export function useContractBillsSync({
           condominio: false,
           gas: false,
           notificacao_rescisao: false,
+          entrega_chaves: false,
         };
 
         data.forEach((bill) => {
@@ -103,9 +105,9 @@ export function useContractBillsSync({
     await loadBillStatus();
   };
 
-  return { 
-    billStatus, 
-    isLoading, 
-    refreshBillStatus 
+  return {
+    billStatus,
+    isLoading,
+    refreshBillStatus,
   };
 }

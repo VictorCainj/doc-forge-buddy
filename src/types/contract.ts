@@ -162,7 +162,8 @@ export type BillType =
   | 'agua'
   | 'condominio'
   | 'gas'
-  | 'notificacao_rescisao';
+  | 'notificacao_rescisao'
+  | 'entrega_chaves';
 
 /**
  * Interface para conta de consumo de um contrato
@@ -187,4 +188,5 @@ export interface BillStatus {
   condominio?: boolean;
   gas?: boolean;
   notificacao_rescisao?: boolean;
+  entrega_chaves?: boolean;
 }

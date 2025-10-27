@@ -1,15 +1,10 @@
-import React from 'react';
-import { 
-  Zap, 
-  Droplets, 
-  Building2, 
-  Flame, 
-  Bell 
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Zap, Droplets, Building2, Flame, Bell, Key } from 'lucide-react';
 import { Check } from 'lucide-react';
 import { useContractBills } from '@/hooks/useContractBills';
 import { ContractFormData, BillType } from '@/types/contract';
 import { cn } from '@/lib/utils';
+import { KeyDeliveryDateModal } from './KeyDeliveryDateModal';
 
 interface ContractBillsSectionProps {
   contractId: string;
@@ -21,17 +16,24 @@ interface ContractBillsSectionProps {
  * - Badges clicáveis que mudam de cor
  * - Cinza quando não entregue, verde quando entregue
  * - Ícone de check quando entregue
+ * - Modal para preencher data de entrega de chaves
  */
 export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
   contractId,
   formData,
 }) => {
-  const { bills, billStatus, isLoading, toggleBillDelivery } = useContractBills(
-    {
-      contractId,
-      formData,
-    }
-  );
+  const {
+    bills,
+    billStatus,
+    isLoading,
+    toggleBillDelivery,
+    updateBillWithDate,
+  } = useContractBills({
+    contractId,
+    formData,
+  });
+
+  const [isKeyDeliveryModalOpen, setIsKeyDeliveryModalOpen] = useState(false);
 
   // Se não há bills configuradas, não renderiza nada
   if (bills.length === 0 && !isLoading) {
@@ -44,6 +46,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
     condominio: 'Condomínio',
     gas: 'Gás',
     notificacao_rescisao: 'Notificação de Rescisão',
+    entrega_chaves: 'Entrega de Chaves',
   };
 
   const billIcons: Record<BillType, React.ElementType> = {
@@ -52,6 +55,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
     condominio: Building2,
     gas: Flame,
     notificacao_rescisao: Bell,
+    entrega_chaves: Key,
   };
 
   // Ordenar bills na ordem padrão
@@ -61,6 +65,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
     'condominio',
     'gas',
     'notificacao_rescisao',
+    'entrega_chaves',
   ];
   const visibleBills = orderedBillTypes
     .filter((type) => bills.some((b) => b.bill_type === type))
@@ -68,6 +73,20 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
       type,
       delivered: billStatus[type] || false,
     }));
+
+  const handleBillClick = (type: BillType, isDelivered: boolean) => {
+    // Se for Entrega de Chaves e não estiver entregue, abrir modal
+    if (type === 'entrega_chaves' && !isDelivered) {
+      setIsKeyDeliveryModalOpen(true);
+    } else {
+      // Para todos os outros casos (incluindo desmarcar), usar toggle direto
+      toggleBillDelivery(type);
+    }
+  };
+
+  const handleConfirmKeyDelivery = async (date: Date) => {
+    await updateBillWithDate('entrega_chaves', date);
+  };
 
   return (
     <div className="overflow-visible">
@@ -82,7 +101,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
               key={type}
               onClick={(e) => {
                 e.stopPropagation();
-                toggleBillDelivery(type);
+                handleBillClick(type, delivered);
               }}
               disabled={isLoading}
               className={cn(
@@ -98,10 +117,7 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
             >
               <div className="flex items-center gap-1.5">
                 <div className="p-1 rounded bg-black">
-                  <Icon
-                    className="h-3.5 w-3.5 text-white"
-                    color="white"
-                  />
+                  <Icon className="h-3.5 w-3.5 text-white" color="white" />
                 </div>
                 <span
                   className={cn(
@@ -117,7 +133,11 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
                   className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 shadow-sm"
                   style={{ backgroundColor: '#34A853' }}
                 >
-                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} color="white" />
+                  <Check
+                    className="h-3.5 w-3.5 text-white"
+                    strokeWidth={3}
+                    color="white"
+                  />
                 </div>
               )}
               {!delivered && (
@@ -127,6 +147,13 @@ export const ContractBillsSection: React.FC<ContractBillsSectionProps> = ({
           );
         })}
       </div>
+
+      <KeyDeliveryDateModal
+        isOpen={isKeyDeliveryModalOpen}
+        onClose={() => setIsKeyDeliveryModalOpen(false)}
+        onConfirm={handleConfirmKeyDelivery}
+        contractId={contractId}
+      />
     </div>
   );
 };
