@@ -47,16 +47,16 @@ export function MotivoDesocupacaoChart({
                 <span className="text-xs font-semibold text-neutral-700 bg-blue-50 px-2 py-0.5 rounded">
                   {motivo.count}
                 </span>
-                <span className="text-xs font-bold text-blue-600">
+                <span className="text-xs font-bold text-blue-600 tabular-nums">
                   {motivo.percentage.toFixed(0)}%
                 </span>
               </div>
             </div>
 
             {/* Barra de progresso com porcentagem visual */}
-            <div className="relative w-full bg-neutral-200 rounded-full h-2.5 overflow-hidden">
+            <div className="relative w-full bg-neutral-200 rounded-full h-3 overflow-hidden">
               <div
-                className="h-2.5 rounded-full transition-all duration-500 ease-out relative flex items-center justify-end pr-1"
+                className="h-3 rounded-full transition-all duration-500 ease-out relative flex items-center justify-start pl-2 min-w-[40px]"
                 style={{
                   width: `${(motivo.count / maxCount) * 100}%`,
                   backgroundColor: getBarColor(index),
@@ -66,12 +66,10 @@ export function MotivoDesocupacaoChart({
                 aria-valuemax={maxCount}
                 aria-label={`${motivo.motivo}: ${motivo.count} ocorrências`}
               >
-                {/* Indicador de porcentagem dentro da barra */}
-                {(motivo.count / maxCount) * 100 > 15 && (
-                  <span className="text-[8px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-                    {motivo.percentage.toFixed(0)}%
-                  </span>
-                )}
+                {/* Indicador de porcentagem sempre visível na barra */}
+                <span className="text-[9px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] whitespace-nowrap tabular-nums">
+                  {motivo.percentage.toFixed(0)}%
+                </span>
               </div>
             </div>
           </div>

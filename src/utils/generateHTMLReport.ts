@@ -60,6 +60,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Relatório de Desocupações - ${periodo}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4;
@@ -230,6 +233,12 @@ export function generateHTMLReport(data: HTMLReportData): string {
        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
      }
 
+     .pie-chart svg {
+       width: 100%;
+       height: 100%;
+       page-break-inside: avoid;
+     }
+
      .pie-chart svg path {
        transition: all 0.3s ease;
        cursor: pointer;
@@ -239,6 +248,11 @@ export function generateHTMLReport(data: HTMLReportData): string {
        opacity: 0.8;
        filter: brightness(1.1);
        stroke-width: 3;
+     }
+
+     .pie-chart svg text {
+       pointer-events: none;
+       user-select: none;
      }
 
      .pie-segment {
@@ -257,14 +271,30 @@ export function generateHTMLReport(data: HTMLReportData): string {
        .pie-chart {
          background: white !important;
          border: 2px solid #333 !important;
+         page-break-inside: avoid !important;
+         break-inside: avoid !important;
        }
        
        .pie-chart svg {
          filter: none !important;
+         page-break-inside: avoid !important;
+         break-inside: avoid !important;
+       }
+
+       .pie-chart svg path {
+         -webkit-print-color-adjust: exact !important;
+         print-color-adjust: exact !important;
+         color-adjust: exact !important;
+       }
+
+       .pie-chart svg text {
+         -webkit-print-color-adjust: exact !important;
+         print-color-adjust: exact !important;
+         color-adjust: exact !important;
        }
        
        .pie-segment {
-         display: none;
+         display: none !important;
        }
      }
 
@@ -322,6 +352,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
       font-size: 14px;
       font-weight: 600;
       color: ${colors.primary};
+      font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
     }
 
     /* Seção de Contratos */
@@ -385,35 +418,39 @@ export function generateHTMLReport(data: HTMLReportData): string {
        max-width: 120px;
        overflow: hidden;
        text-overflow: ellipsis;
-       white-space: nowrap;
+       white-space: normal;
        word-wrap: break-word;
-       hyphens: auto;
+       hyphens: manual;
+       line-height: 1.4;
      }
 
      td:first-child {
-       max-width: 80px;
+       max-width: 100px;
        font-weight: 600;
      }
 
      td:nth-child(2), td:nth-child(3) {
-       max-width: 100px;
+       max-width: 120px;
      }
 
      td:nth-child(4) {
-       max-width: 180px;
+       max-width: 200px;
        white-space: normal;
-       line-height: 1.3;
+       line-height: 1.4;
+       font-size: 11px;
      }
 
      td:nth-child(5), td:nth-child(6) {
-       max-width: 100px;
-       font-family: monospace;
+       max-width: 110px;
+       font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+       font-size: 11px;
      }
 
      td:last-child {
-       max-width: 250px;
+       max-width: 280px;
        white-space: normal;
-       line-height: 1.3;
+       line-height: 1.4;
+       font-size: 11px;
      }
 
      /* Tooltips */
@@ -471,6 +508,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
          max-width: 100% !important;
          font-size: 12px !important;
          line-height: 1.4 !important;
+         -webkit-font-smoothing: antialiased !important;
+         -moz-osx-font-smoothing: grayscale !important;
+         text-rendering: optimizeLegibility !important;
        }
 
        .print-button, .print-instructions {
@@ -544,16 +584,34 @@ export function generateHTMLReport(data: HTMLReportData): string {
          width: 280px !important;
          height: 280px !important;
          margin: 10px auto !important;
+         page-break-inside: avoid !important;
+         break-inside: avoid !important;
        }
 
        .pie-chart svg {
          width: 280px !important;
          height: 280px !important;
+         page-break-inside: avoid !important;
+         break-inside: avoid !important;
+       }
+
+       .pie-chart svg path,
+       .pie-chart svg text {
+         -webkit-print-color-adjust: exact !important;
+         print-color-adjust: exact !important;
+         color-adjust: exact !important;
        }
 
        .legend-item {
          padding: 5px 0 !important;
          font-size: 12px !important;
+       }
+
+       .legend-value {
+         font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
+         font-variant-numeric: tabular-nums !important;
+         letter-spacing: -0.02em !important;
+         white-space: nowrap !important;
        }
 
        .legend-color {
@@ -618,6 +676,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
          text-overflow: initial !important;
          white-space: normal !important;
          word-wrap: break-word !important;
+         hyphens: manual !important;
+         text-align: left !important;
+         line-height: 1.4 !important;
        }
 
        .footer {
@@ -870,13 +931,16 @@ export function generateHTMLReport(data: HTMLReportData): string {
        
        // HTML completo com configurações de impressão
        const printHTML = \`
-         <!DOCTYPE html>
-         <html lang="pt-BR">
-         <head>
-           <meta charset="UTF-8">
-           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-           <title>Relatório de Desocupações - Impressão</title>
-           <style>
+                   <!DOCTYPE html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Relatório de Desocupações - Impressão</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+            <style>
              @page {
                size: A4;
                margin: 1cm;
@@ -888,13 +952,13 @@ export function generateHTMLReport(data: HTMLReportData): string {
                print-color-adjust: exact !important;
              }
              
-             body {
-               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-               margin: 0;
-               padding: 0;
-               font-size: 12px;
-               line-height: 1.4;
-             }
+                           body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                margin: 0;
+                padding: 0;
+                font-size: 12px;
+                line-height: 1.4;
+              }
              
              .header {
                background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%) !important;
@@ -921,38 +985,48 @@ export function generateHTMLReport(data: HTMLReportData): string {
                margin-top: 8px;
              }
              
-             .total-card {
-               background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%) !important;
-               border: none !important;
-               border-radius: 12px;
-               padding: 20px;
-               margin-bottom: 20px;
-               text-align: center;
-               box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
-             }
+                           .total-card {
+                background: linear-gradient(135deg, ${colors.primary} 0%, #1967D2 100%) !important;
+                border: none !important;
+                border-radius: 12px !important;
+                padding: 20px !important;
+                margin-bottom: 20px !important;
+                text-align: center !important;
+                box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3) !important;
+                position: relative !important;
+                overflow: hidden !important;
+                height: auto !important;
+                max-height: none !important;
+              }
              
-             .total-card h2 {
-               font-size: 18px;
-               color: white !important;
-               margin-bottom: 8px;
-               font-weight: 600;
-               opacity: 0.95;
-             }
-             
-             .total-card .value {
-               font-size: 48px;
-               font-weight: 800;
-               color: white !important;
-               text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-               letter-spacing: -1px;
-             }
+                           .total-card h2 {
+                font-size: 18px !important;
+                color: white !important;
+                margin-bottom: 8px !important;
+                font-weight: 600 !important;
+                opacity: 0.95 !important;
+                position: relative !important;
+                z-index: 1 !important;
+              }
+              
+              .total-card .value {
+                font-size: 48px !important;
+                font-weight: 800 !important;
+                color: white !important;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+                letter-spacing: -1px !important;
+                position: relative !important;
+                z-index: 1 !important;
+              }
 
-             .total-card .subtitle {
-               font-size: 12px;
-               color: white !important;
-               opacity: 0.8;
-               margin-top: 6px;
-             }
+              .total-card .subtitle {
+                font-size: 12px !important;
+                color: white !important;
+                opacity: 0.8 !important;
+                margin-top: 6px !important;
+                position: relative !important;
+                z-index: 1 !important;
+              }
              
              .dashboard {
                display: block;
@@ -981,11 +1055,22 @@ export function generateHTMLReport(data: HTMLReportData): string {
                width: 280px;
                height: 280px;
                margin: 10px auto;
+               page-break-inside: avoid;
+               break-inside: avoid;
              }
              
              .pie-chart svg {
                width: 280px;
                height: 280px;
+               page-break-inside: avoid;
+               break-inside: avoid;
+             }
+
+             .pie-chart svg path,
+             .pie-chart svg text {
+               -webkit-print-color-adjust: exact !important;
+               print-color-adjust: exact !important;
+               color-adjust: exact !important;
              }
              
              .legend-item {
@@ -1024,6 +1109,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
                font-size: 12px;
                font-weight: 600;
                color: ${colors.primary};
+               font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+               font-variant-numeric: tabular-nums;
+               letter-spacing: -0.02em;
              }
              
              .contracts-section {
@@ -1088,6 +1176,9 @@ export function generateHTMLReport(data: HTMLReportData): string {
                text-overflow: initial;
                white-space: normal;
                word-wrap: break-word;
+               hyphens: manual;
+               text-align: left;
+               line-height: 1.4;
              }
              
              .footer {
@@ -1100,9 +1191,13 @@ export function generateHTMLReport(data: HTMLReportData): string {
                page-break-before: avoid;
              }
              
-             .header, .total-card {
-               page-break-after: avoid;
-             }
+                           .header, .total-card {
+                page-break-after: avoid;
+              }
+
+              .total-card::before {
+                display: none !important;
+              }
              
              .dashboard {
                page-break-inside: avoid;
@@ -1279,9 +1374,12 @@ function generatePieChartHTML(
       const labelY =
         centerY + labelRadius * Math.sin(((midAngle - 90) * Math.PI) / 180);
 
-      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)">
-        <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="bold" fill="white" stroke="black" stroke-width="1">${motivo.count.toString().padStart(2, '0')} (${motivo.percentage.toFixed(0)}%)</text>
-      </path>`;
+      // Verificar se o segmento é grande o suficiente para mostrar label
+      const segmentSize = endAngle - startAngle;
+      const showLabel = segmentSize > 10; // Mostrar label se o segmento for maior que 10 graus
+
+      return `<path d="${pathData}" fill="${chartColors[index % chartColors.length]}" stroke="white" stroke-width="2" title="${motivo.motivo} (${motivo.count} contratos - ${motivo.percentage.toFixed(1)}%)"></path>
+        ${showLabel ? `<text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="white" font-family="'Roboto Mono', 'Courier New', monospace" style="pointer-events: none; text-rendering: geometricPrecision; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.8));">${motivo.percentage.toFixed(0)}%</text>` : ''}`;
     })
     .join('');
 
