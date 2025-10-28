@@ -15,17 +15,12 @@ import { Badge } from '@/components/ui/badge';
 import { useDashboardDesocupacao } from '@/hooks/useDashboardDesocupacao';
 import { useQueryClient } from '@tanstack/react-query';
 import { DashboardFilters } from '@/types/dashboardDesocupacao';
-import { MotivoDesocupacaoChart } from '@/components/dashboard/MotivoDesocupacaoChart';
 import { ContratoDesocupacaoCard } from '@/components/dashboard/ContratoDesocupacaoCard';
 import {
-  BarChart3,
-  Calendar,
-  Users,
   AlertCircle,
   Filter,
   RotateCcw,
   Loader2,
-  TrendingUp,
   Download,
   Building2,
 } from '@/utils/iconMapper';
@@ -396,125 +391,50 @@ const DashboardDesocupacao = () => {
           )}
 
           {/* Conteúdo Principal */}
-          {data && stats && (
+          {data && (
             <div className="space-y-6">
-              {/* Cards de Estatísticas */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-300 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-blue-100 group-hover:scale-110 transition-transform duration-300">
-                        <Users className="h-6 w-6 text-blue-700" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-neutral-500 mb-1">
-                      Total Desocupações
-                    </p>
-                    <p className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
-                      {stats.total}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-amber-300 transition-all duration-300 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-amber-100 group-hover:scale-110 transition-transform duration-300">
-                        <TrendingUp className="h-6 w-6 text-amber-700" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-neutral-500 mb-1">
-                      Motivo Mais Comum
-                    </p>
-                    <p className="text-lg font-semibold text-neutral-900 group-hover:text-amber-600 transition-colors truncate">
-                      {stats.motivoMaisComum}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-green-300 transition-all duration-300 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-green-100 group-hover:scale-110 transition-transform duration-300">
-                        <Calendar className="h-6 w-6 text-green-700" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-neutral-500 mb-1">Período</p>
-                    <p className="text-lg font-semibold text-neutral-900 group-hover:text-green-600 transition-colors">
-                      {stats.periodo}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gráfico e Lista */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="border-neutral-200 shadow-sm lg:col-span-1">
-                  <CardHeader className="border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-neutral-700" />
-                      <span className="text-neutral-900">Estatísticas</span>
+              {/* Lista de Contratos */}
+              <Card className="border-neutral-200 shadow-sm">
+                <CardHeader className="border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-neutral-900">
+                      Contratos em Desocupação
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {stats.topMotivos.length > 0 ? (
-                      <MotivoDesocupacaoChart motivosStats={stats.topMotivos} />
-                    ) : (
-                      <div className="text-center py-12">
-                        <BarChart3 className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-                        <p className="text-neutral-500 text-sm">
-                          Nenhum motivo encontrado
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="border-neutral-200 shadow-sm lg:col-span-2">
-                  <CardHeader className="border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-neutral-900">
-                        Contratos em Desocupação
-                      </CardTitle>
-                      <Badge
-                        variant="outline"
-                        className="border-blue-300 bg-blue-50 text-blue-700"
-                      >
-                        {data.contratos.length} contratos
-                      </Badge>
+                    <Badge
+                      variant="outline"
+                      className="border-blue-300 bg-blue-50 text-blue-700"
+                    >
+                      {data.contratos.length} contratos
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  {data.contratos.length > 0 ? (
+                    <div className="space-y-4">
+                      {data.contratos.map((contrato) => (
+                        <ContratoDesocupacaoCard
+                          key={contrato.id}
+                          contrato={contrato}
+                          onMotivoUpdated={() => {
+                            queryClient.invalidateQueries({
+                              queryKey: ['dashboard-desocupacao'],
+                            });
+                          }}
+                        />
+                      ))}
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {data.contratos.length > 0 ? (
-                      <div className="space-y-4">
-                        {data.contratos.map((contrato) => (
-                          <ContratoDesocupacaoCard
-                            key={contrato.id}
-                            contrato={contrato}
-                            onMotivoUpdated={() => {
-                              queryClient.invalidateQueries({
-                                queryKey: ['dashboard-desocupacao'],
-                              });
-                            }}
-                          />
-                        ))}
+                  ) : (
+                    <div className="text-center py-16">
+                      <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Building2 className="h-8 w-8 text-neutral-400" />
                       </div>
-                    ) : (
-                      <div className="text-center py-16">
-                        <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                          <Building2 className="h-8 w-8 text-neutral-400" />
-                        </div>
-                        <p className="text-neutral-600">
-                          Nenhum contrato encontrado para o período selecionado
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                      <p className="text-neutral-600">
+                        Nenhum contrato encontrado para o período selecionado
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>
