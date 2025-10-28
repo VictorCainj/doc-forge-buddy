@@ -296,7 +296,8 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
         '[NOME DO LOCATÁRIO]';
 
       // Processar fiadores se existirem
-      const temFiador = formData.temFiador === 'sim';
+      // Compatibilidade: verificar tanto tipoGarantia quanto temFiador
+      const temFiador = formData.tipoGarantia === 'Fiador' || formData.temFiador === 'sim';
       if (temFiador) {
         const fiadores = [
           formData.primeiroFiador,

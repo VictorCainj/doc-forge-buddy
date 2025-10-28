@@ -475,8 +475,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                     </div>
                   )}
 
-                  {currentStepData.id === 'fiador' &&
-                    formData.temFiador === 'sim' && (
+                  {currentStepData.id === 'garantia' &&
+                    formData.tipoGarantia === 'Fiador' && (
                       <div className="mb-3">
                         <PersonManager
                           title="Fiador(es)"

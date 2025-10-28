@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { BillStatus } from '@/types/contract';
+import { log } from '@/utils/logger';
 
 interface UseContractBillsSyncProps {
   contractId: string;
@@ -48,13 +49,13 @@ export function useContractBillsSync({
         .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
 
       if (contractError) {
-        console.error('Erro ao buscar contrato:', contractError);
+        log.error('Erro ao buscar contrato:', contractError);
         setIsLoading(false);
         return;
       }
 
       if (!contractData?.id) {
-        console.warn('Contrato não encontrado:', contractId);
+        log.warn('Contrato não encontrado:', contractId);
         setIsLoading(false);
         return;
       }

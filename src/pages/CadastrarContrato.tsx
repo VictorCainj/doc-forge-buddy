@@ -13,8 +13,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { splitNames } from '@/utils/nameHelpers';
+import { useEvictionReasons } from '@/hooks/useEvictionReasons';
 
 const CadastrarContrato = () => {
+  // Buscar motivos de desocupação ativos
+  const { reasons, isLoading: isLoadingReasons } = useEvictionReasons();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,6 +52,12 @@ const CadastrarContrato = () => {
       setFormData(mappedData);
     }
   }, [location.state]);
+
+  // Converter motivos para formato de options
+  const motivoOptions = reasons.map((reason) => ({
+    value: reason.description,
+    label: reason.description,
+  }));
 
   const steps: FormStep[] = [
     {
@@ -181,19 +190,21 @@ const CadastrarContrato = () => {
       ],
     },
     {
-      id: 'fiador',
-      title: 'Fiadores',
-      description: 'Adicione os fiadores do contrato (opcional)',
+      id: 'garantia',
+      title: 'Garantia',
+      description: 'Selecione o tipo de garantia do contrato',
       icon: Shield,
       fields: [
         {
-          name: 'temFiador',
-          label: 'Contrato possui fiador?',
+          name: 'tipoGarantia',
+          label: 'Tipo de Garantia',
           type: 'select',
           required: true,
           options: [
-            { value: 'nao', label: 'Não - Sem fiador' },
-            { value: 'sim', label: 'Sim - Com fiador' },
+            { value: 'Caução', label: 'Caução' },
+            { value: 'Fiador', label: 'Fiador' },
+            { value: 'Seguro Fiança', label: 'Seguro Fiança' },
+            { value: 'Título de Capitalização', label: 'Título de Capitalização' },
           ],
         },
       ],
@@ -221,9 +232,10 @@ const CadastrarContrato = () => {
         {
           name: 'motivoDesocupacao',
           label: 'Motivo da Desocupação',
-          type: 'textarea',
+          type: 'select',
           required: false,
-          placeholder: 'Descreva o motivo da desocupação (opcional)',
+          placeholder: isLoadingReasons ? 'Carregando motivos...' : 'Selecione o motivo',
+          options: motivoOptions,
         },
       ],
     },

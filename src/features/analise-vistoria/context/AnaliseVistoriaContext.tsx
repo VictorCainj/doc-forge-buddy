@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ApontamentoVistoria, DadosVistoria } from '@/types/vistoria';
-import { BudgetItemType } from '@/types/orcamento';
 import {
   AnaliseVistoriaContextValue,
   CurrentApontamento,

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PremiumButton } from '@/components/ui/premium-button';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import {
   Select,
@@ -204,14 +205,14 @@ const DashboardDesocupacao = () => {
                 </Button>
 
                 {data && data.contratos.length > 0 && (
-                  <Button
-                    onClick={handleGenerateReport}
+                  <PremiumButton 
+                    onClick={handleGenerateReport} 
                     disabled={isGenerating}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50"
+                    icon={<Download />}
+                    variant="info"
                   >
-                    <Download className="h-4 w-4" />
                     Relatório
-                  </Button>
+                  </PremiumButton>
                 )}
               </div>
             </div>

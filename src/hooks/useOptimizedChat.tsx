@@ -219,8 +219,16 @@ export const useOptimizedChat = (): UseOptimizedChatReturn => {
         // Se quer reanalisar e há imagem, usar analyzeImage
         if (lastImageMessage && (lastImageMessage.imageUrl || lastImageMessage.imageData)) {
           const imageSource = lastImageMessage.imageData || lastImageMessage.imageUrl;
+          if (!imageSource) {
+            toast({
+              title: 'Erro',
+              description: 'Não foi possível encontrar a imagem',
+              variant: 'destructive',
+            });
+            return;
+          }
           const response = await analyzeImage(
-            imageSource!,
+            imageSource,
             sanitizedInput
           );
 

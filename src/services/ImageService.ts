@@ -48,9 +48,9 @@ export class ImageService {
       const hasSerial = image.image_serial && image.image_serial.length > 0;
       const hasUrl = image.image_url && image.image_url.length > 0;
 
-      if (hasSerial) {
+      if (hasSerial && image.image_serial) {
         // Deduplicar por serial
-        if (seenSerials.has(image.image_serial!)) {
+        if (seenSerials.has(image.image_serial)) {
           duplicatesRemoved++;
           log.debug(
             'Imagem duplicada removida por serial:',
@@ -58,15 +58,15 @@ export class ImageService {
           );
           continue;
         }
-        seenSerials.add(image.image_serial!);
-      } else if (hasUrl) {
+        seenSerials.add(image.image_serial);
+      } else if (hasUrl && image.image_url) {
         // Fallback: deduplicar por URL se não tem serial
-        if (seenUrls.has(image.image_url!)) {
+        if (seenUrls.has(image.image_url)) {
           duplicatesRemoved++;
           log.debug('Imagem duplicada removida por URL:', image.image_url);
           continue;
         }
-        seenUrls.add(image.image_url!);
+        seenUrls.add(image.image_url);
       } else {
         // Sem serial nem URL, adicionar mesmo assim
         uniqueImages.push(image);

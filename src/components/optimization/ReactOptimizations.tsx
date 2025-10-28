@@ -15,7 +15,7 @@ export function withMemo<P extends object>(
  * Hook customizado para memoização de eventos
  * Evita criar novas funções a cada render
  */
-export function useMemoizedCallback<T extends (...args: any[]) => any>(
+export function useMemoizedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   deps: React.DependencyList
 ): T {

@@ -12,6 +12,7 @@ import {
 } from '@/utils/iconMapper';
 import { FormStep } from '../hooks/use-form-wizard';
 import { Button } from '@/components/ui/button';
+import { log } from '@/utils/logger';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTermoLocatario } from '@/features/documents/hooks';
 import { ContactModal } from '@/features/documents/components';
@@ -57,7 +58,6 @@ const TermoLocatario: React.FC = () => {
   const {
     billStatus,
     isLoading: loadingBills,
-    refreshBillStatus,
   } = useContractBillsSync({
     contractId: contractData.numeroContrato,
   });
@@ -90,7 +90,7 @@ const TermoLocatario: React.FC = () => {
             .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
 
         if (contractError) {
-          console.error(
+          log.error(
             'Erro ao buscar contrato para sincronização:',
             contractError
           );
@@ -98,7 +98,7 @@ const TermoLocatario: React.FC = () => {
         }
 
         if (!contractDataFromDB?.id) {
-          console.warn(
+          log.warn(
             'Contrato não encontrado para sincronização:',
             contractData.numeroContrato
           );
@@ -617,7 +617,8 @@ Foi entregue {{tipoQuantidadeChaves}}
         : '';
 
     // Processar fiadores - puxar automaticamente do contrato
-    const temFiadores = contractData.temFiador === 'sim';
+    // Compatibilidade: verificar tanto tipoGarantia quanto temFiador
+    const temFiadores = contractData.tipoGarantia === 'Fiador' || contractData.temFiador === 'sim';
     const fiadores: string[] = [];
 
     if (temFiadores && contractData.nomeFiador) {

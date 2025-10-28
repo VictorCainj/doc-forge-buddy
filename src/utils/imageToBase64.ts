@@ -3,6 +3,8 @@
  * Permite copiar documentos com imagens embutidas para e-mails
  */
 
+import { log } from './logger';
+
 // Cache de imagens já convertidas para melhorar performance
 const imageCache = new Map<string, string>();
 
@@ -11,8 +13,9 @@ const imageCache = new Map<string, string>();
  */
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   // Verificar cache primeiro
-  if (imageCache.has(url)) {
-    return imageCache.get(url)!;
+  const cached = imageCache.get(url);
+  if (cached) {
+    return cached;
   }
 
   try {
@@ -39,13 +42,13 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
       reader.onerror = () => reject(new Error('Erro ao converter imagem'));
       reader.readAsDataURL(blob);
     });
-  } catch (error) {
+  } catch (_error) {
     // Fallback: tentar carregar via canvas (funciona para imagens no mesmo domínio ou com CORS habilitado)
     try {
       return await convertImageViaCanvas(url);
-    } catch {
+    } catch (err) {
       // Se tudo falhar, retornar a URL original
-      console.warn(`Não foi possível converter imagem: ${url}`, error);
+      log.warn(`Não foi possível converter imagem: ${url}`, err);
       return url;
     }
   }
@@ -80,7 +83,7 @@ const convertImageViaCanvas = async (url: string): Promise<string> => {
           resolve(base64);
         } catch {
           // Se falhar (por exemplo, por CORS), retornar URL original
-          console.warn(`CORS bloqueou conversão da imagem: ${url}`);
+          log.warn(`CORS bloqueou conversão da imagem: ${url}`);
           resolve(url);
         }
       } catch (error) {
@@ -137,7 +140,7 @@ export const convertImagesToBase64 = async (
       const base64 = await fetchImageAsBase64(url);
       return { url, base64 };
     } catch (error) {
-      console.warn(`Não foi possível converter imagem: ${url}`, error);
+      log.warn(`Não foi possível converter imagem: ${url}`, error);
       return { url, base64: url }; // Mantém URL original em caso de erro
     }
   });

@@ -1,9 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
 import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
 import { CleanupDuplicatesPanel } from '@/components/admin/CleanupDuplicatesPanel';
+import { EvictionReasonsManagement } from '@/components/admin/EvictionReasonsManagement';
 import {
   Users,
   FileText,
@@ -11,6 +11,7 @@ import {
   Shield,
   Search,
   Trash2,
+  ClipboardList,
 } from '@/utils/iconMapper';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -154,13 +155,20 @@ const Admin = () => {
         {/* Tabs de Funcionalidades Modernizadas */}
         <Tabs defaultValue="users" className="space-y-6">
           <div className="bg-white border border-neutral-200 rounded-xl p-2 shadow-sm">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 bg-transparent h-auto">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 bg-transparent h-auto">
               <TabsTrigger
                 value="users"
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
               >
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Usuários</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="motivos"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Motivos</span>
               </TabsTrigger>
               <TabsTrigger
                 value="vistorias"
@@ -191,6 +199,13 @@ const Admin = () => {
             className="space-y-4 animate-in fade-in-50 duration-300"
           >
             <UserManagement />
+          </TabsContent>
+
+          <TabsContent
+            value="motivos"
+            className="space-y-4 animate-in fade-in-50 duration-300"
+          >
+            <EvictionReasonsManagement />
           </TabsContent>
 
           <TabsContent

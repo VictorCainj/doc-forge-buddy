@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { log } from '@/utils/logger';
 import { useAnaliseVistoriaContext } from '../context/AnaliseVistoriaContext';
-import { useAuth } from '@/hooks/useAuth';
 import { usePrestadores } from '@/hooks/usePrestadores';
 
 export const useDocumentPreview = () => {

@@ -16,7 +16,6 @@ import {
 } from '@/utils/iconMapper';
 import { DadosVistoria } from '@/types/vistoria';
 import { FixDuplicatesButton } from '@/components/FixDuplicatesButton';
-import { executeImageSerialMigration } from '@/utils/executeMigration';
 import { useToast } from '@/hooks/use-toast';
 
 interface Contract {

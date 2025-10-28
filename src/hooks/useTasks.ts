@@ -146,7 +146,15 @@ export const useTasks = () => {
 
   // Change task status
   const changeStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
+    mutationFn: async ({
+      id,
+      status,
+      conclusion_text,
+    }: {
+      id: string;
+      status: TaskStatus;
+      conclusion_text?: string;
+    }) => {
       if (!user?.id) {
         throw new Error('Usuário não autenticado');
       }
@@ -159,9 +167,14 @@ export const useTasks = () => {
         .eq('user_id', user.id)
         .single();
 
+      const updateData: Record<string, unknown> = { status };
+      if (conclusion_text !== undefined) {
+        updateData.conclusion_text = conclusion_text;
+      }
+
       const { data, error } = await supabase
         .from('tasks')
-        .update({ status })
+        .update(updateData)
         .eq('id', id)
         .eq('user_id', user.id)
         .select()

@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { log } from './logger';
 
 export const exportSummaryToPDF = async (
   summary: string,
@@ -89,7 +90,7 @@ export const exportSummaryToPDF = async (
     const fileName = `Resumo_Diario_${date.replace(/\//g, '-')}.pdf`;
     doc.save(fileName);
   } catch (error) {
-    console.error('Erro ao exportar PDF:', error);
+    log.error('Erro ao exportar PDF:', error);
     throw new Error('Erro ao exportar o resumo para PDF');
   }
 };

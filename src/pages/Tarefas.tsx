@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PremiumButton } from '@/components/ui/premium-button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ import { TaskCard } from '@/components/TaskCard';
 import { TaskModal } from '@/components/TaskModal';
 import { AITaskCreationModal } from '@/components/AITaskCreationModal';
 import { DailySummaryModal } from '@/components/DailySummaryModal';
+import { TaskCompletionModal } from '@/components/TaskCompletionModal';
 import { UserStatsCard } from '@/components/UserStatsCard';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
@@ -51,13 +53,14 @@ const Tarefas = () => {
     isCreating,
     isUpdating,
     isDeleting,
-    getTodayTasks,
   } = useTasks();
 
   const [selectedTab, setSelectedTab] = useState<string>('in_progress');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+  const [completingTask, setCompletingTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [dailySummary, setDailySummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -186,6 +189,36 @@ const Tarefas = () => {
     }
   };
 
+  const handleRequestCompletion = (task: Task) => {
+    setCompletingTask(task);
+    setIsCompletionModalOpen(true);
+  };
+
+  const handleConfirmCompletion = async (conclusionText: string) => {
+    if (!completingTask) return;
+
+    try {
+      await changeStatus({
+        id: completingTask.id,
+        status: 'completed',
+        conclusion_text: conclusionText,
+      });
+      toast({
+        title: 'Tarefa concluída',
+        description: 'A tarefa foi concluída com sucesso.',
+      });
+      setIsCompletionModalOpen(false);
+      setCompletingTask(null);
+    } catch (error) {
+      console.error('Erro ao concluir tarefa:', error);
+      toast({
+        title: 'Erro ao concluir tarefa',
+        description: 'Não foi possível concluir a tarefa. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
     setIsTaskModalOpen(true);
@@ -296,13 +329,9 @@ const Tarefas = () => {
 
           {/* Botões de Ação */}
           <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={handleNewTask}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              <Plus className="h-4 w-4" />
+            <PremiumButton onClick={handleNewTask} icon={<Plus />} variant="secondary">
               Nova Tarefa
-            </Button>
+            </PremiumButton>
             <Button
               onClick={handleAITask}
               variant="outline"
@@ -472,6 +501,7 @@ const Tarefas = () => {
                     onEdit={handleEditTask}
                     onDelete={handleDeleteTask}
                     onChangeStatus={handleChangeStatus}
+                    onRequestCompletion={handleRequestCompletion}
                   />
                 ))}
               </div>
@@ -505,6 +535,13 @@ const Tarefas = () => {
         summary={dailySummary}
         isGenerating={isGeneratingSummary}
         userName={profile?.full_name || 'Gestor'}
+      />
+
+      <TaskCompletionModal
+        open={isCompletionModalOpen}
+        onOpenChange={setIsCompletionModalOpen}
+        taskTitle={completingTask?.title || ''}
+        onSubmit={handleConfirmCompletion}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

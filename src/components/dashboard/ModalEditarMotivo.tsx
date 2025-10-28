@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,14 +6,21 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useEditarMotivo } from '@/hooks/useEditarMotivo';
-import { useGerarMotivoIA } from '@/hooks/useGerarMotivoIA';
 import { ContratoDesocupacao } from '@/types/dashboardDesocupacao';
-import { Edit, Sparkles, Save, X } from '@/utils/iconMapper';
+import { useEvictionReasons } from '@/hooks/useEvictionReasons';
+import { Edit, Save, X, Search } from '@/utils/iconMapper';
 
 interface ModalEditarMotivoProps {
   contrato: ContratoDesocupacao;
@@ -29,10 +36,19 @@ export const ModalEditarMotivo: React.FC<ModalEditarMotivoProps> = ({
   onSuccess,
 }) => {
   const [motivo, setMotivo] = useState(contrato.motivoDesocupacao || '');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { editarMotivo, isLoading } = useEditarMotivo();
-  const { gerarMotivoIA } = useGerarMotivoIA();
+  const { reasons, isLoading: isLoadingReasons } = useEvictionReasons();
+
+  // Filtrar motivos baseado no termo de busca
+  const filteredReasons = useMemo(() => {
+    if (!searchTerm.trim()) return reasons;
+
+    return reasons.filter((reason) =>
+      reason.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [reasons, searchTerm]);
 
   const handleSave = async () => {
     try {
@@ -45,27 +61,9 @@ export const ModalEditarMotivo: React.FC<ModalEditarMotivoProps> = ({
     }
   };
 
-  const handleGenerateAI = async () => {
-    setIsGenerating(true);
-    try {
-      const motivoGerado = await gerarMotivoIA({
-        contrato,
-        motivosExistentes: [], // TODO: Buscar motivos existentes para análise
-      });
-
-      if (motivoGerado) {
-        setMotivo(motivoGerado);
-        toast.success('Motivo da desocupação resumido com IA!');
-      }
-    } catch {
-      toast.error('Erro ao resumir motivo com IA.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const handleClose = () => {
     setMotivo(contrato.motivoDesocupacao || '');
+    setSearchTerm('');
     onClose();
   };
 
@@ -117,50 +115,62 @@ export const ModalEditarMotivo: React.FC<ModalEditarMotivoProps> = ({
               <Label htmlFor="motivo" className="text-base font-medium">
                 Motivo da Desocupação
               </Label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateAI}
-                disabled={isGenerating}
-                className="flex items-center gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                {isGenerating ? 'Resumindo...' : 'Resumir com IA'}
-              </Button>
             </div>
 
-            <Textarea
-              id="motivo"
+            {/* Barra de Busca */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-500" />
+              <Input
+                placeholder="Buscar motivos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {searchTerm && filteredReasons.length === 0 && (
+              <div className="text-sm text-neutral-500 text-center py-2">
+                Nenhum motivo encontrado com &quot;{searchTerm}&quot;
+              </div>
+            )}
+
+            <Select
               value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Digite o motivo da desocupação ou use a IA para resumir o motivo existente..."
-              className="min-h-[120px] resize-none"
-              maxLength={500}
-            />
+              onValueChange={setMotivo}
+              disabled={isLoadingReasons}
+            >
+              <SelectTrigger id="motivo" className="w-full">
+                <SelectValue
+                  placeholder={
+                    isLoadingReasons
+                      ? 'Carregando motivos...'
+                      : 'Selecione o motivo da desocupação'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredReasons.length > 0 ? (
+                  filteredReasons.map((reason) => (
+                    <SelectItem key={reason.id} value={reason.description}>
+                      {reason.description}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-neutral-500 text-center">
+                    Nenhum motivo disponível
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
 
-            <div className="flex justify-between items-center text-sm text-neutral-500">
-              <span>Máximo 500 caracteres</span>
-              <span>{motivo.length}/500</span>
-            </div>
+            {/* Contador de resultados */}
+            {searchTerm && filteredReasons.length > 0 && (
+              <div className="text-xs text-neutral-500">
+                {filteredReasons.length} motivo(s) encontrado(s)
+              </div>
+            )}
           </div>
 
-          {/* Dicas para IA */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h5 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              Como funciona a IA
-            </h5>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>
-                • A IA analisa o motivo existente e o resume de forma concisa
-              </li>
-              <li>• Mantém o contexto original sem inventar informações</li>
-              <li>
-                • Aplica palavras-chave padronizadas para facilitar agrupamento
-              </li>
-              <li>• Preserva informações importantes do motivo original</li>
-            </ul>
-          </div>
 
           {/* Botões de Ação */}
           <div className="flex justify-end gap-3 pt-4 border-t">
@@ -175,7 +185,7 @@ export const ModalEditarMotivo: React.FC<ModalEditarMotivoProps> = ({
 
             <Button
               onClick={handleSave}
-              disabled={isLoading || !motivo.trim()}
+              disabled={isLoading || !motivo}
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />

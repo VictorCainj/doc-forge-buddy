@@ -12,6 +12,7 @@ import {
   UpdateVistoriaAnalisePayload,
 } from '@/types/vistoria.extended';
 import { generateUniqueImageSerial } from '@/utils/imageSerialGenerator';
+import { log } from '@/utils/logger';
 
 export const useVistoriaAnalises = () => {
   const { user } = useAuth();
@@ -30,15 +31,13 @@ export const useVistoriaAnalises = () => {
   // Carregar todas as análises do usuário
   const fetchAnalises = useCallback(async () => {
     if (!user) {
-      // eslint-disable-next-line no-console
-      console.log('Usuário não autenticado, não carregando análises');
+      log.debug('Usuário não autenticado, não carregando análises');
       return;
     }
 
     try {
       setLoading(true);
-      // eslint-disable-next-line no-console
-      console.log('Carregando análises para usuário:', user.id);
+      log.debug('Carregando análises para usuário:', user.id);
 
       // Buscar análises
       const { data: analisesData, error: analisesError } = await supabase
@@ -49,14 +48,12 @@ export const useVistoriaAnalises = () => {
 
       if (analisesError) throw analisesError;
 
-      // eslint-disable-next-line no-console
-      console.log('Análises encontradas:', analisesData?.length || 0);
+      log.debug('Análises encontradas:', analisesData?.length || 0);
 
       // Buscar imagens para cada análise
       const analisesWithImages = await Promise.all(
         (analisesData || []).map(async (analise) => {
-          // eslint-disable-next-line no-console
-          console.log(`🔍 Buscando imagens para vistoria_id: ${analise.id}`);
+          log.debug(`🔍 Buscando imagens para vistoria_id: ${analise.id}`);
 
           const { data: imagesData, error: imagesError } = await supabase
             .from('vistoria_images')
@@ -65,16 +62,13 @@ export const useVistoriaAnalises = () => {
             .order('created_at', { ascending: true });
 
           if (imagesError) {
-            // eslint-disable-next-line no-console
-            console.error('❌ Erro ao carregar imagens:', imagesError);
+            log.error('❌ Erro ao carregar imagens:', imagesError);
             return { ...analise, images: [] };
           }
 
-          // eslint-disable-next-line no-console
-          console.log(`✅ Imagens encontradas: ${imagesData?.length || 0}`);
+          log.debug(`✅ Imagens encontradas: ${imagesData?.length || 0}`);
           if (imagesData && imagesData.length > 0) {
-            // eslint-disable-next-line no-console
-            console.log(
+            log.debug(
               '📸 Detalhes das imagens:',
               imagesData.map((img) => ({
                 apontamento_id: img.apontamento_id,
@@ -93,14 +87,9 @@ export const useVistoriaAnalises = () => {
       );
 
       setAnalises(analisesWithImages as unknown as VistoriaAnaliseWithImages[]);
-      // eslint-disable-next-line no-console
-      console.log(
-        'Análises carregadas com sucesso:',
-        analisesWithImages.length
-      );
+      log.info('Análises carregadas com sucesso:', analisesWithImages.length);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Erro ao carregar análises:', error);
+      log.error('Erro ao carregar análises:', error);
       toast({
         title: 'Erro ao carregar análises',
         description: 'Não foi possível carregar as análises de vistoria.',
@@ -210,8 +199,7 @@ export const useVistoriaAnalises = () => {
 
       return analiseId;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Erro ao salvar análise:', error);
+      log.error('Erro ao salvar análise:', error);
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar a análise de vistoria.',
@@ -278,8 +266,7 @@ export const useVistoriaAnalises = () => {
 
       return true;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Erro ao atualizar análise:', error);
+      log.error('Erro ao atualizar análise:', error);
       toast({
         title: 'Erro ao atualizar',
         description: 'Não foi possível atualizar a análise de vistoria.',
@@ -324,8 +311,7 @@ export const useVistoriaAnalises = () => {
 
       return true;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Erro ao deletar análise:', error);
+      log.error('Erro ao deletar análise:', error);
       toast({
         title: 'Erro ao deletar',
         description: 'Não foi possível deletar a análise de vistoria.',
@@ -368,8 +354,7 @@ export const useVistoriaAnalises = () => {
         images: imagesData || [],
       } as unknown as VistoriaAnaliseWithImages;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Erro ao carregar análise:', error);
+      log.error('Erro ao carregar análise:', error);
       return null;
     }
   };
@@ -660,11 +645,9 @@ export const useVistoriaAnalises = () => {
             .insert(refsWithSerials);
 
           if (insertError) {
-            // eslint-disable-next-line no-console
-            console.error('❌ Erro ao inserir imagens externas:', insertError);
+            log.error('❌ Erro ao inserir imagens externas:', insertError);
           } else {
-            // eslint-disable-next-line no-console
-            console.log(
+            log.debug(
               '✓ Imagens externas inseridas com sucesso:',
               uniqueRefs.length
             );
@@ -672,11 +655,9 @@ export const useVistoriaAnalises = () => {
         }
       }
 
-      // eslint-disable-next-line no-console
-      console.log('=== PROCESSAMENTO DE IMAGENS CONCLUÍDO ===\n');
+      log.debug('=== PROCESSAMENTO DE IMAGENS CONCLUÍDO ===\n');
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Erro ao processar imagens:', error);
+      log.error('❌ Erro ao processar imagens:', error);
       // Não re-lançar o erro para não quebrar o salvamento da análise principal
     } finally {
       // ✅ PROTEÇÃO 1: Remover flag de processamento
@@ -742,8 +723,7 @@ export const useVistoriaAnalises = () => {
         );
 
         if (createError) {
-          // eslint-disable-next-line no-console
-          console.error('Erro ao criar bucket:', createError);
+          log.error('Erro ao criar bucket:', createError);
           // Continuar mesmo se não conseguir criar o bucket
         }
       }
@@ -766,13 +746,11 @@ export const useVistoriaAnalises = () => {
         .upload(fileName, file);
 
       if (uploadError) {
-        // eslint-disable-next-line no-console
-        console.error('❌ Erro no upload:', uploadError);
+        log.error('❌ Erro no upload:', uploadError);
         throw uploadError;
       }
 
-      // eslint-disable-next-line no-console
-      console.log('✓ Upload realizado com sucesso:', uploadData);
+      log.debug('✓ Upload realizado com sucesso:', uploadData);
 
       // Obter URL pública
       const {
@@ -801,16 +779,13 @@ export const useVistoriaAnalises = () => {
       });
 
       if (dbError) {
-        // eslint-disable-next-line no-console
-        console.error('❌ Erro ao salvar referência no banco:', dbError);
+        log.error('❌ Erro ao salvar referência no banco:', dbError);
         throw dbError;
       }
 
-      // eslint-disable-next-line no-console
-      console.log('✓ Referência salva no banco para:', file.name);
+      log.debug('✓ Referência salva no banco para:', file.name);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Erro ao fazer upload da imagem:', error);
+      log.error('❌ Erro ao fazer upload da imagem:', error);
       throw error;
     }
   };
@@ -820,7 +795,8 @@ export const useVistoriaAnalises = () => {
     if (user) {
       fetchAnalises();
     }
-  }, [user, fetchAnalises]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return {
     analises,

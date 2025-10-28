@@ -70,7 +70,7 @@ export const FormStepContent: React.FC<FormStepContentProps> = React.memo(
           />
         )}
 
-        {step.id === 'fiador' && formData.temFiador === 'sim' && (
+        {step.id === 'garantia' && formData.tipoGarantia === 'Fiador' && (
           <PersonManager
             title="Fiador(es)"
             people={fiadores}

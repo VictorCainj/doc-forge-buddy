@@ -61,9 +61,9 @@ class ErrorBoundary extends Component<Props, State> {
           <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800">
             <Card className="max-w-2xl w-full">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-destructive">
+                <CardTitle className="flex items-center gap-3 text-destructive text-lg">
                   <AlertTriangle className="h-6 w-6" />
-                  <h1 className="text-lg">Algo deu errado</h1>
+                  Algo deu errado
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">

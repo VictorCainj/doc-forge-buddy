@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ImageService, VistoriaImage, CleanupReport } from '../ImageService';
+import { ImageService, VistoriaImage } from '../ImageService';
 import { supabase } from '@/integrations/supabase/client';
-import * as logger from '@/utils/logger';
 
 // Mock do Supabase
 vi.mock('@/integrations/supabase/client', () => ({

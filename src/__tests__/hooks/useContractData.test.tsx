@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useContractData } from '@/hooks/useContractData';
 import { supabase } from '@/integrations/supabase/client';
-import { Contract } from '@/types/contract';
 
 // Mock do Supabase
 vi.mock('@/integrations/supabase/client', () => ({

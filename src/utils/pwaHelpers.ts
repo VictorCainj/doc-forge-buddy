@@ -8,12 +8,12 @@
 export const registerServiceWorker =
   async (): Promise<ServiceWorkerRegistration | null> => {
     if (!('serviceWorker' in navigator)) {
-      console.warn('Service Worker não é suportado neste navegador');
+      // Service Worker não suportado
       return null;
     }
 
     if (!import.meta.env.PROD) {
-      console.log('Service Worker desabilitado em desenvolvimento');
+      // Service Worker desabilitado em desenvolvimento
       return null;
     }
 
@@ -25,10 +25,7 @@ export const registerServiceWorker =
         }
       );
 
-      console.log(
-        '✅ Service Worker registrado com sucesso',
-        registration.scope
-      );
+      // Service Worker registrado com sucesso
 
       // Verificar atualizações a cada hora
       setInterval(

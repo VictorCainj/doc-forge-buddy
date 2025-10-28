@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { log } from './logger';
 
 /**
  * Utilitário para aplicar migrações de banco de dados
@@ -13,8 +14,8 @@ export class MigrationUtils {
    */
   static async addNotificacaoRescisaoToExistingContracts(): Promise<void> {
     try {
-      console.log('🔄 Iniciando migração: Adicionando Notificação de Rescisão aos contratos existentes...');
-      console.log('⚠️ IMPORTANTE: Certifique-se de que a constraint foi corrigida executando o script SQL');
+      log.info('🔄 Iniciando migração: Adicionando Notificação de Rescisão aos contratos existentes...');
+      log.warn('⚠️ IMPORTANTE: Certifique-se de que a constraint foi corrigida executando o script SQL');
 
       // 1. Buscar todos os contratos que não possuem a conta "notificacao_rescisao"
       const { data: contractsWithoutNotification, error: selectError } = await supabase
@@ -33,7 +34,7 @@ export class MigrationUtils {
       }
 
       if (!contractsWithoutNotification || contractsWithoutNotification.length === 0) {
-        console.log('✅ Todos os contratos já possuem a conta "Notificação de Rescisão"');
+        log.info('✅ Todos os contratos já possuem a conta "Notificação de Rescisão"');
         return;
       }
 
@@ -54,12 +55,12 @@ export class MigrationUtils {
         throw new Error(`Erro ao inserir contas: ${insertError.message}`);
       }
 
-      console.log(`✅ Migração concluída: ${newBills.length} contas "Notificação de Rescisão" adicionadas`);
+      log.info(`✅ Migração concluída: ${newBills.length} contas "Notificação de Rescisão" adicionadas`);
       toast.success(`Migração concluída: ${newBills.length} contas adicionadas`);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('❌ Erro na migração:', errorMessage);
+      log.error('❌ Erro na migração:', errorMessage);
       toast.error(`Erro na migração: ${errorMessage}`);
       throw error;
     }

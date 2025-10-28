@@ -10,6 +10,7 @@ import {
   setupPWAInstallPrompt,
   onConnectivityChange,
 } from './utils/pwaHelpers';
+import { log } from './utils/logger';
 
 // Inicializar Sentry para error tracking (apenas em produção)
 initSentry();
@@ -24,7 +25,7 @@ if (import.meta.env.DEV) {
       axe.default(React, ReactDOM, 1000, {});
     })
     .catch(() => {
-      console.warn('axe-core não pôde ser carregado');
+      log.warn('axe-core não pôde ser carregado');
     });
 }
 
@@ -36,18 +37,18 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 
     // Configurar prompt de instalação
     setupPWAInstallPrompt(() => {
-      console.log('✅ PWA pronto para instalação');
+      log.info('✅ PWA pronto para instalação');
       // Aqui você pode mostrar um banner ou botão de instalação
     });
 
     // Monitorar conectividade
     onConnectivityChange(
       () => {
-        console.log('🌐 Conexão restaurada');
+        log.info('🌐 Conexão restaurada');
         // Opcional: Sincronizar dados pendentes
       },
       () => {
-        console.log('📡 Modo offline');
+        log.info('📡 Modo offline');
         // Opcional: Mostrar aviso de offline
       }
     );

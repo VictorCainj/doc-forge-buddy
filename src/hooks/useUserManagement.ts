@@ -93,7 +93,7 @@ export const useCreateUser = () => {
       queryClient.invalidateQueries({ queryKey: ['users-list'] });
       toast.success('Usuário criado com sucesso!');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao criar usuário');
     },
   });
@@ -124,7 +124,7 @@ export const useUpdateUser = () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       toast.success('Usuário atualizado com sucesso!');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao atualizar usuário');
     },
   });
@@ -162,7 +162,7 @@ export const useToggleUserStatus = () => {
           : 'Usuário desativado com sucesso!'
       );
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao alterar status do usuário');
     },
   });
@@ -187,7 +187,7 @@ export const useDeleteUser = () => {
       queryClient.invalidateQueries({ queryKey: ['users-list'] });
       toast.success('Usuário removido com sucesso!');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao remover usuário');
     },
   });

@@ -11,6 +11,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   completed_at?: string;
+  conclusion_text?: string;
 }
 
 export interface CreateTaskInput {

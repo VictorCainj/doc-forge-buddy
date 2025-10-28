@@ -30,6 +30,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
   onChangeStatus: (taskId: string, status: TaskStatus) => void;
+  onRequestCompletion?: (task: Task) => void;
 }
 
 export const TaskCard = ({
@@ -37,6 +38,7 @@ export const TaskCard = ({
   onEdit,
   onDelete,
   onChangeStatus,
+  onRequestCompletion,
 }: TaskCardProps) => {
   const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
@@ -112,7 +114,9 @@ export const TaskCard = ({
               )}
               {task.status !== 'completed' && (
                 <DropdownMenuItem
-                  onClick={() => onChangeStatus(task.id, 'completed')}
+                  onClick={() =>
+                    onRequestCompletion ? onRequestCompletion(task) : onChangeStatus(task.id, 'completed')
+                  }
                 >
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Marcar como Concluída
@@ -157,6 +161,16 @@ export const TaskCard = ({
               </div>
             )}
           </div>
+          {task.conclusion_text && task.conclusion_text.trim() && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-xs font-medium text-green-900 mb-1">
+                ✓ Texto de Conclusão:
+              </p>
+              <p className="text-xs text-green-800 whitespace-pre-wrap break-words">
+                {task.conclusion_text}
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

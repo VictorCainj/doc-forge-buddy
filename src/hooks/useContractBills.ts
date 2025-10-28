@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { log } from '@/utils/logger';
 import { toast } from 'sonner';
 import {
   ContractBill,
@@ -83,13 +84,13 @@ export function useContractBills({
         .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
 
       if (contractError) {
-        console.error('Erro ao buscar contrato:', contractError);
+        log.error('Erro ao buscar contrato:', contractError);
         toast.error('Erro ao carregar dados do contrato');
         return;
       }
 
       if (!contractDataFromDB?.id) {
-        console.warn('Contrato não encontrado:', contractId);
+        log.warn('Contrato não encontrado:', contractId);
         // Não mostrar erro para o usuário, apenas log
         return;
       }

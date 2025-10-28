@@ -22,20 +22,11 @@ import {
   CheckCircle,
   AlertTriangle,
   FileText,
-  Edit,
-  User,
-  MapPin,
-  Calendar,
   ClipboardList,
   Save,
   X,
   AlertCircle,
-  CheckCircle2,
   Wand2,
-  RefreshCw,
-  Users,
-  ChevronDown,
-  ChevronUp,
   Package,
   Wrench,
   Copy,
@@ -57,26 +48,21 @@ import {
   DadosVistoria,
   VistoriaAnaliseWithImages,
 } from '@/types/vistoria';
-import { BudgetItemType } from '@/types/orcamento';
-import { ActionButton } from '@/components/ui/action-button';
 import { validateImages } from '@/utils/imageValidation';
-import { removeImageFromHTML } from '@/utils/removeImageFromHTML';
 import {
   deduplicateImagesBySerial,
   getSimplifiedSerial,
 } from '@/utils/imageSerialGenerator';
-import { FixDuplicatesButton } from '@/components/FixDuplicatesButton';
-import { executeImageSerialMigration } from '@/utils/executeMigration';
 import {
   ClassificationWarningBanner,
   NoContractAlert,
-  DocumentPreviewContent,
   AnaliseHeader,
   ContractInfoCard,
   PrestadorSelector,
   ImagePreviewModal,
   DocumentPreviewCard,
 } from '@/features/analise-vistoria';
+import { BudgetItemType } from '@/types/orcamento';
 
 interface Contract {
   id: string;
@@ -141,7 +127,6 @@ const AnaliseVistoria = () => {
   const [previewImageModal, setPreviewImageModal] = useState<string | null>(
     null
   );
-  const [imageZoom, setImageZoom] = useState<number>(1);
   const [editingAnaliseId, setEditingAnaliseId] = useState<string | null>(null);
   const [existingAnaliseId, setExistingAnaliseId] = useState<string | null>(
     null
@@ -158,7 +143,7 @@ const AnaliseVistoria = () => {
   // Capturar erros do hook useOpenAI
   useEffect(() => {
     if (aiError) {
-      console.error('Erro no hook useOpenAI:', aiError);
+      log.error('Erro no hook useOpenAI:', aiError);
       toast({
         title: 'Erro na IA',
         description: `Erro ao carregar funcionalidades de IA: ${aiError}`,
@@ -170,7 +155,7 @@ const AnaliseVistoria = () => {
   // Verificar se todos os hooks estão funcionando corretamente
   useEffect(() => {
     if (!correctText || !extractApontamentos) {
-      console.error('Hooks do useOpenAI não estão funcionando corretamente:', {
+      log.error('Hooks do useOpenAI não estão funcionando corretamente:', {
         correctText: !!correctText,
         extractApontamentos: !!extractApontamentos,
       });
@@ -192,10 +177,7 @@ const AnaliseVistoria = () => {
   // Capturar erros gerais do componente
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error(
-        'Erro capturado no componente AnaliseVistoria:',
-        event.error
-      );
+      log.error('Erro capturado no componente AnaliseVistoria:', event.error);
       setComponentError(event.error?.message || 'Erro desconhecido');
     };
 
@@ -204,17 +186,11 @@ const AnaliseVistoria = () => {
   }, []);
 
   const [selectedPrestadorId, setSelectedPrestadorId] = useState<string>('');
-  const [isContractInfoExpanded, setIsContractInfoExpanded] = useState(false);
   const [extractionText, setExtractionText] = useState('');
   const [showExtractionPanel, setShowExtractionPanel] = useState(false);
   const [publicDocumentId, setPublicDocumentId] = useState<string | null>(null);
   const [externalImageUrl, setExternalImageUrl] = useState('');
   const [showExternalUrlInput, setShowExternalUrlInput] = useState(false);
-  const [publicDocumentUrl, setPublicDocumentUrl] = useState<string | null>(
-    null
-  );
-  const [apontamentosSemClassificacao, setApontamentosSemClassificacao] =
-    useState(0);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -232,9 +208,7 @@ const AnaliseVistoria = () => {
         // Carregar public_document_id se existir
         if (analiseData.public_document_id) {
           setPublicDocumentId(analiseData.public_document_id);
-          setPublicDocumentUrl(
-            `${window.location.origin}/documento-publico/${analiseData.public_document_id}`
-          );
+          // URL do documento público será gerada quando necessário
         }
 
         // Carregar dados da vistoria
@@ -474,7 +448,7 @@ const AnaliseVistoria = () => {
                   endereco: enderecoFinal,
                 });
               } catch (error) {
-                console.error('Erro ao processar dados do contrato:', error);
+                log.error('Erro ao processar dados do contrato:', error);
               }
             }
           }
@@ -885,7 +859,7 @@ const AnaliseVistoria = () => {
 
       setDocumentPreview(template);
     } catch (error) {
-      console.error('Erro ao atualizar pré-visualização:', error);
+      log.error('Erro ao atualizar pré-visualização:', error);
       setDocumentPreview('');
     }
   }, [apontamentos, dadosVistoria, documentMode]);
@@ -2105,47 +2079,9 @@ const AnaliseVistoria = () => {
     }
   };
 
-  // Função para migrar/corrigir classificações de documentos antigos
-  const handleMigrarClassificacoes = useCallback(() => {
-    let apontamentosCorrigidos = 0;
-
-    const apontamentosAtualizados = apontamentos.map((apontamento) => {
-      // Se já tem classificação, não altera
-      if (apontamento.classificacao) {
-        return apontamento;
-      }
-
-      // TODOS os apontamentos sem classificação → Responsabilidade do Locatário
-      apontamentosCorrigidos++;
-      return {
-        ...apontamento,
-        classificacao: 'responsabilidade' as const,
-      };
-    });
-
-    setApontamentos(apontamentosAtualizados);
-
-    if (apontamentosCorrigidos > 0) {
-      toast({
-        title: 'Classificações atribuídas! ✅',
-        description: `${apontamentosCorrigidos} apontamento(s) ${apontamentosCorrigidos === 1 ? 'foi atribuído' : 'foram atribuídos'} como responsabilidade do locatário.`,
-      });
-    } else {
-      toast({
-        title: 'Nenhuma correção necessária',
-        description:
-          'Todos os apontamentos já estão classificados corretamente.',
-      });
-    }
-  }, [apontamentos, toast]);
 
   // Detectar apontamentos sem classificação
-  useEffect(() => {
-    const semClassificacao = apontamentos.filter(
-      (ap) => !ap.classificacao
-    ).length;
-    setApontamentosSemClassificacao(semClassificacao);
-  }, [apontamentos]);
+  // Nota: Função removida pois a variável não é utilizada no componente
 
   const handleExtractApontamentos = async () => {
     if (!extractionText.trim()) {
@@ -2295,7 +2231,6 @@ const AnaliseVistoria = () => {
             hasExistingAnalise={hasExistingAnalise}
             loadingExistingAnalise={loadingExistingAnalise}
             onReloadImages={forceReloadImages}
-            onMigration={executeImageSerialMigration}
             savedAnaliseId={savedAnaliseId}
           />
         )}
@@ -3028,7 +2963,6 @@ está suja
           imageUrl={previewImageModal}
           onClose={() => {
             setPreviewImageModal(null);
-            setImageZoom(1);
           }}
         />
       )}

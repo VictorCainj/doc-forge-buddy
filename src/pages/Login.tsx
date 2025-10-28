@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { parseAuthError } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, Shield, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -33,7 +33,6 @@ const Login = () => {
   });
 
   const emailValue = watch('email');
-  const passwordValue = watch('password');
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);

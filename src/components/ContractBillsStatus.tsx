@@ -1,6 +1,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  Zap,
+  Droplets,
+  Building2,
+  Flame,
+  Bell,
+  Key,
+} from 'lucide-react';
 import { BillType, ContractFormData } from '@/types/contract';
 import { useContractBills } from '@/hooks/useContractBills';
 import { cn } from '@/lib/utils';

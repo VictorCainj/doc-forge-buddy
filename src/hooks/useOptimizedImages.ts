@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import { log } from '@/utils/logger';
 
 export interface ImageOptimizationOptions {
   maxWidth?: number;
@@ -152,7 +153,7 @@ export const useOptimizedImages = (
         // Verificar se é imagem
         if (!file.type.startsWith('image/')) {
           // eslint-disable-next-line no-console
-          console.warn(`Arquivo ${file.name} não é uma imagem`);
+          log.warn(`Arquivo ${file.name} não é uma imagem`);
           continue;
         }
 
@@ -193,7 +194,7 @@ export const useOptimizedImages = (
 
         } catch (error) {
           // eslint-disable-next-line no-console
-          console.error(`Erro ao processar ${file.name}:`, error);
+          log.error(`Erro ao processar ${file.name}:`, error);
         }
 
         // Atualizar progresso

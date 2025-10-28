@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { PremiumButton } from '@/components/ui/premium-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,7 +26,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  User,
   Phone,
   Mail,
   MapPin,
@@ -34,8 +34,6 @@ import {
   Building2,
   Users,
   FileText,
-  Calendar,
-  Clock,
   Copy,
   Check,
 } from '@/utils/iconMapper';
@@ -45,6 +43,7 @@ import {
   Prestador,
 } from '@/hooks/usePrestadores';
 import { memo } from 'react';
+import { log } from '@/utils/logger';
 
 // Componente de formulário memoizado para evitar re-renders
 interface PrestadorFormProps {
@@ -266,7 +265,7 @@ const Prestadores = () => {
       setCopiedPrestadorId(prestador.id);
       setTimeout(() => setCopiedPrestadorId(null), 2000);
     } catch (err) {
-      console.error('Erro ao copiar informação:', err);
+      log.error('Erro ao copiar informação:', err);
     }
   };
 
@@ -369,10 +368,9 @@ const Prestadores = () => {
               onOpenChange={setIsCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200">
-                  <Plus className="h-4 w-4" />
+                <PremiumButton icon={<Plus />} variant="success">
                   Novo Prestador
-                </Button>
+                </PremiumButton>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-neutral-200 shadow-xl">
                 <DialogHeader className="pb-4 border-b border-neutral-200">

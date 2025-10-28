@@ -2,6 +2,8 @@ import { X, Trash2 } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useSafeHTML } from '@/hooks/useSafeHTML';
+import { log } from '@/utils/logger';
+import React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -277,7 +279,7 @@ const SafeDocumentViewer = ({
     // Expor função global para os botões de exclusão
     if (onImageDelete) {
       (window as any).handleImageDelete = (imageSrc: string) => {
-        console.log('Botão de exclusão clicado para:', imageSrc);
+        log.info('Botão de exclusão clicado para:', imageSrc);
         onImageDelete(imageSrc);
       };
     }
@@ -293,55 +295,27 @@ const SafeDocumentViewer = ({
 
     const addDeleteButtons = () => {
       const images = document.querySelectorAll('.document-viewer-content img');
-      console.log('🔍 Encontradas', images.length, 'imagens para processar');
-      console.log(
-        '🔍 HTML do documento:',
-        document
-          .querySelector('.document-viewer-content')
-          ?.innerHTML.substring(0, 200) + '...'
-      );
+      log.info('🔍 Encontradas', images.length, 'imagens para processar');
 
       if (images.length === 0) {
-        console.log('❌ Nenhuma imagem encontrada no documento');
-        console.log('🔍 Tentando seletores alternativos...');
-
-        // Tentar seletores alternativos
-        const allImages = document.querySelectorAll('img');
-        console.log('🔍 Total de imagens na página:', allImages.length);
-
-        allImages.forEach((img, index) => {
-          console.log(
-            `🔍 Imagem ${index + 1}:`,
-            img.src?.substring(0, 50) + '...'
-          );
-        });
+        log.warn('❌ Nenhuma imagem encontrada no documento');
         return;
       }
 
       images.forEach((img, index) => {
-        console.log(`🔍 Processando imagem ${index + 1}:`, {
-          tagName: img.tagName,
-          src: img.src?.substring(0, 50) + '...',
-          className: img.className,
-          parentElement: img.parentElement?.tagName,
-        });
-
         // Verificar se já tem botão de exclusão
         if (img.parentElement?.querySelector('.image-delete-overlay')) {
-          console.log(`⏭️ Imagem ${index + 1} já tem botão, pulando`);
+          log.debug(`⏭️ Imagem ${index + 1} já tem botão, pulando`);
           return;
         }
 
         const src = img.getAttribute('src');
         if (!src) {
-          console.log(`❌ Imagem ${index + 1} não tem src`);
+          log.warn(`❌ Imagem ${index + 1} não tem src`);
           return;
         }
 
-        console.log(
-          `✅ Processando imagem ${index + 1}:`,
-          src.substring(0, 50) + '...'
-        );
+        log.debug(`✅ Processando imagem ${index + 1}:`, src.substring(0, 50) + '...');
 
         // Criar container
         const container = document.createElement('div');
@@ -377,7 +351,7 @@ const SafeDocumentViewer = ({
         deleteButton.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🗑️ Botão de exclusão clicado para:', src);
+          log.info('🗑️ Botão de exclusão clicado para:', src);
           onImageDelete(src);
         };
 
@@ -386,13 +360,9 @@ const SafeDocumentViewer = ({
           img.parentNode.insertBefore(container, img);
           container.appendChild(img);
           container.appendChild(deleteButton);
-          console.log(`✅ Botão adicionado à imagem ${index + 1}`);
-          console.log(
-            `✅ Container criado:`,
-            container.outerHTML.substring(0, 100) + '...'
-          );
+          log.debug(`✅ Botão adicionado à imagem ${index + 1}`);
         } else {
-          console.log(`❌ Imagem ${index + 1} não tem parentNode`);
+          log.warn(`❌ Imagem ${index + 1} não tem parentNode`);
         }
       });
     };

@@ -96,7 +96,7 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
   // Verificar se há etapas que usam PersonManager
   const hasPersonManagerSteps = steps.some(
     (step) =>
-      step.id === 'locador' || step.id === 'locatario' || step.id === 'fiador'
+      step.id === 'locador' || step.id === 'locatario' || step.id === 'garantia'
   );
 
   // Hook principal do formulário
@@ -203,9 +203,9 @@ const DocumentFormWizard: React.FC<DocumentFormWizardProps> = ({
             }
           }
         }, 100);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Se o erro for de validação, apenas silenciosamente retornar
-        if (error?.message === 'VALIDATION_REQUIRED') {
+        if (error instanceof Error && error.message === 'VALIDATION_REQUIRED') {
           return;
         }
         // Erro já tratado no onGenerate

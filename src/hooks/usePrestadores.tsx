@@ -219,7 +219,8 @@ export const usePrestadores = () => {
     if (user) {
       fetchPrestadores();
     }
-  }, [user, fetchPrestadores]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return {
     prestadores,

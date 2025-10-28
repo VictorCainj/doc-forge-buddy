@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { PremiumButton } from '@/components/ui/premium-button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -139,7 +140,8 @@ const Contratos = () => {
       }
 
       if (documentType === 'Distrato de Contrato de Locação') {
-        const temFiadores = formData.temFiador === 'sim';
+        // Compatibilidade: verificar tanto tipoGarantia quanto temFiador
+        const temFiadores = formData.tipoGarantia === 'Fiador' || formData.temFiador === 'sim';
         const fiadores: string[] = [];
 
         if (temFiadores && formData.nomeFiador) {
@@ -579,10 +581,9 @@ const Contratos = () => {
                   )}
 
                   <Link to="/cadastrar-contrato">
-                    <Button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200">
-                      <Plus className="h-4 w-4" />
+                    <PremiumButton icon={<Plus />} variant="primary">
                       Novo Contrato
-                    </Button>
+                    </PremiumButton>
                   </Link>
                 </div>
               </div>

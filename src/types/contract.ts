@@ -59,8 +59,9 @@ export interface ContractFormData {
   emailProprietario?: string;
   qualificacaoCompletaLocadores?: string;
 
-  // Dados do fiador
-  temFiador?: string;
+  // Dados de garantia
+  tipoGarantia?: string;
+  temFiador?: string; // Mantido para compatibilidade
   nomeFiador?: string;
   primeiroFiador?: string;
   segundoFiador?: string;

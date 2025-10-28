@@ -38,7 +38,6 @@ export interface ContractCardProps {
   onDelete: (contractId: string) => void;
   onGenerateDocument: (contract: Contract, documentType: DocumentType) => void;
   onGenerateAgendamento: (contract: Contract) => void;
-  onGenerateNPS: (contract: Contract) => void;
   onGenerateWhatsApp: (
     contract: Contract,
     type: 'locador' | 'locatario'
@@ -54,7 +53,6 @@ export const ContractCard = memo<ContractCardProps>(
     onDelete,
     onGenerateDocument: _onGenerateDocument,
     onGenerateAgendamento,
-    onGenerateNPS,
     onGenerateWhatsApp,
     isGenerating = false,
     generatingDocument,
@@ -150,19 +148,22 @@ export const ContractCard = memo<ContractCardProps>(
     // Date calculations removed - not used
 
     return (
-      <Card className="metric-card glass-card border-border hover:shadow-soft transition-all duration-300 overflow-visible">
-        <CardContent className="p-6">
+      <Card className="group relative bg-white border border-neutral-200/80 hover:border-neutral-300 hover:shadow-xl transition-all duration-500 overflow-visible backdrop-blur-sm shadow-sm">
+        {/* Gradiente sutil no topo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-lg"></div>
+        
+        <CardContent className="relative p-6">
           {/* Header do Contrato */}
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start justify-between mb-6">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <FileTextColored className="h-4 w-4" />
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/20 group-hover:shadow-lg group-hover:shadow-blue-500/30 transition-shadow duration-300">
+                <FileTextColored className="h-4 w-4 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-foreground">
-                  Contrato {contract.form_data.numeroContrato || '[NÚMERO]'}
+                <h3 className="font-bold text-base text-neutral-900 tracking-tight">
+                  {contract.form_data.numeroContrato || 'Contrato sem número'}
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-neutral-500 mt-0.5 font-mono">
                   ID: {contract.id.slice(0, 8)}...
                 </p>
               </div>
@@ -170,8 +171,8 @@ export const ContractCard = memo<ContractCardProps>(
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-neutral-100 transition-colors">
+                  <MoreVertical className="h-4 w-4 text-neutral-600" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -186,21 +187,24 @@ export const ContractCard = memo<ContractCardProps>(
             </DropdownMenu>
           </div>
 
-          {/* Separador */}
-          <div className="border-t border-primary-500/20 mb-4"></div>
+          {/* Separador com gradiente */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-neutral-300 to-transparent h-px"></div>
+          </div>
 
           {/* PARTES ENVOLVIDAS */}
-          <div className="mb-4">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          <div className="mb-5">
+            <h4 className="text-xs font-semibold text-neutral-600 uppercase tracking-wide mb-3.5 flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-blue-500"></span>
               Partes Envolvidas
             </h4>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="p-1.5 rounded-md bg-success-500/10">
-                  <UserColored className="h-3 w-3" />
+            <div className="space-y-3.5">
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/50 hover:border-emerald-200/50 transition-colors group/item">
+                <div className="p-2 rounded-lg bg-white shadow-sm group-hover/item:shadow-md transition-shadow">
+                  <UserColored className="h-3.5 w-3.5 text-emerald-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">
                     {isMultipleProprietarios(
                       contract.form_data.nomesResumidosLocadores ||
                         contract.form_data.nomeProprietario ||
@@ -209,19 +213,19 @@ export const ContractCard = memo<ContractCardProps>(
                       ? 'Proprietários'
                       : 'Proprietário'}
                   </p>
-                  <p className="text-sm font-medium text-foreground truncate">
+                  <p className="text-sm font-medium text-neutral-900 truncate">
                     {contract.form_data.nomesResumidosLocadores ||
                       contract.form_data.nomeProprietario ||
                       '[NOME DO PROPRIETÁRIO]'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="p-1.5 rounded-md bg-primary-500/10">
-                  <User2Colored className="h-3 w-3" />
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100/50 hover:border-blue-200/50 transition-colors group/item">
+                <div className="p-2 rounded-lg bg-white shadow-sm group-hover/item:shadow-md transition-shadow">
+                  <User2Colored className="h-3.5 w-3.5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">
                     {isMultipleLocatarios(
                       contract.form_data.nomeLocatario ||
                         contract.form_data.primeiroLocatario ||
@@ -230,7 +234,7 @@ export const ContractCard = memo<ContractCardProps>(
                       ? 'Locatários'
                       : 'Locatário'}
                   </p>
-                  <p className="text-sm font-medium text-foreground truncate">
+                  <p className="text-sm font-medium text-neutral-900 truncate">
                     {contract.form_data.nomeLocatario ||
                       contract.form_data.primeiroLocatario ||
                       '[NOME DO LOCATÁRIO]'}
@@ -241,20 +245,21 @@ export const ContractCard = memo<ContractCardProps>(
           </div>
 
           {/* INFORMAÇÕES DO IMÓVEL */}
-          <div className="mb-4">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-              Informações do Imóvel
+          <div className="mb-5">
+            <h4 className="text-xs font-semibold text-neutral-600 uppercase tracking-wide mb-3.5 flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-blue-500"></span>
+              Localização
             </h4>
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 rounded-md bg-warning-500/10">
-                <MapPinColored className="h-3 w-3" />
+            <div className="flex items-start gap-3 p-2.5 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 hover:border-amber-200/50 transition-colors">
+              <div className="p-2 rounded-lg bg-white shadow-sm">
+                <MapPinColored className="h-3.5 w-3.5 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">
                   Endereço
                 </p>
                 <p
-                  className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary hover:underline transition-colors"
+                  className="text-sm font-medium text-neutral-900 truncate cursor-pointer hover:text-amber-600 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     const endereco =
@@ -275,58 +280,52 @@ export const ContractCard = memo<ContractCardProps>(
             </div>
           </div>
 
+          {/* Separador sutil */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-neutral-300 to-transparent h-px"></div>
+          </div>
+
           {/* BOTÃO EDITAR */}
-          <div className="flex items-center justify-between mb-4 pt-2 border-t border-primary-500/20">
+          <div className="flex items-center justify-between mb-5">
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs h-8 text-muted-foreground hover:text-foreground"
+              className="text-xs h-9 px-4 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-all"
               onClick={handleEditContract}
             >
-              <EditColored className="h-3 w-3 mr-1" />
+              <EditColored className="h-3.5 w-3.5 mr-1.5" />
               Editar
             </Button>
           </div>
 
           {/* AÇÕES RÁPIDAS */}
-          <div className="space-y-2 pt-3 border-t border-primary-500/20">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2.5 pt-4 border-t border-neutral-100">
+            <h4 className="text-xs font-semibold text-neutral-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-blue-500"></span>
+              Ações Rápidas
+            </h4>
+            <div className="grid grid-cols-1 gap-2.5">
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8"
+                className="text-xs h-9 border-neutral-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all shadow-sm hover:shadow w-full"
                 onClick={() => onGenerateAgendamento(contract)}
                 disabled={isGenerating}
               >
                 {getLoadingIcon(
                   contract.id,
                   'agendamento',
-                  <CalendarColored className="h-3 w-3 mr-1" />
+                  <CalendarColored className="h-3.5 w-3.5 mr-1.5" />
                 )}
                 Agendamento
               </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => onGenerateNPS(contract)}
-                disabled={isGenerating}
-              >
-                {getLoadingIcon(
-                  contract.id,
-                  'nps',
-                  <FileTextColored className="h-3 w-3 mr-1" />
-                )}
-                NPS
-              </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8"
+                className="text-xs h-9 border-neutral-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-all shadow-sm hover:shadow"
                 onClick={() => onGenerateWhatsApp(contract, 'locador')}
                 disabled={isGenerating}
               >
@@ -336,7 +335,7 @@ export const ContractCard = memo<ContractCardProps>(
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8"
+                className="text-xs h-9 border-neutral-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-all shadow-sm hover:shadow"
                 onClick={() => onGenerateWhatsApp(contract, 'locatario')}
                 disabled={isGenerating}
               >
@@ -344,15 +343,15 @@ export const ContractCard = memo<ContractCardProps>(
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-2.5">
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8"
+                className="text-xs h-9 border-neutral-200 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 transition-all shadow-sm hover:shadow"
                 onClick={handleAnaliseClick}
                 disabled={checkingAnalise}
               >
-                <SearchCheckColored className="h-3 w-3 mr-1" />
+                <SearchCheckColored className="h-3.5 w-3.5 mr-1.5" />
                 {checkingAnalise
                   ? 'Verificando...'
                   : hasAnalise

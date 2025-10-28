@@ -7,6 +7,7 @@ import {
   MotivoStats,
   DashboardFilters,
 } from '@/types/dashboardDesocupacao';
+import { log } from '@/utils/logger';
 
 /**
  * Hook para buscar dados do Dashboard de Desocupação
@@ -31,7 +32,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
         );
       }
 
-      console.log(
+      log.debug(
         'Total de contratos encontrados:',
         todosContratos?.length || 0
       );
@@ -39,23 +40,23 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
       // Mostrar todos os contratos (independente do motivo de desocupação)
       const contratosComMotivo = todosContratos || [];
 
-      console.log('=== DEBUG DASHBOARD ===');
-      console.log('Total de contratos encontrados:', contratosComMotivo.length);
+      log.debug('=== DEBUG DASHBOARD ===');
+      log.debug('Total de contratos encontrados:', contratosComMotivo.length);
 
       // Verificar quantos contratos têm dataInicioRescisao preenchida
       const contratosComData = contratosComMotivo.filter(
         (c) => c.form_data?.dataInicioRescisao
       );
-      console.log('Contratos COM dataInicioRescisao:', contratosComData.length);
-      console.log(
+      log.debug('Contratos COM dataInicioRescisao:', contratosComData.length);
+      log.debug(
         'Contratos SEM dataInicioRescisao:',
         contratosComMotivo.length - contratosComData.length
       );
 
       // Mostrar algumas datas de exemplo
-      console.log('Exemplos de datas encontradas:');
+      log.debug('Exemplos de datas encontradas:');
       contratosComData.slice(0, 5).forEach((c) => {
-        console.log(`  Contrato ${c.id}: ${c.form_data?.dataInicioRescisao}`);
+        log.debug(`  Contrato ${c.id}: ${c.form_data?.dataInicioRescisao}`);
       });
 
       // Aplicar filtro de período baseado na data de comunicação
@@ -67,7 +68,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
         const inicio = new Date(startDate);
         const fim = new Date(endDate);
 
-        console.log('Aplicando filtro por data de início da rescisão:', {
+        log.debug('Aplicando filtro por data de início da rescisão:', {
           periodo: filters.periodo,
           startDate,
           endDate,
@@ -97,7 +98,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
           }
 
           if (isNaN(dataInicioRescisaoObj.getTime())) {
-            console.log(
+            log.warn(
               'Data de início da rescisão inválida:',
               contrato.id,
               dataInicioRescisao
@@ -111,7 +112,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
 
           // Log apenas para contratos incluídos para reduzir spam no console
           if (estaNoPeriodo) {
-            console.log(
+            log.debug(
               'Contrato incluído:',
               contrato.id,
               'Data início rescisão:',
@@ -122,14 +123,14 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
           return estaNoPeriodo;
         });
       } else {
-        console.log('Mostrando todos os contratos (sem filtro de período)');
+        log.debug('Mostrando todos os contratos (sem filtro de período)');
       }
 
-      console.log(
+      log.debug(
         'Contratos após filtro de período:',
         contratosFiltrados.length
       );
-      console.log('=== FIM DEBUG ===');
+      log.debug('=== FIM DEBUG ===');
 
       const contratosData = contratosFiltrados;
       const error = null;
@@ -152,7 +153,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
 
           return { item, billsData };
         } catch (error) {
-          console.error('Erro ao buscar bills para contrato:', item.id, error);
+          log.error('Erro ao buscar bills para contrato:', item.id, error);
           return { item, billsData: null };
         }
       });
@@ -182,7 +183,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
             }
 
             if (isNaN(dataTeste.getTime())) {
-              console.log(
+              log.warn(
                 'Data de início da rescisão inválida encontrada:',
                 item.id,
                 dataInicioRescisao
@@ -221,7 +222,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
                   diasPendentes = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                 }
               } catch (error) {
-                console.error('Erro ao calcular dias pendentes:', error);
+                log.error('Erro ao calcular dias pendentes:', error);
               }
             }
 
@@ -285,7 +286,7 @@ function getPeriodDates(filters: DashboardFilters): {
     const startOfMonth = new Date(filters.ano, filters.mes - 1, 1);
     const endOfMonth = new Date(filters.ano, filters.mes, 0);
 
-    console.log('Calculando mês específico:', {
+    log.debug('Calculando mês específico:', {
       ano: filters.ano,
       mes: filters.mes,
       startOfMonth: startOfMonth.toISOString(),
@@ -353,7 +354,7 @@ function calculateStats(
       endDateFormatted = endDateObj.toLocaleDateString('pt-BR');
     }
   } catch (error) {
-    console.log('Erro ao formatar datas do período:', error);
+    log.error('Erro ao formatar datas do período:', error);
   }
 
   let periodoAtual: string;
