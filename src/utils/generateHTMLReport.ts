@@ -97,7 +97,13 @@ export function generateHTMLReport(data: HTMLReportData): string {
   <style>
     @page {
       size: A4;
-      margin: 1cm;
+      margin: 2cm 2.5cm;
+      @top-center {
+        content: element(header);
+      }
+      @bottom-center {
+        content: element(footer);
+      }
     }
   </style>
   <style>
@@ -679,16 +685,68 @@ export function generateHTMLReport(data: HTMLReportData): string {
          print-color-adjust: exact !important;
        }
 
-       body {
-         padding: 0 !important;
-         margin: 0 !important;
-         max-width: 100% !important;
-         font-size: 12px !important;
-         line-height: 1.4 !important;
-         -webkit-font-smoothing: antialiased !important;
-         -moz-osx-font-smoothing: grayscale !important;
-         text-rendering: optimizeLegibility !important;
-       }
+      body {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        text-rendering: optimizeLegibility !important;
+      }
+      
+      /* Quebras de página entre cada conteúdo */
+      .print-page {
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+      }
+      
+      /* Garantir que conteúdo não quebre */
+      .content-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      
+      /* Evitar quebra no meio de tabelas */
+      tbody tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      
+      /* Cabeçalho e rodapé fixos em todas as páginas */
+      @page {
+        margin: 2cm 2.5cm 2cm 2.5cm;
+      }
+      
+      thead {
+        display: table-header-group !important;
+      }
+      
+      tfoot {
+        display: table-footer-group !important;
+      }
+      
+      .page-header {
+        position: running(header);
+        text-align: center;
+        font-size: 10px;
+        color: #666;
+        padding: 5px 0;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      .page-footer {
+        position: running(footer);
+        text-align: center;
+        font-size: 9px;
+        color: #999;
+        padding: 5px 0;
+        border-top: 1px solid #ddd;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
 
        .print-button, .print-instructions {
          display: none !important;
@@ -1122,7 +1180,13 @@ export function generateHTMLReport(data: HTMLReportData): string {
             <style>
              @page {
                size: A4;
-               margin: 1cm;
+               margin: 2cm 2.5cm;
+               @top-center {
+                 content: element(header);
+               }
+               @bottom-center {
+                 content: element(footer);
+               }
              }
              
              * {
