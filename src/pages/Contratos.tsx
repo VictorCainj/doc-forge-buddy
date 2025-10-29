@@ -19,6 +19,7 @@ import { applyContractConjunctions } from '@/features/contracts/utils/contractCo
 import { processContractTemplate } from '@/features/contracts/utils/templateProcessor';
 import {
   NOTIFICACAO_AGENDAMENTO_TEMPLATE,
+  EMAIL_CONVITE_VISTORIA_TEMPLATE,
   DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE,
   DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
   STATUS_VISTORIA_WHATSAPP_TEMPLATE,
@@ -141,7 +142,8 @@ const Contratos = () => {
 
       if (documentType === 'Distrato de Contrato de Locação') {
         // Compatibilidade: verificar tanto tipoGarantia quanto temFiador
-        const temFiadores = formData.tipoGarantia === 'Fiador' || formData.temFiador === 'sim';
+        const temFiadores =
+          formData.tipoGarantia === 'Fiador' || formData.temFiador === 'sim';
         const fiadores: string[] = [];
 
         if (temFiadores && formData.nomeFiador) {
@@ -315,10 +317,23 @@ const Contratos = () => {
     );
     const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${state.selectedContract.title}`;
 
+    // Se for Vistoria Final, gerar também o e-mail de convite
+    let secondaryTemplate = null;
+    if (state.formData.tipoVistoria === 'final') {
+      // Sempre definir David Issa como responsável técnico
+      enhancedData.nomeVistoriador =
+        state.formData.nomeVistoriador || 'David Issa';
+      secondaryTemplate = processContractTemplate(
+        EMAIL_CONVITE_VISTORIA_TEMPLATE,
+        enhancedData
+      );
+    }
+
     navigate('/gerar-documento', {
       state: {
         title: documentTitle,
         template: processedTemplate,
+        secondaryTemplate: secondaryTemplate,
         formData: enhancedData,
         documentType: 'Notificação de Agendamento',
       },

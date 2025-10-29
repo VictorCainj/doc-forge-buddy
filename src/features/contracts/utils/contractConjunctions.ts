@@ -80,6 +80,7 @@ export function applyContractConjunctions(
     enhancedData.locatarioPrezado = 'Prezadas';
     enhancedData.locatarioDocumentacao = 'das locatárias';
     enhancedData.locatarioResponsabilidade = 'das locatárias';
+    enhancedData.locatarioTermoPelo = 'pelas locatárias';
   } else if (generoLocatario === 'masculinos') {
     // Plural masculino
     enhancedData.locatarioTerm = 'LOCATÁRIOS';
@@ -91,6 +92,7 @@ export function applyContractConjunctions(
     enhancedData.locatarioPrezado = 'Prezados';
     enhancedData.locatarioDocumentacao = 'dos locatários';
     enhancedData.locatarioResponsabilidade = 'dos locatários';
+    enhancedData.locatarioTermoPelo = 'pelos locatários';
   } else if (generoLocatario === 'feminino') {
     // Singular feminino
     enhancedData.locatarioTerm = 'LOCATÁRIA';
@@ -102,6 +104,7 @@ export function applyContractConjunctions(
     enhancedData.locatarioIra = 'irá';
     enhancedData.locatarioTermo = 'da locatária';
     enhancedData.locatarioPrezado = 'Prezada';
+    enhancedData.locatarioTermoPelo = 'pela locatária';
   } else if (generoLocatario === 'masculino') {
     // Singular masculino
     enhancedData.locatarioTerm = 'LOCATÁRIO';
@@ -113,6 +116,7 @@ export function applyContractConjunctions(
     enhancedData.locatarioIra = 'irá';
     enhancedData.locatarioTermo = 'do locatário';
     enhancedData.locatarioPrezado = 'Prezado';
+    enhancedData.locatarioTermoPelo = 'pelo locatário';
   } else if (autoDetectedMultiple) {
     // Fallback: detecção automática indica plural (padrão masculino)
     enhancedData.locatarioTerm = 'LOCATÁRIOS';
@@ -124,6 +128,7 @@ export function applyContractConjunctions(
     enhancedData.locatarioPrezado = 'Prezados';
     enhancedData.locatarioDocumentacao = 'dos locatários';
     enhancedData.locatarioResponsabilidade = 'dos locatários';
+    enhancedData.locatarioTermoPelo = 'pelos locatários';
   } else {
     // Fallback: singular masculino (padrão)
     enhancedData.locatarioTerm = 'LOCATÁRIO';
@@ -135,6 +140,7 @@ export function applyContractConjunctions(
     enhancedData.locatarioIra = 'irá';
     enhancedData.locatarioTermo = 'do locatário';
     enhancedData.locatarioPrezado = 'Prezado';
+    enhancedData.locatarioTermoPelo = 'pelo locatário';
   }
 
   // Usar os dados dos locatários adicionados manualmente
@@ -370,6 +376,42 @@ export function applyContractConjunctions(
         `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
       : `<strong>${nomesProprietarioArray[0]}</strong>`;
 
+  // Gerar lista de todos os primeiros nomes (locadores + locatários) para e-mail de convite
+  const todosPrimeirosNomes: string[] = [];
+
+  // Adicionar primeiros nomes dos locadores
+  nomesProprietarioArray.forEach((nomeCompleto) => {
+    const primeiroNome = nomeCompleto.split(' ')[0];
+    const primeiroNomeCapitalizado =
+      primeiroNome.charAt(0).toUpperCase() +
+      primeiroNome.slice(1).toLowerCase();
+    todosPrimeirosNomes.push(primeiroNomeCapitalizado);
+  });
+
+  // Adicionar primeiros nomes dos locatários
+  nomesLocatarioArray.forEach((nomeCompleto) => {
+    const primeiroNome = nomeCompleto.split(' ')[0];
+    const primeiroNomeCapitalizado =
+      primeiroNome.charAt(0).toUpperCase() +
+      primeiroNome.slice(1).toLowerCase();
+    todosPrimeirosNomes.push(primeiroNomeCapitalizado);
+  });
+
+  // Formatando a lista com vírgulas e "e" antes do último
+  if (todosPrimeirosNomes.length > 0) {
+    if (todosPrimeirosNomes.length === 1) {
+      enhancedData.todosNomesConviteVistoria = todosPrimeirosNomes[0];
+    } else {
+      enhancedData.todosNomesConviteVistoria =
+        todosPrimeirosNomes.slice(0, -1).join(', ') +
+        ' e ' +
+        todosPrimeirosNomes[todosPrimeirosNomes.length - 1] +
+        '.';
+    }
+  } else {
+    enhancedData.todosNomesConviteVistoria = '';
+  }
+
   // Adicionar variáveis de data padrão
   enhancedData.dataAtual = DateHelpers.getCurrentDateBrazilian();
   enhancedData.dataComunicacao =
@@ -386,6 +428,9 @@ export function applyContractConjunctions(
     DateHelpers.getCurrentDateBrazilian();
   enhancedData.assinanteSelecionado =
     safeFormData.assinanteSelecionado || '[NOME DO ASSINANTE]';
+
+  // Sempre definir David Issa como responsável técnico padrão
+  enhancedData.nomeVistoriador = safeFormData.nomeVistoriador || 'David Issa';
 
   // Variáveis de endereço e contrato
   enhancedData.enderecoImovel =

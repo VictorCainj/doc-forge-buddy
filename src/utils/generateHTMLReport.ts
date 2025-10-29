@@ -685,16 +685,16 @@ export function generateHTMLReport(data: HTMLReportData): string {
          print-color-adjust: exact !important;
        }
 
-      body {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-        font-size: 12px !important;
-        line-height: 1.4 !important;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-        text-rendering: optimizeLegibility !important;
-      }
+       body {
+         padding: 0 !important;
+         margin: 0 !important;
+         max-width: 100% !important;
+         font-size: 12px !important;
+         line-height: 1.4 !important;
+         -webkit-font-smoothing: antialiased !important;
+         -moz-osx-font-smoothing: grayscale !important;
+         text-rendering: optimizeLegibility !important;
+       }
       
       /* Quebras de página entre cada conteúdo */
       .print-page {

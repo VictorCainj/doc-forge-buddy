@@ -20,13 +20,18 @@ const GerarDocumento = () => {
   const [fontSize, setFontSize] = useState(14);
 
   // Dados passados via state da navegação
-  const { title, template, formData, documentType } = location.state || {};
+  const { title, template, secondaryTemplate, formData, documentType } =
+    location.state || {};
 
   // Se não há dados, redirecionar para contratos
   if (!title || !template) {
     navigate('/contratos');
     return null;
   }
+
+  // Verificar se há template secundário (e-mail de convite)
+  const hasSecondaryTemplate =
+    secondaryTemplate && secondaryTemplate.trim() !== '';
 
   // Função para gerar título baseado no tipo de documento
   const getDocumentTitle = () => {
@@ -161,6 +166,11 @@ const GerarDocumento = () => {
         </style>
       `;
 
+      // Montar conteúdo completo incluindo template secundário se existir
+      const printContent = hasSecondaryTemplate
+        ? `${template}<div style="page-break-before: always; margin-top: 60px;"></div>${secondaryTemplate}`
+        : template;
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -170,7 +180,7 @@ const GerarDocumento = () => {
             ${printCSS}
           </head>
           <body>
-            ${template}
+            ${printContent}
           </body>
         </html>
       `);
@@ -281,7 +291,11 @@ const GerarDocumento = () => {
                 <Maximize2 className="h-4 w-4" />
               </Button>
               <CopyButton
-                content={template}
+                content={
+                  hasSecondaryTemplate
+                    ? `${template}\n\n${secondaryTemplate}`
+                    : template
+                }
                 size="sm"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
               />
@@ -315,8 +329,8 @@ const GerarDocumento = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-8 py-6">
-        {/* Document Preview - Minimalista */}
+      <div className="max-w-[1400px] mx-auto px-8 py-6 space-y-6">
+        {/* Document Preview - Primeiro Documento */}
         <Card className="shadow-sm">
           <CardContent className="p-0">
             <div
@@ -335,6 +349,44 @@ const GerarDocumento = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Segundo Documento - E-mail de Convite (apenas para Vistoria Final) */}
+        {hasSecondaryTemplate && (
+          <Card className="shadow-sm">
+            <div className="bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md shadow-green-500/20">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-neutral-900 tracking-tight">
+                    Assunto do E-mail: Convite para Acompanhamento da Vistoria
+                    de Saída - Contrato N°{' '}
+                    {formData?.numeroContrato || '[Número]'}
+                  </h2>
+                  <p className="text-xs text-neutral-600">Documento separado</p>
+                </div>
+              </div>
+              <CopyButton
+                content={secondaryTemplate}
+                size="sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+              />
+            </div>
+            <CardContent className="p-0">
+              <div
+                className="p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto bg-white"
+                style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
+                id="secondary-document-content"
+              >
+                <div
+                  dangerouslySetInnerHTML={{ __html: secondaryTemplate }}
+                  style={{ backgroundColor: 'white', color: 'black' }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

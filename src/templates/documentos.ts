@@ -287,6 +287,40 @@ export const NOTIFICACAO_AGENDAMENTO_TEMPLATE = `
 </div>
 `;
 
+export const EMAIL_CONVITE_VISTORIA_TEMPLATE = `
+<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="margin-bottom: 20px;">
+    <p style="margin: 10px 0; font-size: 15px;">Prezados {{todosNomesConviteVistoria}}</p>
+  </div>
+  
+  <div style="margin-bottom: 20px; text-align: justify;">
+    <p style="margin: 10px 0; font-size: 15px;">Informamos que a vistoria de saída do imóvel localizado no endereço: <strong>{{enderecoImovel}}</strong>, foi agendada {{locatarioTermoPelo}} <strong>{{nomeLocatarioFormatado}}</strong> – Contrato n. <strong>{{numeroContrato}}</strong></p>
+    
+    <p style="margin: 10px 0; font-size: 15px;">Conforme previsto contratualmente e em atenção às boas práticas de transparência e segurança jurídica, convidamos Vossa Senhoria a acompanhar presencialmente o ato da vistoria, ocasião em que será realizada a conferência do estado de conservação do imóvel.</p>
+    
+    <p style="margin: 10px 0; font-size: 15px;">A presença no local é importante para que todas as observações possam ser feitas em comum acordo, garantindo a ciência e a possibilidade de manifestação imediata quanto ao conteúdo do laudo.</p>
+  </div>
+  
+  <div style="margin-bottom: 20px; padding-left: 20px;">
+    <p style="margin: 5px 0; font-size: 15px;">• <strong>Responsável técnico:</strong> {{nomeVistoriador}}</p>
+  </div>
+  
+  <div style="margin-bottom: 20px; text-align: justify;">
+    <p style="margin: 10px 0; font-size: 15px;">Caso não seja possível o comparecimento, solicitamos que nos informe com antecedência. Ressaltamos que, mesmo na ausência, a vistoria será realizada conforme agendado, e o laudo será elaborado com base na análise técnica do vistoriador.</p>
+    
+    <p style="margin: 10px 0; font-size: 15px;">Anexo a este e-mail, a notificação formal de agendamento da vistoria.</p>
+    
+    <p style="margin: 10px 0; font-size: 15px;">Permanecemos à disposição para quaisquer esclarecimentos.</p>
+  </div>
+  
+  <div style="margin-top: 40px;">
+    <p style="margin: 5px 0; font-size: 15px;">Atenciosamente,</p>
+    <p style="margin: 5px 0; font-size: 15px;"><strong>MADIA IMÓVEIS LTDA</strong></p>
+    <p style="margin: 5px 0; font-size: 15px;">Setor de Rescisão</p>
+  </div>
+</div>
+`;
+
 export const DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; line-height: 1.8; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;">
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
