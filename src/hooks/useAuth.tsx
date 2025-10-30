@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
@@ -49,43 +50,92 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const PROFILE_STORAGE_KEY = 'user_profile_cache';
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    // Carregar perfil do cache no início
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(PROFILE_STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          // Verificar se o cache não expirou (24 horas)
+          const cacheAge = Date.now() - (parsed._timestamp || 0);
+          if (cacheAge < 24 * 60 * 60 * 1000) {
+            authLogger.debug('Perfil carregado do cache');
+            return parsed;
+          }
+        }
+      } catch (error) {
+        authLogger.warn('Erro ao carregar perfil do cache:', error);
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
-  // Carregar profile do usuário (otimizado com timeout)
-  const loadUserProfile = async (userId: string) => {
-    try {
-      // Timeout de 3 segundos para o carregamento do profile
-      const profilePromise = supabase
-        .from('profiles')
-        .select('user_id, role, full_name, created_at')
-        .eq('user_id', userId)
-        .single();
-
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout ao carregar profile')), 3000)
-      );
-
-      const { data, error } = await Promise.race([
-        profilePromise,
-        timeoutPromise
-      ]) as { data: unknown; error: unknown };
-
-      if (error) {
-        authLogger.error('Erro ao carregar profile:', error);
-        setProfile(null);
-      } else {
-        setProfile(data as UserProfile);
-        authLogger.debug('Profile carregado:', data?.role);
+  // Salvar perfil no cache
+  const saveProfileToCache = useCallback((profileData: UserProfile | null) => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (profileData) {
+          localStorage.setItem(
+            PROFILE_STORAGE_KEY,
+            JSON.stringify({ ...profileData, _timestamp: Date.now() })
+          );
+        } else {
+          localStorage.removeItem(PROFILE_STORAGE_KEY);
+        }
+      } catch (error) {
+        authLogger.warn('Erro ao salvar perfil no cache:', error);
       }
-    } catch (error) {
-      authLogger.warn('Timeout ou erro ao carregar profile:', error);
-      setProfile(null);
     }
-  };
+  }, []);
+
+  // Carregar profile do usuário (otimizado com timeout)
+  const loadUserProfile = useCallback(
+    async (userId: string) => {
+      try {
+        // Timeout de 3 segundos para o carregamento do profile
+        const profilePromise = supabase
+          .from('profiles')
+          .select('user_id, role, full_name, created_at')
+          .eq('user_id', userId)
+          .single();
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Timeout ao carregar profile')),
+            3000
+          )
+        );
+
+        const { data, error } = (await Promise.race([
+          profilePromise,
+          timeoutPromise,
+        ])) as { data: unknown; error: unknown };
+
+        if (error) {
+          authLogger.error('Erro ao carregar profile:', error);
+          setProfile(null);
+          saveProfileToCache(null);
+        } else {
+          const profileData = data as UserProfile;
+          setProfile(profileData);
+          saveProfileToCache(profileData);
+          authLogger.debug('Profile carregado:', profileData?.role);
+        }
+      } catch (error) {
+        authLogger.warn('Timeout ou erro ao carregar profile:', error);
+        // Em caso de erro, tentar manter o cache se disponível
+        // O cache já foi carregado no estado inicial
+      }
+    },
+    [saveProfileToCache]
+  );
 
   useEffect(() => {
     let isSubscribed = true;
@@ -105,12 +155,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const getInitialSession = async () => {
       try {
         setupTimeout();
-        
+
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession();
-        
+
         if (!isSubscribed) return;
 
         if (error) {
@@ -139,14 +189,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isSubscribed) return;
-      
+
       authLogger.debug('Auth state changed:', event, session?.user?.email);
-      
+
       // Evitar processar eventos duplicados
       if (event === 'INITIAL_SESSION') {
         return;
       }
-      
+
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -154,6 +204,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await loadUserProfile(session.user.id);
       } else {
         setProfile(null);
+        saveProfileToCache(null);
       }
 
       setLoading(false);
@@ -164,7 +215,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadUserProfile, saveProfileToCache]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -181,6 +232,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
+      // Limpar cache do perfil ao fazer logout
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(PROFILE_STORAGE_KEY);
+      }
+      setProfile(null);
       return { error };
     } catch (error) {
       return { error: error as AuthError };

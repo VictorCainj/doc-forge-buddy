@@ -4,6 +4,7 @@ import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
 import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
 import { CleanupDuplicatesPanel } from '@/components/admin/CleanupDuplicatesPanel';
 import { EvictionReasonsManagement } from '@/components/admin/EvictionReasonsManagement';
+import { ContractsManagement } from '@/components/admin/ContractsManagement';
 import {
   Users,
   FileText,
@@ -155,7 +156,7 @@ const Admin = () => {
         {/* Tabs de Funcionalidades Modernizadas */}
         <Tabs defaultValue="users" className="space-y-6">
           <div className="bg-white border border-neutral-200 rounded-xl p-2 shadow-sm">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 bg-transparent h-auto">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 bg-transparent h-auto">
               <TabsTrigger
                 value="users"
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
@@ -190,6 +191,13 @@ const Admin = () => {
               >
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Auditoria</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="contracts"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Contratos</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -227,6 +235,13 @@ const Admin = () => {
             className="space-y-4 animate-in fade-in-50 duration-300"
           >
             <AuditLogsViewer />
+          </TabsContent>
+
+          <TabsContent
+            value="contracts"
+            className="space-y-4 animate-in fade-in-50 duration-300"
+          >
+            <ContractsManagement />
           </TabsContent>
         </Tabs>
       </div>

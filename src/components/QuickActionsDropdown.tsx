@@ -8,7 +8,6 @@ import {
   Calendar,
   Phone,
   NotebookPen,
-  FileText,
   Briefcase,
   AlertTriangle,
   SearchCheck,
@@ -26,7 +25,6 @@ import {
   DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
   DEVOLUTIVA_COMERCIAL_TEMPLATE,
   DEVOLUTIVA_CADERNINHO_TEMPLATE,
-  DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
   DEVOLUTIVA_COBRANCA_CONSUMO_TEMPLATE,
   TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE,
   TERMO_RECUSA_ASSINATURA_PDF_TEMPLATE,
@@ -308,19 +306,6 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
             contractId,
             DEVOLUTIVA_CADERNINHO_TEMPLATE,
             'Caderninho'
-          );
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'distrato',
-        label: 'Distrato',
-        icon: FileText,
-        onClick: () => {
-          onGenerateDocument(
-            contractId,
-            DISTRATO_CONTRATO_LOCACAO_TEMPLATE,
-            'Distrato'
           );
           setIsOpen(false);
         },
@@ -782,9 +767,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                               <span className="text-sm text-gray-600 font-medium text-left">
                                 {action.id === 'caderninho'
                                   ? 'Caderninho'
-                                  : action.id === 'distrato'
-                                    ? 'Distrato'
-                                    : action.label}
+                                  : action.label}
                               </span>
                             </button>
                           ))}

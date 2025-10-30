@@ -11,30 +11,55 @@ interface AdminRouteProps {
 }
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [forceLoad, setForceLoad] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Aguardar carregamento do perfil antes de verificar admin
+  useEffect(() => {
+    if (!loading && user) {
+      // Se temos usuário mas não temos perfil ainda, aguardar um pouco mais
+      if (!profile && user) {
+        const timeoutId = setTimeout(() => {
+          setProfileLoading(false);
+        }, 2000); // Aguardar 2 segundos para perfil carregar
+        return () => clearTimeout(timeoutId);
+      } else {
+        setProfileLoading(false);
+      }
+    } else if (!loading && !user) {
+      setProfileLoading(false);
+    }
+  }, [loading, user, profile]);
 
   // Timeout de segurança para evitar loop infinito de loading
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (loading) {
+      if (loading || profileLoading) {
         console.warn('Timeout de verificação de admin - forçando renderização');
         setForceLoad(true);
+        setProfileLoading(false);
       }
-    }, 4000); // 4 segundos de timeout (otimizado)
+    }, 6000); // 6 segundos de timeout (aumentado para aguardar perfil)
 
     return () => clearTimeout(timeoutId);
-  }, [loading]);
+  }, [loading, profileLoading]);
 
-  // Mostrar loader enquanto carrega
-  if (loading && !forceLoad) {
+  // Mostrar loader enquanto carrega autenticação ou perfil
+  if ((loading || profileLoading) && !forceLoad) {
     return <PageLoader />;
   }
 
   // Se não estiver autenticado, redirecionar para login
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Aguardar perfil ser carregado antes de verificar admin
+  // Se ainda está carregando o perfil, mostrar loader
+  if (user && !profile && !forceLoad) {
+    return <PageLoader />;
   }
 
   // Se não for admin, mostrar mensagem de acesso negado
