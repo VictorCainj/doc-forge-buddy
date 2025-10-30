@@ -16,6 +16,9 @@ import { CompleteContractData } from './useCompleteContractData';
 import { getCachedResponse, setCachedResponse } from '@/utils/aiCache';
 import { log } from '@/utils/logger';
 
+/**
+ * Retorno do hook useOpenAI com métodos para integração com OpenAI
+ */
 interface UseOpenAIReturn {
   correctText: (text: string) => Promise<string>;
   improveText: (text: string) => Promise<string>;
@@ -44,6 +47,27 @@ interface UseOpenAIReturn {
   error: string | null;
 }
 
+/**
+ * Hook para integração com OpenAI API
+ *
+ * Fornece métodos para correção de texto, análise de contratos, geração de imagens,
+ * transcrição de áudio e extração de apontamentos de vistoria.
+ *
+ * Utiliza cache local para otimizar requisições repetidas.
+ *
+ * @example
+ * ```typescript
+ * const { correctText, isLoading, error } = useOpenAI();
+ *
+ * // Corrigir texto
+ * const corrected = await correctText('Texto com erros');
+ *
+ * // Analisar contratos
+ * const analysis = await analyzeContracts('Buscar contratos vencidos', contracts);
+ * ```
+ *
+ * @returns Objeto com métodos de integração OpenAI e estados de loading/erro
+ */
 export const useOpenAI = (): UseOpenAIReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

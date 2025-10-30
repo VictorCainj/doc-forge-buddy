@@ -29,6 +29,7 @@ import { generateHTMLReport } from '@/utils/generateHTMLReport';
 import { exportDashboardToExcel } from '@/utils/exportDashboardToExcel';
 import { ExcelIcon } from '@/components/icons/ExcelIcon';
 import { toast } from 'sonner';
+import { log } from '@/utils/logger';
 
 const DashboardDesocupacao = () => {
   const queryClient = useQueryClient();
@@ -87,7 +88,7 @@ const DashboardDesocupacao = () => {
       await exportDashboardToExcel(data, filters);
       toast.success('Dashboard exportado para Excel com sucesso!');
     } catch (error) {
-      console.error('Erro ao exportar para Excel:', error);
+      log.error('Erro ao exportar para Excel:', error);
       toast.error('Erro ao exportar dashboard para Excel');
     } finally {
       setIsExporting(false);
@@ -206,12 +207,12 @@ const DashboardDesocupacao = () => {
         newWindow.document.write(htmlContent);
         newWindow.document.close();
       } else {
-        console.error(
+        log.error(
           'Não foi possível abrir nova aba. Verifique o bloqueador de pop-ups.'
         );
       }
     } catch (error) {
-      console.error('Erro ao gerar relatório:', error);
+      log.error('Erro ao gerar relatório:', error);
     } finally {
       setIsGenerating(false);
     }

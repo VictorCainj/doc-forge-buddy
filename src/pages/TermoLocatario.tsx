@@ -55,10 +55,7 @@ const TermoLocatario: React.FC = () => {
   } = useTermoLocatario(contractData);
 
   // Sincronizar contas de consumo do banco de dados
-  const {
-    billStatus,
-    isLoading: loadingBills,
-  } = useContractBillsSync({
+  const { billStatus, isLoading: loadingBills } = useContractBillsSync({
     contractId: contractData.numeroContrato,
   });
 
@@ -120,7 +117,7 @@ const TermoLocatario: React.FC = () => {
               .eq('contract_id', realContractId)
               .eq('bill_type', 'energia');
           } catch (error) {
-            console.error('Erro ao sincronizar CPFL:', error);
+            log.error('Erro ao sincronizar CPFL:', error);
           }
         }
 
@@ -137,11 +134,11 @@ const TermoLocatario: React.FC = () => {
               .eq('contract_id', realContractId)
               .eq('bill_type', 'agua');
           } catch (error) {
-            console.error('Erro ao sincronizar Água:', error);
+            log.error('Erro ao sincronizar Água:', error);
           }
         }
       } catch (error) {
-        console.error('Erro geral na sincronização:', error);
+        log.error('Erro geral na sincronização:', error);
       }
     },
     [autoFillData, contractData.numeroContrato]
@@ -618,7 +615,9 @@ Foi entregue {{tipoQuantidadeChaves}}
 
     // Processar fiadores - puxar automaticamente do contrato
     // Compatibilidade: verificar tanto tipoGarantia quanto temFiador
-    const temFiadores = contractData.tipoGarantia === 'Fiador' || contractData.temFiador === 'sim';
+    const temFiadores =
+      contractData.tipoGarantia === 'Fiador' ||
+      contractData.temFiador === 'sim';
     const fiadores: string[] = [];
 
     if (temFiadores && contractData.nomeFiador) {

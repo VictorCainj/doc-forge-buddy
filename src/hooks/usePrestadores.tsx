@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { isValidPrestadorArray, isValidPrestador } from '@/utils/typeGuards';
+import { log } from '@/utils/logger';
 
 export interface Prestador {
   id: string;
@@ -30,20 +32,18 @@ export interface CreatePrestadorData {
 
 export const usePrestadores = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [prestadores, setPrestadores] = useState<Prestador[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Carregar todos os prestadores do usuário
-  const fetchPrestadores = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  // Buscar prestadores com React Query (com cache)
+  const {
+    data: prestadores = [],
+    isLoading: loading,
+    refetch: fetchPrestadores,
+  } = useQuery({
+    queryKey: ['prestadores', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
 
-    try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('prestadores')
         .select('*')
@@ -51,43 +51,28 @@ export const usePrestadores = () => {
         .order('nome', { ascending: true });
 
       if (error) throw error;
-      
+
       // Validar dados com Type Guard
       if (data && isValidPrestadorArray(data)) {
-        setPrestadores(data);
+        log.debug(`${data.length} prestadores carregados`);
+        return data;
       } else {
-        toast({
-          title: 'Dados inválidos',
-          description: 'Os dados dos prestadores estão em formato incorreto.',
-          variant: 'destructive',
-        });
-        setPrestadores([]);
+        log.error('Dados dos prestadores inválidos');
+        toast.error('Os dados dos prestadores estão em formato incorreto.');
+        return [];
       }
-    } catch {
-      toast({
-        title: 'Erro ao carregar prestadores',
-        description: 'Não foi possível carregar a lista de prestadores.',
-        variant: 'destructive',
-      });
-      setPrestadores([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, toast]);
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutos - cache longo pois dados não mudam frequentemente
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false, // Não refetch ao focar janela
+  });
 
-  // Criar novo prestador
-  const createPrestador = async (data: CreatePrestadorData): Promise<Prestador | null> => {
-    if (!user) {
-      toast({
-        title: 'Usuário não autenticado',
-        description: 'Faça login para criar prestadores.',
-        variant: 'destructive',
-      });
-      return null;
-    }
+  // Criar novo prestador (Mutation com React Query)
+  const createMutation = useMutation({
+    mutationFn: async (data: CreatePrestadorData) => {
+      if (!user) throw new Error('Usuário não autenticado');
 
-    try {
-      setSaving(true);
       const { data: prestador, error } = await supabase
         .from('prestadores')
         .insert({
@@ -99,43 +84,40 @@ export const usePrestadores = () => {
 
       if (error) throw error;
 
-      // Validar prestador criado
       if (prestador && isValidPrestador(prestador)) {
-        toast({
-          title: 'Prestador criado',
-          description: 'O prestador foi cadastrado com sucesso.',
-        });
-
-        await fetchPrestadores();
         return prestador;
       } else {
         throw new Error('Dados do prestador criado são inválidos');
       }
-    } catch {
-      toast({
-        title: 'Erro ao criar',
-        description: 'Não foi possível criar o prestador.',
-        variant: 'destructive',
-      });
-      return null;
-    } finally {
-      setSaving(false);
-    }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prestadores'] });
+      toast.success('Prestador criado com sucesso');
+    },
+    onError: (error: Error) => {
+      log.error('Erro ao criar prestador:', error);
+      toast.error(`Erro ao criar prestador: ${error.message}`);
+    },
+  });
+
+  const createPrestador = async (
+    data: CreatePrestadorData
+  ): Promise<Prestador | null> => {
+    const result = await createMutation.mutateAsync(data);
+    return result || null;
   };
 
-  // Atualizar prestador
-  const updatePrestador = async (id: string, data: Partial<CreatePrestadorData>): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: 'Usuário não autenticado',
-        description: 'Faça login para atualizar prestadores.',
-        variant: 'destructive',
-      });
-      return false;
-    }
+  // Atualizar prestador (Mutation com React Query)
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<CreatePrestadorData>;
+    }) => {
+      if (!user) throw new Error('Usuário não autenticado');
 
-    try {
-      setSaving(true);
       const { error } = await supabase
         .from('prestadores')
         .update({
@@ -146,39 +128,34 @@ export const usePrestadores = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-
-      toast({
-        title: 'Prestador atualizado',
-        description: 'O prestador foi atualizado com sucesso.',
-      });
-
-      await fetchPrestadores();
       return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prestadores'] });
+      toast.success('Prestador atualizado com sucesso');
+    },
+    onError: (error: Error) => {
+      log.error('Erro ao atualizar prestador:', error);
+      toast.error(`Erro ao atualizar: ${error.message}`);
+    },
+  });
+
+  const updatePrestador = async (
+    id: string,
+    data: Partial<CreatePrestadorData>
+  ): Promise<boolean> => {
+    try {
+      return await updateMutation.mutateAsync({ id, data });
     } catch {
-      toast({
-        title: 'Erro ao atualizar',
-        description: 'Não foi possível atualizar o prestador.',
-        variant: 'destructive',
-      });
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
-  // Deletar prestador
-  const deletePrestador = async (id: string): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: 'Usuário não autenticado',
-        description: 'Faça login para deletar prestadores.',
-        variant: 'destructive',
-      });
-      return false;
-    }
+  // Deletar prestador (Mutation com React Query)
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('Usuário não autenticado');
 
-    try {
-      setSaving(true);
       const { error } = await supabase
         .from('prestadores')
         .delete()
@@ -186,23 +163,23 @@ export const usePrestadores = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-
-      toast({
-        title: 'Prestador deletado',
-        description: 'O prestador foi removido com sucesso.',
-      });
-
-      await fetchPrestadores();
       return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prestadores'] });
+      toast.success('Prestador deletado com sucesso');
+    },
+    onError: (error: Error) => {
+      log.error('Erro ao deletar prestador:', error);
+      toast.error(`Erro ao deletar: ${error.message}`);
+    },
+  });
+
+  const deletePrestador = async (id: string): Promise<boolean> => {
+    try {
+      return await deleteMutation.mutateAsync(id);
     } catch {
-      toast({
-        title: 'Erro ao deletar',
-        description: 'Não foi possível deletar o prestador.',
-        variant: 'destructive',
-      });
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -214,13 +191,11 @@ export const usePrestadores = () => {
     [prestadores]
   );
 
-  // Carregar prestadores quando o componente montar
-  useEffect(() => {
-    if (user) {
-      fetchPrestadores();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  // Combinar estados de loading das mutations
+  const saving =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending;
 
   return {
     prestadores,

@@ -40,14 +40,26 @@ const Tarefas = lazy(() => import('./pages/Tarefas'));
 
 const DashboardDesocupacao = lazy(() => import('./pages/DashboardDesocupacao'));
 
+/**
+ * Configuração otimizada do React Query
+ * - staleTime: 2 min (mais agressivo para dados frescos)
+ * - gcTime: 5 min (garbage collection mais rápido)
+ * - Retry inteligente baseado no tipo de erro
+ * - Configurações podem ser sobrescritas por query específica
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos (anteriormente cacheTime)
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      retry: 1,
+      staleTime: 2 * 60 * 1000, // 2 minutos (dados ficam "frescos")
+      gcTime: 5 * 60 * 1000, // 5 minutos (tempo em cache)
+      refetchOnWindowFocus: true, // Refetch ao focar janela (útil para dados que mudam)
+      refetchOnMount: 'always', // Sempre buscar dados frescos ao montar
+      retry: (failureCount, error: any) => {
+        // Retry inteligente baseado no erro
+        if (error?.status === 404) return false; // Não retry para 404
+        if (error?.status === 401) return false; // Não retry para 401 (auth)
+        return failureCount < 2; // Máximo 2 tentativas
+      },
     },
   },
 });

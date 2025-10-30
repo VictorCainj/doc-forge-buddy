@@ -139,7 +139,7 @@ export function useContractBills({
         setBills(filteredBills as ContractBill[]);
       }
     } catch (error) {
-      console.error('Erro ao carregar contas:', error);
+      log.error('Erro ao carregar contas:', error);
       toast.error('Erro ao carregar contas de consumo');
     } finally {
       setIsLoading(false);
@@ -203,7 +203,7 @@ export function useContractBills({
             : `${billName} marcada como não entregue`
         );
       } catch (error) {
-        console.error('Erro ao atualizar conta:', error);
+        log.error('Erro ao atualizar conta:', error);
         toast.error('Erro ao atualizar status da conta');
       }
     },
@@ -259,7 +259,7 @@ export function useContractBills({
 
         toast.success(`${billName} concluída`);
       } catch (error) {
-        console.error('Erro ao atualizar conta:', error);
+        log.error('Erro ao atualizar conta:', error);
         toast.error('Erro ao atualizar status da conta');
         throw error;
       }

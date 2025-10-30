@@ -3,6 +3,7 @@ import { AlertTriangle, RefreshCw } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { captureException } from '@/lib/sentry';
+import { log } from '@/utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -30,7 +31,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('🔴 Error caught by boundary:', error, errorInfo);
+    log.error('🔴 Error caught by boundary:', error, errorInfo);
     this.setState({ errorInfo });
 
     // Enviar para Sentry em produção

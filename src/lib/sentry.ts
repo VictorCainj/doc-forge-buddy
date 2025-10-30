@@ -1,19 +1,23 @@
 import * as Sentry from '@sentry/react';
 
+import { env, hasSentry } from '@/config/env';
+import { log } from '@/utils/logger';
+
 /**
  * Inicializa o Sentry para error tracking
  * @param dsn - DSN do projeto Sentry (opcional, pode vir de variável de ambiente)
  */
 export const initSentry = (dsn?: string) => {
-  const sentryDsn = dsn || import.meta.env.VITE_SENTRY_DSN;
+  // Usar dsn fornecido ou buscar do env validado
+  const sentryDsn = dsn || env.VITE_SENTRY_DSN;
 
-  if (!sentryDsn && import.meta.env.PROD) {
-    console.warn('⚠️ Sentry DSN não configurado. Error tracking desabilitado.');
+  if (!hasSentry() && env.PROD) {
+    log.warn('⚠️ Sentry DSN não configurado. Error tracking desabilitado.');
     return;
   }
 
-  if (!import.meta.env.PROD) {
-    console.log('📊 Sentry configurado (modo desenvolvimento)');
+  if (!env.PROD) {
+    log.debug('📊 Sentry configurado (modo desenvolvimento)');
     return;
   }
 
@@ -27,11 +31,11 @@ export const initSentry = (dsn?: string) => {
       }),
     ],
     // Performance Monitoring - Ajustar sample rate baseado no environment
-    tracesSampleRate: import.meta.env.MODE === 'production' ? 0.5 : 1.0,
+    tracesSampleRate: env.MODE === 'production' ? 0.5 : 1.0,
     // Session Replay
-    replaysSessionSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
+    replaysSessionSampleRate: env.MODE === 'production' ? 0.1 : 1.0,
     replaysOnErrorSampleRate: 1.0,
-    environment: import.meta.env.MODE || 'development',
+    environment: env.MODE || 'development',
     // Configuração de contexto padrão
     defaultIntegrations: true,
     // Capturar console logs como breadcrumbs
@@ -64,7 +68,7 @@ export const initSentry = (dsn?: string) => {
     },
   });
 
-  console.log('✅ Sentry inicializado com sucesso');
+  log.info('✅ Sentry inicializado com sucesso');
 };
 
 /**
