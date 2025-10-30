@@ -26,6 +26,9 @@ import {
   Building2,
 } from '@/utils/iconMapper';
 import { generateHTMLReport } from '@/utils/generateHTMLReport';
+import { exportDashboardToExcel } from '@/utils/exportDashboardToExcel';
+import { ExcelIcon } from '@/components/icons/ExcelIcon';
+import { toast } from 'sonner';
 
 const DashboardDesocupacao = () => {
   const queryClient = useQueryClient();
@@ -41,6 +44,7 @@ const DashboardDesocupacao = () => {
   const [mes, setMes] = useState(new Date().getMonth() + 1);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data, isLoading, error, refetch } = useDashboardDesocupacao(filters);
 
@@ -71,6 +75,25 @@ const DashboardDesocupacao = () => {
     setMes(new Date().getMonth() + 1);
   };
 
+  const handleExportToExcel = async () => {
+    if (!data || data.contratos.length === 0) {
+      toast.error('Não há dados para exportar');
+      return;
+    }
+
+    setIsExporting(true);
+
+    try {
+      await exportDashboardToExcel(data, filters);
+      toast.success('Dashboard exportado para Excel com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar para Excel:', error);
+      toast.error('Erro ao exportar dashboard para Excel');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleGenerateReport = async () => {
     if (!data) return;
 
@@ -95,8 +118,26 @@ const DashboardDesocupacao = () => {
           filters.ano &&
           filters.mes
         ) {
-          const startOfMonth = new Date(filters.ano, filters.mes - 1, 1);
-          const endOfMonth = new Date(filters.ano, filters.mes, 0);
+          // Dia 01 do mês às 00:00:00
+          const startOfMonth = new Date(
+            filters.ano,
+            filters.mes - 1,
+            1,
+            0,
+            0,
+            0,
+            0
+          );
+          // Último dia do mês às 23:59:59.999
+          const endOfMonth = new Date(
+            filters.ano,
+            filters.mes,
+            0,
+            23,
+            59,
+            59,
+            999
+          );
           return {
             startDate: startOfMonth.toISOString().split('T')[0],
             endDate: endOfMonth.toISOString().split('T')[0],
@@ -104,8 +145,26 @@ const DashboardDesocupacao = () => {
         }
 
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        // Dia 01 do mês atual às 00:00:00
+        const startOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1,
+          0,
+          0,
+          0,
+          0
+        );
+        // Último dia do mês atual às 23:59:59.999
+        const endOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
         return {
           startDate: startOfMonth.toISOString().split('T')[0],
           endDate: endOfMonth.toISOString().split('T')[0],
@@ -205,14 +264,24 @@ const DashboardDesocupacao = () => {
                 </Button>
 
                 {data && data.contratos.length > 0 && (
-                  <PremiumButton 
-                    onClick={handleGenerateReport} 
-                    disabled={isGenerating}
-                    icon={<Download />}
-                    variant="info"
-                  >
-                    Relatório
-                  </PremiumButton>
+                  <>
+                    <PremiumButton
+                      onClick={handleExportToExcel}
+                      disabled={isExporting || isGenerating}
+                      icon={<ExcelIcon />}
+                      variant="success"
+                    >
+                      Exportar Excel
+                    </PremiumButton>
+                    <PremiumButton
+                      onClick={handleGenerateReport}
+                      disabled={isGenerating}
+                      icon={<Download />}
+                      variant="info"
+                    >
+                      Relatório
+                    </PremiumButton>
+                  </>
                 )}
               </div>
             </div>

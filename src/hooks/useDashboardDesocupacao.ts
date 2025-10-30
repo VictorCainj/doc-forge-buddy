@@ -32,10 +32,7 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
         );
       }
 
-      log.debug(
-        'Total de contratos encontrados:',
-        todosContratos?.length || 0
-      );
+      log.debug('Total de contratos encontrados:', todosContratos?.length || 0);
 
       // Mostrar todos os contratos (independente do motivo de desocupação)
       const contratosComMotivo = todosContratos || [];
@@ -59,77 +56,74 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
         log.debug(`  Contrato ${c.id}: ${c.form_data?.dataInicioRescisao}`);
       });
 
-      // Aplicar filtro de período baseado na data de comunicação
+      // Aplicar filtro de período baseado na data de início da rescisão
+      // Sempre filtra por período: do dia 01 até o final do mês
       let contratosFiltrados = contratosComMotivo;
+      const { startDate, endDate } = getPeriodDates(filters);
+      // Início do dia às 00:00:00
+      const inicio = new Date(startDate + 'T00:00:00');
+      // Fim do dia às 23:59:59.999 para incluir todo o último dia
+      const fim = new Date(endDate + 'T23:59:59.999');
 
-      // Se não for "Mês Atual" (padrão), aplicar filtro por data de comunicação
-      if (filters.periodo !== 'mes-atual') {
-        const { startDate, endDate } = getPeriodDates(filters);
-        const inicio = new Date(startDate);
-        const fim = new Date(endDate);
+      log.debug('Aplicando filtro por data de início da rescisão:', {
+        periodo: filters.periodo,
+        startDate,
+        endDate,
+        inicio: inicio.toISOString(),
+        fim: fim.toISOString(),
+      });
 
-        log.debug('Aplicando filtro por data de início da rescisão:', {
-          periodo: filters.periodo,
-          startDate,
-          endDate,
-        });
+      contratosFiltrados = contratosComMotivo.filter((contrato) => {
+        const dataInicioRescisao = contrato.form_data?.dataInicioRescisao;
+        if (!dataInicioRescisao) {
+          // Log resumido para não poluir o console
+          return false;
+        }
 
-        contratosFiltrados = contratosComMotivo.filter((contrato) => {
-          const dataInicioRescisao = contrato.form_data?.dataInicioRescisao;
-          if (!dataInicioRescisao) {
-            // Log resumido para não poluir o console
-            return false;
-          }
+        // Validar se a data é válida e converter formato brasileiro (DD/MM/YYYY) para Date
+        let dataInicioRescisaoObj: Date;
 
-          // Validar se a data é válida e converter formato brasileiro (DD/MM/YYYY) para Date
-          let dataInicioRescisaoObj: Date;
+        // Se a data está no formato brasileiro DD/MM/YYYY
+        if (dataInicioRescisao.includes('/')) {
+          const [dia, mes, ano] = dataInicioRescisao.split('/');
+          dataInicioRescisaoObj = new Date(
+            parseInt(ano),
+            parseInt(mes) - 1,
+            parseInt(dia)
+          );
+        } else {
+          // Se já está no formato ISO ou outro formato
+          dataInicioRescisaoObj = new Date(dataInicioRescisao);
+        }
 
-          // Se a data está no formato brasileiro DD/MM/YYYY
-          if (dataInicioRescisao.includes('/')) {
-            const [dia, mes, ano] = dataInicioRescisao.split('/');
-            dataInicioRescisaoObj = new Date(
-              parseInt(ano),
-              parseInt(mes) - 1,
-              parseInt(dia)
-            );
-          } else {
-            // Se já está no formato ISO ou outro formato
-            dataInicioRescisaoObj = new Date(dataInicioRescisao);
-          }
+        if (isNaN(dataInicioRescisaoObj.getTime())) {
+          log.warn(
+            'Data de início da rescisão inválida:',
+            contrato.id,
+            dataInicioRescisao
+          );
+          return false;
+        }
 
-          if (isNaN(dataInicioRescisaoObj.getTime())) {
-            log.warn(
-              'Data de início da rescisão inválida:',
-              contrato.id,
-              dataInicioRescisao
-            );
-            return false;
-          }
+        // Verificar se a data de início da rescisão está dentro do período
+        // (do dia 01 às 00:00:00 até o último dia às 23:59:59.999)
+        const estaNoPeriodo =
+          dataInicioRescisaoObj >= inicio && dataInicioRescisaoObj <= fim;
 
-          // Verificar se a data de início da rescisão está dentro do período
-          const estaNoPeriodo =
-            dataInicioRescisaoObj >= inicio && dataInicioRescisaoObj <= fim;
+        // Log apenas para contratos incluídos para reduzir spam no console
+        if (estaNoPeriodo) {
+          log.debug(
+            'Contrato incluído:',
+            contrato.id,
+            'Data início rescisão:',
+            dataInicioRescisao
+          );
+        }
 
-          // Log apenas para contratos incluídos para reduzir spam no console
-          if (estaNoPeriodo) {
-            log.debug(
-              'Contrato incluído:',
-              contrato.id,
-              'Data início rescisão:',
-              dataInicioRescisao
-            );
-          }
+        return estaNoPeriodo;
+      });
 
-          return estaNoPeriodo;
-        });
-      } else {
-        log.debug('Mostrando todos os contratos (sem filtro de período)');
-      }
-
-      log.debug(
-        'Contratos após filtro de período:',
-        contratosFiltrados.length
-      );
+      log.debug('Contratos após filtro de período:', contratosFiltrados.length);
       log.debug('=== FIM DEBUG ===');
 
       const contratosData = contratosFiltrados;
@@ -283,8 +277,10 @@ function getPeriodDates(filters: DashboardFilters): {
   }
 
   if (filters.periodo === 'mes-especifico' && filters.ano && filters.mes) {
-    const startOfMonth = new Date(filters.ano, filters.mes - 1, 1);
-    const endOfMonth = new Date(filters.ano, filters.mes, 0);
+    // Dia 01 do mês às 00:00:00
+    const startOfMonth = new Date(filters.ano, filters.mes - 1, 1, 0, 0, 0, 0);
+    // Último dia do mês às 23:59:59.999
+    const endOfMonth = new Date(filters.ano, filters.mes, 0, 23, 59, 59, 999);
 
     log.debug('Calculando mês específico:', {
       ano: filters.ano,
@@ -303,8 +299,26 @@ function getPeriodDates(filters: DashboardFilters): {
 
   // Mês atual (padrão)
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  // Dia 01 do mês atual às 00:00:00
+  const startOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1,
+    0,
+    0,
+    0,
+    0
+  );
+  // Último dia do mês atual às 23:59:59.999
+  const endOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  );
 
   return {
     startDate: startOfMonth.toISOString().split('T')[0],
