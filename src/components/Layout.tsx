@@ -15,7 +15,12 @@ const Layout = ({ children }: LayoutProps) => {
       <main
         role="main"
         aria-label="Conteúdo principal"
-        className="min-h-screen w-full overflow-auto pt-16 md:pt-0 md:pl-[60px] transition-all duration-300"
+        className="min-h-screen w-full overflow-y-auto pt-16 md:pt-0 md:pl-[60px] transition-all duration-300 custom-scrollbar smooth-scroll"
+        style={{
+          contentVisibility: 'auto',
+          contain: 'layout paint style',
+          containIntrinsicSize: '1200px 800px',
+        }}
       >
         {children}
       </main>
