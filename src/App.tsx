@@ -1,16 +1,19 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ToastProvider } from '@/components/ui/toast-notification';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from '@/hooks/useAuth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import PageTransition from '@/components/PageTransition';
+import { prefetchRouteModules } from '@/utils/prefetchRoutes';
 
 // Lazy load de páginas para code splitting
 // Páginas críticas (carregadas primeiro)
@@ -64,216 +67,142 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ToastProvider>
-      <TooltipProvider delayDuration={0}>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <ErrorBoundary>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  {/* Rotas públicas */}
-                  <Route
-                    path="/login"
-                    element={
-                      <ProtectedRoute requireAuth={false}>
-                        <Login />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/forgot-password"
-                    element={
-                      <ProtectedRoute requireAuth={false}>
-                        <ForgotPassword />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/documento-publico/:id"
-                    element={<DocumentoPublico />}
-                  />
-
-                  {/* Rotas protegidas */}
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Index />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/contratos"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Contratos />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/cadastrar-contrato"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <CadastrarContrato />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/editar-contrato/:id"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <EditarContrato />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/gerar-documento"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <GerarDocumento />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/termo-locador"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <TermoLocador />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/termo-locatario"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <TermoLocatario />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/termo-recusa-assinatura-email"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <TermoRecusaAssinaturaEmail />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/processo/:contratoId"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <ProcessoRescisao />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/processo/:contratoId/termo-chaves"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <TermoLocatario />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/editar-termo/:id"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <EditTerm />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route
-                    path="/analise-vistoria"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <AnaliseVistoria />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/prestadores"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Prestadores />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/tarefas"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Tarefas />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route
-                    path="/dashboard-desocupacao"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <DashboardDesocupacao />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute>
-                        <AdminRoute>
-                          <Layout>
-                            <Admin />
-                          </Layout>
-                        </AdminRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* Rota 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ToastProvider>
-  </QueryClientProvider>
+const renderPublic = (element: JSX.Element) => (
+  <PageTransition>{element}</PageTransition>
 );
+
+const renderPublicAuth = (element: JSX.Element) => (
+  <PageTransition>
+    <ProtectedRoute requireAuth={false}>{element}</ProtectedRoute>
+  </PageTransition>
+);
+
+const renderProtected = (element: JSX.Element) => (
+  <PageTransition>
+    <ProtectedRoute>
+      <Layout>{element}</Layout>
+    </ProtectedRoute>
+  </PageTransition>
+);
+
+const renderAdmin = (element: JSX.Element) => (
+  <PageTransition>
+    <ProtectedRoute>
+      <AdminRoute>
+        <Layout>{element}</Layout>
+      </AdminRoute>
+    </ProtectedRoute>
+  </PageTransition>
+);
+
+const AnimatedAppRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <Routes location={location} key={location.pathname}>
+        {/* Rotas públicas */}
+        <Route path="/login" element={renderPublicAuth(<Login />)} />
+        <Route
+          path="/forgot-password"
+          element={renderPublicAuth(<ForgotPassword />)}
+        />
+        <Route
+          path="/documento-publico/:id"
+          element={renderPublic(<DocumentoPublico />)}
+        />
+
+        {/* Rotas protegidas */}
+        <Route path="/" element={renderProtected(<Index />)} />
+        <Route
+          path="/contratos"
+          element={renderProtected(<Contratos />)}
+        />
+        <Route
+          path="/cadastrar-contrato"
+          element={renderProtected(<CadastrarContrato />)}
+        />
+        <Route
+          path="/editar-contrato/:id"
+          element={renderProtected(<EditarContrato />)}
+        />
+        <Route
+          path="/gerar-documento"
+          element={renderProtected(<GerarDocumento />)}
+        />
+        <Route
+          path="/termo-locador"
+          element={renderProtected(<TermoLocador />)}
+        />
+        <Route
+          path="/termo-locatario"
+          element={renderProtected(<TermoLocatario />)}
+        />
+        <Route
+          path="/termo-recusa-assinatura-email"
+          element={renderProtected(<TermoRecusaAssinaturaEmail />)}
+        />
+        <Route
+          path="/processo/:contratoId"
+          element={renderProtected(<ProcessoRescisao />)}
+        />
+        <Route
+          path="/processo/:contratoId/termo-chaves"
+          element={renderProtected(<TermoLocatario />)}
+        />
+        <Route
+          path="/editar-termo/:id"
+          element={renderProtected(<EditTerm />)}
+        />
+        <Route
+          path="/analise-vistoria"
+          element={renderProtected(<AnaliseVistoria />)}
+        />
+        <Route
+          path="/prestadores"
+          element={renderProtected(<Prestadores />)}
+        />
+        <Route
+          path="/tarefas"
+          element={renderProtected(<Tarefas />)}
+        />
+        <Route
+          path="/dashboard-desocupacao"
+          element={renderProtected(<DashboardDesocupacao />)}
+        />
+        <Route path="/admin" element={renderAdmin(<Admin />)} />
+
+        {/* Rota 404 */}
+        <Route path="*" element={renderPublic(<NotFound />)} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
+const App = () => {
+  useEffect(() => {
+    prefetchRouteModules();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <TooltipProvider delayDuration={0}>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <ErrorBoundary>
+                <Suspense fallback={<PageLoader />}>
+                  <AnimatedAppRoutes />
+                </Suspense>
+              </ErrorBoundary>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ToastProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
