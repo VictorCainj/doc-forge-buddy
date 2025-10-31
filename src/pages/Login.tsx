@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { parseAuthError } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Sparkles, Check } from 'lucide-react';
 import Card from '@/components/Card';
 
 const loginSchema = z.object({
@@ -21,6 +21,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -262,10 +263,13 @@ const Login = () => {
                     <input
                       type="checkbox"
                       className="sr-only peer"
-                      checked={false}
-                      readOnly
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      disabled={isLoading}
                     />
-                    <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded peer-checked:bg-blue-500 peer-checked:border-blue-500 group-hover:border-blue-500 transition-all" />
+                    <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded peer-checked:bg-blue-500 peer-checked:border-blue-500 group-hover:border-blue-500 transition-all flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                    </div>
                   </div>
                   <span className="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">
                     Lembrar-me

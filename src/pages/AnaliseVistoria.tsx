@@ -43,6 +43,7 @@ import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
 import { useVistoriaImages } from '@/hooks/useVistoriaImages';
 import { usePrestadores } from '@/hooks/usePrestadores';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ApontamentoVistoria,
   DadosVistoria,
@@ -75,6 +76,7 @@ const AnaliseVistoria = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const {
     correctText,
     extractApontamentos,
@@ -82,7 +84,7 @@ const AnaliseVistoria = () => {
     isLoading: isAILoading,
     error: aiError,
   } = useOpenAI();
-  const { saveAnalise, updateAnalise } = useVistoriaAnalises();
+  const { saveAnalise, updateAnalise, clearImageCache } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
   const { prestadores } = usePrestadores();
 
@@ -1469,21 +1471,27 @@ const AnaliseVistoria = () => {
   // Auto-salvar quando os apontamentos mudarem (com debounce)
   const [lastSavedApontamentos, setLastSavedApontamentos] =
     useState<string>('');
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   useEffect(() => {
-    if (apontamentos.length === 0 || !selectedContract) return;
+    if (apontamentos.length === 0 || !selectedContract || saving || isAutoSaving) return;
 
     // Verificar se houve mudança real nos apontamentos
     const currentApontamentosString = JSON.stringify(apontamentos);
     if (currentApontamentosString === lastSavedApontamentos) return;
 
     const timeoutId = setTimeout(async () => {
-      await saveAnalysis(true); // true = silencioso (sem toast)
-      setLastSavedApontamentos(currentApontamentosString);
+      setIsAutoSaving(true);
+      try {
+        await saveAnalysis(true); // true = silencioso (sem toast)
+        setLastSavedApontamentos(currentApontamentosString);
+      } finally {
+        setIsAutoSaving(false);
+      }
     }, 2000); // Aguarda 2 segundos após a última mudança
 
     return () => clearTimeout(timeoutId);
-  }, [apontamentos, selectedContract, saveAnalysis, lastSavedApontamentos]);
+  }, [apontamentos, selectedContract, saveAnalysis, lastSavedApontamentos, saving, isAutoSaving]);
 
   // Adicionar event listeners para clique nas imagens da pré-visualização
   useEffect(() => {
@@ -1625,6 +1633,44 @@ const AnaliseVistoria = () => {
     publicDocumentId,
     updatePublicDocument,
   ]);
+
+  // Limpar todos os caches quando sair da página
+  useEffect(() => {
+    return () => {
+      log.debug('🧹 Limpando caches da página analise-vistoria');
+      
+      // Limpar cache de imagens processadas
+      if (clearImageCache) {
+        clearImageCache();
+      }
+
+      // Limpar cache do React Query relacionado a vistoria
+      queryClient.removeQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return (
+            queryKey.some((key) =>
+              typeof key === 'string' &&
+              (key.includes('vistoria') ||
+                key.includes('analise') ||
+                key.includes('vistoria_analises') ||
+                key.includes('vistoria_images'))
+            )
+          );
+        },
+      });
+
+      // Limpar cache do localStorage relacionado a esta página
+      const localStorageKeys = Object.keys(localStorage);
+      localStorageKeys.forEach((key) => {
+        if (key.includes('analise-vistoria') || key.includes('vistoria')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      log.debug('✅ Caches limpos com sucesso');
+    };
+  }, [clearImageCache, queryClient]);
 
   const generateDocument = async () => {
     if (apontamentos.length === 0) {

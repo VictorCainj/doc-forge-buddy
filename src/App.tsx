@@ -114,7 +114,10 @@ const AnimatedAppRoutes = () => {
 
         {/* Rotas protegidas */}
         <Route path="/" element={renderProtected(<Index />)} />
-        <Route path="/contratos" element={renderProtected(<Contratos />)} />
+        <Route
+          path="/contratos"
+          element={renderProtected(<Contratos />)}
+        />
         <Route
           path="/cadastrar-contrato"
           element={renderProtected(<CadastrarContrato />)}
@@ -155,8 +158,14 @@ const AnimatedAppRoutes = () => {
           path="/analise-vistoria"
           element={renderProtected(<AnaliseVistoria />)}
         />
-        <Route path="/prestadores" element={renderProtected(<Prestadores />)} />
-        <Route path="/tarefas" element={renderProtected(<Tarefas />)} />
+        <Route
+          path="/prestadores"
+          element={renderProtected(<Prestadores />)}
+        />
+        <Route
+          path="/tarefas"
+          element={renderProtected(<Tarefas />)}
+        />
         <Route
           path="/dashboard-desocupacao"
           element={renderProtected(<DashboardDesocupacao />)}

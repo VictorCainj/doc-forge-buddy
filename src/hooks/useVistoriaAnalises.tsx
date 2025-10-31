@@ -616,40 +616,70 @@ export const useVistoriaAnalises = () => {
         }
 
         if (uniqueRefs.length > 0) {
-          // Gerar seriais únicos para imagens externas
-          const refsWithSerials = await Promise.all(
-            uniqueRefs.map(async (ref, index) => {
-              const imageSerial = await generateUniqueImageSerial(
-                vistoriaId,
-                1, // Apontamento index - será ajustado quando tivermos o contexto completo
-                ref.tipo_vistoria,
-                index + 1
+          // ✅ PROTEÇÃO 7: Verificar no banco se as URLs já existem antes de inserir
+          const refsToInsert = [];
+          for (const ref of uniqueRefs) {
+            const { data: existingImage } = await supabase
+              .from('vistoria_images')
+              .select('id')
+              .eq('vistoria_id', vistoriaId)
+              .eq('apontamento_id', ref.apontamento_id)
+              .eq('tipo_vistoria', ref.tipo_vistoria)
+              .eq('image_url', ref.image_url)
+              .maybeSingle();
+
+            if (!existingImage) {
+              refsToInsert.push(ref);
+            } else {
+              // eslint-disable-next-line no-console
+              console.warn(
+                '⚠️ Imagem externa já existe no banco, pulando:',
+                ref.image_url
               );
+            }
+          }
 
-              return {
-                vistoria_id: vistoriaId,
-                apontamento_id: ref.apontamento_id,
-                tipo_vistoria: ref.tipo_vistoria,
-                image_url: ref.image_url,
-                image_serial: imageSerial,
-                file_name: ref.file_name,
-                file_size: ref.file_size,
-                file_type: ref.file_type,
-                user_id: user?.id,
-              };
-            })
-          );
+          if (refsToInsert.length > 0) {
+            // Gerar seriais únicos para imagens externas
+            const refsWithSerials = await Promise.all(
+              refsToInsert.map(async (ref, index) => {
+                const imageSerial = await generateUniqueImageSerial(
+                  vistoriaId,
+                  1, // Apontamento index - será ajustado quando tivermos o contexto completo
+                  ref.tipo_vistoria,
+                  index + 1
+                );
 
-          const { error: insertError } = await supabase
-            .from('vistoria_images')
-            .insert(refsWithSerials);
+                return {
+                  vistoria_id: vistoriaId,
+                  apontamento_id: ref.apontamento_id,
+                  tipo_vistoria: ref.tipo_vistoria,
+                  image_url: ref.image_url,
+                  image_serial: imageSerial,
+                  file_name: ref.file_name,
+                  file_size: ref.file_size,
+                  file_type: ref.file_type,
+                  user_id: user?.id,
+                };
+              })
+            );
 
-          if (insertError) {
-            log.error('❌ Erro ao inserir imagens externas:', insertError);
+            const { error: insertError } = await supabase
+              .from('vistoria_images')
+              .insert(refsWithSerials);
+
+            if (insertError) {
+              log.error('❌ Erro ao inserir imagens externas:', insertError);
+            } else {
+              log.debug(
+                '✓ Imagens externas inseridas com sucesso:',
+                refsToInsert.length
+              );
+            }
           } else {
-            log.debug(
-              '✓ Imagens externas inseridas com sucesso:',
-              uniqueRefs.length
+            // eslint-disable-next-line no-console
+            console.log(
+              'ℹ️ Todas as imagens externas já existem no banco, nenhuma inserida'
             );
           }
         }
@@ -757,6 +787,26 @@ export const useVistoriaAnalises = () => {
         data: { publicUrl },
       } = supabase.storage.from('vistoria-images').getPublicUrl(fileName);
 
+      // ✅ PROTEÇÃO 6: Verificar se já existe imagem com mesma URL antes de inserir
+      const { data: existingImageByUrl } = await supabase
+        .from('vistoria_images')
+        .select('id')
+        .eq('vistoria_id', vistoriaId)
+        .eq('apontamento_id', apontamentoId)
+        .eq('tipo_vistoria', tipoVistoria)
+        .eq('image_url', publicUrl)
+        .maybeSingle();
+
+      if (existingImageByUrl) {
+        // eslint-disable-next-line no-console
+        console.warn('⚠️ Imagem com mesma URL já existe no banco, pulando inserção:', {
+          file: file.name,
+          existing_id: existingImageByUrl.id,
+          url: publicUrl,
+        });
+        return;
+      }
+
       // Gerar número de série único para a imagem
       const imageSerial = await generateUniqueImageSerial(
         vistoriaId,
@@ -798,6 +848,13 @@ export const useVistoriaAnalises = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Função para limpar cache de imagens processadas
+  const clearImageCache = useCallback(() => {
+    log.debug('🧹 Limpando cache de imagens processadas');
+    processedImagesCache.clear();
+    setProcessingImages(new Set());
+  }, []);
+
   return {
     analises,
     loading,
@@ -807,5 +864,6 @@ export const useVistoriaAnalises = () => {
     updateAnalise,
     deleteAnalise,
     getAnaliseById,
+    clearImageCache,
   };
 };
