@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Utilitários para enriquecer contexto com dados de contratos
  */

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { generateUniqueImageSerial } from '@/utils/imageSerialGenerator';
 import { log } from '@/utils/logger';

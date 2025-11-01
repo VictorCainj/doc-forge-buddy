@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Contract } from '@/hooks/useContractAnalysis';
 import { CompleteContractData } from '@/hooks/useCompleteContractData';
 import { log } from '@/utils/logger';

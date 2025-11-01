@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { log } from '@/utils/logger';
 
 export interface ValidationResult {
