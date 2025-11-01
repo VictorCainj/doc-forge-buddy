@@ -135,7 +135,7 @@ export function FixDuplicatesButton({
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       {duplicatesCount !== null && duplicatesCount > 0 && (
-        <Badge variant="destructive" className="text-xs">
+        <Badge variant="error" className="text-xs">
           <AlertTriangle className="h-3 w-3 mr-1" />
           {duplicatesCount} duplicata{duplicatesCount !== 1 ? 's' : ''}
         </Badge>

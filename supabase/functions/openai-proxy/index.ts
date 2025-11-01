@@ -29,7 +29,7 @@ interface OpenAIRequest {
   data: any;
 }
 
-serve(async (req) => {
+serve(async (req): Promise<Response> => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -1072,9 +1072,7 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
 
     // Fazer a chamada à OpenAI (apenas para ações que usam chat completions)
     if (
-      action !== 'generateImage' &&
-      action !== 'transcribeAudio' &&
-      action !== 'textToSpeech'
+      !['generateImage', 'transcribeAudio', 'textToSpeech'].includes(action as string)
     ) {
       // Timeout de 60 segundos para a chamada da API
       const controller = new AbortController();
@@ -1136,7 +1134,7 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
         );
       } catch (error) {
         clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           throw new Error('Timeout na chamada da API da OpenAI (60s)');
         }
         throw error;
