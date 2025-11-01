@@ -208,7 +208,19 @@ All colors MUST be HSL.
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-wrap: break-word !important;
-    hyphens: auto !important;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Remove blur de animações após conclusão - força nitidez máxima */
+  * {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Garante que after de animações não cause blur */
+  .motion-complete,
+  [data-motion-complete] {
+    will-change: auto !important;
   }
 
   /* Animação para as estrelas na tela de login */
