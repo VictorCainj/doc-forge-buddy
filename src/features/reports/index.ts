@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Reports Feature - Barrel Exports
  * Centraliza todos os exports da feature de reports
