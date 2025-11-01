@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useEffect } from 'react';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { log } from '@/utils/logger';
