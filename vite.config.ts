@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
@@ -18,7 +17,7 @@ export default defineConfig(({ mode }) => ({
           assets: './dist/**',
         },
       }),
-  ].filter(Boolean) as any,
+  ].filter(Boolean) as ReturnType<typeof sentryVitePlugin>[],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -26,16 +25,25 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 500,
-    target: 'es2015',
+    target: 'es2020', // Navegadores modernos - remove necessidade de polyfills legacy
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: mode === 'development', // Source maps apenas em desenvolvimento
     minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
         drop_debugger: true,
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
-        passes: 2,
+        pure_funcs:
+          mode === 'production'
+            ? ['console.log', 'console.info', 'console.debug', 'console.warn']
+            : [],
+        passes: 3, // Mais passes para melhor otimização
+        unsafe: true, // Otimizações mais agressivas
+        unsafe_comps: true,
+        unsafe_math: true,
+        unsafe_methods: true,
+        dead_code: true,
+        unused: true,
       },
       format: {
         comments: false,
@@ -43,7 +51,7 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       treeshake: {
-        moduleSideEffects: false,
+        moduleSideEffects: 'no-external', // Tree-shaking mais agressivo
         propertyReadSideEffects: false,
         tryCatchDeoptimization: false,
       },
@@ -142,12 +150,14 @@ export default defineConfig(({ mode }) => ({
           }
         },
         // Otimizar nomes de chunks
-        chunkFileNames: mode === 'production' 
-          ? 'assets/[name]-[hash].js' 
-          : 'assets/[name].js',
-        entryFileNames: mode === 'production' 
-          ? 'assets/[name]-[hash].js' 
-          : 'assets/[name].js',
+        chunkFileNames:
+          mode === 'production'
+            ? 'assets/[name]-[hash].js'
+            : 'assets/[name].js',
+        entryFileNames:
+          mode === 'production'
+            ? 'assets/[name]-[hash].js'
+            : 'assets/[name].js',
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name?.split('.') || [];
           const ext = info[info.length - 1];
@@ -181,5 +191,6 @@ export default defineConfig(({ mode }) => ({
       'lucide-react',
       'exceljs',
     ],
+    exclude: ['html2pdf.js', 'html2canvas', 'jspdf'], // Excluir libs pesadas de otimização inicial
   },
 }));

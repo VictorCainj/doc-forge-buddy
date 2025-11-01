@@ -12,6 +12,23 @@ import {
 } from './utils/pwaHelpers';
 import { log } from './utils/logger';
 
+// Configurar Trusted Types para mitigar DOM-based XSS
+if (typeof window !== 'undefined' && 'trustedTypes' in window) {
+  try {
+    // @ts-expect-error - trustedTypes não está disponível em todos os navegadores e não está nos tipos do TypeScript
+    if (window.trustedTypes?.createPolicy) {
+      // @ts-expect-error - trustedTypes não está disponível em todos os navegadores e não está nos tipos do TypeScript
+      window.trustedTypes.createPolicy('default', {
+        createHTML: (string: string) => string,
+        createScriptURL: (string: string) => string,
+        createScript: (string: string) => string,
+      });
+    }
+  } catch (error) {
+    log.warn('Trusted Types não pôde ser configurado:', error);
+  }
+}
+
 // Inicializar Sentry para error tracking (apenas em produção)
 initSentry();
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -394,8 +393,9 @@ const DocumentForm = memo<DocumentFormProps>(
                     variant="outline"
                     className="gap-2"
                     title="Diminuir tamanho da fonte"
+                    aria-label="Diminuir tamanho da fonte"
                   >
-                    <Minimize2 className="h-4 w-4" />
+                    <Minimize2 className="h-4 w-4" aria-hidden="true" />
                     Diminuir
                   </Button>
                   <Button
@@ -403,8 +403,9 @@ const DocumentForm = memo<DocumentFormProps>(
                     variant="outline"
                     className="gap-2"
                     title="Aumentar tamanho da fonte"
+                    aria-label="Aumentar tamanho da fonte"
                   >
-                    <Maximize2 className="h-4 w-4" />
+                    <Maximize2 className="h-4 w-4" aria-hidden="true" />
                     Aumentar
                   </Button>
                   <CopyButton
@@ -414,8 +415,9 @@ const DocumentForm = memo<DocumentFormProps>(
                   <Button
                     onClick={handlePrint}
                     className="gap-2 bg-gradient-primary"
+                    aria-label="Imprimir documento"
                   >
-                    <Printer className="h-4 w-4" />
+                    <Printer className="h-4 w-4" aria-hidden="true" />
                     Imprimir
                   </Button>
                 </div>
@@ -506,11 +508,11 @@ const DocumentForm = memo<DocumentFormProps>(
                 {fieldGroups
                   ? fieldGroups.map((group, groupIndex) => (
                       <div key={groupIndex} className="space-y-4">
-                        <h3 className="text-sm font-semibold text-primary border-b border-border pb-2">
+                        <h2 className="text-sm font-semibold text-primary border-b border-border pb-2">
                           {group.getDynamicTitle
                             ? group.getDynamicTitle(formData)
                             : group.title}
-                        </h3>
+                        </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {group.fields.map((field) => (
                             <div key={field.name} className="space-y-2">
@@ -653,7 +655,7 @@ DocumentForm.displayName = 'DocumentForm';
 // Componente para renderizar preview de forma segura
 const SafePreview = ({
   template,
-  formData,
+  formData: _formData,
 }: {
   template: string;
   formData: Record<string, string>;

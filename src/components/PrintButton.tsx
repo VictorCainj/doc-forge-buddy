@@ -52,8 +52,9 @@ export const PrintButton: React.FC<PrintButtonProps> = ({
       size={size}
       className={`print:hidden ${className}`}
       title={`Imprimir ${title}`}
+      aria-label={`Imprimir ${title}`}
     >
-      <Printer className="h-4 w-4 mr-2" />
+      <Printer className="h-4 w-4 mr-2" aria-hidden="true" />
       {children || 'Imprimir'}
     </Button>
   );
@@ -93,8 +94,9 @@ export const DashboardPrintButton: React.FC<DashboardPrintButtonProps> = ({
       size="default"
       className={`print:hidden ${className}`}
       title="Imprimir relatório do dashboard"
+      aria-label="Imprimir relatório do dashboard"
     >
-      <Printer className="h-4 w-4 mr-2" />
+      <Printer className="h-4 w-4 mr-2" aria-hidden="true" />
       Imprimir Relatório
     </Button>
   );

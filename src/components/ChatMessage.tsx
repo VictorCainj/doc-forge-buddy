@@ -33,7 +33,7 @@ interface Message {
     model?: string;
     tokens?: number;
     transcription?: string;
-    analysis?: any;
+    analysis?: Record<string, unknown>;
     adaptiveResponse?: boolean;
   };
 }
@@ -135,11 +135,17 @@ const ChatMessage = memo(
                   src={message.imageUrl || message.imageData}
                   alt="Imagem enviada"
                   className="w-full rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                  style={{
+                    aspectRatio: 'auto',
+                    maxHeight: '400px',
+                    objectFit: 'contain',
+                  }}
                   onLoad={() => setImageLoaded(true)}
                   onClick={() =>
                     window.open(message.imageUrl || message.imageData, '_blank')
                   }
                   title="Clique para abrir em tamanho real"
+                  loading="lazy"
                 />
                 <div className="absolute top-2 right-2 flex gap-1">
                   <Button
@@ -153,8 +159,9 @@ const ChatMessage = memo(
                     }
                     className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
                     title="Visualizar em tamanho real"
+                    aria-label="Visualizar imagem em tamanho real"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -162,8 +169,9 @@ const ChatMessage = memo(
                     onClick={handleDownloadImage}
                     className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
                     title="Baixar imagem"
+                    aria-label="Baixar imagem"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -320,8 +328,9 @@ const ChatMessage = memo(
                     className="h-7 w-7 p-0 hover:bg-neutral-100"
                     onClick={handleRetry}
                     title="Tentar novamente"
+                    aria-label="Tentar novamente"
                   >
-                    <RotateCcw className="h-3 w-3" />
+                    <RotateCcw className="h-3 w-3" aria-hidden="true" />
                   </Button>
                 )}
 
@@ -336,8 +345,9 @@ const ChatMessage = memo(
                         className="h-7 w-7 p-0 hover:bg-green-100 text-green-600"
                         onClick={() => onFeedback(message.id, 'positive')}
                         title="Resposta boa"
+                        aria-label="Marcar resposta como boa"
                       >
-                        <ThumbsUp className="h-3 w-3" />
+                        <ThumbsUp className="h-3 w-3" aria-hidden="true" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -345,8 +355,9 @@ const ChatMessage = memo(
                         className="h-7 w-7 p-0 hover:bg-red-100 text-red-600"
                         onClick={() => onFeedback(message.id, 'negative')}
                         title="Resposta inadequada"
+                        aria-label="Marcar resposta como inadequada"
                       >
-                        <ThumbsDown className="h-3 w-3" />
+                        <ThumbsDown className="h-3 w-3" aria-hidden="true" />
                       </Button>
                     </>
                   )}
@@ -357,11 +368,16 @@ const ChatMessage = memo(
                   className="h-7 w-7 p-0 hover:bg-neutral-100"
                   onClick={handleCopy}
                   title="Copiar mensagem"
+                  aria-label={
+                    copiedMessageId === message.id
+                      ? 'Mensagem copiada'
+                      : 'Copiar mensagem'
+                  }
                 >
                   {copiedMessageId === message.id ? (
-                    <Check className="h-3 w-3" />
+                    <Check className="h-3 w-3" aria-hidden="true" />
                   ) : (
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-3 w-3" aria-hidden="true" />
                   )}
                 </Button>
               </div>

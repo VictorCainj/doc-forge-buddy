@@ -119,10 +119,15 @@ export const MobileSidebar = ({
         {...props}
       >
         <div className="flex justify-end z-20 w-full">
-          <Menu
+          <button
+            type="button"
             className="text-neutral-800 dark:text-neutral-200 cursor-pointer"
             onClick={() => setOpen(!open)}
-          />
+            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={open}
+          >
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
         </div>
         <AnimatePresence>
           {open && (
@@ -139,12 +144,14 @@ export const MobileSidebar = ({
                 className
               )}
             >
-              <div
+              <button
+                type="button"
                 className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer"
                 onClick={() => setOpen(!open)}
+                aria-label="Fechar menu"
               >
-                <X />
-              </div>
+                <X className="h-6 w-6" aria-hidden="true" />
+              </button>
               {children}
             </motion.div>
           )}
@@ -164,6 +171,8 @@ export const SidebarLink = ({
   props?: LinkProps;
 }) => {
   const { open, animate } = useSidebar();
+  const isCollapsed = animate && !open;
+
   return (
     <RouterLink
       to={link.href}
@@ -171,15 +180,17 @@ export const SidebarLink = ({
         'flex items-center justify-start gap-2 group/sidebar py-2',
         className
       )}
+      aria-label={isCollapsed ? link.label : undefined}
       {...props}
     >
-      {link.icon}
+      <span aria-hidden={!isCollapsed}>{link.icon}</span>
       <motion.span
         animate={{
           display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
         className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        aria-hidden={isCollapsed}
       >
         {link.label}
       </motion.span>

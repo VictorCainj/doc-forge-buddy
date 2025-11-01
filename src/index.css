@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Font Loading Optimization - Reduce LCP */
+@font-face {
+  font-family: system-ui;
+  font-display: swap; /* Prevent invisible text during font load */
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -210,13 +216,13 @@ All colors MUST be HSL.
     overflow-wrap: break-word !important;
     text-rendering: optimizeLegibility;
   }
-  
+
   /* Remove blur de animações após conclusão - força nitidez máxima */
   * {
     transform: translateZ(0);
     backface-visibility: hidden;
   }
-  
+
   /* Garante que after de animações não cause blur */
   .motion-complete,
   [data-motion-complete] {
@@ -515,6 +521,9 @@ All colors MUST be HSL.
   img {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+    /* Prevent layout shifts - ensure images have dimensions */
+    max-width: 100%;
+    height: auto;
   }
 
   /* Exceção para fotos que precisam de suavização */
