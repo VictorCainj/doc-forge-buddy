@@ -159,10 +159,19 @@ export default defineConfig(({ mode }) => ({
             return 'vendor-sentry';
           }
 
-          // Outros node_modules - agrupar em vendor geral
-          if (id.includes('node_modules')) {
-            return 'vendor-misc';
+          // Sonner (toast notifications) - pequeno mas usado em toda aplicação
+          if (id.includes('sonner')) {
+            return 'vendor-sonner';
           }
+
+          // DOMPurify - usado para sanitização HTML
+          if (id.includes('dompurify')) {
+            return 'vendor-dompurify';
+          }
+
+          // Outros node_modules pequenos - deixar Rollup decidir automaticamente
+          // Não forçar agrupamento em vendor-misc para evitar dependências circulares
+          return null;
         },
         // Otimizar nomes de chunks
         chunkFileNames:
