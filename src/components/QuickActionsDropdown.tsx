@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useRef, useEffect, memo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronRight,
   User,
@@ -58,10 +59,17 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
       new Set()
     );
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { user } = useAuth();
     const [hasAnalise, setHasAnalise] = useState(false);
     const [checkingAnalise, setCheckingAnalise] = useState(false);
+    
+    // Estados para arrastar o modal
+    const [isDragging, setIsDragging] = useState(false);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const [showHighlight, setShowHighlight] = useState(false);
 
     // Verificar se existe análise para este contrato
     useEffect(() => {
@@ -94,25 +102,121 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
       }
     }, [contractId, user, isOpen]);
 
-    // Fechar dropdown ao clicar fora
+    // Controlar overflow do body quando modal está aberto e redirecionar visualmente
     useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          dropdownRef.current &&
-          !dropdownRef.current.contains(event.target as Node)
-        ) {
-          setIsOpen(false);
-        }
-      };
-
       if (isOpen) {
-        document.addEventListener('mousedown', handleClickOutside);
+        document.body.style.overflow = 'hidden';
+        // Resetar posição quando abrir
+        setPosition({ x: 0, y: 0 });
+        setShowHighlight(true);
+        
+        // Scroll suave para o topo para garantir que o modal seja visível
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
+        
+        // Remover destaque após 2 segundos
+        const highlightTimer = setTimeout(() => {
+          setShowHighlight(false);
+        }, 2000);
+        
+        // Pequeno delay para garantir que o scroll aconteça após o modal aparecer
+        setTimeout(() => {
+          // Focar no modal para acessibilidade
+          if (modalRef.current) {
+            modalRef.current.focus();
+          }
+        }, 100);
+
+        return () => {
+          clearTimeout(highlightTimer);
+        };
+      } else {
+        document.body.style.overflow = '';
+        setShowHighlight(false);
       }
 
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.body.style.overflow = '';
       };
     }, [isOpen]);
+
+    // Handlers para arrastar o modal
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+      // Não iniciar arraste se clicar em elementos interativos
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'BUTTON' ||
+        target.closest('button') ||
+        target.tagName === 'A' ||
+        target.closest('a')
+      ) {
+        return;
+      }
+
+      if (modalRef.current) {
+        const rect = modalRef.current.getBoundingClientRect();
+        // Se está centralizado, usar coordenadas absolutas da viewport
+        if (position.x === 0 && position.y === 0) {
+          setDragOffset({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+          // Converter posição centralizada para posição absoluta
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+          setPosition({
+            x: centerX - rect.width / 2,
+            y: centerY - rect.height / 2,
+          });
+        } else {
+          setDragOffset({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+        }
+        setIsDragging(true);
+      }
+    };
+
+    useEffect(() => {
+      if (!isDragging) return;
+
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!modalRef.current) return;
+
+        const modalRect = modalRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Calcular nova posição
+        let newX = e.clientX - dragOffset.x;
+        let newY = e.clientY - dragOffset.y;
+
+        // Limitar movimento dentro da viewport
+        const maxX = viewportWidth - modalRect.width;
+        const maxY = viewportHeight - modalRect.height;
+
+        newX = Math.max(0, Math.min(newX, maxX));
+        newY = Math.max(0, Math.min(newY, maxY));
+
+        setPosition({ x: newX, y: newY });
+      };
+
+      const handleMouseUp = () => {
+        setIsDragging(false);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }, [isDragging, dragOffset]);
 
     const handleActionClick = async (action: QuickAction) => {
       if (action.disabled) return;
@@ -377,19 +481,43 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
           />
         </button>
 
-        {/* Modal centralizado */}
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/40 z-[9998]"
-              onClick={() => setIsOpen(false)}
-            />
+        {/* Modal centralizado - Renderizado via Portal */}
+        {isOpen &&
+          createPortal(
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black/40 z-[9998]"
+                onClick={() => setIsOpen(false)}
+              />
 
-            {/* Modal */}
-            <div className="fixed inset-4 md:inset-8 z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-              {/* Header do modal */}
-              <div className="relative px-6 py-5 border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
+              {/* Modal - Centralizado e arrastável */}
+              <div 
+                ref={modalRef}
+                tabIndex={-1}
+                className={`fixed z-[9999] w-[90vw] max-w-6xl max-h-[90vh] min-h-[400px] sm:min-h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ${
+                  isDragging ? 'cursor-grabbing' : ''
+                } ${!isDragging && position.x === 0 && position.y === 0 ? 'animate-in fade-in-0 zoom-in-95' : ''}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxHeight: 'calc(100vh - 4rem)',
+                  left: position.x === 0 && position.y === 0 ? '50%' : `${position.x}px`,
+                  top: position.x === 0 && position.y === 0 ? '50%' : `${position.y}px`,
+                  transform: position.x === 0 && position.y === 0 ? 'translate(-50%, -50%)' : 'none',
+                  outline: 'none',
+                  boxShadow: showHighlight && position.x === 0 && position.y === 0 
+                    ? '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(59, 130, 246, 0.3)' 
+                    : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                  transition: 'box-shadow 0.3s ease-out, transform 0.2s ease-out',
+                }}
+              >
+              {/* Header do modal - Fixo e arrastável */}
+              <div 
+                className={`relative px-6 py-5 border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white flex-shrink-0 ${
+                  isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                } select-none`}
+                onMouseDown={handleMouseDown}
+              >
                 <div className="text-center">
                   <h3 className="text-2xl font-semibold text-neutral-900 tracking-tight">
                     Ações Rápidas
@@ -405,7 +533,8 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-all duration-200"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="absolute top-4 right-4 p-2 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-all duration-200 z-10"
                 >
                   <svg
                     className="w-5 h-5"
@@ -423,8 +552,8 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                 </button>
               </div>
 
-              {/* Conteúdo do menu organizado */}
-              <div className="flex-1 p-6 overflow-y-auto bg-neutral-50">
+              {/* Conteúdo do menu organizado - Com scrollbar customizada */}
+              <div className="flex-1 p-6 overflow-y-auto bg-neutral-50 custom-scrollbar min-h-0">
                 <div className="max-w-6xl mx-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Coluna 1: TERMOS */}
@@ -622,9 +751,10 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                   onClick={() => handleActionClick(action)}
                                   disabled={action.disabled}
                                   className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
+                                  aria-label={action.label || action.id}
                                 >
                                   {action.loading ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" aria-hidden="true" />
                                   ) : (
                                     <div
                                       className="p-1 rounded bg-black"
@@ -632,6 +762,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                         imageRendering: 'crisp-edges',
                                         backfaceVisibility: 'hidden',
                                       }}
+                                      aria-hidden="true"
                                     >
                                       <action.icon
                                         className="h-3 w-3 text-white flex-shrink-0"
@@ -688,9 +819,14 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                               }}
                               disabled={checkingAnalise}
                               className="w-full flex items-center gap-3 bg-white hover:bg-neutral-50 p-3 rounded-lg transition-all duration-200 disabled:opacity-50 border border-neutral-200 hover:border-blue-300"
+                              aria-label={checkingAnalise
+                                ? 'Verificando análise de vistoria'
+                                : hasAnalise
+                                  ? 'Carregar análise de vistoria'
+                                  : 'Criar análise de vistoria'}
                             >
                               {checkingAnalise ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" aria-hidden="true" />
                               ) : (
                                 <div
                                   className="p-1 rounded bg-black"
@@ -698,6 +834,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                                     imageRendering: 'crisp-edges',
                                     backfaceVisibility: 'hidden',
                                   }}
+                                  aria-hidden="true"
                                 >
                                   <SearchCheck
                                     className="h-3 w-3 text-white flex-shrink-0"
@@ -829,8 +966,9 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                 </div>
               </div>
             </div>
-          </>
-        )}
+            </>,
+            document.body
+          )}
       </div>
     );
   }

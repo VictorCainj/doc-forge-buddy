@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { generateUniqueImageSerial } from '@/utils/imageSerialGenerator';
+import { log } from '@/utils/logger';
 
 export interface ImageUploadProgress {
   fileName: string;
@@ -68,8 +69,7 @@ export const useVistoriaImages = () => {
             .maybeSingle();
 
           if (existingImage) {
-            // eslint-disable-next-line no-console
-            console.warn('⚠️ Imagem já existe, pulando upload:', file.name);
+            log.warn('⚠️ Imagem já existe, pulando upload:', file.name);
             setUploadProgress((prev) =>
               prev.map((item, index) =>
                 index === i
@@ -301,7 +301,7 @@ export const useVistoriaImages = () => {
 
         // Verificar se o base64 é válido antes de decodificar
         if (!arr[1] || arr[1].trim() === '') {
-          console.warn('Base64 string is empty or invalid:', base64);
+          log.warn('Base64 string is empty or invalid:', base64);
           return new File([], filename, { type: mimeType });
         }
 
@@ -313,8 +313,8 @@ export const useVistoriaImages = () => {
         }
         return new File([u8arr], filename, { type: mime });
       } catch (error) {
-        console.error('Erro ao converter base64 para File:', error);
-        console.error('Base64 problemático:', base64);
+        log.error('Erro ao converter base64 para File:', error);
+        log.error('Base64 problemático:', base64);
         // Retornar um arquivo vazio como fallback
         return new File([], filename, { type: mimeType });
       }

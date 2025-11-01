@@ -969,7 +969,7 @@ const AnaliseVistoria = () => {
 
       // ✅ PROTEÇÃO: Se já carregamos esta análise, não recarregar
       if (existingAnaliseId && savedAnaliseId === existingAnaliseId) {
-        console.log(
+        log.debug(
           '⚠️ Análise já carregada, ignorando recarga:',
           existingAnaliseId
         );

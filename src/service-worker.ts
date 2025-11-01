@@ -137,23 +137,23 @@ registerRoute(
 
 // Event listeners para gerenciamento de cache e atualizações
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
+  // Log removido para produção (Lighthouse)
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
       .then((cache) => {
-        console.log('Service Worker: Caching critical URLs');
+        // Log removido para produção (Lighthouse)
         return cache.addAll(CRITICAL_URLS);
       })
       .then(() => {
-        console.log('Service Worker: Installation complete');
+        // Log removido para produção (Lighthouse)
         return self.skipWaiting();
       })
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
+  // Log removido para produção (Lighthouse)
   event.waitUntil(
     caches
       .keys()
@@ -165,14 +165,14 @@ self.addEventListener('activate', (event) => {
                 cacheName
               )
             ) {
-              console.log('Service Worker: Deleting old cache:', cacheName);
+              // Log removido para produção (Lighthouse)
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('Service Worker: Activation complete');
+        // Log removido para produção (Lighthouse)
         return self.clients.claim();
       })
   );
@@ -210,7 +210,7 @@ self.addEventListener('message', (event) => {
 // Background sync para funcionalidades offline
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
-    console.log('Service Worker: Background sync triggered');
+    // Log removido para produção (Lighthouse)
     event.waitUntil(doBackgroundSync());
   }
 });
@@ -218,9 +218,9 @@ self.addEventListener('sync', (event) => {
 async function doBackgroundSync() {
   try {
     // Implementar lógica de sincronização offline
-    console.log('Service Worker: Performing background sync');
-  } catch (error) {
-    console.error('Service Worker: Background sync failed:', error);
+    // Log removido para produção (Lighthouse)
+  } catch {
+    // Log removido para produção (Lighthouse)
   }
 }
 

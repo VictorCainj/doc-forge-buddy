@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Database, ArrowRight, X, Loader2 } from '@/utils/iconMapper';
 import { useVistoriaMigrator } from '@/utils/migrateVistoriaData';
 import { useToast } from '@/hooks/use-toast';
+import { log } from '@/utils/logger';
 
 const VistoriaMigrationBanner = () => {
   const { needsMigration, executeMigration, hasLegacyData } =
@@ -23,8 +24,7 @@ const VistoriaMigrationBanner = () => {
         const needsMig = await needsMigration();
         setShouldShowBanner(needsMig);
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Erro ao verificar migração:', error);
+        log.error('Erro ao verificar migração:', error);
         setShouldShowBanner(false);
       } finally {
         setIsCheckingMigration(false);

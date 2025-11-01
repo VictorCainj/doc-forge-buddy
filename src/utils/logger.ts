@@ -22,32 +22,39 @@ class Logger {
   }
 
   debug(message: string, ...args: unknown[]) {
-    if (this.level <= LogLevel.DEBUG) {
+    if (this.level <= LogLevel.DEBUG && import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
       console.debug(`[DEBUG] ${message}`, ...args);
     }
   }
 
   info(message: string, ...args: unknown[]) {
-    if (this.level <= LogLevel.INFO) {
+    if (this.level <= LogLevel.INFO && import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
       console.info(`[INFO] ${message}`, ...args);
     }
   }
 
   warn(message: string, ...args: unknown[]) {
-    if (this.level <= LogLevel.WARN) {
+    if (this.level <= LogLevel.WARN && import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
       console.warn(`[WARN] ${message}`, ...args);
     }
   }
 
   error(message: string, ...args: unknown[]) {
-    if (this.level <= LogLevel.ERROR) {
+    if (this.level <= LogLevel.ERROR && import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
       console.error(`[ERROR] ${message}`, ...args);
     }
   }
 
   // Método para logs que devem sempre aparecer (críticos)
   critical(message: string, ...args: unknown[]) {
-    console.error(`[CRITICAL] ${message}`, ...args);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.error(`[CRITICAL] ${message}`, ...args);
+    }
   }
 }
 

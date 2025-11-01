@@ -7,13 +7,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
 import { useOptimizedData } from '@/hooks/useOptimizedData';
-import { useContractsWithPendingBills } from '@/hooks/useContractsWithPendingBills';
 import { useStandardToast } from '@/utils/toastHelpers';
 import {
   formatDateBrazilian,
   convertDateToBrazilian,
 } from '@/utils/dateFormatter';
-import { AlertCircle, Building2, Plus } from '@/utils/iconMapper';
+import { Building2, Plus } from '@/utils/iconMapper';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { TemplateProcessor } from '@/utils/templateProcessor';
 import { Contract } from '@/types/contract';
 import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
@@ -34,8 +40,9 @@ const Contratos = () => {
   const navigate = useNavigate();
   const { showError } = useStandardToast();
 
-  // Estado para controlar filtro de pendências
-  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  // Estados para filtro de mês e ano
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
 
   // Reducer state (substitui ~20 useState)
   const { state, actions } = useContractReducer();
@@ -66,28 +73,89 @@ const Contratos = () => {
     limit: 6,
   });
 
-  // Hook para buscar contratos com pendências
-  const { data: pendingContracts, loading: loadingPending } =
-    useContractsWithPendingBills({
-      enabled: showPendingOnly,
-    });
-
-  // Contratos exibidos (filtro de pendências, busca ou paginação normal)
+  // Contratos exibidos (filtro de mês/ano, busca ou paginação normal)
   const displayedContracts = useMemo(() => {
-    if (showPendingOnly) {
-      return pendingContracts; // Exibir apenas contratos com pendências
-    }
+    let contractsToDisplay = contracts;
+
+    // Aplicar filtro de busca primeiro
     if (hasSearched && searchResults.length > 0) {
-      return searchResults; // Exibir resultados da busca
+      contractsToDisplay = searchResults;
     }
-    return contracts; // Exibir todos os contratos
-  }, [
-    showPendingOnly,
-    pendingContracts,
-    hasSearched,
-    searchResults,
-    contracts,
-  ]);
+
+    // Função para parsear data brasileira (DD/MM/YYYY) - mesmo padrão usado na criação
+    const parseBrazilianDate = (dateStr: string): Date | null => {
+      if (!dateStr) return null;
+
+      // Se a data está no formato brasileiro DD/MM/YYYY
+      if (dateStr.includes('/')) {
+        const [dia, mes, ano] = dateStr.split('/');
+        const parsedDate = new Date(
+          parseInt(ano),
+          parseInt(mes) - 1,
+          parseInt(dia)
+        );
+
+        // Validar se a data é válida
+        if (isNaN(parsedDate.getTime())) {
+          return null;
+        }
+
+        return parsedDate;
+      } else {
+        // Se já está no formato ISO ou outro formato
+        const parsedDate = new Date(dateStr);
+
+        // Validar se a data é válida
+        if (isNaN(parsedDate.getTime())) {
+          return null;
+        }
+
+        return parsedDate;
+      }
+    };
+
+    // Aplicar filtro de mês e/ou ano se selecionados
+    if (selectedMonth || selectedYear) {
+      contractsToDisplay = contractsToDisplay.filter((contract) => {
+        // Só considerar contratos com dataInicioRescisao válida
+        if (!contract.form_data?.dataInicioRescisao) {
+          return false; // Excluir contratos sem dataInicioRescisao
+        }
+
+        const contractDate = parseBrazilianDate(
+          contract.form_data.dataInicioRescisao
+        );
+
+        // Se não conseguiu parsear, excluir do resultado
+        if (!contractDate || isNaN(contractDate.getTime())) {
+          return false;
+        }
+
+        const currentYear = new Date().getFullYear();
+
+        if (selectedMonth && selectedYear) {
+          // Ambos selecionados: filtrar por mês e ano específicos
+          return (
+            contractDate.getMonth() + 1 === parseInt(selectedMonth) &&
+            contractDate.getFullYear() === parseInt(selectedYear)
+          );
+        } else if (selectedMonth) {
+          // Apenas mês selecionado: filtrar por mês do ano atual
+          return (
+            contractDate.getMonth() + 1 === parseInt(selectedMonth) &&
+            contractDate.getFullYear() === currentYear
+          );
+        } else if (selectedYear) {
+          // Apenas ano selecionado: filtrar por todos os meses daquele ano
+          return contractDate.getFullYear() === parseInt(selectedYear);
+        }
+
+        return false;
+      });
+    }
+
+    return contractsToDisplay;
+  }, [selectedMonth, selectedYear, hasSearched, searchResults, contracts]);
 
   // ============================================================
   // DOCUMENT GENERATION HANDLERS
@@ -528,14 +596,36 @@ const Contratos = () => {
     }
   }, [loadMore, actions, state.currentPage]);
 
-  // Handler para toggle do filtro de pendências
-  const handleTogglePendingFilter = useCallback(() => {
-    if (!showPendingOnly) {
-      // Ativando filtro: limpar busca
-      clearSearch();
+  // Handler para limpar filtro de mês/ano
+  const handleClearDateFilter = useCallback(() => {
+    setSelectedMonth('');
+    setSelectedYear('');
+  }, []);
+
+  // Gerar lista de anos (últimos 5 anos + próximos 2 anos)
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
+      years.push(i);
     }
-    setShowPendingOnly(!showPendingOnly);
-  }, [showPendingOnly, clearSearch]);
+    return years.reverse();
+  }, []);
+
+  const meses = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ];
 
   return (
     <TooltipProvider>
@@ -569,21 +659,54 @@ const Contratos = () => {
                     className="w-80"
                   />
 
-                  <Button
-                    variant={showPendingOnly ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={handleTogglePendingFilter}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
-                    disabled={loadingPending}
-                  >
-                    <AlertCircle className="h-4 w-4" />
-                    Pendentes
-                    {showPendingOnly && pendingContracts.length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 text-xs bg-neutral-100 rounded">
-                        {pendingContracts.length}
-                      </span>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={selectedMonth}
+                      onValueChange={setSelectedMonth}
+                    >
+                      <SelectTrigger className="w-[140px] h-9 border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
+                        <SelectValue placeholder="Mês" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {meses.map((mes, index) => (
+                          <SelectItem
+                            key={index}
+                            value={(index + 1).toString()}
+                          >
+                            {mes}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={selectedYear}
+                      onValueChange={setSelectedYear}
+                    >
+                      <SelectTrigger className="w-[120px] h-9 border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
+                        <SelectValue placeholder="Ano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableYears.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {(selectedMonth || selectedYear) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearDateFilter}
+                        className="h-9 px-3 text-neutral-600 hover:text-neutral-900"
+                        aria-label="Limpar filtro de data"
+                      >
+                        Limpar
+                      </Button>
                     )}
-                  </Button>
+                  </div>
 
                   {hasSearched && (
                     <Button
@@ -612,11 +735,11 @@ const Contratos = () => {
           {/* Lista de Contratos */}
           <ContractList
             contracts={displayedContracts}
-            isLoading={showPendingOnly ? loadingPending : loading}
-            hasMore={showPendingOnly ? false : hasMore}
+            isLoading={loading}
+            hasMore={hasMore}
             loadMore={handleLoadMore}
             isLoadingMore={state.loading.loadMore}
-            totalCount={showPendingOnly ? pendingContracts.length : totalCount}
+            totalCount={totalCount}
             displayedCount={displayedContracts.length}
             hasSearched={hasSearched}
             onGenerateDocument={generateDocument}

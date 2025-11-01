@@ -17,6 +17,11 @@ interface ActionButtonProps
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   iconOnly?: boolean;
+  /**
+   * aria-label obrigatório quando iconOnly=true
+   * Se não fornecido, usa label como fallback
+   */
+  'aria-label'?: string;
 }
 
 const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
@@ -29,6 +34,7 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       loading,
       iconOnly,
       className,
+      'aria-label': ariaLabel,
       ...props
     },
     ref
@@ -59,6 +65,9 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       lg: 'h-5 w-5',
     };
 
+    // Garantir aria-label quando iconOnly ou quando não há label visível
+    const accessibleLabel = ariaLabel || (iconOnly ? label : undefined);
+
     return (
       <Button
         ref={ref}
@@ -70,6 +79,7 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
           className
         )}
         disabled={loading || props.disabled}
+        aria-label={accessibleLabel}
         {...props}
       >
         {loading ? (
@@ -78,11 +88,13 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
               'animate-spin rounded-full border-2 border-current border-t-transparent',
               iconSizes[size]
             )}
+            aria-hidden="true"
           />
         ) : (
           <>
             <Icon
               className={cn(iconSizes[size], !iconOnly && label && 'mr-2')}
+              aria-hidden={iconOnly && !!accessibleLabel}
             />
             {!iconOnly && label && <span>{label}</span>}
           </>

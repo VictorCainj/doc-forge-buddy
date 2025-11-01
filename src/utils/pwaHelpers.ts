@@ -47,7 +47,7 @@ export const registerServiceWorker =
             navigator.serviceWorker.controller
           ) {
             // Nova versão disponível
-            console.log('🔄 Nova versão disponível!');
+            // Log removido para produção (Lighthouse)
 
             // Notificar o usuário
             // eslint-disable-next-line no-alert
@@ -61,13 +61,13 @@ export const registerServiceWorker =
 
       // Recarregar quando o SW assume controle
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 Service Worker atualizado, recarregando...');
+        // Log removido para produção (Lighthouse)
         window.location.reload();
       });
 
       return registration;
-    } catch (error) {
-      console.error('❌ Erro ao registrar Service Worker:', error);
+    } catch {
+      // Log removido para produção (Lighthouse)
       return null;
     }
   };
@@ -104,7 +104,7 @@ export const clearServiceWorkerCache = async (): Promise<void> => {
 
     messageChannel.port1.onmessage = (event) => {
       if (event.data.type === 'CACHE_CLEARED') {
-        console.log('✅ Cache limpo com sucesso');
+        // Log removido para produção (Lighthouse)
         resolve();
       } else {
         reject(new Error('Falha ao limpar cache'));
@@ -236,7 +236,7 @@ export const promptPWAInstall = async (): Promise<boolean> => {
   ).deferredPrompt;
 
   if (!deferredPrompt) {
-    console.warn('Prompt de instalação não está disponível');
+    // Log removido para produção (Lighthouse)
     return false;
   }
 
@@ -246,9 +246,7 @@ export const promptPWAInstall = async (): Promise<boolean> => {
   // Aguarda escolha do usuário
   const { outcome } = await deferredPrompt.userChoice;
 
-  console.log(
-    `Usuário ${outcome === 'accepted' ? 'aceitou' : 'rejeitou'} a instalação`
-  );
+  // Log removido para produção (Lighthouse)
 
   // Limpa o prompt
   delete (window as Window & { deferredPrompt?: BeforeInstallPromptEvent })
@@ -270,7 +268,7 @@ export const setupPWAInstallPrompt = (onCanInstall?: () => void): void => {
       window as Window & { deferredPrompt?: BeforeInstallPromptEvent }
     ).deferredPrompt = e as BeforeInstallPromptEvent;
 
-    console.log('✅ App pode ser instalado');
+    // Log removido para produção (Lighthouse)
 
     if (onCanInstall) {
       onCanInstall();
@@ -279,7 +277,7 @@ export const setupPWAInstallPrompt = (onCanInstall?: () => void): void => {
 
   // Detecta quando o app foi instalado
   window.addEventListener('appinstalled', () => {
-    console.log('✅ App foi instalado com sucesso');
+    // Log removido para produção (Lighthouse)
     delete (window as Window & { deferredPrompt?: BeforeInstallPromptEvent })
       .deferredPrompt;
   });

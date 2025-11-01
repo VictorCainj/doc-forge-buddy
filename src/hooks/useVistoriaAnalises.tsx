@@ -180,8 +180,7 @@ export const useVistoriaAnalises = () => {
       try {
         await processAndSaveImages(analiseId, data.apontamentos);
       } catch (imageError) {
-        // eslint-disable-next-line no-console
-        console.warn(
+        log.warn(
           'Erro ao salvar imagens, mas análise foi salva:',
           imageError
         );
@@ -366,8 +365,7 @@ export const useVistoriaAnalises = () => {
   ) => {
     // ✅ PROTEÇÃO 1: Prevenir processamento simultâneo
     if (processingImages.has(vistoriaId)) {
-      // eslint-disable-next-line no-console
-      console.warn(
+      log.warn(
         '⚠️ Processamento de imagens já em andamento para:',
         vistoriaId
       );
@@ -378,10 +376,8 @@ export const useVistoriaAnalises = () => {
       // Marcar como em processamento
       setProcessingImages((prev) => new Set(prev).add(vistoriaId));
 
-      // eslint-disable-next-line no-console
-      console.log('=== PROCESSANDO IMAGENS PARA VISTORIA:', vistoriaId, '===');
-      // eslint-disable-next-line no-console
-      console.log('Total de apontamentos:', apontamentos.length);
+      log.debug('=== PROCESSANDO IMAGENS PARA VISTORIA:', vistoriaId, '===');
+      log.debug('Total de apontamentos:', apontamentos.length);
 
       // ✅ PROTEÇÃO 2: Buscar imagens existentes no banco ANTES de processar
       const { data: existingDbImages } = await supabase
@@ -389,14 +385,12 @@ export const useVistoriaAnalises = () => {
         .select('id, image_url, apontamento_id, tipo_vistoria, file_name')
         .eq('vistoria_id', vistoriaId);
 
-      // eslint-disable-next-line no-console
-      console.log(
+      log.debug(
         '📊 Imagens já existentes no banco:',
         existingDbImages?.length || 0
       );
       if (existingDbImages && existingDbImages.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log(
+        log.debug(
           '📸 IDs das imagens existentes:',
           existingDbImages.map((img) => img.id)
         );
@@ -422,8 +416,7 @@ export const useVistoriaAnalises = () => {
       for (let i = 0; i < apontamentos.length; i++) {
         const apontamentoData = apontamentos[i] as Record<string, unknown>;
 
-        // eslint-disable-next-line no-console
-        console.log(
+        log.debug(
           `\n--- Apontamento ${i + 1}: ${apontamentoData.ambiente || 'Sem nome'} ---`
         );
 
@@ -431,13 +424,11 @@ export const useVistoriaAnalises = () => {
         const vistoriaInicial = apontamentoData.vistoriaInicial as any;
         if (vistoriaInicial?.fotos && Array.isArray(vistoriaInicial.fotos)) {
           const fotosIniciais = vistoriaInicial.fotos;
-          // eslint-disable-next-line no-console
-          console.log('Fotos vistoria inicial:', fotosIniciais.length);
+          log.debug('Fotos vistoria inicial:', fotosIniciais.length);
 
           for (let j = 0; j < fotosIniciais.length; j++) {
             const foto = fotosIniciais[j];
-            // eslint-disable-next-line no-console
-            console.log(`  Foto inicial ${j + 1}:`, {
+            log.debug(`  Foto inicial ${j + 1}:`, {
               isFile: foto instanceof File,
               isFromDatabase: foto?.isFromDatabase,
               isExternal: foto?.isExternal,
@@ -447,8 +438,7 @@ export const useVistoriaAnalises = () => {
 
             if (foto instanceof File) {
               // ✅ Nova imagem - fazer upload
-              // eslint-disable-next-line no-console
-              console.log('  → Upload de nova imagem:', foto.name);
+              log.debug('  → Upload de nova imagem:', foto.name);
               const apontamentoId =
                 typeof apontamentoData.id === 'string'
                   ? apontamentoData.id
@@ -460,8 +450,7 @@ export const useVistoriaAnalises = () => {
               // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
               // Registrar no cache
               processedUrls.add(foto.url);
-              // eslint-disable-next-line no-console
-              console.log(
+              log.debug(
                 '  ✓ Imagem do banco preservada (não será re-inserida):',
                 foto.url
               );
@@ -475,8 +464,7 @@ export const useVistoriaAnalises = () => {
               );
 
               if (!alreadyExists) {
-                // eslint-disable-next-line no-console
-                console.log('  → Salvando imagem externa:', foto.url);
+                log.debug('  → Salvando imagem externa:', foto.url);
                 const apontamentoId =
                   typeof apontamentoData.id === 'string'
                     ? apontamentoData.id
@@ -490,8 +478,7 @@ export const useVistoriaAnalises = () => {
                   file_type: foto.type || 'image/external',
                 });
               } else {
-                // eslint-disable-next-line no-console
-                console.log(
+                log.debug(
                   '  ⚠️ Imagem externa já existe, ignorando:',
                   foto.url
                 );
@@ -504,13 +491,11 @@ export const useVistoriaAnalises = () => {
         const vistoriaFinal = apontamentoData.vistoriaFinal as any;
         if (vistoriaFinal?.fotos && Array.isArray(vistoriaFinal.fotos)) {
           const fotosFinais = vistoriaFinal.fotos;
-          // eslint-disable-next-line no-console
-          console.log('Fotos vistoria final:', fotosFinais.length);
+          log.debug('Fotos vistoria final:', fotosFinais.length);
 
           for (let j = 0; j < fotosFinais.length; j++) {
             const foto = fotosFinais[j];
-            // eslint-disable-next-line no-console
-            console.log(`  Foto final ${j + 1}:`, {
+            log.debug(`  Foto final ${j + 1}:`, {
               isFile: foto instanceof File,
               isFromDatabase: foto?.isFromDatabase,
               isExternal: foto?.isExternal,
@@ -520,8 +505,7 @@ export const useVistoriaAnalises = () => {
 
             if (foto instanceof File) {
               // ✅ Nova imagem - fazer upload
-              // eslint-disable-next-line no-console
-              console.log('  → Upload de nova imagem:', foto.name);
+              log.debug('  → Upload de nova imagem:', foto.name);
               const apontamentoId =
                 typeof apontamentoData.id === 'string'
                   ? apontamentoData.id
@@ -533,8 +517,7 @@ export const useVistoriaAnalises = () => {
               // ✅ PROTEÇÃO 3: Imagem já existe no banco - NÃO re-inserir, apenas ignorar
               // Registrar no cache
               processedUrls.add(foto.url);
-              // eslint-disable-next-line no-console
-              console.log(
+              log.debug(
                 '  ✓ Imagem do banco preservada (não será re-inserida):',
                 foto.url
               );
@@ -548,8 +531,7 @@ export const useVistoriaAnalises = () => {
               );
 
               if (!alreadyExists) {
-                // eslint-disable-next-line no-console
-                console.log('  → Salvando imagem externa:', foto.url);
+                log.debug('  → Salvando imagem externa:', foto.url);
                 const apontamentoId =
                   typeof apontamentoData.id === 'string'
                     ? apontamentoData.id
@@ -563,8 +545,7 @@ export const useVistoriaAnalises = () => {
                   file_type: foto.type || 'image/external',
                 });
               } else {
-                // eslint-disable-next-line no-console
-                console.log(
+                log.debug(
                   '  ⚠️ Imagem externa já existe, ignorando:',
                   foto.url
                 );
@@ -574,14 +555,10 @@ export const useVistoriaAnalises = () => {
         }
       }
 
-      // eslint-disable-next-line no-console
-      console.log('\n=== RESUMO DO PROCESSAMENTO ===');
-      // eslint-disable-next-line no-console
-      console.log('Novas imagens para upload:', imagePromises.length);
-      // eslint-disable-next-line no-console
-      console.log('Imagens externas para inserir:', externalImageRefs.length);
-      // eslint-disable-next-line no-console
-      console.log(
+      log.debug('\n=== RESUMO DO PROCESSAMENTO ===');
+      log.debug('Novas imagens para upload:', imagePromises.length);
+      log.debug('Imagens externas para inserir:', externalImageRefs.length);
+      log.debug(
         'Imagens do banco preservadas (não re-inseridas):',
         existingDbImages?.length || 0
       );
@@ -589,8 +566,7 @@ export const useVistoriaAnalises = () => {
       // Aguardar upload de todas as novas imagens
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
-        // eslint-disable-next-line no-console
-        console.log('✓ Todas as novas imagens foram enviadas com sucesso');
+        log.debug('✓ Todas as novas imagens foram enviadas com sucesso');
       }
 
       // ✅ PROTEÇÃO 4: Inserir apenas imagens externas novas (não duplicadas)
@@ -608,8 +584,7 @@ export const useVistoriaAnalises = () => {
         );
 
         if (uniqueRefs.length < externalImageRefs.length) {
-          // eslint-disable-next-line no-console
-          console.warn(
+          log.warn(
             '⚠️ Duplicatas removidas:',
             externalImageRefs.length - uniqueRefs.length
           );
@@ -690,8 +665,7 @@ export const useVistoriaAnalises = () => {
         .maybeSingle();
 
       if (existingImage) {
-        // eslint-disable-next-line no-console
-        console.warn('⚠️ Imagem já existe no banco, pulando upload:', {
+        log.warn('⚠️ Imagem já existe no banco, pulando upload:', {
           file: file.name,
           existing_id: existingImage.id,
           url: existingImage.image_url,
@@ -706,8 +680,7 @@ export const useVistoriaAnalises = () => {
       );
 
       if (!bucketExists) {
-        // eslint-disable-next-line no-console
-        console.warn('Bucket vistoria-images não existe. Criando...');
+        log.warn('Bucket vistoria-images não existe. Criando...');
         const { error: createError } = await supabase.storage.createBucket(
           'vistoria-images',
           {
@@ -733,8 +706,7 @@ export const useVistoriaAnalises = () => {
       const fileName = `${user.id}/${vistoriaId}/${apontamentoId}/${tipoVistoria}/${Date.now()}.${fileExt}`;
 
       // Upload para o Supabase Storage
-      // eslint-disable-next-line no-console
-      console.log(
+      log.debug(
         '📤 Fazendo upload da imagem:',
         fileName,
         'Tamanho:',

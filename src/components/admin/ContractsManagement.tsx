@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { log } from '@/utils/logger';
 import {
   Table,
   TableBody,
@@ -76,7 +77,7 @@ export const ContractsManagement = () => {
         .eq('contract_id', contractId);
 
       if (billsError) {
-        console.warn('Erro ao deletar contas de consumo:', billsError);
+        log.warn('Erro ao deletar contas de consumo:', billsError);
         // Continua mesmo se não conseguir deletar as bills
       }
 

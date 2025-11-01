@@ -47,8 +47,9 @@ export const logError = (
     errors.shift();
   }
 
-  // Log no console em dev
+  // Log no console em dev (monitoring usa logger interno para não criar dependência circular)
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
     console.error('Error captured:', errorData);
   }
 
@@ -73,6 +74,7 @@ export const initPerformanceMonitoring = () => {
       metrics.LCP = lastEntry.renderTime || lastEntry.loadTime || 0;
 
       if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.log('LCP:', metrics.LCP);
       }
     });
@@ -92,6 +94,7 @@ export const initPerformanceMonitoring = () => {
         metrics.FID = entry.processingStart - entry.startTime;
 
         if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
           console.log('FID:', metrics.FID);
         }
       });
@@ -115,6 +118,7 @@ export const initPerformanceMonitoring = () => {
           metrics.CLS = clsValue;
 
           if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
             console.log('CLS:', metrics.CLS);
           }
         }
@@ -137,6 +141,7 @@ export const initPerformanceMonitoring = () => {
           metrics.FCP = entry.startTime;
 
           if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
             console.log('FCP:', metrics.FCP);
           }
         }
@@ -160,6 +165,7 @@ export const initPerformanceMonitoring = () => {
         navigationEntry.responseStart - navigationEntry.requestStart;
 
       if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.log('TTFB:', metrics.TTFB);
       }
     }
@@ -212,6 +218,7 @@ export const initMonitoring = () => {
   initPerformanceMonitoring();
 
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
     console.log('Monitoring initialized');
   }
 };

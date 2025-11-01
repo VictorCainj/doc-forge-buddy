@@ -27,6 +27,7 @@ import {
 } from '@/types/task';
 import { useOpenAI } from '@/hooks/useOpenAI';
 import { useToast } from '@/hooks/use-toast';
+import { log } from '@/utils/logger';
 
 interface TaskModalProps {
   open: boolean;
@@ -94,7 +95,7 @@ export const TaskModal = ({
         description: 'A descrição foi melhorada pela IA.',
       });
     } catch (error) {
-      console.error('Erro ao melhorar texto:', error);
+      log.error('Erro ao melhorar texto:', error);
       toast({
         title: 'Erro ao revisar',
         description: 'Não foi possível revisar o texto. Tente novamente.',
@@ -124,7 +125,7 @@ export const TaskModal = ({
         description: 'A observação foi melhorada pela IA.',
       });
     } catch (error) {
-      console.error('Erro ao melhorar texto:', error);
+      log.error('Erro ao melhorar texto:', error);
       toast({
         title: 'Erro ao revisar',
         description: 'Não foi possível revisar o texto. Tente novamente.',
@@ -154,7 +155,7 @@ export const TaskModal = ({
         description: 'A descrição foi corrigida pela IA.',
       });
     } catch (error) {
-      console.error('Erro ao corrigir texto:', error);
+      log.error('Erro ao corrigir texto:', error);
       toast({
         title: 'Erro ao corrigir',
         description: 'Não foi possível corrigir o texto. Tente novamente.',
@@ -184,7 +185,7 @@ export const TaskModal = ({
         description: 'A observação foi corrigida pela IA.',
       });
     } catch (error) {
-      console.error('Erro ao corrigir texto:', error);
+      log.error('Erro ao corrigir texto:', error);
       toast({
         title: 'Erro ao corrigir',
         description: 'Não foi possível corrigir o texto. Tente novamente.',
@@ -228,7 +229,7 @@ export const TaskModal = ({
       await onSubmit(taskData);
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao salvar tarefa:', error);
+      log.error('Erro ao salvar tarefa:', error);
     }
   };
 

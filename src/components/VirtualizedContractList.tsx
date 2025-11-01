@@ -235,8 +235,9 @@ const ContractItem = memo<{
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={handleEdit}
+                  aria-label={`Editar contrato ${contract.form_data.numeroContrato || '[NÚMERO]'}`}
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <QuickActionsDropdown
                   contractId={contract.id}
