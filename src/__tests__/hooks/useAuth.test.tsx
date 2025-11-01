@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
@@ -83,7 +82,10 @@ describe('useAuth', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    const signInResult = await result.current.signIn('test@example.com', 'password');
+    const signInResult = await result.current.signIn(
+      'test@example.com',
+      'password'
+    );
 
     expect(signInResult.error).toBeNull();
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
@@ -111,7 +113,10 @@ describe('useAuth', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    const signInResult = await result.current.signIn('test@example.com', 'wrong');
+    const signInResult = await result.current.signIn(
+      'test@example.com',
+      'wrong'
+    );
 
     expect(signInResult.error).toEqual(mockError);
   });

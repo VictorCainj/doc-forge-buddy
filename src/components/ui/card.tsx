@@ -2,19 +2,12 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// Card Google Material Design 3
+// Card Google Material Design 3 - Enhanced with premium effects
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      'bg-white rounded-xl border border-neutral-200 shadow-elevation-1 hover:shadow-elevation-2 transition-shadow duration-200',
-      className
-    )}
-    {...props}
-  />
+  <div ref={ref} className={cn('premium-card', className)} {...props} />
 ));
 Card.displayName = 'Card';
 
@@ -31,7 +24,7 @@ const CardHeader = React.forwardRef<
 ));
 CardHeader.displayName = 'CardHeader';
 
-// CardTitle com tipografia Google
+// CardTitle com tipografia Google - Enhanced
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
@@ -39,7 +32,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'text-lg font-medium text-neutral-900 tracking-tight',
+      'text-lg font-semibold text-neutral-900 tracking-tight',
       className
     )}
     {...props}
@@ -52,7 +45,11 @@ const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-neutral-700', className)} {...props} />
+  <p
+    ref={ref}
+    className={cn('text-sm text-neutral-600 leading-relaxed', className)}
+    {...props}
+  />
 ));
 CardDescription.displayName = 'CardDescription';
 

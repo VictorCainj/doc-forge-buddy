@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Barrel export para utilitários compartilhados
  * Organiza utilitários por categoria
@@ -8,50 +7,39 @@
 export { formatDateBrazilian, formatCurrency, formatPhone } from './formatters';
 
 // Validators
-export { validateEmail, validatePhone, validateCPF, validateCNPJ } from './validators';
+export {
+  validateEmail,
+  validatePhone,
+  validateCPF,
+  validateCNPJ,
+} from './validators';
 
 // Helpers
 export { cn, generateId, debounce, throttle } from './helpers';
 
 // Date utilities
-export { 
-  getCurrentDate, 
-  addDays, 
-  subtractDays, 
+export {
+  getCurrentDate,
+  addDays,
+  subtractDays,
   formatRelativeTime,
-  isValidDate 
+  isValidDate,
 } from './dateHelpers';
 
 // String utilities
-export { 
-  capitalize, 
-  slugify, 
-  truncate, 
+export {
+  capitalize,
+  slugify,
+  truncate,
   removeAccents,
-  sanitizeHtml 
+  sanitizeHtml,
 } from './stringHelpers';
 
 // Array utilities
-export { 
-  groupBy, 
-  sortBy, 
-  uniqueBy, 
-  chunk,
-  flatten 
-} from './arrayHelpers';
+export { groupBy, sortBy, uniqueBy, chunk, flatten } from './arrayHelpers';
 
 // Object utilities
-export { 
-  deepMerge, 
-  omit, 
-  pick, 
-  isEmpty,
-  isEqual 
-} from './objectHelpers';
+export { deepMerge, omit, pick, isEmpty, isEqual } from './objectHelpers';
 
 // Performance utilities
-export { 
-  memoize, 
-  createCache, 
-  measurePerformance 
-} from './performanceHelpers';
+export { memoize, createCache, measurePerformance } from './performanceHelpers';

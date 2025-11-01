@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useMemo, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PremiumButton } from '@/components/ui/premium-button';
@@ -12,7 +11,7 @@ import {
   formatDateBrazilian,
   convertDateToBrazilian,
 } from '@/utils/dateFormatter';
-import { Building2, Plus } from '@/utils/iconMapper';
+import { FileText, Plus } from '@/utils/iconMapper';
 import {
   Select,
   SelectContent,
@@ -35,10 +34,12 @@ import { ContractList, ContractModals } from '@/features/contracts/components';
 import { splitNames } from '@/utils/nameHelpers';
 import { useContractReducer } from '@/features/contracts/hooks/useContractReducer';
 import OptimizedSearch from '@/components/ui/optimized-search';
+import { useAuth } from '@/hooks/useAuth';
 
 const Contratos = () => {
   const navigate = useNavigate();
   const { showError } = useStandardToast();
+  const { profile, user } = useAuth();
 
   // Estados para filtro de mês e ano
   const [selectedMonth, setSelectedMonth] = useState<string>('');
@@ -61,7 +62,8 @@ const Contratos = () => {
     maxResults: 100,
   });
 
-  // Dados principais
+  // Dados principais - quando há filtros de data, usar limite maior
+  const hasDateFilters = selectedMonth || selectedYear;
   const {
     data: contracts,
     loading,
@@ -70,7 +72,7 @@ const Contratos = () => {
     totalCount,
   } = useOptimizedData({
     documentType: 'contrato',
-    limit: 6,
+    limit: hasDateFilters ? 1000 : 6, // Carregar mais quando há filtros de data
   });
 
   // Contratos exibidos (filtro de mês/ano, busca ou paginação normal)
@@ -386,9 +388,12 @@ const Contratos = () => {
     );
     const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${state.selectedContract.title}`;
 
-    // Se for Vistoria Final, gerar também o e-mail de convite
+    // Gerar também o e-mail de convite para Vistoria Final e Revistoria
     let secondaryTemplate = null;
-    if (state.formData.tipoVistoria === 'final') {
+    if (
+      state.formData.tipoVistoria === 'final' ||
+      state.formData.tipoVistoria === 'revistoria'
+    ) {
       // Sempre definir David Issa como responsável técnico
       enhancedData.nomeVistoriador =
         state.formData.nomeVistoriador || 'David Issa';
@@ -629,15 +634,15 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+      <div className="min-h-screen premium-gradient-bg">
         {/* Header Moderno */}
-        <div className="bg-white border-b border-neutral-200 shadow-sm">
+        <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/60 shadow-sm">
           <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
-                    <Building2 className="h-7 w-7 text-white" />
+                  <div className="icon-container w-14 h-14 bg-neutral-200 dark:bg-neutral-700 rounded-2xl flex items-center justify-center scale-on-hover">
+                    <FileText className="h-7 w-7 text-neutral-700 dark:text-neutral-300" />
                   </div>
                   <div>
                     <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
@@ -725,6 +730,35 @@ const Contratos = () => {
                     </PremiumButton>
                   </Link>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Welcome Section */}
+        <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="animate-gradient-border">
+            <div className="animate-gradient-border-content flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 p-6 sm:p-8">
+              <div className="flex flex-col gap-3">
+                <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                  Bem-vindo,{' '}
+                  <span className="animate-gradient-text inline-block">
+                    {profile?.full_name ||
+                      user?.email?.split('@')[0] ||
+                      'Usuário'}
+                  </span>
+                </h2>
+                <p className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 font-medium">
+                  Com quais contratos iremos trabalhar hoje?
+                </p>
+              </div>
+              <div className="flex flex-col items-start sm:items-end gap-1">
+                <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-medium uppercase tracking-wide">
+                  Hoje
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                  {formatDateBrazilian(new Date())}
+                </p>
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Utilitários para gerenciamento de PWA e Service Worker
  */

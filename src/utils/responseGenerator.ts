@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Gerador de respostas adaptativas humanizadas
  */

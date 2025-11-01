@@ -76,11 +76,14 @@ export function useContractBills({
     try {
       // Primeiro, buscar o ID real do contrato na tabela saved_terms
       // Usar ilike para busca mais flexível e evitar problemas com caracteres especiais
+      // Ordenar por created_at DESC para pegar o contrato mais recente se houver múltiplos
       const { data: contractDataFromDB, error: contractError } = await supabase
         .from('saved_terms')
         .select('id')
         .eq('document_type', 'contrato')
         .ilike('form_data->>numeroContrato', contractId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
 
       if (contractError) {

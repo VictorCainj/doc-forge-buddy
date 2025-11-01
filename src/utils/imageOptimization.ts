@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Utilitários para otimização de imagens
  * Compressão, conversão para WebP, lazy loading e placeholders

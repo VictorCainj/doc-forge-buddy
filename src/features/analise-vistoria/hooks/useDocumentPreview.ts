@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useCallback, useEffect } from 'react';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { log } from '@/utils/logger';
@@ -88,7 +87,14 @@ export const useDocumentPreview = () => {
       console.error('Erro ao atualizar pré-visualização:', error);
       setDocumentPreview('');
     }
-  }, [apontamentos, dadosVistoria, documentMode, selectedPrestadorId, prestadores, setDocumentPreview]);
+  }, [
+    apontamentos,
+    dadosVistoria,
+    documentMode,
+    selectedPrestadorId,
+    prestadores,
+    setDocumentPreview,
+  ]);
 
   // Atualizar pré-visualização do documento em tempo real
   useEffect(() => {

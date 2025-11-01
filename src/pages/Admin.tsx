@@ -92,15 +92,15 @@ const Admin = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+    <div className="min-h-screen premium-gradient-bg">
       <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Cabeçalho Moderno */}
         <div className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Shield className="h-7 w-7 text-white" />
+          <div className="flex flex-col items-center gap-4 mb-4">
+            <div className="icon-container w-14 h-14 bg-neutral-200 dark:bg-neutral-700 rounded-2xl flex items-center justify-center scale-on-hover">
+              <Shield className="h-7 w-7 text-neutral-700 dark:text-neutral-300" />
             </div>
-            <div>
+            <div className="text-center">
               <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
                 Painel de Administração
               </h1>
@@ -118,16 +118,16 @@ const Admin = () => {
             return (
               <div
                 key={stat.title}
-                className="group relative bg-white border border-neutral-200 rounded-xl p-5 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden"
+                className="group relative elevated-card p-5 hover:border-neutral-300/80 overflow-hidden"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Efeito de brilho no hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+                {/* Efeito de brilho sutil no hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div
-                      className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}
+                      className={`icon-container p-3 rounded-xl ${stat.bgColor} transition-transform duration-300`}
                     >
                       <Icon className={`h-5 w-5 ${stat.color}`} />
                     </div>

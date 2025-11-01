@@ -84,6 +84,8 @@ const TermoLocatario: React.FC = () => {
             .select('id')
             .eq('document_type', 'contrato')
             .ilike('form_data->>numeroContrato', contractData.numeroContrato)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle(); // Usar maybeSingle em vez de single para evitar erro quando não há resultados
 
         if (contractError) {

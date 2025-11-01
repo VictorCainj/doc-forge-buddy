@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { ActionButton } from '@/components/ui/action-button';
@@ -25,7 +24,9 @@ export const PrestadorSelector = ({
   onSelectPrestador,
 }: PrestadorSelectorProps) => {
   const navigate = useNavigate();
-  const selectedPrestador = prestadores.find((p) => p.id === selectedPrestadorId);
+  const selectedPrestador = prestadores.find(
+    (p) => p.id === selectedPrestadorId
+  );
 
   return (
     <Card className="mb-6 bg-white border-neutral-200">
@@ -84,13 +85,19 @@ export const PrestadorSelector = ({
               </span>
             </div>
             {selectedPrestador.cnpj && (
-              <p className="text-xs text-neutral-500">CNPJ: {selectedPrestador.cnpj}</p>
+              <p className="text-xs text-neutral-500">
+                CNPJ: {selectedPrestador.cnpj}
+              </p>
             )}
             {selectedPrestador.telefone && (
-              <p className="text-xs text-neutral-500">Tel: {selectedPrestador.telefone}</p>
+              <p className="text-xs text-neutral-500">
+                Tel: {selectedPrestador.telefone}
+              </p>
             )}
             {selectedPrestador.email && (
-              <p className="text-xs text-neutral-500">Email: {selectedPrestador.email}</p>
+              <p className="text-xs text-neutral-500">
+                Email: {selectedPrestador.email}
+              </p>
             )}
           </div>
         )}

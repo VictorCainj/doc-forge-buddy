@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { validateContractsList, type Contract } from '@/utils/dataValidator';
@@ -59,7 +58,10 @@ export const useOptimizedData = (
 
         // Verificar cache para primeira página
         if (page === 0 && reset) {
-          const cachedData = cacheManager.get<{ data: Contract[]; count: number }>(`contracts-${cacheKey}`);
+          const cachedData = cacheManager.get<{
+            data: Contract[];
+            count: number;
+          }>(`contracts-${cacheKey}`);
           if (cachedData) {
             dbLogger.debug('Usando dados do cache');
             setData(cachedData.data);
@@ -77,8 +79,10 @@ export const useOptimizedData = (
         // O count é feito apenas na primeira página
         const query = supabase
           .from('saved_terms')
-          .select('id, title, document_type, form_data, created_at, updated_at', 
-            page === 0 ? { count: 'exact' } : {})
+          .select(
+            'id, title, document_type, form_data, created_at, updated_at',
+            page === 0 ? { count: 'exact' } : {}
+          )
           .eq('document_type', documentType)
           .order(orderBy, { ascending })
           .range(from, to);
@@ -92,17 +96,21 @@ export const useOptimizedData = (
         setData((prevData) =>
           reset ? validatedData : [...prevData, ...validatedData]
         );
-        
+
         // Atualizar count apenas na primeira página
         if (page === 0 && result.count !== null) {
           setTotalCount(result.count);
           // Cachear dados da primeira página
-          cacheManager.set(`contracts-${cacheKey}`, {
-            data: validatedData,
-            count: result.count,
-          }, 2 * 60 * 1000); // Cache de 2 minutos
+          cacheManager.set(
+            `contracts-${cacheKey}`,
+            {
+              data: validatedData,
+              count: result.count,
+            },
+            2 * 60 * 1000
+          ); // Cache de 2 minutos
         }
-        
+
         setCurrentPage(page);
         setError(null);
       } catch (err) {
@@ -199,12 +207,12 @@ export const useDashboardData = () => {
 
     // Contratos do mês atual (baseado na data de início da desocupação)
     const currentMonthContracts = contracts.filter((contract) => {
-      const vacationStartDate = contract.form_data.dataInicioRescisao 
+      const vacationStartDate = contract.form_data.dataInicioRescisao
         ? parseBrazilianDate(contract.form_data.dataInicioRescisao)
         : new Date(contract.created_at);
-      
+
       if (!vacationStartDate) return false;
-      
+
       return (
         vacationStartDate.getMonth() === currentMonth &&
         vacationStartDate.getFullYear() === currentYear
@@ -213,12 +221,12 @@ export const useDashboardData = () => {
 
     // Contratos do mês anterior (baseado na data de início da desocupação)
     const previousMonthContracts = contracts.filter((contract) => {
-      const vacationStartDate = contract.form_data.dataInicioRescisao 
+      const vacationStartDate = contract.form_data.dataInicioRescisao
         ? parseBrazilianDate(contract.form_data.dataInicioRescisao)
         : new Date(contract.created_at);
-      
+
       if (!vacationStartDate) return false;
-      
+
       return (
         vacationStartDate.getMonth() === previousMonth &&
         vacationStartDate.getFullYear() === previousYear
@@ -268,12 +276,12 @@ export const useDashboardData = () => {
 
       const contractsInMonth = contracts.filter((contract) => {
         // Usar a data de início da desocupação se disponível, senão usar data de criação
-        const vacationStartDate = contract.form_data.dataInicioRescisao 
+        const vacationStartDate = contract.form_data.dataInicioRescisao
           ? parseBrazilianDate(contract.form_data.dataInicioRescisao)
           : new Date(contract.created_at);
-        
+
         if (!vacationStartDate) return false;
-        
+
         return (
           vacationStartDate.getMonth() === date.getMonth() &&
           vacationStartDate.getFullYear() === date.getFullYear()

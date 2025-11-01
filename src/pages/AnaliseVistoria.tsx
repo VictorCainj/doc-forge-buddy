@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { log } from '@/utils/logger';
@@ -2079,7 +2078,6 @@ const AnaliseVistoria = () => {
       });
     }
   };
-
 
   // Detectar apontamentos sem classificação
   // Nota: Função removida pois a variável não é utilizada no componente

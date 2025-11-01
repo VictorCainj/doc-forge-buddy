@@ -3,7 +3,7 @@ import { ContractWizardModal } from '@/features/contracts/components';
 import { FormStep } from '@/hooks/use-form-wizard';
 import {
   Users,
-  Building2,
+  FileText,
   UserCheck,
   Shield,
   Calendar,
@@ -64,7 +64,7 @@ const CadastrarContrato = () => {
       id: 'contrato',
       title: 'Dados do Contrato',
       description: 'Informações essenciais do contrato',
-      icon: Building2,
+      icon: FileText,
       fields: [
         {
           name: 'numeroContrato',
@@ -204,7 +204,10 @@ const CadastrarContrato = () => {
             { value: 'Caução', label: 'Caução' },
             { value: 'Fiador', label: 'Fiador' },
             { value: 'Seguro Fiança', label: 'Seguro Fiança' },
-            { value: 'Título de Capitalização', label: 'Título de Capitalização' },
+            {
+              value: 'Título de Capitalização',
+              label: 'Título de Capitalização',
+            },
           ],
         },
       ],
@@ -234,7 +237,9 @@ const CadastrarContrato = () => {
           label: 'Motivo da Desocupação',
           type: 'select',
           required: false,
-          placeholder: isLoadingReasons ? 'Carregando motivos...' : 'Selecione o motivo',
+          placeholder: isLoadingReasons
+            ? 'Carregando motivos...'
+            : 'Selecione o motivo',
           options: motivoOptions,
         },
       ],

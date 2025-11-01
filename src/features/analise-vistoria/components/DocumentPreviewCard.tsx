@@ -1,8 +1,14 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckCircle2, AlertCircle, Edit, Trash2, Eye } from '@/utils/iconMapper';
+import {
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  Edit,
+  Trash2,
+  Eye,
+} from '@/utils/iconMapper';
 import { DocumentPreviewContent } from './DocumentPreviewContent';
 import { ApontamentoVistoria } from '@/types/vistoria';
 
@@ -61,7 +67,8 @@ export const DocumentPreviewCard = ({
                   variant="outline"
                   className="text-xs border-green-200 bg-white text-green-900"
                 >
-                  {apontamentos.length} apontamento{apontamentos.length !== 1 ? 's' : ''}
+                  {apontamentos.length} apontamento
+                  {apontamentos.length !== 1 ? 's' : ''}
                 </Badge>
               </div>
             </div>
@@ -128,12 +135,15 @@ export const DocumentPreviewCard = ({
                             apontamento.valor !== undefined &&
                             apontamento.quantidade !== undefined && (
                               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                                <Badge variant="outline" className="text-xs border-blue-200 bg-blue-50 text-blue-700">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-blue-200 bg-blue-50 text-blue-700"
+                                >
                                   {apontamento.tipo === 'material'
                                     ? 'Material'
                                     : apontamento.tipo === 'mao_de_obra'
-                                    ? 'Mão de Obra'
-                                    : 'Material + M.O.'}
+                                      ? 'Mão de Obra'
+                                      : 'Material + M.O.'}
                                 </Badge>
                                 <span className="text-neutral-600">
                                   {apontamento.quantidade}x R${' '}
@@ -191,7 +201,9 @@ export const DocumentPreviewCard = ({
             <h3 className="font-semibold text-neutral-900 mb-2 text-lg">
               Processando documento...
             </h3>
-            <p className="text-sm text-neutral-600">Aguarde enquanto o documento é gerado</p>
+            <p className="text-sm text-neutral-600">
+              Aguarde enquanto o documento é gerado
+            </p>
           </div>
         )}
       </CardContent>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Utilitários de validação de dados robustos
  * Previne erros de parsing e validação de entrada

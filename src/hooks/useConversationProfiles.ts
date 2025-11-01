@@ -1,13 +1,10 @@
-// @ts-nocheck
 /**
  * Hook para gerenciar perfis de comunicação conversacional
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import {
-  ConversationProfile,
-} from '@/types/conversationProfile';
+import { ConversationProfile } from '@/types/conversationProfile';
 import { analyzeMessageContext } from '@/utils/sentimentAnalysis';
 import { log } from '@/utils/logger';
 

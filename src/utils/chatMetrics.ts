@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { log } from './logger';
 
@@ -11,7 +10,12 @@ export interface MetricData {
 export interface FeedbackData {
   messageId: string;
   rating: 1 | 2 | 3 | 4 | 5;
-  feedbackType: 'helpful' | 'unhelpful' | 'incorrect' | 'incomplete' | 'excellent';
+  feedbackType:
+    | 'helpful'
+    | 'unhelpful'
+    | 'incorrect'
+    | 'incomplete'
+    | 'excellent';
   comment?: string;
 }
 
@@ -32,22 +36,25 @@ export async function recordMetric(
   metricData: MetricData
 ): Promise<void> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
-      .from('chat_metrics')
-      .insert({
-        session_id: sessionId,
-        user_id: user.id,
-        metric_name: metricData.name,
-        metric_value: metricData.value,
-        metadata: metricData.metadata || {},
-      });
+    const { error } = await supabase.from('chat_metrics').insert({
+      session_id: sessionId,
+      user_id: user.id,
+      metric_name: metricData.name,
+      metric_value: metricData.value,
+      metadata: metricData.metadata || {},
+    });
 
     if (error) throw error;
 
-    log.debug('Métrica registrada', { name: metricData.name, value: metricData.value });
+    log.debug('Métrica registrada', {
+      name: metricData.name,
+      value: metricData.value,
+    });
   } catch (error) {
     log.error('Erro ao registrar métrica', error);
   }
@@ -58,22 +65,25 @@ export async function recordMetric(
  */
 export async function submitFeedback(feedback: FeedbackData): Promise<boolean> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return false;
 
-    const { error } = await supabase
-      .from('chat_feedback')
-      .insert({
-        message_id: feedback.messageId,
-        user_id: user.id,
-        rating: feedback.rating,
-        feedback_type: feedback.feedbackType,
-        comment: feedback.comment || null,
-      });
+    const { error } = await supabase.from('chat_feedback').insert({
+      message_id: feedback.messageId,
+      user_id: user.id,
+      rating: feedback.rating,
+      feedback_type: feedback.feedbackType,
+      comment: feedback.comment || null,
+    });
 
     if (error) throw error;
 
-    log.debug('Feedback registrado', { messageId: feedback.messageId, rating: feedback.rating });
+    log.debug('Feedback registrado', {
+      messageId: feedback.messageId,
+      rating: feedback.rating,
+    });
     return true;
   } catch (error) {
     log.error('Erro ao registrar feedback', error);
@@ -86,7 +96,9 @@ export async function submitFeedback(feedback: FeedbackData): Promise<boolean> {
  */
 export async function getChatStats(): Promise<ChatStats | null> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return null;
 
     // Buscar métricas de tempo de resposta
@@ -96,27 +108,35 @@ export async function getChatStats(): Promise<ChatStats | null> {
       .eq('user_id', user.id)
       .eq('metric_name', 'response_time');
 
-    const avgResponseTime = responseTimeMetrics && responseTimeMetrics.length > 0
-      ? responseTimeMetrics.reduce((sum, m) => sum + Number(m.metric_value), 0) / responseTimeMetrics.length
-      : 0;
+    const avgResponseTime =
+      responseTimeMetrics && responseTimeMetrics.length > 0
+        ? responseTimeMetrics.reduce(
+            (sum, m) => sum + Number(m.metric_value),
+            0
+          ) / responseTimeMetrics.length
+        : 0;
 
     // Buscar estatísticas de feedback usando a função RPC
-    const { data: feedbackStats } = await supabase
-      .rpc('get_user_satisfaction_stats', { user_id_param: user.id });
+    const { data: feedbackStats } = await supabase.rpc(
+      'get_user_satisfaction_stats',
+      { user_id_param: user.id }
+    );
 
     const avgRating = feedbackStats?.[0]?.avg_rating || 0;
     const totalFeedback = feedbackStats?.[0]?.total_feedback || 0;
     const positiveFeedback = feedbackStats?.[0]?.positive_feedback || 0;
 
-    const satisfactionRate = totalFeedback > 0 
-      ? (Number(positiveFeedback) / Number(totalFeedback)) * 100 
-      : 0;
+    const satisfactionRate =
+      totalFeedback > 0
+        ? (Number(positiveFeedback) / Number(totalFeedback)) * 100
+        : 0;
 
     // Contar mensagens e sessões
     const { count: totalMessages } = await supabase
       .from('chat_messages')
       .select('*', { count: 'exact', head: true })
-      .in('session_id', 
+      .in(
+        'session_id',
         supabase.from('chat_sessions').select('id').eq('user_id', user.id)
       );
 
@@ -133,7 +153,7 @@ export async function getChatStats(): Promise<ChatStats | null> {
       .lte('rating', 2);
 
     const commonIssues = negativeFeedback
-      ? Array.from(new Set(negativeFeedback.map(f => f.feedback_type)))
+      ? Array.from(new Set(negativeFeedback.map((f) => f.feedback_type)))
       : [];
 
     return {

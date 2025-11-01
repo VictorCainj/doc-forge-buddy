@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Utilitários para análise de sentimento e contexto emocional
  */

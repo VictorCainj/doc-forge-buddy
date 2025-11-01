@@ -281,6 +281,294 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-soft);
   }
 
+  /* Professional Visual Effects - High Quality & Performance */
+
+  /* Animated gradient text - optimized for performance */
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient-text {
+    background: linear-gradient(
+      90deg,
+      #3b82f6 0%,
+      #8b5cf6 25%,
+      #ec4899 50%,
+      #8b5cf6 75%,
+      #3b82f6 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 3s ease-in-out infinite;
+    will-change: background-position;
+  }
+
+  /* Dark mode gradient */
+  .dark .animate-gradient-text {
+    background: linear-gradient(
+      90deg,
+      #60a5fa 0%,
+      #a78bfa 25%,
+      #f472b6 50%,
+      #a78bfa 75%,
+      #60a5fa 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Animated gradient border - optimized for performance */
+  @keyframes gradient-border-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient-border {
+    position: relative;
+    background: linear-gradient(
+      to right,
+      #3b82f6,
+      #8b5cf6,
+      #ec4899,
+      #8b5cf6,
+      #3b82f6
+    );
+    background-size: 200% 100%;
+    padding: 2px;
+    border-radius: 1rem;
+    animation: gradient-border-shift 3s ease-in-out infinite;
+    will-change: background-position;
+  }
+
+  .dark .animate-gradient-border {
+    background: linear-gradient(
+      to right,
+      #60a5fa,
+      #a78bfa,
+      #f472b6,
+      #a78bfa,
+      #60a5fa
+    );
+    background-size: 200% 100%;
+  }
+
+  .animate-gradient-border-content {
+    background: rgb(250 250 249);
+    border-radius: calc(1rem - 2px);
+  }
+
+  .dark .animate-gradient-border-content {
+    background: rgb(23 23 23 / 0.5);
+  }
+
+  /* Premium Card with subtle depth */
+  .premium-card {
+    @apply bg-white rounded-xl border border-neutral-200/80;
+    @apply shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_24px_rgba(0,0,0,0.04)];
+    @apply transition-all duration-300 ease-out;
+    @apply relative overflow-hidden;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.98) 100%
+    );
+  }
+
+  .premium-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.03) 0%,
+      rgba(139, 92, 246, 0.02) 50%,
+      rgba(236, 72, 153, 0.02) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .premium-card:hover {
+    @apply -translate-y-1 shadow-[0_4px_12px_rgba(0,0,0,0.08),0_16px_32px_rgba(0,0,0,0.06)];
+    @apply border-neutral-300/60;
+  }
+
+  .premium-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Elevated card with smooth lift effect */
+  .elevated-card {
+    @apply bg-white rounded-xl border border-neutral-200;
+    @apply shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)];
+    @apply transition-all duration-300;
+    @apply hover:shadow-[0_8px_24px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.06)];
+    @apply hover:-translate-y-1;
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Subtle glow effect on hover */
+  .glow-on-hover {
+    @apply transition-all duration-300;
+    @apply hover:shadow-[0_0_20px_rgba(59,130,246,0.15),0_8px_24px_rgba(0,0,0,0.08)];
+  }
+
+  /* Professional gradient background */
+  .premium-gradient-bg {
+    background: linear-gradient(
+      135deg,
+      rgba(249, 250, 251, 0.8) 0%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(249, 250, 251, 0.9) 100%
+    );
+  }
+
+  /* Subtle pattern overlay */
+  .pattern-overlay {
+    position: relative;
+  }
+
+  .pattern-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(0, 0, 0, 0.02) 1px,
+      transparent 0
+    );
+    background-size: 24px 24px;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* Smooth scale animation */
+  .scale-on-hover {
+    @apply transition-transform duration-300 ease-out;
+    @apply hover:scale-[1.02];
+  }
+
+  /* Icon container with subtle glow */
+  .icon-container {
+    @apply relative;
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .icon-container::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background: radial-gradient(
+      circle at center,
+      rgba(59, 130, 246, 0.1) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    border-radius: inherit;
+  }
+
+  .icon-container:hover::before {
+    opacity: 1;
+  }
+
+  /* Text gradient effect */
+  .text-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(217 89% 61%) 0%,
+      hsl(217 89% 55%) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Border glow effect */
+  .border-glow {
+    position: relative;
+    @apply border border-neutral-200;
+  }
+
+  .border-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.2),
+      rgba(139, 92, 246, 0.2),
+      rgba(236, 72, 153, 0.2)
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .border-glow:hover::after {
+    opacity: 1;
+  }
+
+  /* Micro-interaction: pulse effect */
+  @keyframes subtle-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.01);
+    }
+  }
+
+  .subtle-pulse {
+    animation: subtle-pulse 3s ease-in-out infinite;
+  }
+
+  /* Shimmer effect for loading states */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+
   .status-indicator {
     position: relative;
     display: inline-flex;

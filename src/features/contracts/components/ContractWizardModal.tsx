@@ -21,7 +21,7 @@ import { PersonManager } from '@/components/ui/person-manager';
 import { splitNames } from '@/utils/nameHelpers';
 import { FormStep, FormField } from '@/hooks/use-form-wizard';
 import { useContractWizard } from '../hooks/useContractWizard';
-import { ChevronLeft, ChevronRight, Building2 } from '@/utils/iconMapper';
+import { ChevronLeft, ChevronRight, FileText } from '@/utils/iconMapper';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -299,8 +299,8 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
         {/* Header Google Material Design 3 - Professional */}
         <DialogHeader className="relative px-6 py-5 border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-white">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Building2 className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 bg-neutral-200 dark:bg-neutral-700 rounded-xl flex items-center justify-center">
+              <FileText className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
             </div>
             <DialogTitle className="text-2xl font-semibold text-neutral-900 tracking-tight">
               {title}
@@ -311,7 +311,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
           <div className="mt-3 relative">
             <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-500 to-blue-600"
+                className="h-full bg-neutral-600 dark:bg-neutral-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
@@ -321,7 +321,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
               <span className="font-medium">
                 Etapa {currentStep + 1} de {steps.length}
               </span>
-              <span className="font-semibold text-blue-600">
+              <span className="font-semibold text-neutral-700 dark:text-neutral-300">
                 {Math.round(progress)}%
               </span>
             </div>
@@ -357,7 +357,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 className={cn(
                   'relative group transition-all duration-200',
                   'flex flex-col items-center gap-1.5 p-2 rounded-lg',
-                  isActive && 'bg-blue-50',
+                  isActive && 'bg-neutral-100 dark:bg-neutral-800',
                   !isActive && 'hover:bg-neutral-50'
                 )}
               >
@@ -365,8 +365,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 <div
                   className={cn(
                     'relative w-9 h-9 flex items-center justify-center transition-all duration-200',
-                    isActive &&
-                      'bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg shadow-blue-500/20',
+                    isActive && 'bg-neutral-200 dark:bg-neutral-700 rounded-lg',
                     !isActive &&
                       isCompleted &&
                       'bg-green-500 rounded-full shadow-md',
@@ -382,7 +381,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                       <Icon
                         className={cn(
                           'h-5 w-5',
-                          isActive && 'text-white',
+                          isActive && 'text-neutral-700 dark:text-neutral-300',
                           !isActive && 'text-neutral-600'
                         )}
                       />
@@ -394,7 +393,7 @@ export const ContractWizardModal: React.FC<ContractWizardModalProps> = ({
                 <span
                   className={cn(
                     'text-xs font-medium transition-colors duration-200',
-                    isActive && 'text-blue-600',
+                    isActive && 'text-neutral-700 dark:text-neutral-300',
                     !isActive && 'text-neutral-600'
                   )}
                 >

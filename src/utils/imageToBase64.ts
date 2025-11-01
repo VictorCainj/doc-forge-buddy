@@ -42,7 +42,7 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
       reader.onerror = () => reject(new Error('Erro ao converter imagem'));
       reader.readAsDataURL(blob);
     });
-  } catch (_error) {
+  } catch {
     // Fallback: tentar carregar via canvas (funciona para imagens no mesmo domínio ou com CORS habilitado)
     try {
       return await convertImageViaCanvas(url);

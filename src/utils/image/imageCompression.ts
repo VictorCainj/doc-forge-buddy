@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Utilitário para compressão automática de imagens
  * Reduz tamanho de uploads em até 90% mantendo qualidade visual

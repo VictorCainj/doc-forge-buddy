@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FileText,
   LogOut,
-  Home,
+  Circle,
   Search,
   Users,
   Settings,
@@ -153,9 +153,7 @@ const Sidebar = () => {
         {/* Seção Superior: Logo e Menu */}
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           {/* Logo */}
-          <div className="mb-8">
-            {open ? <Logo /> : <LogoIcon />}
-          </div>
+          <div className="mb-8">{open ? <Logo /> : <LogoIcon />}</div>
 
           {/* Menu Items */}
           <div className="flex flex-col gap-2">
@@ -267,8 +265,8 @@ const Sidebar = () => {
 const Logo = () => {
   return (
     <div className="flex items-center space-x-2 px-2">
-      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
-        <Home className="h-4 w-4 text-white" />
+      <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Circle className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
       </div>
       <motion.div
         initial={{ opacity: 0 }}
@@ -290,8 +288,8 @@ const Logo = () => {
 const LogoIcon = () => {
   return (
     <div className="flex items-center justify-center px-2">
-      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
-        <Home className="h-4 w-4 text-white" />
+      <div className="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Circle className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
       </div>
     </div>
   );
