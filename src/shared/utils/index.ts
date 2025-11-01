@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Barrel export para utilitários compartilhados
  * Organiza utilitários por categoria

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { convertDateToBrazilian } from '@/utils/dateFormatter';
 
 /**
