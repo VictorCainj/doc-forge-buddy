@@ -17,24 +17,30 @@ const ProtectedRoute = ({
   const [forceLoad, setForceLoad] = useState(false);
 
   // Timeout de segurança para evitar loop infinito de loading
+  // Para rotas públicas (login), reduzir o timeout
   useEffect(() => {
+    const timeoutDuration = requireAuth ? 4000 : 1000; // 1 segundo para rotas públicas
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn(
-          'Timeout de verificação de autenticação - forçando renderização'
-        );
+        // Timeout de segurança para evitar loop infinito de loading
         setForceLoad(true);
       }
-    }, 4000); // 4 segundos de timeout (otimizado)
+    }, timeoutDuration);
 
     return () => clearTimeout(timeoutId);
-  }, [loading]);
+  }, [loading, requireAuth]);
 
-  // Mostrar loading enquanto verifica autenticação
+  // Para rotas públicas (como login), não bloquear com loading
+  if (!requireAuth && loading && !forceLoad) {
+    // Renderizar children mesmo durante loading para evitar bloqueio
+    return <>{children}</>;
+  }
+
+  // Mostrar loading enquanto verifica autenticação (apenas para rotas protegidas)
   if (loading && !forceLoad) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
+      <div className="min-h-screen flex items-center justify-center pointer-events-none">
+        <div className="flex flex-col items-center space-y-4 pointer-events-auto">
           <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
           <p className="text-neutral-600">Verificando autenticação...</p>
         </div>
