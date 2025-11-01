@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Input, InputProps } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 /**
  * Input acessível com label e mensagens de erro
  */
-export interface AccessibleInputProps extends InputProps {
+export interface AccessibleInputProps extends React.ComponentProps<typeof Input> {
   /**
    * Label do input (obrigatório para acessibilidade)
    */

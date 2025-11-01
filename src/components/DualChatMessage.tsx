@@ -199,7 +199,6 @@ const DualChatMessage = memo(
               message={responseMessage}
               onRetry={() => {}} // Implementar retry se necessário
               onCopy={() => {}} // Implementar copy se necessário
-              showAnalysis={false}
             />
           </div>
         </div>

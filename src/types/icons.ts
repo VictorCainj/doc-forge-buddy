@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 /**
  * Tipos de Ícones - Sistema Lucide React
@@ -9,7 +9,7 @@ import { LucideIcon } from 'lucide-react';
  * Tipo base para ícones da aplicação
  * Utilizado em toda a aplicação para garantir consistência
  */
-export type AppIcon = LucideIcon;
+export type AppIcon = React.ComponentType<any>;
 
 /**
  * Categorias de ícones para aplicação de cores

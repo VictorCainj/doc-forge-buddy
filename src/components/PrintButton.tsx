@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Printer } from '@/utils/iconMapper';
 import { usePrint } from '@/hooks/usePrint';
+import type { DashboardReportData } from '@/hooks/usePrint';
 import { toast } from 'sonner';
 
 interface PrintButtonProps {
@@ -59,7 +60,7 @@ export const PrintButton: React.FC<PrintButtonProps> = ({
 };
 
 interface DashboardPrintButtonProps {
-  data: Record<string, unknown>;
+  data: DashboardReportData;
   className?: string;
 }
 

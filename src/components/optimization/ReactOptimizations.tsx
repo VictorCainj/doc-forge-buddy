@@ -7,7 +7,7 @@ import React, { ComponentType, useMemo, useCallback } from 'react';
 export function withMemo<P extends object>(
   Component: ComponentType<P>,
   areEqual?: (prevProps: P, nextProps: P) => boolean
-): ComponentType<P> {
+): React.MemoExoticComponent<ComponentType<P>> {
   return React.memo(Component, areEqual);
 }
 

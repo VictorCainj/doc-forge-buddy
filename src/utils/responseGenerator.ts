@@ -4,7 +4,7 @@
 
 import { MessageAnalysis, AdaptiveResponse } from '@/types/conversationProfile';
 import { ConversationProfile } from '@/types/conversationProfile';
-import { Contract } from '@/hooks/useContractAnalysis';
+import { Contract } from '@/types/contract';
 import { DualResponseResult } from '@/types/dualChat';
 import { analyzeMessageContext } from './sentimentAnalysis';
 import {

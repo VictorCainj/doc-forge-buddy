@@ -23,7 +23,7 @@ interface ChatSession {
   mode: string;
   created_at: string | null;
   updated_at: string | null;
-  metadata?: Record<string, unknown>;
+  metadata?: any;
 }
 
 export const useChatPersistence = () => {
@@ -171,7 +171,7 @@ export const useChatPersistence = () => {
             id: msg.id,
             content: msg.content,
             role: msg.role as 'user' | 'assistant',
-            timestamp: new Date(msg.created_at),
+            timestamp: new Date(msg.created_at || Date.now()),
             imageData: firstImage?.image_data || null,
             metadata: msg.metadata as { model?: string; tokens?: number },
           };
@@ -211,7 +211,7 @@ export const useChatPersistence = () => {
 
       if (error) throw error;
 
-      return data || [];
+      return (data as unknown as ChatSession[]) || [];
     } catch (error) {
       log.error('Erro ao carregar sessões:', error);
       toast({

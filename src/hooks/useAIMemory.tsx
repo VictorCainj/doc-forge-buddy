@@ -313,7 +313,7 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
         const analysis = await analyzeTextAdvanced(question);
 
         // Verificar se há pergunta similar no histórico
-        let similarQuestion = null;
+        let similarQuestion: UserPatterns['commonQuestions'][number] | null = null;
         if (
           memory.patterns.commonQuestions &&
           memory.patterns.commonQuestions.length > 0
@@ -331,7 +331,7 @@ export const useAIMemory = (userId: string = 'default'): UseAIMemoryReturn => {
                 q.question.toLowerCase().includes(keyword.toLowerCase())
               );
             return hasFirstKeyword || hasAnyKeyword;
-          });
+          }) || null;
         }
 
         let personalizedResponse = question;
@@ -615,7 +615,7 @@ Perfil do Usuário:
         `Ações pendentes: ${memory.context?.pendingActions?.filter((a) => !a.completed).length || 0}`,
       ];
 
-      const recommendations = [];
+      const recommendations: string[] = [];
 
       if (memory.preferences?.favoriteTopics?.length > 5) {
         recommendations.push(

@@ -40,6 +40,10 @@ export interface DualMessage {
     url: string;
     base64: string;
   };
+  // Dados opcionais de análise/sentimento e confiança de detecção
+  locadorSentiment?: import('./sentimentAnalysis').AdvancedSentimentAnalysis;
+  locatarioSentiment?: import('./sentimentAnalysis').AdvancedSentimentAnalysis;
+  detectionConfidence?: number;
 }
 
 export interface DualChatState {

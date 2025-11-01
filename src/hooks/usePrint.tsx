@@ -16,7 +16,7 @@ interface PrintStyles {
   showFooter: boolean;
 }
 
-interface DashboardReportData {
+export interface DashboardReportData {
   metrics: {
     totalContracts: number;
     contractsOver30Days: number;

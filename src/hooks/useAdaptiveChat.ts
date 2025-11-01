@@ -201,7 +201,7 @@ export const useAdaptiveChat = (): UseAdaptiveChatReturn => {
         );
 
         // Definir análise para o painel emocional
-        setLastAnalysis(adaptiveResponse.metadata?.analysis || null);
+        setLastAnalysis(null);
 
         // Aprender com a interação se houver perfil ativo
         if (activeProfile) {
