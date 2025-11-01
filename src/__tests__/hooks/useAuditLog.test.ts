@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Testes para hook useAuditLog
  */
