@@ -8,20 +8,14 @@
     <meta name="author" content="Lovable" />
 
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.openai.com https://*.sentry.io; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';" />
+    <!-- CSP, X-Frame-Options e outros headers de segurança devem estar apenas em HTTP headers (vercel.json) -->
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
 
     <!-- Preload Critical Resources for LCP -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="preload" href="/src/main.tsx" as="script" />
-
-    <!-- Font Loading Optimization -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <meta property="og:title" content="doc-forge-buddy" />
     <meta property="og:description" content="Lovable Generated Project" />

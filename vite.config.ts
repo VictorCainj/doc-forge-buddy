@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks: (id) => {
-          // Vendor chunk para React e React DOM
+          // Vendor chunk para React e React DOM (crítico, carregado primeiro)
           if (
             id.includes('node_modules/react') ||
             id.includes('node_modules/react-dom')
@@ -65,12 +65,12 @@ export default defineConfig(({ mode }) => ({
             return 'vendor-react';
           }
 
-          // UI components (Radix UI)
+          // UI components (Radix UI) - usado em toda aplicação
           if (id.includes('node_modules/@radix-ui')) {
             return 'vendor-ui';
           }
 
-          // PDF e documentação - chunks separados mais granulares
+          // PDF e documentação - chunks separados e lazy loaded apenas quando necessário
           if (id.includes('html2pdf')) {
             return 'vendor-html2pdf';
           }
@@ -87,17 +87,22 @@ export default defineConfig(({ mode }) => ({
             return 'vendor-docx';
           }
 
-          // Supabase
+          // Excel - usado apenas em algumas páginas
+          if (id.includes('exceljs')) {
+            return 'vendor-excel';
+          }
+
+          // Supabase - usado em toda aplicação
           if (id.includes('@supabase')) {
             return 'vendor-supabase';
           }
 
-          // OpenAI
+          // OpenAI - usado apenas em algumas páginas
           if (id.includes('openai')) {
             return 'vendor-openai';
           }
 
-          // Forms
+          // Forms - usado em formulários
           if (
             id.includes('react-hook-form') ||
             id.includes('@hookform') ||
@@ -106,7 +111,7 @@ export default defineConfig(({ mode }) => ({
             return 'vendor-forms';
           }
 
-          // Markdown
+          // Markdown - usado apenas em algumas páginas
           if (
             id.includes('react-markdown') ||
             id.includes('remark') ||
@@ -115,7 +120,7 @@ export default defineConfig(({ mode }) => ({
             return 'vendor-markdown';
           }
 
-          // Utils
+          // Utils - pequeno, pode ficar junto
           if (
             id.includes('date-fns') ||
             id.includes('clsx') ||
@@ -124,29 +129,39 @@ export default defineConfig(({ mode }) => ({
             return 'vendor-utils';
           }
 
-          // Charts
+          // Charts - usado apenas em dashboards
           if (id.includes('chart.js') || id.includes('chartjs')) {
             return 'vendor-charts';
           }
 
-          // Framer Motion
+          // Framer Motion - usado para animações
           if (id.includes('framer-motion')) {
             return 'vendor-framer';
           }
 
-          // TanStack Query
+          // TanStack Query - usado em toda aplicação
           if (id.includes('@tanstack/react-query')) {
             return 'vendor-query';
           }
 
-          // Router
+          // Router - usado em toda aplicação
           if (id.includes('react-router')) {
             return 'vendor-router';
           }
 
-          // Lucide icons
+          // Lucide icons - usado em toda aplicação
           if (id.includes('lucide-react')) {
             return 'vendor-icons';
+          }
+
+          // Sentry - usado apenas em produção
+          if (id.includes('@sentry')) {
+            return 'vendor-sentry';
+          }
+
+          // Outros node_modules - agrupar em vendor geral
+          if (id.includes('node_modules')) {
+            return 'vendor-misc';
           }
         },
         // Otimizar nomes de chunks

@@ -310,8 +310,11 @@ const DashboardDesocupacao = () => {
                         setFilters({ ...filters, periodo: value })
                       }
                     >
-                      <SelectTrigger className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
-                        <SelectValue />
+                      <SelectTrigger
+                        className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20"
+                        aria-label="Período"
+                      >
+                        <SelectValue placeholder="Selecione o período" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="mes-atual">Mês Atual</SelectItem>
@@ -355,8 +358,11 @@ const DashboardDesocupacao = () => {
                           value={mes.toString()}
                           onValueChange={(value) => setMes(parseInt(value))}
                         >
-                          <SelectTrigger className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
-                            <SelectValue />
+                          <SelectTrigger
+                            className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20"
+                            aria-label="Mês"
+                          >
+                            <SelectValue placeholder="Selecione o mês" />
                           </SelectTrigger>
                           <SelectContent>
                             {[
