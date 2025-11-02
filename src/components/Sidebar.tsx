@@ -30,6 +30,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -154,6 +155,11 @@ const Sidebar = () => {
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           {/* Logo */}
           <div className="mb-8">{open ? <Logo /> : <LogoIcon />}</div>
+
+          {/* Notificações */}
+          <div className="mb-4 px-2">
+            <NotificationBell />
+          </div>
 
           {/* Menu Items */}
           <div className="flex flex-col gap-2">

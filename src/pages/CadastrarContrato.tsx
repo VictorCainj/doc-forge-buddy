@@ -12,8 +12,9 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { splitNames } from '@/utils/nameHelpers';
+import { NotificationAutoCreator } from '@/features/notifications/utils/notificationAutoCreator';
 import { useEvictionReasons } from '@/hooks/useEvictionReasons';
+import { splitNames } from '@/utils/nameHelpers';
 
 const CadastrarContrato = () => {
   // Buscar motivos de desocupação ativos
@@ -357,15 +358,33 @@ const CadastrarContrato = () => {
           throw error;
         }
 
+        // Buscar o contrato criado para obter o ID
+        const { data: createdContract } = await supabase
+          .from('saved_terms')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('title', contractData.title)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (createdContract) {
+          await NotificationAutoCreator.onContractCreated(
+            createdContract.id,
+            data.numeroContrato || 'N/A'
+          );
+        }
+
         toast.success('Contrato cadastrado com sucesso!');
       }
 
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro completo ao cadastrar contrato:', error);
+      const errorMessage = error?.message || error?.error?.message || 'Erro desconhecido ao cadastrar contrato';
       toast.error(
-        isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao cadastrar contrato'
+        isEditMode ? `Erro ao atualizar contrato: ${errorMessage}` : `Erro ao cadastrar contrato: ${errorMessage}`
       );
     } finally {
       setIsSubmitting(false);

@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { X } from '@/utils/iconMapper';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { X, Search } from '@/utils/iconMapper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -23,9 +23,35 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Busca automática com debounce
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      onSearch('');
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        await onSearch(searchTerm.trim());
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      setIsSearching(false);
+    };
+  }, [searchTerm, onSearch]);
 
   const handleSearch = useCallback(async () => {
-    if (!searchTerm.trim()) return;
+    if (!searchTerm.trim()) {
+      onSearch('');
+      return;
+    }
 
     setIsSearching(true);
     try {
@@ -52,52 +78,79 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
   const hasResults = useMemo(() => resultsCount > 0, [resultsCount]);
 
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      <div className="relative flex-1">
+    <div className={`relative ${className}`}>
+      <div 
+        className={`
+          relative flex items-center gap-2
+          glass-card-enhanced rounded-xl
+          border transition-all duration-200
+          ${isFocused 
+            ? 'border-purple-400/50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/20' 
+            : 'border-white/20 hover:border-white/30'
+          }
+        `}
+      >
+        {/* Ícone de busca */}
+        <div className="absolute left-4 z-10 pointer-events-none">
+          <Search 
+            className={`h-5 w-5 transition-colors duration-300 ${
+              isFocused ? 'text-purple-500' : 'text-neutral-400'
+            }`} 
+          />
+        </div>
+
+        {/* Input */}
         <Input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyPress={handleKeyPress}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="pr-10"
+          className={`
+            flex-1 pl-12 pr-12 h-12
+            bg-transparent border-0
+            focus-visible:ring-0 focus-visible:ring-offset-0
+            placeholder:text-neutral-400
+            text-neutral-700 font-medium
+          `}
           disabled={isLoading}
         />
+
+        {/* Botão de limpar */}
         {searchTerm && (
           <Button
             variant="ghost"
             size="sm"
             onClick={handleClear}
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+            className="absolute right-12 h-8 w-8 p-0 rounded-lg hover:bg-white/50 transition-all duration-200"
+            aria-label="Limpar busca"
           >
-            <X className="h-3 w-3" />
+            <X className="h-4 w-4 text-neutral-500" />
           </Button>
+        )}
+
+        {/* Indicador de busca */}
+        {isSearching && (
+          <div className="absolute right-12 flex items-center">
+            <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          </div>
         )}
       </div>
 
-      <Button
-        onClick={handleSearch}
-        disabled={!searchTerm.trim() || isLoading || isSearching}
-        className="relative px-4 py-2 rounded-xl transition-all duration-700 overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient text-white shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-transparent before:to-white/20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-3000 backdrop-blur-sm border border-white/20"
-      >
-        {isSearching ? (
-          <div className="flex items-center space-x-2 relative z-10">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span className="relative animate-gradient-text-button">Buscando...</span>
-          </div>
-        ) : (
-          <span className="relative z-10">
-            <span className="relative">
-              <span className="absolute inset-0 blur-sm opacity-60 bg-white/60 animate-slow-pulse"></span>
-              <span className="relative animate-gradient-text-button">Buscar</span>
-            </span>
-          </span>
-        )}
-      </Button>
-
+      {/* Badge de resultados */}
       {showResultsCount && hasResults && (
-        <Badge variant="secondary" className="ml-2">
-          {resultsCount} resultado{resultsCount !== 1 ? 's' : ''}
-        </Badge>
+        <div className="absolute -top-2 -right-2 z-20">
+          <Badge 
+            className="
+              bg-gradient-to-r from-purple-500 to-pink-500 
+              text-white border-0 shadow-lg
+              px-3 py-1 text-xs font-semibold
+            "
+          >
+            {resultsCount} {resultsCount === 1 ? 'resultado' : 'resultados'}
+          </Badge>
+        </div>
       )}
     </div>
   );

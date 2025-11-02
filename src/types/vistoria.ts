@@ -33,6 +33,9 @@ export interface DadosVistoria {
   locatario: string;
   endereco: string;
   dataVistoria: string;
+  tipoVistoria?: 'inicial' | 'final' | 'vistoria' | 'revistoria';
+  responsavel?: string;
+  observacoes?: string;
 }
 
 export interface VistoriaAnalise {

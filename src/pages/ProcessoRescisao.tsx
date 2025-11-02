@@ -103,7 +103,7 @@ const ProcessoRescisao = () => {
   }, [contratoId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800 relative overflow-hidden p-6">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-800 via-neutral-900 to-neutral-800 relative p-6">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
@@ -141,7 +141,7 @@ const ProcessoRescisao = () => {
           {processos.map((processo) => (
             <Card
               key={processo.id}
-              className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-200"
+              className="bg-white/10 border-white/20 hover:bg-white/15 transition-all duration-200"
             >
               <CardHeader>
                 <div className="flex items-center gap-3">

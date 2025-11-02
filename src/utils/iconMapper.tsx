@@ -244,6 +244,7 @@ export const SearchCheck = withNeutralColor(
 export const Filter = withNeutralColor(LucideIcons.Filter, 'Filter');
 export const ZoomIn = withNeutralColor(LucideIcons.ZoomIn, 'ZoomIn');
 export const ZoomOut = withNeutralColor(LucideIcons.ZoomOut, 'ZoomOut');
+export const Tag = withNeutralColor(LucideIcons.Tag, 'Tag');
 
 // Ações Gerais
 export const Plus = withNeutralColor(LucideIcons.Plus, 'Plus');
@@ -484,6 +485,7 @@ export const iconMapper = {
   Filter,
   ZoomIn,
   ZoomOut,
+  Tag,
 
   // Ações Gerais
   Plus,

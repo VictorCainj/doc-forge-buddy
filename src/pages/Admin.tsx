@@ -92,16 +92,16 @@ const Admin = () => {
   ];
 
   return (
-    <div className="min-h-screen premium-gradient-bg">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-purple-50/30">
       <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Cabeçalho Moderno */}
         <div className="mb-10">
           <div className="flex flex-col items-center gap-4 mb-4">
-            <div className="icon-container w-14 h-14 bg-neutral-200 dark:bg-neutral-700 rounded-2xl flex items-center justify-center scale-on-hover">
+            <div className="icon-container w-14 h-14 bg-neutral-200 dark:bg-neutral-700 rounded-2xl flex items-center justify-center shadow-lg">
               <Shield className="h-7 w-7 text-neutral-700 dark:text-neutral-300" />
             </div>
             <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight animate-gradient-text">
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Painel de Administração
               </h1>
               <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
@@ -122,12 +122,12 @@ const Admin = () => {
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Efeito de brilho sutil no hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 -z-0" />
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div
-                      className={`icon-container p-3 rounded-xl ${stat.bgColor} transition-transform duration-300`}
+                      className={`icon-container p-3 rounded-xl ${stat.bgColor} transition-transform duration-200`}
                     >
                       <Icon className={`h-5 w-5 ${stat.color}`} />
                     </div>
@@ -204,97 +204,47 @@ const Admin = () => {
 
           <TabsContent
             value="users"
-            className="space-y-4 animate-in fade-in-50 duration-300"
+            className="space-y-4"
           >
             <UserManagement />
           </TabsContent>
 
           <TabsContent
             value="motivos"
-            className="space-y-4 animate-in fade-in-50 duration-300"
+            className="space-y-4"
           >
             <EvictionReasonsManagement />
           </TabsContent>
 
           <TabsContent
             value="vistorias"
-            className="space-y-4 animate-in fade-in-50 duration-300"
+            className="space-y-4"
           >
             <VistoriaAnalisesPanel />
           </TabsContent>
 
           <TabsContent
             value="cleanup"
-            className="space-y-4 animate-in fade-in-50 duration-300"
+            className="space-y-4"
           >
             <CleanupDuplicatesPanel />
           </TabsContent>
 
           <TabsContent
             value="audit"
-            className="space-y-4 animate-in fade-in-50 duration-300"
+            className="space-y-4"
           >
             <AuditLogsViewer />
           </TabsContent>
 
           <TabsContent
             value="contracts"
-            className="space-y-4 animate-in fade-in-50 duration-300"
+            className="space-y-4"
           >
             <ContractsManagement />
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Estilos personalizados para animações */}
-      <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes gradient-shift {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-        @keyframes fadeInScale {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-in {
-          animation: fadeInUp 0.3s ease-out;
-        }
-        .animate-gradient-text {
-          background: linear-gradient(
-            90deg,
-            #3b82f6 0%,
-            #8b5cf6 25%,
-            #ec4899 50%,
-            #f59e0b 75%,
-            #3b82f6 100%
-          );
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: gradient-shift 3s ease infinite, fadeInScale 0.6s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

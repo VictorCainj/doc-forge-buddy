@@ -14,6 +14,7 @@ import PageLoader from '@/components/PageLoader';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
 import { prefetchRouteModules } from '@/utils/prefetchRoutes';
+import { setNotificationQueryClient } from '@/features/notifications/utils/notificationAutoCreator';
 
 // Lazy load de páginas para code splitting
 // Páginas críticas (carregadas primeiro)
@@ -42,6 +43,8 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Tarefas = lazy(() => import('./pages/Tarefas'));
 
 const DashboardDesocupacao = lazy(() => import('./pages/DashboardDesocupacao'));
+
+const Notificacoes = lazy(() => import('./pages/Notificacoes'));
 
 /**
  * Configuração otimizada do React Query para performance instantânea
@@ -174,6 +177,7 @@ const AnimatedAppRoutes = () => {
           path="/dashboard-desocupacao"
           element={renderProtected(<DashboardDesocupacao />)}
         />
+        <Route path="/notificacoes" element={renderProtected(<Notificacoes />)} />
         <Route path="/admin" element={renderAdmin(<Admin />)} />
 
         {/* Rota 404 */}
@@ -186,6 +190,8 @@ const AnimatedAppRoutes = () => {
 const App = () => {
   useEffect(() => {
     prefetchRouteModules();
+    // Configurar queryClient para notificações
+    setNotificationQueryClient(queryClient);
   }, []);
 
   return (

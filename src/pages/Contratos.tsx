@@ -24,6 +24,8 @@ import { TemplateProcessor } from '@/utils/templateProcessor';
 import { Contract } from '@/types/contract';
 import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
 import { processTemplate } from '@/shared/template-processing';
+import { NotificationAutoCreator } from '@/features/notifications/utils/notificationAutoCreator';
+import { supabase } from '@/integrations/supabase/client';
 import {
   NOTIFICACAO_AGENDAMENTO_TEMPLATE,
   EMAIL_CONVITE_VISTORIA_TEMPLATE,
@@ -36,11 +38,13 @@ import { splitNames } from '@/utils/nameHelpers';
 import { useContractReducer } from '@/features/contracts/hooks/useContractReducer';
 import OptimizedSearch from '@/components/ui/optimized-search';
 import { useAuth } from '@/hooks/useAuth';
+import { useContractFavorites } from '@/hooks/useContractFavorites';
+import { useContractTags } from '@/hooks/useContractTags';
+import { usePreloadContracts } from '@/hooks/usePreloadContracts';
 import { exportContractsToExcel } from '@/utils/exportContractsToExcel';
 import { createContractIndex, filterContractsByDate } from '@/utils/contractIndex';
-import { usePreloadContracts } from '@/hooks/usePreloadContracts';
 import { useDebouncedCallback } from '@/utils/debounce';
-import { ContractStats } from '@/features/contracts/components/ContractStats';
+import { Star, Tag } from '@/utils/iconMapper';
 
 // Lazy load de modals para code splitting
 const ContractModals = lazy(() => import('@/features/contracts/components').then(m => ({ default: m.ContractModals })));
@@ -62,6 +66,13 @@ const Contratos = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string>('');
+
+  // Hooks de favoritos e tags
+  const { favoritesSet, isFavorite } = useContractFavorites();
+  const { getAllTags, getContractTags } = useContractTags();
+  const allTags = getAllTags();
   
   // Pré-carregamento de contratos em background
   usePreloadContracts({
@@ -106,18 +117,26 @@ const Contratos = () => {
     return createContractIndex(contracts);
   }, [contracts]);
 
-  // Contratos exibidos (filtro de mês/ano, busca ou paginação normal) - ULTRA OTIMIZADO
+  // Contratos exibidos (filtro de mês/ano, busca, favoritos, tags ou paginação normal) - ULTRA OTIMIZADO
   const displayedContracts = useMemo(() => {
-    // Early return para casos simples
-    if (!selectedMonth && !selectedYear && !hasSearched) {
-      return contracts;
-    }
-
     let contractsToDisplay = contracts;
 
     // Aplicar filtro de busca primeiro
     if (hasSearched && searchResults.length > 0) {
       contractsToDisplay = searchResults;
+    }
+
+    // Aplicar filtro de favoritos
+    if (showFavoritesOnly) {
+      contractsToDisplay = contractsToDisplay.filter((c) => isFavorite(c.id));
+    }
+
+    // Aplicar filtro de tags
+    if (selectedTagFilter) {
+      contractsToDisplay = contractsToDisplay.filter((c) => {
+        const contractTags = getContractTags(c.id);
+        return contractTags.some((t) => t.tag_name.toLowerCase() === selectedTagFilter.toLowerCase());
+      });
     }
 
     // Aplicar filtro de mês e/ou ano usando índice (busca O(1))
@@ -126,17 +145,18 @@ const Contratos = () => {
       const year = selectedYear ? parseInt(selectedYear) : undefined;
       const filtered = filterContractsByDate(contractIndex, month, year);
       
-      // Se há busca, filtrar apenas os resultados da busca
-      if (hasSearched && searchResults.length > 0) {
-        const filteredIds = new Set(filtered.map(c => c.id));
-        contractsToDisplay = contractsToDisplay.filter(c => filteredIds.has(c.id));
-      } else {
-        contractsToDisplay = filtered;
-      }
+      // Se há outros filtros, filtrar apenas os resultados já filtrados
+      const filteredIds = new Set(filtered.map(c => c.id));
+      contractsToDisplay = contractsToDisplay.filter(c => filteredIds.has(c.id));
+    }
+
+    // Early return para casos simples (sem filtros)
+    if (!selectedMonth && !selectedYear && !hasSearched && !showFavoritesOnly && !selectedTagFilter) {
+      return contracts;
     }
 
     return contractsToDisplay;
-  }, [selectedMonth, selectedYear, hasSearched, searchResults, contracts, contractIndex]);
+  }, [selectedMonth, selectedYear, hasSearched, searchResults, contracts, contractIndex, showFavoritesOnly, selectedTagFilter, isFavorite, getContractTags]);
 
   // ============================================================
   // DOCUMENT GENERATION HANDLERS
@@ -326,7 +346,7 @@ const Contratos = () => {
   // MODAL HANDLERS
   // ============================================================
 
-  const handleGenerateAgendamento = useCallback(() => {
+  const handleGenerateAgendamento = useCallback(async () => {
     if (
       !state.selectedContract ||
       !state.formData.dataVistoria ||
@@ -375,6 +395,55 @@ const Contratos = () => {
       enhancedData
     );
     const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${state.selectedContract.title}`;
+
+    // Registrar agendamento na tabela vistoria_analises e criar notificação
+    try {
+      const contractNumber = state.selectedContract.form_data?.numeroContrato || 'N/A';
+      // Usar a data formatada ou a data original se não houver formatação
+      const vistoriaDate = dataVistoriaFormatada || state.formData.dataVistoria;
+      const vistoriaType = state.formData.tipoVistoria === 'revistoria' ? 'revistoria' : 'vistoria final';
+      
+      // Preparar dados da vistoria para salvar no banco
+      const dadosVistoria = {
+        locatario: state.selectedContract.form_data?.nomeLocatario || '',
+        endereco: state.selectedContract.form_data?.enderecoImovel || '',
+        dataVistoria: state.formData.dataVistoria, // Data no formato ISO (YYYY-MM-DD)
+        tipoVistoria: state.formData.tipoVistoria === 'revistoria' ? 'revistoria' : 'final', // Garantir que está no formato correto
+        responsavel: enhancedData.nomeVistoriador || 'David Issa',
+        observacoes: `Vistoria agendada para ${dataVistoriaFormatada} às ${state.formData.horaVistoria}`,
+      };
+
+      // Criar entrada na tabela vistoria_analises para registrar o agendamento
+      const { data: vistoriaData, error: vistoriaError } = await supabase
+        .from('vistoria_analises')
+        .insert({
+          title: `Agendamento ${tipoVistoriaTexto} - ${contractNumber}`,
+          contract_id: state.selectedContract.id,
+          dados_vistoria: dadosVistoria,
+          apontamentos: [], // Ainda sem apontamentos, será preenchido quando a vistoria for realizada
+          user_id: user?.id || null,
+        })
+        .select()
+        .single();
+
+      if (vistoriaError) {
+        console.error('Erro ao registrar agendamento no banco:', vistoriaError);
+        // Continuar mesmo se falhar o registro no banco
+      } else {
+        console.log('Agendamento registrado no banco:', vistoriaData.id);
+        
+        // Criar notificação com o ID real da vistoria
+        await NotificationAutoCreator.onVistoriaScheduled(
+          vistoriaData.id,
+          state.selectedContract.id,
+          contractNumber,
+          vistoriaDate,
+          vistoriaType
+        );
+      }
+    } catch (error) {
+      console.warn('Erro ao criar notificação de vistoria agendada (não crítico):', error);
+    }
 
     // Gerar também o e-mail de convite para Vistoria Final e Revistoria
     let secondaryTemplate: string | null = null;
@@ -661,7 +730,7 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen ai-gradient-bg relative">
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-purple-50/30 relative">
 
         {/* Conteúdo principal com z-index */}
         <div className="relative z-10">
@@ -672,14 +741,13 @@ const Contratos = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <div className="flex items-center gap-4">
                     <div className="relative group">
-                      <div className="icon-container w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center scale-on-hover glow-border shadow-lg">
+                      <div className="icon-container w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
                         <FileText className="h-8 w-8 text-white" />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-300 -z-10" />
                     </div>
                     <div>
-                      <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                        <span className="animate-gradient-text">Contratos</span>
+                      <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        Contratos
                       </h1>
                       <p className="text-neutral-600 mt-1.5 text-sm sm:text-base font-medium">
                         Gerencie todos os contratos de locação
@@ -694,8 +762,58 @@ const Contratos = () => {
                       showResultsCount={true}
                       resultsCount={totalResults}
                       isLoading={isSearching}
-                      className="w-80 glass-card-enhanced rounded-xl"
+                      className="w-full sm:w-80"
                     />
+
+                    {/* Filtro de Favoritos */}
+                    <Button
+                      variant={showFavoritesOnly ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                      className={`h-12 px-4 glass-card-enhanced rounded-xl border transition-all duration-200 font-medium ${
+                        showFavoritesOnly
+                          ? 'border-amber-300/50 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          : 'border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+                      }`}
+                      aria-label={showFavoritesOnly ? 'Mostrar todos os contratos' : 'Mostrar apenas favoritos'}
+                    >
+                      <Star className={`h-4 w-4 mr-2 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                      <span className="hidden sm:inline">Favoritos</span>
+                    </Button>
+
+                    {/* Filtro de Tags */}
+                    {allTags.length > 0 && (
+                      <Select value={selectedTagFilter} onValueChange={setSelectedTagFilter}>
+                        <SelectTrigger 
+                          className="w-[140px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium"
+                          aria-label="Filtrar por tag"
+                        >
+                          <Tag className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="Tags" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card-enhanced border-white/20">
+                          <SelectItem 
+                            value="" 
+                            className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer"
+                          >
+                            Todas as tags
+                          </SelectItem>
+                          {allTags.map((tag) => (
+                            <SelectItem
+                              key={tag.id}
+                              value={tag.tag_name}
+                              className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+                            >
+                              <div 
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: tag.color }}
+                              />
+                              {tag.tag_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
 
                     <div className="flex items-center gap-2">
                       <Select
@@ -703,17 +821,17 @@ const Contratos = () => {
                         onValueChange={debouncedSetMonth}
                       >
                         <SelectTrigger 
-                          className="w-[140px] h-10 ai-select-glass rounded-xl font-medium"
+                          className="w-[140px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium"
                           aria-label="Selecione o mês"
                         >
                           <SelectValue placeholder="Mês" />
                         </SelectTrigger>
-                        <SelectContent className="glass-card-enhanced">
+                        <SelectContent className="glass-card-enhanced border-white/20">
                           {meses.map((mes, index) => (
                             <SelectItem
                               key={index}
                               value={(index + 1).toString()}
-                              className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200"
+                              className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer"
                             >
                               {mes}
                             </SelectItem>
@@ -726,67 +844,75 @@ const Contratos = () => {
                         onValueChange={debouncedSetYear}
                       >
                         <SelectTrigger 
-                          className="w-[120px] h-10 ai-select-glass rounded-xl font-medium"
+                          className="w-[120px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium"
                           aria-label="Selecione o ano"
                         >
                           <SelectValue placeholder="Ano" />
                         </SelectTrigger>
-                        <SelectContent className="glass-card-enhanced">
+                        <SelectContent className="glass-card-enhanced border-white/20">
                           {availableYears.map((year) => (
-                            <SelectItem key={year} value={year.toString()} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
+                            <SelectItem 
+                              key={year} 
+                              value={year.toString()} 
+                              className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer"
+                            >
                               {year}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
 
-                      {(selectedMonth || selectedYear) && (
+                      {(selectedMonth || selectedYear || showFavoritesOnly || selectedTagFilter) && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={handleClearDateFilter}
-                          className="h-10 px-4 text-neutral-600 hover:text-neutral-900 hover:bg-white/80 rounded-xl transition-all duration-300"
-                          aria-label="Limpar filtro de data"
+                          onClick={() => {
+                            handleClearDateFilter();
+                            setShowFavoritesOnly(false);
+                            setSelectedTagFilter('');
+                          }}
+                          className="h-12 px-4 glass-card-enhanced rounded-xl border border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50 transition-all duration-200 font-medium"
+                          aria-label="Limpar todos os filtros"
                         >
-                          Limpar
+                          Limpar Filtros
                         </Button>
                       )}
                     </div>
 
                     {hasSearched && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={clearSearch}
-                        className="inline-flex items-center gap-2 px-4 py-2 h-10 rounded-xl glass-card-enhanced hover:bg-white/90 text-neutral-700 transition-all duration-300"
+                        className="h-12 px-4 glass-card-enhanced rounded-xl border border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50 transition-all duration-300 font-medium"
                       >
-                        Limpar
+                        Limpar Busca
                       </Button>
                     )}
 
                     {displayedContracts.length > 0 && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={handleExportToExcel}
                         disabled={isExporting || displayedContracts.length === 0}
-                        className="inline-flex items-center gap-2 px-4 py-2 h-10 rounded-xl glass-card-enhanced hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 text-emerald-700 border-emerald-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-12 px-4 glass-card-enhanced rounded-xl border border-emerald-300/50 hover:border-emerald-400/50 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                         title={`Exportar ${displayedContracts.length} contrato(s) para Excel`}
                       >
                         {isExporting ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-300 border-t-emerald-700"></div>
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></div>
                             <span className="hidden sm:inline">
                               Exportando...
                             </span>
-                          </>
+                          </div>
                         ) : (
-                          <>
+                          <div className="flex items-center gap-2">
                             <Download className="h-4 w-4" />
                             <span className="hidden sm:inline">
                               Exportar Excel
                             </span>
-                          </>
+                          </div>
                         )}
                       </Button>
                     )}
@@ -803,36 +929,29 @@ const Contratos = () => {
         </div>
 
           {/* Welcome Section Reformulada */}
-          <div className="max-w-[1400px] mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div className="gradient-border-animated">
-              <div className="glass-card-enhanced flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 sm:gap-8 p-8 sm:p-10 rounded-[14px]">
-                <div className="flex flex-col gap-4">
-                  <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900">
-                    Bem-vindo,{' '}
-                    <span className="animate-gradient-text inline-block text-4xl sm:text-5xl">
-                      {profile?.full_name ||
-                        user?.email?.split('@')[0] ||
-                        'Usuário'}
-                    </span>
-                  </h2>
-                  <p className="text-lg sm:text-xl text-neutral-700 font-semibold">
-                    Com quais contratos iremos trabalhar hoje?
+          <div className="max-w-[1400px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="glass-card-enhanced flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 rounded-xl">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-lg sm:text-xl font-semibold text-neutral-900">
+                  Bem-vindo,{' '}
+                  <span className="inline-block text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    {profile?.full_name ||
+                      user?.email?.split('@')[0] ||
+                      'Usuário'}
+                  </span>
+                </h2>
+                <p className="text-sm sm:text-base text-neutral-600">
+                  Com quais contratos iremos trabalhar hoje?
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-neutral-500 uppercase tracking-wider font-medium">
+                  Hoje
+                </p>
+                <div className="bg-white/90 px-4 py-2 rounded-lg border border-white/50">
+                  <p className="text-sm sm:text-base font-semibold text-neutral-700">
+                    {formatDateBrazilian(new Date())}
                   </p>
-                </div>
-                <div className="flex flex-col items-start sm:items-end gap-2">
-                  <p className="text-sm sm:text-base text-neutral-600 font-semibold uppercase tracking-wider">
-                    Hoje
-                  </p>
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-xl blur-lg opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
-                    <div className="relative bg-white/90 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/50 shadow-lg">
-                      <p className="text-xl sm:text-2xl font-bold relative">
-                        <span className="animate-gradient-text text-2xl sm:text-3xl">
-                          {formatDateBrazilian(new Date())}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -840,9 +959,6 @@ const Contratos = () => {
 
           {/* Main Content */}
           <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
-            {/* Estatísticas de Contratos */}
-            <ContractStats contracts={displayedContracts} />
-            
             {/* Lista de Contratos */}
             <ContractList
               contracts={displayedContracts}

@@ -13,8 +13,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ContractFormData } from '@/types/contract';
-import { splitNames } from '@/utils/nameHelpers';
+import { NotificationAutoCreator } from '@/features/notifications/utils/notificationAutoCreator';
 import { useEvictionReasons } from '@/hooks/useEvictionReasons';
+import { splitNames } from '@/utils/nameHelpers';
 
 const EditarContrato = () => {
   // Buscar motivos de desocupação ativos
@@ -356,11 +357,24 @@ const EditarContrato = () => {
 
       if (error) throw error;
 
+      // Criar notificação de atualização (não bloqueia se falhar)
+      try {
+        await NotificationAutoCreator.onContractUpdated(
+          contractId,
+          data.numeroContrato || 'N/A'
+        );
+      } catch (notificationError) {
+        console.warn('Erro ao criar notificação (não crítico):', notificationError);
+        // Continuar mesmo se a notificação falhar
+      }
+
       toast.success('Contrato atualizado com sucesso!');
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
-    } catch {
-      toast.error('Erro ao atualizar contrato');
+    } catch (error: any) {
+      console.error('Erro ao atualizar contrato:', error);
+      const errorMessage = error?.message || error?.error?.message || 'Erro desconhecido ao atualizar contrato';
+      toast.error(`Erro ao atualizar contrato: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

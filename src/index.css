@@ -207,10 +207,10 @@ All colors MUST be HSL.
   * {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   /* GPU acceleration para elementos animados */
   button,
-  [role="button"],
+  [role='button'],
   .transition-all,
   .transition-transform {
     transform: translateZ(0);
@@ -230,7 +230,7 @@ All colors MUST be HSL.
   /* Remove blur de animações após conclusão - força nitidez máxima */
   /* Otimizado: removido * global para melhor performance */
   button,
-  [role="button"],
+  [role='button'],
   .transition-all,
   .transition-transform,
   .motion-reduce\:transition-none {
@@ -291,13 +291,15 @@ All colors MUST be HSL.
     will-change: filter;
     transform: translateZ(0);
   }
-  
+
   /* Otimização de métricas cards - transições mais rápidas */
   .metric-card {
     background: var(--gradient-secondary);
     border: 1px solid hsl(var(--border));
     box-shadow: var(--shadow-card);
-    transition: transform 75ms ease, box-shadow 75ms ease;
+    transition:
+      transform 75ms ease,
+      box-shadow 75ms ease;
   }
 
   .metric-card:hover {
@@ -320,12 +322,7 @@ All colors MUST be HSL.
 
   /* Gradiente estático em textos - SEM animação persistente */
   .animate-gradient-text {
-    background: linear-gradient(
-      90deg,
-      #a855f7 0%,
-      #ec4899 50%,
-      #f43f5e 100%
-    );
+    background: linear-gradient(90deg, #a855f7 0%, #ec4899 50%, #f43f5e 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -835,15 +832,15 @@ All colors MUST be HSL.
   .transition-instant {
     transition: all 0ms ease;
   }
-  
+
   .transition-fast {
     transition: all 75ms ease;
   }
-  
+
   .transition-base {
     transition: all 100ms ease;
   }
-  
+
   .gpu-accelerate {
     transform: translateZ(0);
     backface-visibility: hidden;
@@ -905,9 +902,17 @@ All colors MUST be HSL.
     content: '';
     position: absolute;
     inset: 0;
-    background: 
-      radial-gradient(circle at 20% 50%, rgba(148, 163, 184, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(148, 163, 184, 0.06) 0%, transparent 50%);
+    background:
+      radial-gradient(
+        circle at 20% 50%,
+        rgba(148, 163, 184, 0.08) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 80%,
+        rgba(148, 163, 184, 0.06) 0%,
+        transparent 50%
+      );
     pointer-events: none;
   }
 
@@ -923,7 +928,8 @@ All colors MUST be HSL.
 
   /* Animações keyframes - Otimizadas para performance */
   @keyframes gradient-flow {
-    0%, 100% {
+    0%,
+    100% {
       background-position: 0% 50%;
     }
     50% {
@@ -932,13 +938,18 @@ All colors MUST be HSL.
   }
 
   @keyframes glow-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.5;
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.2);
+      box-shadow:
+        0 0 20px rgba(59, 130, 246, 0.3),
+        0 0 40px rgba(139, 92, 246, 0.2);
     }
     50% {
       opacity: 1;
-      box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.4);
+      box-shadow:
+        0 0 30px rgba(59, 130, 246, 0.5),
+        0 0 60px rgba(139, 92, 246, 0.4);
     }
   }
 
@@ -957,7 +968,7 @@ All colors MUST be HSL.
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 
+    box-shadow:
       0 8px 32px 0 rgba(31, 38, 135, 0.15),
       0 0 0 1px rgba(255, 255, 255, 0.2) inset;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -966,7 +977,7 @@ All colors MUST be HSL.
   .glass-card-enhanced:hover {
     background: rgba(255, 255, 255, 0.9);
     transform: translateY(-4px);
-    box-shadow: 
+    box-shadow:
       0 16px 48px 0 rgba(31, 38, 135, 0.25),
       0 0 0 1px rgba(255, 255, 255, 0.3) inset,
       0 0 40px rgba(59, 130, 246, 0.2);
@@ -998,25 +1009,41 @@ All colors MUST be HSL.
 
   /* Cards com gradientes únicos - Cores neutras */
   .ai-card-blue {
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.98) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.95) 0%,
+      rgba(241, 245, 249, 0.98) 100%
+    );
     border: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   }
 
   .ai-card-purple {
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.98) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.95) 0%,
+      rgba(241, 245, 249, 0.98) 100%
+    );
     border: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   }
 
   .ai-card-cyan {
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.98) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.95) 0%,
+      rgba(241, 245, 249, 0.98) 100%
+    );
     border: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   }
 
   .ai-card-teal {
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.98) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.95) 0%,
+      rgba(241, 245, 249, 0.98) 100%
+    );
     border: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   }
@@ -1027,7 +1054,61 @@ All colors MUST be HSL.
   .ai-card-teal:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s ease;
+  }
+
+  /* Cards com gradientes por status */
+  .ai-card-green {
+    background: linear-gradient(
+      135deg,
+      rgba(236, 253, 245, 0.95) 0%,
+      rgba(209, 250, 229, 0.98) 100%
+    );
+    border: 1px solid rgba(167, 243, 208, 0.6);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+  }
+
+  .ai-card-yellow {
+    background: linear-gradient(
+      135deg,
+      rgba(254, 252, 232, 0.95) 0%,
+      rgba(254, 240, 138, 0.98) 100%
+    );
+    border: 1px solid rgba(253, 230, 138, 0.6);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.08);
+  }
+
+  .ai-card-red {
+    background: linear-gradient(
+      135deg,
+      rgba(254, 242, 242, 0.95) 0%,
+      rgba(254, 226, 226, 0.98) 100%
+    );
+    border: 1px solid rgba(252, 165, 165, 0.6);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.08);
+  }
+
+  .ai-card-orange {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 247, 237, 0.95) 0%,
+      rgba(254, 215, 170, 0.98) 100%
+    );
+    border: 1px solid rgba(253, 186, 116, 0.6);
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.08);
+  }
+
+  .ai-card-green:hover,
+  .ai-card-yellow:hover,
+  .ai-card-red:hover,
+  .ai-card-orange:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s ease;
   }
 
   /* Ícones com gradiente estático - SEM animação persistente */
@@ -1044,7 +1125,7 @@ All colors MUST be HSL.
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
+    box-shadow:
       0 4px 24px rgba(0, 0, 0, 0.06),
       0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   }
@@ -1097,12 +1178,24 @@ All colors MUST be HSL.
     }
   }
 
-  .fade-in-delay-1 { animation-delay: 0.1s; }
-  .fade-in-delay-2 { animation-delay: 0.2s; }
-  .fade-in-delay-3 { animation-delay: 0.3s; }
-  .fade-in-delay-4 { animation-delay: 0.4s; }
-  .fade-in-delay-5 { animation-delay: 0.5s; }
-  .fade-in-delay-6 { animation-delay: 0.6s; }
+  .fade-in-delay-1 {
+    animation-delay: 0.1s;
+  }
+  .fade-in-delay-2 {
+    animation-delay: 0.2s;
+  }
+  .fade-in-delay-3 {
+    animation-delay: 0.3s;
+  }
+  .fade-in-delay-4 {
+    animation-delay: 0.4s;
+  }
+  .fade-in-delay-5 {
+    animation-delay: 0.5s;
+  }
+  .fade-in-delay-6 {
+    animation-delay: 0.6s;
+  }
 
   /* Partículas decorativas flutuantes - Removidas para melhor performance */
   .ai-particle {
@@ -1121,7 +1214,9 @@ All colors MUST be HSL.
     border-radius: inherit;
     padding: 2px;
     background: linear-gradient(135deg, #a855f7, #ec4899, #f43f5e);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     opacity: 0;

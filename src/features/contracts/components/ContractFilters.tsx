@@ -47,16 +47,18 @@ export const ContractFilters = memo<ContractFiltersProps>(({
         {/* Filtro de Status */}
         {onStatusChange && (
           <Select value={statusFilter} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-[180px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <SelectValue placeholder="Status" />
+              </div>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="expired">Expirados</SelectItem>
-              <SelectItem value="cancelled">Cancelados</SelectItem>
+            <SelectContent className="glass-card-enhanced border-white/20">
+              <SelectItem value="all" className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer">Todos</SelectItem>
+              <SelectItem value="active" className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer">Ativos</SelectItem>
+              <SelectItem value="pending" className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer">Pendentes</SelectItem>
+              <SelectItem value="expired" className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer">Expirados</SelectItem>
+              <SelectItem value="cancelled" className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer">Cancelados</SelectItem>
             </SelectContent>
           </Select>
         )}
@@ -65,9 +67,10 @@ export const ContractFilters = memo<ContractFiltersProps>(({
         {hasActiveFilters && (
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onClearFilters}
             title="Limpar filtros"
+            className="h-12 px-4 glass-card-enhanced rounded-xl border border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50 transition-all duration-200 font-medium"
           >
             <X className="h-4 w-4" />
           </Button>

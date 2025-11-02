@@ -2,7 +2,7 @@ import React, { memo, useCallback, useMemo, useEffect, lazy, Suspense } from 're
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Edit, Search } from '@/utils/iconMapper';
+import { Plus, Edit, Search, Star } from '@/utils/iconMapper';
 import {
   FileText,
   User,
@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 import { Contract } from '@/types/contract';
 import { ContractBillsSection } from './ContractBillsSection';
+import { ContractStatusBadge } from './ContractStatusBadge';
+import { ContractTags } from './ContractTags';
+import { ContractCardSkeletonGrid } from './ContractCardSkeleton';
+import { useContractFavorites } from '@/hooks/useContractFavorites';
+import { getCardGradientClassByStatus } from '@/utils/contractGradients';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 // Lazy load de QuickActionsDropdown para code splitting
@@ -53,13 +58,7 @@ const isMultipleLocatarios = (nome?: string) => {
   return nome.includes(' e ') || nome.includes(' E ');
 };
 
-/**
- * Função para determinar a classe de gradiente baseada no índice - Cores mais neutras
- */
-const getCardGradientClass = (index: number): string => {
-  const gradients = ['ai-card-blue', 'ai-card-purple', 'ai-card-cyan', 'ai-card-teal'];
-  return gradients[index % gradients.length];
-};
+// Removido - agora usando getCardGradientClassByStatus
 
 /**
  * Item individual de contrato - memoizado para melhor performance
@@ -75,6 +74,8 @@ const ContractListItem = memo<{
   onJusBrasilSearch: (nomeCompleto: string) => void;
   onEdit: (contractId: string) => void;
 }>(({ contract, index, onGenerateDocument, onJusBrasilSearch, onEdit }) => {
+  const { isFavorite, toggleFavorite } = useContractFavorites();
+
   const handleEdit = useCallback(() => {
     onEdit(contract.id);
   }, [contract.id, onEdit]);
@@ -95,36 +96,100 @@ const ContractListItem = memo<{
     [contract.form_data.nomeLocatario, onJusBrasilSearch]
   );
 
-  const gradientClass = getCardGradientClass(index);
+  const handleToggleFavorite = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      toggleFavorite(contract.id);
+    },
+    [contract.id, toggleFavorite]
+  );
+
+  // Se for favorito, usar laranja. Caso contrário, usar gradiente baseado em status ou neutro
+  const favorite = isFavorite(contract.id);
+  const gradientClass = favorite 
+    ? 'ai-card-orange' 
+    : getCardGradientClassByStatus(contract, index);
+
+  // Handler para clicar no header e navegar para edição
+  const handleHeaderClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Não navegar se clicar em botões ou tags
+      const target = e.target as HTMLElement;
+      if (
+        target.closest('button') ||
+        target.closest('[role="button"]') ||
+        target.closest('.tag-container')
+      ) {
+        return;
+      }
+      handleEdit();
+    },
+    [handleEdit]
+  );
 
   return (
-    <Card className={`glass-card-enhanced ${gradientClass} rounded-2xl overflow-visible min-h-fit transition-all duration-500`}>
-      <CardContent className="p-6 relative z-10">
-        {/* Header do Contrato */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex items-center justify-center flex-1">
-            <div className="text-center">
-              <h3 className="font-bold text-xl text-neutral-900 mb-1">
-                Contrato{' '}
-                <span className="font-mono text-2xl animate-gradient-text">
-                  {contract.form_data.numeroContrato || '[NÚMERO]'}
-                </span>
-              </h3>
-              <p className="text-xs text-neutral-500 font-mono">
-                ID: {contract.id.slice(0, 8)}...
-              </p>
+    <div className="relative fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
+      {/* Tags acima do card */}
+      <div className="mb-2 px-1 flex flex-wrap gap-1.5 justify-start tag-container">
+        <ContractTags contractId={contract.id} contract={contract} maxVisible={3} />
+      </div>
+
+      <Card className={`glass-card-enhanced ${gradientClass} rounded-2xl overflow-visible min-h-fit transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] group`}>
+        <CardContent className="p-6 relative z-10">
+          {/* Header do Contrato - Clicável */}
+          <div 
+            className="flex items-start justify-between mb-5 cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={handleHeaderClick}
+          >
+            <div className="flex items-center justify-center flex-1">
+              <div className="text-center">
+                <h3 className="font-bold text-xl text-neutral-900 mb-1 group-hover:text-purple-600 transition-colors">
+                  Contrato{' '}
+                  <span className="font-mono text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    {contract.form_data.numeroContrato || '[NÚMERO]'}
+                  </span>
+                </h3>
+                <p className="text-xs text-neutral-500 font-mono">
+                  ID: {contract.id.slice(0, 8)}...
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {/* Badge de Status */}
+              <ContractStatusBadge contract={contract} className="hidden sm:flex" />
+              
+              {/* Botão de Favorito */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-9 w-9 p-0 flex-shrink-0 rounded-lg transition-all duration-200 ${
+                  favorite
+                    ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
+                    : 'hover:bg-white/80 hover:text-amber-500'
+                }`}
+                onClick={handleToggleFavorite}
+                aria-label={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              >
+                <Star className={`h-4 w-4 transition-all duration-200 ${favorite ? 'fill-current' : ''}`} />
+              </Button>
+
+              {/* Botão de Editar */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0 flex-shrink-0 rounded-lg hover:bg-white/80 transition-all duration-200"
+                onClick={handleEdit}
+                aria-label={`Editar contrato ${contract.form_data.numeroContrato}`}
+              >
+                <Edit className="h-4 w-4 icon-gradient" />
+              </Button>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 w-9 p-0 flex-shrink-0 rounded-lg hover:bg-white/80 hover:scale-110 transition-all duration-300"
-            onClick={handleEdit}
-            aria-label={`Editar contrato ${contract.form_data.numeroContrato}`}
-          >
-            <Edit className="h-4 w-4 icon-gradient" />
-          </Button>
-        </div>
+
+          {/* Badge de Status Mobile */}
+          <div className="mb-3 sm:hidden">
+            <ContractStatusBadge contract={contract} />
+          </div>
 
         {/* Separador com gradiente */}
         <div className="relative mb-5">
@@ -132,7 +197,7 @@ const ContractListItem = memo<{
             <div className="w-full border-t border-neutral-200"></div>
           </div>
           <div className="relative flex justify-center">
-            <div className="bg-white/80 backdrop-blur-sm px-3">
+            <div className="bg-white/80 px-3">
               <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
             </div>
           </div>
@@ -147,13 +212,12 @@ const ContractListItem = memo<{
           <div className="space-y-3">
             <div className="flex items-start gap-3 group/item">
               <div className="relative">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-lg transition-transform duration-200 group-hover/item:scale-110">
                   <User
                     className="h-4 w-4 text-white"
                     strokeWidth={2.5}
                   />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-lg blur-md opacity-50 group-hover/item:opacity-70 transition-opacity duration-300 -z-10"></div>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1">
@@ -167,7 +231,7 @@ const ContractListItem = memo<{
                   </p>
                   <button
                     onClick={handleProprietarioSearch}
-                    className="opacity-0 group-hover/name:opacity-100 transition-all duration-300 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
+                    className="opacity-0 group-hover/name:opacity-100 transition-opacity duration-200 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
                     title="Buscar no JusBrasil"
                     aria-label={`Buscar ${contract.form_data.nomeProprietario} no JusBrasil`}
                   >
@@ -178,13 +242,12 @@ const ContractListItem = memo<{
             </div>
             <div className="flex items-start gap-3 group/item">
               <div className="relative">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 shadow-lg transition-transform duration-200 group-hover/item:scale-110">
                   <User2
                     className="h-4 w-4 text-white"
                     strokeWidth={2.5}
                   />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 rounded-lg blur-md opacity-50 group-hover/item:opacity-70 transition-opacity duration-300 -z-10"></div>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1">
@@ -198,7 +261,7 @@ const ContractListItem = memo<{
                   </p>
                   <button
                     onClick={handleLocatarioSearch}
-                    className="opacity-0 group-hover/name:opacity-100 transition-all duration-300 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
+                    className="opacity-0 group-hover/name:opacity-100 transition-opacity duration-200 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
                     title="Buscar no JusBrasil"
                     aria-label={`Buscar ${contract.form_data.nomeLocatario} no JusBrasil`}
                   >
@@ -217,8 +280,8 @@ const ContractListItem = memo<{
             Termos do Contrato
           </h4>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-md">
+            <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:border-purple-200 transition-all duration-200">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-md transition-transform duration-200 hover:scale-110">
                 <CalendarDays
                   className="h-4 w-4 text-white"
                   strokeWidth={2.5}
@@ -228,8 +291,8 @@ const ContractListItem = memo<{
                 {contract.form_data.dataInicioRescisao || '01/09/2026'}
               </span>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 shadow-md">
+            <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:border-pink-200 transition-all duration-200">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 shadow-md transition-transform duration-200 hover:scale-110">
                 <Clock
                   className="h-4 w-4 text-white"
                   strokeWidth={2.5}
@@ -248,8 +311,8 @@ const ContractListItem = memo<{
             <span className="w-1 h-4 bg-gradient-to-b from-neutral-400 to-neutral-500 rounded-full"></span>
             Localização
           </h4>
-          <div className="flex items-start gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-md flex-shrink-0">
+          <div className="flex items-start gap-3 p-3 bg-white/60 rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-md flex-shrink-0 transition-transform duration-200 hover:scale-110">
               <MapPin
                 className="h-4 w-4 text-white"
                 strokeWidth={2.5}
@@ -260,7 +323,7 @@ const ContractListItem = memo<{
                 Endereço
               </p>
               <p
-                className="text-sm font-semibold text-neutral-800 line-clamp-2 cursor-pointer hover:text-blue-600 hover:underline transition-all duration-300 leading-relaxed"
+                className="text-sm font-semibold text-neutral-800 line-clamp-2 cursor-pointer hover:text-blue-600 hover:underline transition-colors duration-200 leading-relaxed"
                 onClick={(e) => {
                   e.stopPropagation();
                   const endereco =
@@ -310,6 +373,7 @@ const ContractListItem = memo<{
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 });
 
@@ -369,26 +433,9 @@ export const ContractList = memo<ContractListProps>(
       [navigate]
     );
 
-    // Loading state
+    // Loading state - usar skeletons
     if (isLoading) {
-      return (
-        <Card className="glass-card-enhanced rounded-2xl">
-          <CardContent className="p-12">
-            <div className="text-center">
-              <div className="relative mx-auto mb-6 w-20 h-20 flex items-center justify-center">
-                <div className="p-4 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl shadow-lg animate-pulse">
-                  <FileText className="h-10 w-10 text-white" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
-              </div>
-              <p className="text-xl font-bold text-neutral-900 animate-gradient-text">
-                Carregando contratos...
-              </p>
-              <p className="text-sm text-neutral-600 mt-2 font-medium">Aguarde um momento</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
+      return <ContractCardSkeletonGrid count={6} />;
     }
 
     // Empty state
@@ -428,16 +475,24 @@ export const ContractList = memo<ContractListProps>(
     return (
       <>
         {/* Grid de Contratos - Otimizado com React.memo e lazy loading */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {contracts.map((contract, index) => (
-            <ContractListItem
+            <div
               key={contract.id}
-              contract={contract}
-              index={index}
-              onGenerateDocument={onGenerateDocument}
-              onJusBrasilSearch={handleJusBrasilSearch}
-              onEdit={handleEditContract}
-            />
+              className="fade-in-up opacity-0"
+              style={{ 
+                animationDelay: `${index * 50}ms`,
+                animationFillMode: 'forwards'
+              }}
+            >
+              <ContractListItem
+                contract={contract}
+                index={index}
+                onGenerateDocument={onGenerateDocument}
+                onJusBrasilSearch={handleJusBrasilSearch}
+                onEdit={handleEditContract}
+              />
+            </div>
           ))}
         </div>
 

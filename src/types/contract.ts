@@ -191,3 +191,31 @@ export interface BillStatus {
   notificacao_rescisao?: boolean;
   entrega_chaves?: boolean;
 }
+
+/**
+ * Tipo de status de contrato para badges e gradientes
+ */
+export type ContractStatusType = 'ativo' | 'pendente' | 'expirado' | 'rescisao';
+
+/**
+ * Interface para favorito de contrato
+ */
+export interface ContractFavorite {
+  id: string;
+  contract_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+/**
+ * Interface para tag de contrato
+ */
+export interface ContractTag {
+  id: string;
+  contract_id: string;
+  tag_name: string;
+  color: string;
+  user_id: string;
+  created_at: string;
+  is_automatic?: boolean; // Indica se a tag é gerada automaticamente
+}

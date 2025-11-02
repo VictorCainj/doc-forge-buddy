@@ -470,7 +470,7 @@ const Tarefas = () => {
 
           <TabsContent
             value={selectedTab}
-            className="mt-6 animate-in fade-in-50 duration-300"
+            className="mt-6"
           >
             {filteredTasks.length === 0 ? (
               <Card className="border-neutral-200 shadow-sm">

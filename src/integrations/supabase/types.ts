@@ -648,6 +648,12 @@ export type Database = {
           title: string;
           updated_at: string;
           user_id: string | null;
+          teve_vistoria: boolean | null;
+          teve_revistoria: boolean | null;
+          data_vistoria: string | null;
+          data_revistoria: string | null;
+          vistoria_id: string | null;
+          revistoria_id: string | null;
         };
         Insert: {
           content: string;
@@ -658,6 +664,12 @@ export type Database = {
           title: string;
           updated_at?: string;
           user_id?: string | null;
+          teve_vistoria?: boolean | null;
+          teve_revistoria?: boolean | null;
+          data_vistoria?: string | null;
+          data_revistoria?: string | null;
+          vistoria_id?: string | null;
+          revistoria_id?: string | null;
         };
         Update: {
           content?: string;
@@ -668,6 +680,12 @@ export type Database = {
           title?: string;
           updated_at?: string;
           user_id?: string | null;
+          teve_vistoria?: boolean | null;
+          teve_revistoria?: boolean | null;
+          data_vistoria?: string | null;
+          data_revistoria?: string | null;
+          vistoria_id?: string | null;
+          revistoria_id?: string | null;
         };
         Relationships: [];
       };
@@ -805,6 +823,56 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['user_id'];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message: string;
+          metadata: Json;
+          read: boolean;
+          read_at: string | null;
+          created_at: string;
+          expires_at: string | null;
+          priority: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message: string;
+          metadata?: Json;
+          read?: boolean;
+          read_at?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          priority?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          message?: string;
+          metadata?: Json;
+          read?: boolean;
+          read_at?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          priority?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
           },
         ];
       };
