@@ -50,7 +50,7 @@ const ActionCard = memo<ActionCardProps>(({ action, onClick }) => {
       onClick={onClick}
       disabled={action.disabled || action.loading}
       className={cn(
-        'group relative w-full flex items-center gap-3 bg-white p-4 rounded-xl',
+        'group relative w-full flex flex-col items-center justify-center gap-3 bg-white p-4 rounded-xl',
         'border border-neutral-200 transition-all duration-200',
         'hover:shadow-sm hover:border-neutral-300',
         colors.hover,
@@ -75,7 +75,7 @@ const ActionCard = memo<ActionCardProps>(({ action, onClick }) => {
       </div>
 
       {/* Label */}
-      <div className="flex-1 text-left min-w-0">
+      <div className="flex-1 text-center min-w-0 w-full">
         <span className={cn('text-sm font-medium block', colors.text)}>
           {action.shortLabel || action.label}
         </span>
@@ -84,28 +84,6 @@ const ActionCard = memo<ActionCardProps>(({ action, onClick }) => {
             {action.badge}
           </span>
         )}
-      </div>
-
-      {/* Indicador de hover sutil */}
-      <div
-        className={cn(
-          'absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-40',
-          'transition-opacity duration-200'
-        )}
-      >
-        <svg
-          className="h-4 w-4 text-neutral-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
       </div>
     </button>
   );

@@ -77,15 +77,20 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
       <Button
         onClick={handleSearch}
         disabled={!searchTerm.trim() || isLoading || isSearching}
-        className="px-4"
+        className="relative px-4 py-2 rounded-xl transition-all duration-700 overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient text-white shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-transparent before:to-white/20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-3000 backdrop-blur-sm border border-white/20"
       >
         {isSearching ? (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 relative z-10">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Buscando...</span>
+            <span className="relative animate-gradient-text-button">Buscando...</span>
           </div>
         ) : (
-          'Buscar'
+          <span className="relative z-10">
+            <span className="relative">
+              <span className="absolute inset-0 blur-sm opacity-60 bg-white/60 animate-slow-pulse"></span>
+              <span className="relative animate-gradient-text-button">Buscar</span>
+            </span>
+          </span>
         )}
       </Button>
 

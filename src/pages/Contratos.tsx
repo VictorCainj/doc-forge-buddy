@@ -756,8 +756,10 @@ const Contratos = () => {
                 <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-medium uppercase tracking-wide">
                   Hoje
                 </p>
-                <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-                  {formatDateBrazilian(new Date())}
+                <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 relative">
+                  <span className="relative inline-block animate-gradient-text">
+                    {formatDateBrazilian(new Date())}
+                  </span>
                 </p>
               </div>
             </div>

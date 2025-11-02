@@ -86,22 +86,28 @@ const ContractListItem = memo<{
       <CardContent className="p-5">
         {/* Header do Contrato */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-black">
-              <FileText className="h-4 w-4 text-white" color="white" />
-            </div>
-            <div>
+          <div className="flex items-center justify-center flex-1">
+            <div className="text-center">
               <h3 className="font-bold text-lg text-black">
                 Contrato{' '}
                 <span className="font-mono text-xl text-primary-600">
                   {contract.form_data.numeroContrato || '[NÚMERO]'}
                 </span>
               </h3>
-              <p className="text-xs text-gray-400 font-mono">
+              <p className="text-xs text-gray-400 font-mono mt-1">
                 ID: {contract.id.slice(0, 8)}...
               </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 flex-shrink-0"
+            onClick={handleEdit}
+            aria-label={`Editar contrato ${contract.form_data.numeroContrato}`}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Separador */}
@@ -203,83 +209,54 @@ const ContractListItem = memo<{
           <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
             Termos do Contrato
           </h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div
-                  className="p-1 rounded bg-black"
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+              <div
+                className="p-1 rounded bg-black"
+                style={{
+                  imageRendering: 'crisp-edges',
+                  backfaceVisibility: 'hidden',
+                }}
+              >
+                <CalendarDays
+                  className="h-3 w-3 text-white"
+                  color="#FFFFFF"
+                  strokeWidth={2.5}
                   style={{
-                    imageRendering: 'crisp-edges',
-                    backfaceVisibility: 'hidden',
+                    color: '#FFFFFF',
+                    stroke: '#FFFFFF',
+                    fill: 'none',
+                    shapeRendering: 'geometricPrecision',
                   }}
-                >
-                  <Timer
-                    className="h-3 w-3 text-white"
-                    color="#FFFFFF"
-                    strokeWidth={2.5}
-                    style={{
-                      color: '#FFFFFF',
-                      stroke: '#FFFFFF',
-                      fill: 'none',
-                      shapeRendering: 'geometricPrecision',
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-black">Prazo</span>
+                />
               </div>
-              <span className="text-sm font-bold text-black font-mono">
-                {contract.form_data.prazoDias} dias
+              <span className="text-sm font-semibold text-black">
+                {contract.form_data.dataInicioRescisao || '01/09/2026'}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
-                <div
-                  className="p-1 rounded bg-black"
+            <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+              <div
+                className="p-1 rounded bg-black"
+                style={{
+                  imageRendering: 'crisp-edges',
+                  backfaceVisibility: 'hidden',
+                }}
+              >
+                <Clock
+                  className="h-3 w-3 text-white"
+                  color="#FFFFFF"
+                  strokeWidth={2.5}
                   style={{
-                    imageRendering: 'crisp-edges',
-                    backfaceVisibility: 'hidden',
+                    color: '#FFFFFF',
+                    stroke: '#FFFFFF',
+                    fill: 'none',
+                    shapeRendering: 'geometricPrecision',
                   }}
-                >
-                  <CalendarDays
-                    className="h-3 w-3 text-white"
-                    color="#FFFFFF"
-                    strokeWidth={2.5}
-                    style={{
-                      color: '#FFFFFF',
-                      stroke: '#FFFFFF',
-                      fill: 'none',
-                      shapeRendering: 'geometricPrecision',
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-semibold text-gray-500 font-mono">
-                  {contract.form_data.dataInicioRescisao || '01/09/2026'}
-                </span>
+                />
               </div>
-              <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
-                <div
-                  className="p-1 rounded bg-black"
-                  style={{
-                    imageRendering: 'crisp-edges',
-                    backfaceVisibility: 'hidden',
-                  }}
-                >
-                  <Clock
-                    className="h-3 w-3 text-white"
-                    color="#FFFFFF"
-                    strokeWidth={2.5}
-                    style={{
-                      color: '#FFFFFF',
-                      stroke: '#FFFFFF',
-                      fill: 'none',
-                      shapeRendering: 'geometricPrecision',
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-semibold text-gray-500 font-mono">
-                  {contract.form_data.dataTerminoRescisao || '01/10/2026'}
-                </span>
-              </div>
+              <span className="text-sm font-semibold text-black">
+                {contract.form_data.dataTerminoRescisao || '01/10/2026'}
+              </span>
             </div>
           </div>
         </div>
@@ -347,25 +324,14 @@ const ContractListItem = memo<{
 
         {/* AÇÕES RÁPIDAS */}
         <div className="border-t border-neutral-300 pt-4 relative overflow-visible">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={handleEdit}
-                aria-label={`Editar contrato ${contract.form_data.numeroContrato}`}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <QuickActionsDropdown
-                contractId={contract.id}
-                contractNumber={contract.form_data.numeroContrato || '[NÚMERO]'}
-                onGenerateDocument={(_contractId, template, title) => {
-                  onGenerateDocument(contract, template, title);
-                }}
-              />
-            </div>
+          <div className="flex items-center justify-center">
+            <QuickActionsDropdown
+              contractId={contract.id}
+              contractNumber={contract.form_data.numeroContrato || '[NÚMERO]'}
+              onGenerateDocument={(_contractId, template, title) => {
+                onGenerateDocument(contract, template, title);
+              }}
+            />
           </div>
         </div>
       </CardContent>

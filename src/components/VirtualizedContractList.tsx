@@ -100,19 +100,25 @@ const ContractItem = memo<{
         <CardContent className="p-5">
           {/* Header do Contrato */}
           <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-neutral-100">
-                <FileText className="h-4 w-4 text-neutral-600" />
-              </div>
-              <div>
+            <div className="flex items-center justify-center flex-1">
+              <div className="text-center">
                 <h3 className="font-semibold text-sm text-neutral-900">
                   Contrato {contract.form_data.numeroContrato || '[NÚMERO]'}
                 </h3>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-neutral-500 mt-1">
                   ID: {contract.id.slice(0, 8)}...
                 </p>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 flex-shrink-0"
+              onClick={handleEdit}
+              aria-label={`Editar contrato ${contract.form_data.numeroContrato || '[NÚMERO]'}`}
+            >
+              <Edit className="h-4 w-4" aria-hidden="true" />
+            </Button>
           </div>
 
           {/* Separador */}
@@ -164,37 +170,22 @@ const ContractItem = memo<{
             <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">
               Termos do Contrato
             </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="p-1 rounded bg-neutral-100">
-                    <Timer className="h-3 w-3 text-neutral-600" />
-                  </div>
-                  <span className="text-xs font-medium text-neutral-600">
-                    Prazo
-                  </span>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+                <div className="p-1 rounded bg-neutral-100">
+                  <CalendarDays className="h-3 w-3 text-neutral-600" />
                 </div>
                 <span className="text-xs font-semibold text-neutral-900">
-                  {contract.form_data.prazoDias} dias
+                  {contract.form_data.dataInicioRescisao || '01/09/2026'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
-                  <div className="p-1 rounded bg-neutral-100">
-                    <CalendarDays className="h-3 w-3 text-neutral-600" />
-                  </div>
-                  <span className="text-xs font-semibold text-neutral-900">
-                    {contract.form_data.dataInicioRescisao || '01/09/2026'}
-                  </span>
+              <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
+                <div className="p-1 rounded bg-neutral-100">
+                  <Clock className="h-3 w-3 text-neutral-600" />
                 </div>
-                <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
-                  <div className="p-1 rounded bg-neutral-100">
-                    <Clock className="h-3 w-3 text-neutral-600" />
-                  </div>
-                  <span className="text-xs font-semibold text-neutral-900">
-                    {contract.form_data.dataTerminoRescisao || '01/10/2026'}
-                  </span>
-                </div>
+                <span className="text-xs font-semibold text-neutral-900">
+                  {contract.form_data.dataTerminoRescisao || '01/10/2026'}
+                </span>
               </div>
             </div>
           </div>
@@ -227,27 +218,16 @@ const ContractItem = memo<{
 
           {/* AÇÕES RÁPIDAS */}
           <div className="border-t border-neutral-200 pt-4 relative overflow-visible">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={handleEdit}
-                  aria-label={`Editar contrato ${contract.form_data.numeroContrato || '[NÚMERO]'}`}
-                >
-                  <Edit className="h-4 w-4" aria-hidden="true" />
-                </Button>
-                <QuickActionsDropdown
-                  contractId={contract.id}
-                  contractNumber={
-                    contract.form_data.numeroContrato || '[NÚMERO]'
-                  }
-                  onGenerateDocument={(_contractId, template, title) => {
-                    onGenerateDocument(contract, template, title);
-                  }}
-                />
-              </div>
+            <div className="flex items-center justify-center">
+              <QuickActionsDropdown
+                contractId={contract.id}
+                contractNumber={
+                  contract.form_data.numeroContrato || '[NÚMERO]'
+                }
+                onGenerateDocument={(_contractId, template, title) => {
+                  onGenerateDocument(contract, template, title);
+                }}
+              />
             </div>
           </div>
         </CardContent>

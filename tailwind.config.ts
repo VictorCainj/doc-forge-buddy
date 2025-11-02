@@ -196,10 +196,28 @@ export default {
             height: '0',
           },
         },
+        gradient: {
+          '0%, 100%': {
+            backgroundPosition: '0% 50%',
+          },
+          '50%': {
+            backgroundPosition: '100% 50%',
+          },
+        },
+        'slow-pulse': {
+          '0%, 100%': {
+            opacity: '0.6',
+          },
+          '50%': {
+            opacity: '0.8',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.1s ease-out',
         'accordion-up': 'accordion-up 0.1s ease-out',
+        gradient: 'gradient 40s ease infinite',
+        'slow-pulse': 'slow-pulse 8s ease-in-out infinite',
       },
       transitionDuration: {
         instant: '0ms',

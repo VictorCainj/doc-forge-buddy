@@ -331,8 +331,27 @@ All colors MUST be HSL.
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: gradient-shift 3s ease-in-out infinite;
+    animation: gradient-shift 40s ease-in-out infinite;
     will-change: background-position;
+  }
+
+  /* Gradient text for buttons with gradient background */
+  .animate-gradient-text-button {
+    background: linear-gradient(
+      90deg,
+      #ffffff 0%,
+      #f0f9ff 25%,
+      #fdf2f8 50%,
+      #f0f9ff 75%,
+      #ffffff 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 40s ease-in-out infinite;
+    will-change: background-position;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
   }
 
   /* Dark mode gradient */

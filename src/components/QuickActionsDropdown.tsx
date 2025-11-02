@@ -13,6 +13,7 @@ import {
   SearchCheck,
   Mail,
   MessageSquare,
+  Sparkles,
 } from '@/utils/iconMapper';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -468,19 +469,29 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
         <button
           onClick={() => setIsOpen(true)}
           className={cn(
-            'inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 border text-sm font-medium',
-            isOpen
-              ? 'bg-blue-50 text-blue-700 border-blue-300 shadow-sm'
-              : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50 hover:border-neutral-400 hover:shadow-sm'
+            'relative inline-flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-700 text-sm font-semibold overflow-hidden',
+            'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient',
+            'text-white shadow-lg shadow-purple-500/50',
+            'hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105',
+            'before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-transparent before:to-white/20',
+            'before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-3000',
+            'backdrop-blur-sm border border-white/20',
+            isOpen && 'ring-2 ring-white/50 ring-offset-2 ring-offset-purple-600'
           )}
         >
-          <span>Ações Rápidas</span>
-          <ChevronRight
-            className={cn(
-              'h-4 w-4 transition-transform',
-              isOpen && 'rotate-90'
-            )}
-          />
+          <span className="relative z-10 flex items-center gap-2">
+            <span className="relative">
+              <span className="absolute inset-0 blur-md opacity-60 bg-white/60 animate-slow-pulse"></span>
+              <span className="relative drop-shadow-sm animate-gradient-text-button">Ações Rápidas</span>
+            </span>
+            <ChevronRight
+              className={cn(
+                'h-4 w-4 transition-transform duration-700 relative z-10 drop-shadow-sm text-white',
+                isOpen && 'rotate-90'
+              )}
+              style={{ color: '#FFFFFF', stroke: '#FFFFFF' }}
+            />
+          </span>
         </button>
 
         {/* Modal usando Dialog do shadcn/ui */}
@@ -489,30 +500,33 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
             className="max-w-6xl w-[90vw] max-h-[85vh] p-0 overflow-hidden flex flex-col"
             aria-label="Ações rápidas do contrato"
           >
-            {/* Header do modal */}
-            <DialogHeader className="px-6 py-5 border-b border-neutral-200 bg-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-neutral-50 border border-neutral-200 flex items-center justify-center">
-                  <Briefcase className="h-5 w-5 text-neutral-700" strokeWidth={2} />
+            {/* Banner */}
+            <div className="px-6 py-8 border-b border-neutral-200 bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-pink-500/40 relative overflow-hidden">
+              {/* Gradiente animado de fundo */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient opacity-40"></div>
+              
+              <div className="flex flex-col items-center justify-center text-center relative z-10">
+                <div className="mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient border border-white/50 shadow-lg shadow-purple-500/60 flex items-center justify-center">
+                    <Sparkles className="h-6 w-6 text-white" strokeWidth={2.5} style={{ color: '#FFFFFF', stroke: '#FFFFFF' }} />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <DialogTitle className="text-2xl font-semibold text-neutral-900 tracking-tight">
-                    Ações Rápidas
-                  </DialogTitle>
-                  {contractNumber && (
-                    <DialogDescription className="text-sm text-neutral-600 mt-1">
-                      Contrato:{' '}
-                      <span className="font-medium text-neutral-900">
-                        {contractNumber}
-                      </span>
-                    </DialogDescription>
-                  )}
-                </div>
+                {contractNumber && (
+                  <p className="text-lg font-medium text-white font-mono mb-2">
+                    {contractNumber}
+                  </p>
+                )}
+                <DialogTitle className="text-2xl font-semibold tracking-tight">
+                  <span className="relative inline-block">
+                    <span className="absolute inset-0 blur-md opacity-60 bg-white/60 animate-slow-pulse"></span>
+                    <span className="relative animate-gradient-text-button">Ações Rápidas</span>
+                  </span>
+                </DialogTitle>
               </div>
-            </DialogHeader>
+            </div>
 
             {/* Conteúdo com scroll */}
-            <div className="flex-1 p-6 overflow-y-auto bg-neutral-50 min-h-0 max-h-[calc(85vh-120px)]">
+            <div className="flex-1 p-6 overflow-y-auto bg-neutral-50 min-h-0 max-h-[calc(85vh-200px)]">
               <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {sections.map((section) => (
@@ -524,8 +538,8 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
                   ))}
                 </div>
               </div>
-              </div>
-            </DialogContent>
+            </div>
+          </DialogContent>
         </Dialog>
       </div>
     );

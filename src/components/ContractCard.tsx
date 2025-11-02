@@ -155,11 +155,8 @@ export const ContractCard = memo<ContractCardProps>(
         <CardContent className="relative p-6">
           {/* Header do Contrato */}
           <div className="flex items-start justify-between mb-6">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/20 group-hover:shadow-lg group-hover:shadow-blue-500/30 transition-shadow duration-300">
-                <FileTextColored className="h-4 w-4 text-white" />
-              </div>
-              <div>
+            <div className="flex items-center justify-center flex-1">
+              <div className="text-center">
                 <h3 className="font-bold text-base text-neutral-900 tracking-tight">
                   {contract.form_data.numeroContrato || 'Contrato sem número'}
                 </h3>
@@ -169,22 +166,33 @@ export const ContractCard = memo<ContractCardProps>(
               </div>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-neutral-100 transition-colors">
-                  <MoreVertical className="h-4 w-4 text-neutral-600" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => onDelete(contract.id)}
-                  className="text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleEditContract}
+                aria-label={`Editar contrato ${contract.form_data.numeroContrato || '[NÚMERO]'}`}
+              >
+                <EditColored className="h-4 w-4" />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-neutral-100 transition-colors">
+                    <MoreVertical className="h-4 w-4 text-neutral-600" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => onDelete(contract.id)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Separador com gradiente */}
@@ -283,19 +291,6 @@ export const ContractCard = memo<ContractCardProps>(
           {/* Separador sutil */}
           <div className="relative my-5">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-neutral-300 to-transparent h-px"></div>
-          </div>
-
-          {/* BOTÃO EDITAR */}
-          <div className="flex items-center justify-between mb-5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs h-9 px-4 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-all"
-              onClick={handleEditContract}
-            >
-              <EditColored className="h-3.5 w-3.5 mr-1.5" />
-              Editar
-            </Button>
           </div>
 
           {/* AÇÕES RÁPIDAS */}
