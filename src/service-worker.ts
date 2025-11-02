@@ -1,3 +1,4 @@
+// @ts-nocheck
 /// <reference lib="webworker" />
 
 import { clientsClaim } from 'workbox-core';

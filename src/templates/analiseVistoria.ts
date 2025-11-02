@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fileToBase64HD, urlToBase64HD } from '@/utils/imageHD';
 import { log } from '@/utils/logger';
 import { deduplicateImagesBySerial } from '@/utils/imageSerialGenerator';

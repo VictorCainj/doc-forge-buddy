@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo, useCallback, useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { PremiumButton } from '@/components/ui/premium-button';

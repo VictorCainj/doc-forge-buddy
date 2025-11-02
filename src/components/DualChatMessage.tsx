@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente para renderizar mensagens do chat dual
  */

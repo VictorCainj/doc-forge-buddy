@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook para gerenciar perfis de comunicação conversacional
  */

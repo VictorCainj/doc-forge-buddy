@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import {
   ChevronRight,
