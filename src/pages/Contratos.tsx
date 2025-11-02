@@ -11,7 +11,7 @@ import {
   formatDateBrazilian,
   convertDateToBrazilian,
 } from '@/utils/dateFormatter';
-import { FileText, Plus } from '@/utils/iconMapper';
+import { FileText, Plus, Download } from '@/utils/iconMapper';
 import {
   Select,
   SelectContent,
@@ -35,6 +35,7 @@ import { splitNames } from '@/utils/nameHelpers';
 import { useContractReducer } from '@/features/contracts/hooks/useContractReducer';
 import OptimizedSearch from '@/components/ui/optimized-search';
 import { useAuth } from '@/hooks/useAuth';
+import { exportContractsToExcel } from '@/utils/exportContractsToExcel';
 
 const Contratos = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const Contratos = () => {
   // Estados para filtro de mês e ano
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Reducer state (substitui ~20 useState)
   const { state, actions } = useContractReducer();
@@ -607,6 +609,35 @@ const Contratos = () => {
     setSelectedYear('');
   }, []);
 
+  // Handler para exportar contratos para Excel
+  const handleExportToExcel = useCallback(async () => {
+    if (displayedContracts.length === 0) {
+      toast.error('Não há contratos para exportar');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await exportContractsToExcel(displayedContracts, {
+        selectedMonth,
+        selectedYear,
+        hasSearched,
+      });
+      
+      toast.success(
+        `${displayedContracts.length} contrato(s) exportado(s) com sucesso!`,
+        {
+          description: 'O arquivo Excel foi baixado automaticamente',
+        }
+      );
+    } catch (error) {
+      console.error('Erro ao exportar contratos:', error);
+      showError('Erro ao exportar contratos. Tente novamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [displayedContracts, selectedMonth, selectedYear, hasSearched, showError]);
+
   // Gerar lista de anos (últimos 5 anos + próximos 2 anos)
   const availableYears = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -721,6 +752,29 @@ const Contratos = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
                     >
                       Limpar
+                    </Button>
+                  )}
+
+                  {displayedContracts.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportToExcel}
+                      disabled={isExporting || displayedContracts.length === 0}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-white hover:bg-success-50 text-success-700 hover:border-success-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={`Exportar ${displayedContracts.length} contrato(s) para Excel`}
+                    >
+                      {isExporting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-success-300 border-t-success-700"></div>
+                          <span className="hidden sm:inline">Exportando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4" />
+                          <span className="hidden sm:inline">Exportar Excel</span>
+                        </>
+                      )}
                     </Button>
                   )}
 

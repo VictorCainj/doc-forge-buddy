@@ -161,6 +161,10 @@ const AnimatedAppRoutes = () => {
           element={renderProtected(<EditTerm />)}
         />
         <Route
+          path="/analise-vistoria/:contractId"
+          element={renderProtected(<AnaliseVistoria />)}
+        />
+        <Route
           path="/analise-vistoria"
           element={renderProtected(<AnaliseVistoria />)}
         />

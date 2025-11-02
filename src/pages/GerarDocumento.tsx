@@ -7,7 +7,6 @@ import {
   Minimize2,
   Maximize2,
   FileText,
-  Download,
 } from '@/utils/iconMapper';
 import { CopyButton } from '@/components/ui/copy-button';
 import { toast } from 'sonner';
@@ -20,7 +19,7 @@ const GerarDocumento = () => {
   const [fontSize, setFontSize] = useState(14);
 
   // Dados passados via state da navegação
-  const { title, template, secondaryTemplate, formData, documentType } =
+  const { title, template, secondaryTemplate, formData, documentType, preserveAnalysisState, contractId } =
     location.state || {};
 
   // Se não há dados, redirecionar para contratos
@@ -229,9 +228,15 @@ const GerarDocumento = () => {
               <Button
                 variant="ghost"
                 onClick={() => {
-                  // Se for análise de vistoria, voltar para a página de análise
-                  if (documentType === 'Análise de Vistoria') {
-                    navigate('/analise-vistoria');
+                  // Se for análise de vistoria, voltar para a página de análise com ID do contrato
+                  if (documentType === 'Análise de Vistoria' && contractId) {
+                    navigate(`/analise-vistoria/${contractId}`, {
+                      state: preserveAnalysisState,
+                    });
+                  } else if (documentType === 'Análise de Vistoria') {
+                    navigate('/analise-vistoria', {
+                      state: preserveAnalysisState,
+                    });
                   } else {
                     navigate('/contratos');
                   }
@@ -262,7 +267,18 @@ const GerarDocumento = () => {
             <div className="flex items-center gap-2">
               {documentType === 'Análise de Vistoria' && (
                 <Button
-                  onClick={() => navigate('/analise-vistoria')}
+                  onClick={() => {
+                    // Usar rota parametrizada se tiver contractId
+                    if (contractId) {
+                      navigate(`/analise-vistoria/${contractId}`, {
+                        state: preserveAnalysisState,
+                      });
+                    } else {
+                      navigate('/analise-vistoria', {
+                        state: preserveAnalysisState,
+                      });
+                    }
+                  }}
                   variant="outline"
                   size="sm"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
@@ -313,16 +329,6 @@ const GerarDocumento = () => {
                 )}
                 {isPrinting ? 'Preparando...' : 'Imprimir'}
               </Button>
-              {!isDevolutiva && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
-                >
-                  <Download className="h-4 w-4" />
-                  Exportar
-                </Button>
-              )}
             </div>
           </div>
         </div>

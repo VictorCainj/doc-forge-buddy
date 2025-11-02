@@ -38,7 +38,7 @@ import { useOpenAI } from '@/hooks/useOpenAI';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateBrazilian } from '@/utils/dateFormatter';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
 import { useVistoriaImages } from '@/hooks/useVistoriaImages';
 import { usePrestadores } from '@/hooks/usePrestadores';
@@ -61,6 +61,7 @@ import {
   PrestadorSelector,
   ImagePreviewModal,
   DocumentPreviewCard,
+  ApontamentosSummary,
 } from '@/features/analise-vistoria';
 import { BudgetItemType } from '@/types/orcamento';
 
@@ -74,6 +75,7 @@ const AnaliseVistoria = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams<{ contractId?: string }>();
   const { user } = useAuth();
   const {
     correctText,
@@ -497,6 +499,68 @@ const AnaliseVistoria = () => {
     fetchContracts();
   }, [toast]);
 
+  // Limpar cache quando não houver contrato na URL
+  useEffect(() => {
+    // Se não há contractId na URL e não há estado preservado via location.state
+    if (!params.contractId && !location.state) {
+      // Limpar localStorage
+      localStorage.removeItem('analise-vistoria-state');
+      
+      // Limpar estado da página
+      setApontamentos([]);
+      setSelectedContract(null);
+      setDadosVistoria({
+        locatario: '',
+        endereco: '',
+        dataVistoria: '',
+      });
+      setSavedAnaliseId(null);
+      setIsEditMode(false);
+      setEditingAnaliseId(null);
+      setExistingAnaliseId(null);
+      setHasExistingAnalise(false);
+      setCurrentApontamento({
+        ambiente: '',
+        subtitulo: '',
+        descricao: '',
+        descricaoServico: '',
+        vistoriaInicial: { fotos: [], descritivoLaudo: '' },
+        vistoriaFinal: { fotos: [] },
+        observacao: '',
+        classificacao: undefined,
+        tipo: 'material',
+        valor: 0,
+        quantidade: 0,
+      });
+      setEditingApontamento(null);
+      setDocumentPreview('');
+    }
+  }, [params.contractId, location.state]);
+
+  // Carregar contrato automaticamente pela URL
+  useEffect(() => {
+    const contractId = params.contractId;
+
+    if (contractId && contracts.length > 0 && !selectedContract) {
+      const contract = contracts.find((c) => c.id === contractId);
+
+      if (contract) {
+        setSelectedContract(contract);
+        toast({
+          title: 'Contrato carregado',
+          description: 'O contrato foi carregado automaticamente da URL.',
+        });
+      } else {
+        toast({
+          title: 'Contrato não encontrado',
+          description:
+            'O contrato especificado na URL não foi encontrado. Selecione um contrato manualmente.',
+          variant: 'destructive',
+        });
+      }
+    }
+  }, [params.contractId, contracts, selectedContract, toast]);
+
   // Detectar modo de edição e carregar dados da análise
   useEffect(() => {
     const state = location.state as {
@@ -516,6 +580,7 @@ const AnaliseVistoria = () => {
         editingAnaliseId: string | null;
         existingAnaliseId: string | null;
         hasExistingAnalise: boolean;
+        contractId?: string; // ID do contrato para persistência
       };
     };
 
@@ -537,6 +602,14 @@ const AnaliseVistoria = () => {
       setEditingAnaliseId(preservedState.editingAnaliseId);
       setExistingAnaliseId(preservedState.existingAnaliseId);
       setHasExistingAnalise(preservedState.hasExistingAnalise);
+
+      // Atualizar URL para incluir contractId se ainda não estiver na URL
+      if (preservedState.contractId && !params.contractId) {
+        navigate(`/analise-vistoria/${preservedState.contractId}`, {
+          replace: true,
+          state: state.preserveAnalysisState,
+        });
+      }
 
       toast({
         title: 'Estado restaurado',
@@ -567,7 +640,13 @@ const AnaliseVistoria = () => {
   }, [location.state, contracts, loadAnalysisData, toast]);
 
   // Carregar estado salvo do localStorage (para compatibilidade com dados antigos)
+  // Só carrega se houver contractId na URL ou estado preservado via location.state
   useEffect(() => {
+    // Não carregar se não houver contrato na URL e não houver estado preservado
+    if (!params.contractId && !location.state) {
+      return;
+    }
+
     const loadLegacyState = async () => {
       const savedState = localStorage.getItem('analise-vistoria-state');
       if (savedState) {
@@ -642,7 +721,7 @@ const AnaliseVistoria = () => {
     };
 
     loadLegacyState();
-  }, [contracts, base64ToFile]);
+  }, [contracts, base64ToFile, params.contractId, location.state]);
 
   // Salvar estado no localStorage como backup (para compatibilidade)
   useEffect(() => {
@@ -850,8 +929,8 @@ const AnaliseVistoria = () => {
 
       // Gerar template do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: dadosVistoria.locatario,
-        endereco: dadosVistoria.endereco,
+        locatario: selectedContract?.form_data.numeroContrato || dadosVistoria.locatario || '',
+        endereco: selectedContract?.form_data.enderecoImovel || dadosVistoria.endereco || '',
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
         apontamentos: apontamentosComFotos,
@@ -862,7 +941,7 @@ const AnaliseVistoria = () => {
       log.error('Erro ao atualizar pré-visualização:', error);
       setDocumentPreview('');
     }
-  }, [apontamentos, dadosVistoria, documentMode]);
+  }, [apontamentos, dadosVistoria, documentMode, selectedContract]);
 
   // Atualizar pré-visualização do documento em tempo real
   useEffect(() => {
@@ -1508,8 +1587,8 @@ const AnaliseVistoria = () => {
 
     try {
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: dadosVistoria.locatario,
-        endereco: dadosVistoria.endereco,
+        locatario: selectedContract?.form_data.numeroContrato || dadosVistoria.locatario || '',
+        endereco: selectedContract?.form_data.enderecoImovel || dadosVistoria.endereco || '',
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
         prestador:
@@ -1523,7 +1602,7 @@ const AnaliseVistoria = () => {
         .from('public_documents')
         .update({
           html_content: template,
-          title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${dadosVistoria.locatario}`,
+          title: `${documentMode === 'orcamento' ? 'Orçamento' : 'Análise'} - ${selectedContract?.form_data.numeroContrato || dadosVistoria.locatario}`,
         })
         .eq('id', publicDocumentId);
 
@@ -1540,6 +1619,7 @@ const AnaliseVistoria = () => {
     selectedPrestadorId,
     prestadores,
     apontamentos,
+    selectedContract,
   ]);
 
   // Preencher dados da vistoria automaticamente do contrato SEMPRE
@@ -1706,8 +1786,8 @@ const AnaliseVistoria = () => {
 
       // Gerar template do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: dadosVistoria.locatario,
-        endereco: dadosVistoria.endereco,
+        locatario: selectedContract.form_data.numeroContrato || dadosVistoria.locatario || '',
+        endereco: selectedContract.form_data.enderecoImovel || dadosVistoria.endereco || '',
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
         prestador:
@@ -1717,10 +1797,17 @@ const AnaliseVistoria = () => {
         apontamentos: apontamentosComFotos,
       });
 
+      // Atualizar URL para incluir contractId se ainda não estiver na URL
+      if (selectedContract?.id && !params.contractId) {
+        navigate(`/analise-vistoria/${selectedContract.id}`, {
+          replace: true,
+        });
+      }
+
       // Navegar para a página de geração de documento
       navigate('/gerar-documento', {
         state: {
-          title: `${documentMode === 'orcamento' ? 'Orçamento de Reparos' : 'Análise Comparativa de Vistoria'} - ${dadosVistoria.locatario}`,
+          title: `${documentMode === 'orcamento' ? 'Orçamento de Reparos' : 'Análise Comparativa de Vistoria'} - ${selectedContract?.form_data.numeroContrato || dadosVistoria.locatario}`,
           template: template,
           formData: selectedContract.form_data,
           documentType:
@@ -1737,7 +1824,9 @@ const AnaliseVistoria = () => {
             editingAnaliseId,
             existingAnaliseId,
             hasExistingAnalise,
+            contractId: selectedContract?.id, // Incluir ID do contrato para persistência
           },
+          contractId: selectedContract?.id, // Incluir também no nível superior para fácil acesso
         },
       });
     } catch (error) {
@@ -2245,6 +2334,11 @@ const AnaliseVistoria = () => {
 
         {/* Banner de Alerta - Apontamentos Sem Classificação */}
         {documentMode === 'analise' && <ClassificationWarningBanner />}
+
+        {/* Resumo de Apontamentos - Apenas modo análise e apenas interno */}
+        {documentMode === 'analise' && apontamentos.length > 0 && (
+          <ApontamentosSummary apontamentos={apontamentos} />
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Formulário de Novo Apontamento */}

@@ -19,18 +19,29 @@ interface HTMLReportData {
 export function generateHTMLReport(data: HTMLReportData): string {
   const { contratos, motivosStats, stats, periodo, dataInicio, dataFim } = data;
 
-  // Formatar período no formato DD/MM/YYYY até DD/MM/YYYY
+  // Formatar período no formato 01/MM/YYYY até DD/MM/YYYY (sempre do dia 01 até o último dia do mês)
+  // Usa o mês da data de fim como referência para garantir que ambas sejam do mesmo mês
   let periodoFormatado = periodo;
   if (dataInicio && dataFim) {
     try {
       const inicio = new Date(dataInicio);
       const fim = new Date(dataFim);
       if (!isNaN(inicio.getTime()) && !isNaN(fim.getTime())) {
-        periodoFormatado = `${inicio.toLocaleDateString('pt-BR', {
+        // Usar o mês e ano da data de fim como referência para garantir consistência
+        const mesReferencia = fim.getMonth();
+        const anoReferencia = fim.getFullYear();
+        
+        // Data de início: sempre dia 01 do mês de referência
+        const inicioCorrigido = new Date(anoReferencia, mesReferencia, 1);
+        
+        // Data de fim: sempre o último dia do mês de referência
+        const fimCorrigido = new Date(anoReferencia, mesReferencia + 1, 0);
+        
+        periodoFormatado = `${inicioCorrigido.toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
-        })} até ${fim.toLocaleDateString('pt-BR', {
+        })} até ${fimCorrigido.toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
@@ -653,7 +664,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
       margin-top: 30px;
     }
 
-    /* Botão de Impressão */
+    /* Botão de Impressão e Copiar */
     .print-button {
       position: fixed;
       top: 20px;
@@ -675,6 +686,38 @@ export function generateHTMLReport(data: HTMLReportData): string {
       background: #1967D2;
       transform: translateY(-2px);
       box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .copy-button {
+      position: fixed;
+      top: 20px;
+      right: 180px;
+      background: ${colors.success};
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+      z-index: 1000;
+    }
+
+    .copy-button:hover {
+      background: #45A049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .copy-button.copied {
+      background: ${colors.success};
+    }
+
+    .copy-button.copying {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
 
      /* Estilos de Impressão */
@@ -748,7 +791,7 @@ export function generateHTMLReport(data: HTMLReportData): string {
         width: 100%;
       }
 
-       .print-button, .print-instructions {
+       .print-button, .copy-button, .print-instructions {
          display: none !important;
        }
 
@@ -968,14 +1011,158 @@ export function generateHTMLReport(data: HTMLReportData): string {
       .total-card .value {
         font-size: 36px;
       }
+
+      .copy-button {
+        right: 140px;
+        padding: 10px 16px;
+        font-size: 12px;
+      }
+
+      .print-button {
+        right: 10px;
+        padding: 10px 16px;
+        font-size: 12px;
+      }
     }
   </style>
 </head>
 <body>
-   <button class="print-button no-print" onclick="printReport()">🖨️ Imprimir / Baixar PDF</button>
+   <button class="copy-button no-print" id="copyButton" onclick="copyReport()">
+     <span id="copyText">Copiar</span>
+   </button>
+   <button class="print-button no-print" onclick="printReport()">Imprimir / Baixar PDF</button>
    
    
    <script>
+     async function copyReport() {
+       const copyButton = document.getElementById('copyButton');
+       const copyText = document.getElementById('copyText');
+       
+       try {
+         copyButton.classList.add('copying');
+         copyText.textContent = 'Copiando...';
+         
+         // Obter o conteúdo HTML do body (sem os botões)
+         const bodyContent = document.body.cloneNode(true);
+         
+         // Remover botões de ação e scripts
+         const buttons = bodyContent.querySelectorAll('.print-button, .copy-button, .no-print, script');
+         buttons.forEach(btn => btn.remove());
+         
+         // Criar um container temporário para processar o HTML
+         const tempContainer = document.createElement('div');
+         tempContainer.innerHTML = bodyContent.innerHTML;
+         
+         // Adicionar estilos inline aos elementos principais para garantir formatação ao colar
+         const mainElements = tempContainer.querySelectorAll('.header, .total-card, .dashboard, .contracts-section, table, .pie-section, .legend, .footer');
+         mainElements.forEach(el => {
+           const computedStyle = window.getComputedStyle(el);
+           if (!el.getAttribute('style')) {
+             el.setAttribute('style', '');
+           }
+         });
+         
+         // Obter HTML limpo (apenas o conteúdo visual, sem tags html/head/body)
+         const htmlContent = tempContainer.innerHTML;
+         
+         // Extrair texto simples para fallback
+         const textContent = tempContainer.innerText || tempContainer.textContent || '';
+         
+         // Copiar usando método que preserva formatação HTML
+         try {
+           // Criar elemento temporário invisível com o conteúdo
+           const hiddenDiv = document.createElement('div');
+           hiddenDiv.style.position = 'fixed';
+           hiddenDiv.style.left = '-999999px';
+           hiddenDiv.style.top = '0';
+           hiddenDiv.style.opacity = '0';
+           hiddenDiv.style.pointerEvents = 'none';
+           hiddenDiv.innerHTML = htmlContent;
+           
+           document.body.appendChild(hiddenDiv);
+           
+           // Selecionar e copiar
+           const selection = window.getSelection();
+           const range = document.createRange();
+           range.selectNodeContents(hiddenDiv);
+           selection?.removeAllRanges();
+           selection?.addRange(range);
+           
+           // Tentar copiar com Clipboard API primeiro
+           if (navigator.clipboard && navigator.clipboard.write) {
+             try {
+               const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+               const textBlob = new Blob([textContent], { type: 'text/plain' });
+               
+               await navigator.clipboard.write([
+                 new ClipboardItem({
+                   'text/html': htmlBlob,
+                   'text/plain': textBlob
+                 })
+               ]);
+               
+               selection?.removeAllRanges();
+               document.body.removeChild(hiddenDiv);
+               
+               copyButton.classList.remove('copying');
+               copyButton.classList.add('copied');
+               copyText.textContent = 'Copiado!';
+               
+               setTimeout(() => {
+                 copyButton.classList.remove('copied');
+                 copyText.textContent = 'Copiar';
+               }, 2000);
+               return;
+             } catch (clipboardErr) {
+               // Continuar para fallback
+             }
+           }
+           
+           // Fallback: usar execCommand
+           const success = document.execCommand('copy');
+           
+           selection?.removeAllRanges();
+           document.body.removeChild(hiddenDiv);
+           
+           if (success) {
+             copyButton.classList.remove('copying');
+             copyButton.classList.add('copied');
+             copyText.textContent = 'Copiado!';
+             
+             setTimeout(() => {
+               copyButton.classList.remove('copied');
+               copyText.textContent = 'Copiar';
+             }, 2000);
+           } else {
+             throw new Error('execCommand falhou');
+           }
+         } catch (err) {
+           // Último fallback: copiar apenas texto
+           try {
+             await navigator.clipboard.writeText(textContent);
+             
+             copyButton.classList.remove('copying');
+             copyButton.classList.add('copied');
+             copyText.textContent = 'Copiado!';
+             
+             setTimeout(() => {
+               copyButton.classList.remove('copied');
+               copyText.textContent = 'Copiar';
+             }, 2000);
+           } catch (finalErr) {
+             throw finalErr;
+           }
+         }
+       } catch (error) {
+         console.error('Erro ao copiar:', error);
+         copyButton.classList.remove('copying');
+         copyText.textContent = 'Erro';
+         
+         setTimeout(() => {
+           copyText.textContent = 'Copiar';
+         }, 2000);
+       }
+     }
      // Melhorar tooltips com posicionamento baseado no mouse
      document.addEventListener('DOMContentLoaded', function() {
        // Limpar tooltips existentes

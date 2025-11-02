@@ -96,7 +96,7 @@ export const ContractCard = memo<ContractCardProps>(
     }, [contract.id, user]);
 
     const handleAnaliseClick = () => {
-      navigate('/analise-vistoria', {
+      navigate(`/analise-vistoria/${contract.id}`, {
         state: {
           contractId: contract.id,
           contractData: {

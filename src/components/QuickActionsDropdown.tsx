@@ -191,7 +191,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
             if (contract) {
               const formData =
                 contract.form_data as Record<string, string>;
-              navigate('/analise-vistoria', {
+              navigate(`/analise-vistoria/${contract.id}`, {
                 state: {
                   contractId: contract.id,
                   contractData: {

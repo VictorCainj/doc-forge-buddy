@@ -101,7 +101,7 @@ const Admin = () => {
               <Shield className="h-7 w-7 text-neutral-700 dark:text-neutral-300" />
             </div>
             <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight animate-gradient-text">
                 Painel de Administração
               </h1>
               <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
@@ -258,8 +258,41 @@ const Admin = () => {
             transform: translateY(0);
           }
         }
+        @keyframes gradient-shift {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
         .animate-in {
           animation: fadeInUp 0.3s ease-out;
+        }
+        .animate-gradient-text {
+          background: linear-gradient(
+            90deg,
+            #3b82f6 0%,
+            #8b5cf6 25%,
+            #ec4899 50%,
+            #f59e0b 75%,
+            #3b82f6 100%
+          );
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradient-shift 3s ease infinite, fadeInScale 0.6s ease-out;
         }
       `}</style>
     </div>

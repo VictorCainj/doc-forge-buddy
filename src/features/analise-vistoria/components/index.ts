@@ -11,3 +11,4 @@ export { PrestadorSelector } from './PrestadorSelector';
 export { AIExtractionPanel } from './AIExtractionPanel';
 export { ImagePreviewModal } from './ImagePreviewModal';
 export { DocumentPreviewCard } from './DocumentPreviewCard';
+export { ApontamentosSummary } from './ApontamentosSummary';
