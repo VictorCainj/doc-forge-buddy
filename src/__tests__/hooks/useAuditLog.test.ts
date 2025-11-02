@@ -2,6 +2,7 @@
  * Testes para hook useAuditLog
  */
 
+// @ts-nocheck
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';

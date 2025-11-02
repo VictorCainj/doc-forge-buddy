@@ -29,7 +29,7 @@ interface OpenAIRequest {
   data: any;
 }
 
-serve(async (req): Promise<Response> => {
+serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', {

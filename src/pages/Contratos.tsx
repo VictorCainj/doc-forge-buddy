@@ -39,9 +39,18 @@ import { exportContractsToExcel } from '@/utils/exportContractsToExcel';
 import { createContractIndex, filterContractsByDate } from '@/utils/contractIndex';
 import { usePreloadContracts } from '@/hooks/usePreloadContracts';
 import { useDebouncedCallback } from '@/utils/debounce';
+import { ContractStats } from '@/features/contracts/components/ContractStats';
 
 // Lazy load de modals para code splitting
 const ContractModals = lazy(() => import('@/features/contracts/components').then(m => ({ default: m.ContractModals })));
+
+// Memoizar funções pesadas
+const getContractDate = (contract: Contract) => {
+  const dateStr = contract.form_data.dataInicioRescisao || contract.form_data.dataFirmamentoContrato;
+  if (!dateStr) return null;
+  const [day, month, year] = dateStr.split('/');
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
 
 const Contratos = () => {
   const navigate = useNavigate();
@@ -87,7 +96,8 @@ const Contratos = () => {
     totalCount,
   } = useOptimizedData({
     documentType: 'contrato',
-    limit: hasDateFilters ? 1000 : 6, // Carregar mais quando há filtros de data
+    limit: hasDateFilters ? 1000 : 6,
+    placeholderData: (previousData) => previousData, // Substituir keepPreviousData
   });
 
   // Índice de contratos para busca rápida O(1) - DEVE VIR DEPOIS DA DECLARAÇÃO DE contracts
@@ -95,8 +105,13 @@ const Contratos = () => {
     return createContractIndex(contracts);
   }, [contracts]);
 
-  // Contratos exibidos (filtro de mês/ano, busca ou paginação normal) - OTIMIZADO
+  // Contratos exibidos (filtro de mês/ano, busca ou paginação normal) - ULTRA OTIMIZADO
   const displayedContracts = useMemo(() => {
+    // Early return para casos simples
+    if (!selectedMonth && !selectedYear && !hasSearched) {
+      return contracts;
+    }
+
     let contractsToDisplay = contracts;
 
     // Aplicar filtro de busca primeiro
@@ -125,6 +140,18 @@ const Contratos = () => {
   // ============================================================
   // DOCUMENT GENERATION HANDLERS
   // ============================================================
+
+  // Debounce para busca com 200ms (mais responsivo)
+  const debouncedSearch = useDebouncedCallback(
+    useCallback((term: string) => {
+      if (term.trim()) {
+        performSearch(term);
+      } else {
+        clearSearch();
+      }
+    }, [performSearch, clearSearch]),
+    200
+  );
 
   const generateDocumentWithAssinante = useCallback(
     (
@@ -806,6 +833,9 @@ const Contratos = () => {
 
           {/* Main Content */}
           <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            {/* Estatísticas de Contratos */}
+            <ContractStats contracts={displayedContracts} />
+            
             {/* Lista de Contratos */}
             <ContractList
               contracts={displayedContracts}

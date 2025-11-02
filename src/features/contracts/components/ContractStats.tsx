@@ -1,131 +1,82 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-} from '@/utils/iconMapper';
+import { FileText, Clock, CheckCircle, AlertCircle } from '@/utils/iconMapper';
 import { Contract } from '@/types/contract';
 
 interface ContractStatsProps {
   contracts: Contract[];
-  isLoading?: boolean;
 }
 
 /**
- * Componente de estatísticas para contratos
- * Calcula métricas em tempo real
+ * Componente de estatísticas de contratos
+ * Memoizado e otimizado para cálculos rápidos
  */
-export const ContractStats = memo<ContractStatsProps>(
-  ({ contracts, isLoading }) => {
-    // Calcular estatísticas
-    const stats = {
-      total: contracts.length,
-      active: contracts.filter((c: any) => c.status === 'active' || !c.status)
-        .length,
-      pending: contracts.filter((c: any) => c.status === 'pending').length,
-      expiring: contracts.filter((c: any) => {
-        const endDate =
-          c.form_data?.data_fim || c.form_data?.dataFirmamentoContrato;
-        if (!endDate) return false;
-        const date = new Date(endDate);
-        const now = new Date();
-        const thirtyDaysFromNow = new Date(
-          now.getTime() + 30 * 24 * 60 * 60 * 1000
-        );
-        return date > now && date <= thirtyDaysFromNow;
-      }).length,
-    };
+export const ContractStats = memo<ContractStatsProps>(({ contracts }) => {
+  // Calcular estatísticas uma única vez
+  const stats = useMemo(() => {
+    const total = contracts.length;
+    const active = contracts.filter(c => 
+      c.form_data.dataTerminoRescisao && 
+      new Date(c.form_data.dataTerminoRescisao) > new Date()
+    ).length;
+    const pending = contracts.filter(c => 
+      !c.form_data.dataInicioRescisao
+    ).length;
+    const expired = total - active - pending;
 
-    const statsData = [
-      {
-        label: 'Total',
-        value: stats.total,
-        icon: FileText,
-        color: 'text-primary-600',
-        bgColor: 'bg-primary-100',
-      },
-      {
-        label: 'Ativos',
-        value: stats.active,
-        icon: CheckCircle,
-        color: 'text-success-600',
-        bgColor: 'bg-success-100',
-        percentage:
-          stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0,
-      },
-      {
-        label: 'Pendentes',
-        value: stats.pending,
-        icon: Clock,
-        color: 'text-warning-600',
-        bgColor: 'bg-warning-100',
-      },
-      {
-        label: 'Vencendo',
-        value: stats.expiring,
-        icon: AlertTriangle,
-        color: 'text-error-600',
-        bgColor: 'bg-error-100',
-      },
-    ];
+    return { total, active, pending, expired };
+  }, [contracts]);
 
-    if (isLoading) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="pt-6">
-                <div className="h-20 bg-neutral-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
-    }
+  const statCards = useMemo(() => [
+    {
+      icon: FileText,
+      label: 'Total',
+      value: stats.total,
+      color: 'text-neutral-600',
+      bgColor: 'bg-neutral-100',
+    },
+    {
+      icon: CheckCircle,
+      label: 'Ativos',
+      value: stats.active,
+      color: 'text-success-600',
+      bgColor: 'bg-success-100',
+    },
+    {
+      icon: Clock,
+      label: 'Pendentes',
+      value: stats.pending,
+      color: 'text-warning-600',
+      bgColor: 'bg-warning-100',
+    },
+    {
+      icon: AlertCircle,
+      label: 'Expirados',
+      value: stats.expired,
+      color: 'text-error-600',
+      bgColor: 'bg-error-100',
+    },
+  ], [stats]);
 
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {statsData.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card
-              key={stat.label}
-              className="hover:shadow-lg transition-shadow"
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {stat.label}
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-3xl font-bold text-neutral-900">
-                        {stat.value}
-                      </p>
-                      {stat.percentage !== undefined && (
-                        <span className="text-xs text-success-600 flex items-center">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          {stat.percentage}%
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.bgColor}`}
-                  >
-                    <Icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    );
-  }
-);
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {statCards.map((stat) => (
+        <Card key={stat.label} className="border-neutral-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-neutral-900">{stat.value}</p>
+                <p className="text-xs text-neutral-500">{stat.label}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+});
 
 ContractStats.displayName = 'ContractStats';

@@ -58,7 +58,7 @@ const queryClient = new QueryClient({
       gcTime: 5 * 60 * 1000, // 5 minutos (tempo em cache)
       refetchOnWindowFocus: true, // Refetch ao focar janela (útil para dados que mudam)
       refetchOnMount: false, // Não refetch se dados ainda estão frescos
-      keepPreviousData: true, // Mantém dados anteriores durante refetch para transições suaves
+      placeholderData: (previousData) => previousData, // Mantém dados anteriores durante refetch para transições suaves
       retry: (failureCount, error: any) => {
         // Retry inteligente baseado no erro
         if (error?.status === 404) return false; // Não retry para 404
