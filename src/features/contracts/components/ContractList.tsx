@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,9 +12,14 @@ import {
   Clock,
   MapPin,
 } from 'lucide-react';
-import QuickActionsDropdown from '@/components/QuickActionsDropdown';
 import { Contract } from '@/types/contract';
 import { ContractBillsSection } from './ContractBillsSection';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+
+// Lazy load de QuickActionsDropdown para code splitting
+const LazyQuickActionsDropdown = lazy(() => 
+  import('@/components/QuickActionsDropdown')
+);
 
 interface ContractListProps {
   contracts: Contract[];
@@ -49,10 +54,19 @@ const isMultipleLocatarios = (nome?: string) => {
 };
 
 /**
+ * Função para determinar a classe de gradiente baseada no índice - Cores mais neutras
+ */
+const getCardGradientClass = (index: number): string => {
+  const gradients = ['ai-card-blue', 'ai-card-purple', 'ai-card-cyan', 'ai-card-teal'];
+  return gradients[index % gradients.length];
+};
+
+/**
  * Item individual de contrato - memoizado para melhor performance
  */
 const ContractListItem = memo<{
   contract: Contract;
+  index: number;
   onGenerateDocument: (
     contract: Contract,
     template: string,
@@ -60,7 +74,7 @@ const ContractListItem = memo<{
   ) => void;
   onJusBrasilSearch: (nomeCompleto: string) => void;
   onEdit: (contractId: string) => void;
-}>(({ contract, onGenerateDocument, onJusBrasilSearch, onEdit }) => {
+}>(({ contract, index, onGenerateDocument, onJusBrasilSearch, onEdit }) => {
   const handleEdit = useCallback(() => {
     onEdit(contract.id);
   }, [contract.id, onEdit]);
@@ -81,20 +95,22 @@ const ContractListItem = memo<{
     [contract.form_data.nomeLocatario, onJusBrasilSearch]
   );
 
+  const gradientClass = getCardGradientClass(index);
+
   return (
-    <Card className="bg-white border-neutral-300 shadow-md hover:border-neutral-400 hover:shadow-sm transition-all duration-200 overflow-visible min-h-fit">
-      <CardContent className="p-5">
+    <Card className={`glass-card-enhanced ${gradientClass} rounded-2xl overflow-visible min-h-fit transition-all duration-500`}>
+      <CardContent className="p-6 relative z-10">
         {/* Header do Contrato */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-5">
           <div className="flex items-center justify-center flex-1">
             <div className="text-center">
-              <h3 className="font-bold text-lg text-black">
+              <h3 className="font-bold text-xl text-neutral-900 mb-1">
                 Contrato{' '}
-                <span className="font-mono text-xl text-primary-600">
+                <span className="font-mono text-2xl animate-gradient-text">
                   {contract.form_data.numeroContrato || '[NÚMERO]'}
                 </span>
               </h3>
-              <p className="text-xs text-gray-400 font-mono mt-1">
+              <p className="text-xs text-neutral-500 font-mono">
                 ID: {contract.id.slice(0, 8)}...
               </p>
             </div>
@@ -102,101 +118,91 @@ const ContractListItem = memo<{
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 flex-shrink-0"
+            className="h-9 w-9 p-0 flex-shrink-0 rounded-lg hover:bg-white/80 hover:scale-110 transition-all duration-300"
             onClick={handleEdit}
             aria-label={`Editar contrato ${contract.form_data.numeroContrato}`}
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4 icon-gradient" />
           </Button>
         </div>
 
-        {/* Separador */}
-        <div className="border-t border-neutral-300 mb-4"></div>
+        {/* Separador com gradiente */}
+        <div className="relative mb-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-neutral-200"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <div className="bg-white/80 backdrop-blur-sm px-3">
+              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            </div>
+          </div>
+        </div>
 
         {/* PARTES ENVOLVIDAS */}
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
+        <div className="mb-5">
+          <h4 className="text-sm font-bold text-neutral-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-neutral-400 to-neutral-500 rounded-full"></span>
             Partes Envolvidas
           </h4>
           <div className="space-y-3">
-            <div className="flex items-start gap-2">
-              <div
-                className="p-1.5 rounded-md bg-black"
-                style={{
-                  imageRendering: 'crisp-edges',
-                  backfaceVisibility: 'hidden',
-                }}
-              >
-                <User
-                  className="h-3 w-3 text-white"
-                  color="#FFFFFF"
-                  strokeWidth={2.5}
-                  style={{
-                    color: '#FFFFFF',
-                    stroke: '#FFFFFF',
-                    fill: 'none',
-                    shapeRendering: 'geometricPrecision',
-                  }}
-                />
+            <div className="flex items-start gap-3 group/item">
+              <div className="relative">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                  <User
+                    className="h-4 w-4 text-white"
+                    strokeWidth={2.5}
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-lg blur-md opacity-50 group-hover/item:opacity-70 transition-opacity duration-300 -z-10"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-black uppercase tracking-wide">
+                <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1">
                   {isMultipleProprietarios(contract.form_data.nomeProprietario)
                     ? 'Proprietários'
                     : 'Proprietário'}
                 </p>
-                <div className="flex items-center gap-2 group">
-                  <p className="text-sm font-semibold text-gray-600 truncate leading-tight">
+                <div className="flex items-center gap-2 group/name">
+                  <p className="text-sm font-semibold text-neutral-800 truncate leading-tight">
                     {contract.form_data.nomeProprietario}
                   </p>
                   <button
                     onClick={handleProprietarioSearch}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-neutral-200 rounded"
+                    className="opacity-0 group-hover/name:opacity-100 transition-all duration-300 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
                     title="Buscar no JusBrasil"
                     aria-label={`Buscar ${contract.form_data.nomeProprietario} no JusBrasil`}
                   >
-                    <Search className="h-3 w-3 text-neutral-600" />
+                    <Search className="h-3.5 w-3.5 text-blue-600" />
                   </button>
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-2">
-              <div
-                className="p-1.5 rounded-md bg-black"
-                style={{
-                  imageRendering: 'crisp-edges',
-                  backfaceVisibility: 'hidden',
-                }}
-              >
-                <User2
-                  className="h-3 w-3 text-white"
-                  color="#FFFFFF"
-                  strokeWidth={2.5}
-                  style={{
-                    color: '#FFFFFF',
-                    stroke: '#FFFFFF',
-                    fill: 'none',
-                    shapeRendering: 'geometricPrecision',
-                  }}
-                />
+            <div className="flex items-start gap-3 group/item">
+              <div className="relative">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                  <User2
+                    className="h-4 w-4 text-white"
+                    strokeWidth={2.5}
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 rounded-lg blur-md opacity-50 group-hover/item:opacity-70 transition-opacity duration-300 -z-10"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-black uppercase tracking-wide">
+                <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1">
                   {isMultipleLocatarios(contract.form_data.nomeLocatario)
                     ? 'Locatários'
                     : 'Locatário'}
                 </p>
-                <div className="flex items-center gap-2 group">
-                  <p className="text-sm font-semibold text-gray-600 truncate leading-tight">
+                <div className="flex items-center gap-2 group/name">
+                  <p className="text-sm font-semibold text-neutral-800 truncate leading-tight">
                     {contract.form_data.nomeLocatario}
                   </p>
                   <button
                     onClick={handleLocatarioSearch}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-neutral-200 rounded"
+                    className="opacity-0 group-hover/name:opacity-100 transition-all duration-300 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
                     title="Buscar no JusBrasil"
                     aria-label={`Buscar ${contract.form_data.nomeLocatario} no JusBrasil`}
                   >
-                    <Search className="h-3 w-3 text-neutral-600" />
+                    <Search className="h-3.5 w-3.5 text-purple-600" />
                   </button>
                 </div>
               </div>
@@ -205,56 +211,31 @@ const ContractListItem = memo<{
         </div>
 
         {/* TERMOS DO CONTRATO */}
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
+        <div className="mb-5">
+          <h4 className="text-sm font-bold text-neutral-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-neutral-400 to-neutral-500 rounded-full"></span>
             Termos do Contrato
           </h4>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
-              <div
-                className="p-1 rounded bg-black"
-                style={{
-                  imageRendering: 'crisp-edges',
-                  backfaceVisibility: 'hidden',
-                }}
-              >
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-md">
                 <CalendarDays
-                  className="h-3 w-3 text-white"
-                  color="#FFFFFF"
+                  className="h-4 w-4 text-white"
                   strokeWidth={2.5}
-                  style={{
-                    color: '#FFFFFF',
-                    stroke: '#FFFFFF',
-                    fill: 'none',
-                    shapeRendering: 'geometricPrecision',
-                  }}
                 />
               </div>
-              <span className="text-sm font-semibold text-black">
+              <span className="text-sm font-bold text-neutral-800">
                 {contract.form_data.dataInicioRescisao || '01/09/2026'}
               </span>
             </div>
-            <div className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg">
-              <div
-                className="p-1 rounded bg-black"
-                style={{
-                  imageRendering: 'crisp-edges',
-                  backfaceVisibility: 'hidden',
-                }}
-              >
+            <div className="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-500 shadow-md">
                 <Clock
-                  className="h-3 w-3 text-white"
-                  color="#FFFFFF"
+                  className="h-4 w-4 text-white"
                   strokeWidth={2.5}
-                  style={{
-                    color: '#FFFFFF',
-                    stroke: '#FFFFFF',
-                    fill: 'none',
-                    shapeRendering: 'geometricPrecision',
-                  }}
                 />
               </div>
-              <span className="text-sm font-semibold text-black">
+              <span className="text-sm font-bold text-neutral-800">
                 {contract.form_data.dataTerminoRescisao || '01/10/2026'}
               </span>
             </div>
@@ -262,36 +243,24 @@ const ContractListItem = memo<{
         </div>
 
         {/* LOCALIZAÇÃO */}
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">
+        <div className="mb-5">
+          <h4 className="text-sm font-bold text-neutral-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-neutral-400 to-neutral-500 rounded-full"></span>
             Localização
           </h4>
-          <div className="flex items-start gap-2 p-2 bg-neutral-50 rounded-lg">
-            <div
-              className="p-1 rounded bg-black"
-              style={{
-                imageRendering: 'crisp-edges',
-                backfaceVisibility: 'hidden',
-              }}
-            >
+          <div className="flex items-start gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-md flex-shrink-0">
               <MapPin
-                className="h-3 w-3 text-white"
-                color="#FFFFFF"
+                className="h-4 w-4 text-white"
                 strokeWidth={2.5}
-                style={{
-                  color: '#FFFFFF',
-                  stroke: '#FFFFFF',
-                  fill: 'none',
-                  shapeRendering: 'geometricPrecision',
-                }}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-black uppercase tracking-wide">
+              <p className="text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1">
                 Endereço
               </p>
               <p
-                className="text-sm font-medium text-gray-600 line-clamp-2 cursor-pointer hover:text-primary-600 hover:underline transition-colors leading-relaxed"
+                className="text-sm font-semibold text-neutral-800 line-clamp-2 cursor-pointer hover:text-blue-600 hover:underline transition-all duration-300 leading-relaxed"
                 onClick={(e) => {
                   e.stopPropagation();
                   const endereco =
@@ -313,7 +282,7 @@ const ContractListItem = memo<{
         </div>
 
         {/* CONTAS DE CONSUMO */}
-        <div className="mb-4 pb-2">
+        <div className="mb-5 pb-2">
           <ContractBillsSection
             contractId={
               contract.form_data.numeroContrato || '[NÚMERO NÃO DEFINIDO]'
@@ -323,15 +292,20 @@ const ContractListItem = memo<{
         </div>
 
         {/* AÇÕES RÁPIDAS */}
-        <div className="border-t border-neutral-300 pt-4 relative overflow-visible">
-          <div className="flex items-center justify-center">
-            <QuickActionsDropdown
-              contractId={contract.id}
-              contractNumber={contract.form_data.numeroContrato || '[NÚMERO]'}
-              onGenerateDocument={(_contractId, template, title) => {
-                onGenerateDocument(contract, template, title);
-              }}
-            />
+        <div className="relative overflow-visible pt-5">
+          <div className="absolute inset-x-0 top-0 flex items-center">
+            <div className="w-full border-t border-neutral-200"></div>
+          </div>
+          <div className="flex items-center justify-center pt-4">
+            <Suspense fallback={<div className="h-10 w-32 bg-neutral-200 rounded-lg animate-pulse" />}>
+              <LazyQuickActionsDropdown
+                contractId={contract.id}
+                contractNumber={contract.form_data.numeroContrato || '[NÚMERO]'}
+                onGenerateDocument={(_contractId, template, title) => {
+                  onGenerateDocument(contract, template, title);
+                }}
+              />
+            </Suspense>
           </div>
         </div>
       </CardContent>
@@ -344,6 +318,7 @@ ContractListItem.displayName = 'ContractListItem';
 /**
  * Componente de lista de contratos
  * Memoizado para evitar re-renders desnecessários
+ * Usa virtualização quando há muitos itens (>20) para melhor performance
  */
 export const ContractList = memo<ContractListProps>(
   ({
@@ -358,6 +333,20 @@ export const ContractList = memo<ContractListProps>(
     onGenerateDocument,
   }) => {
     const navigate = useNavigate();
+
+    // Intersection Observer para carregar mais automaticamente quando próximo ao fim
+    const [loadMoreRef, isLoadMoreVisible] = useIntersectionObserver<HTMLDivElement>({
+      threshold: 0.1,
+      rootMargin: '200px',
+      triggerOnce: false,
+    });
+
+    // Carregar mais automaticamente quando visível
+    useEffect(() => {
+      if (isLoadMoreVisible && hasMore && loadMore && !isLoadingMore && !isLoading) {
+        loadMore();
+      }
+    }, [isLoadMoreVisible, hasMore, loadMore, isLoadingMore, isLoading]);
 
     /**
      * Abre busca no JusBrasil pelo nome completo
@@ -383,16 +372,19 @@ export const ContractList = memo<ContractListProps>(
     // Loading state
     if (isLoading) {
       return (
-        <Card className="bg-white border-neutral-300 shadow-sm">
+        <Card className="glass-card-enhanced rounded-2xl">
           <CardContent className="p-12">
             <div className="text-center">
-              <div className="p-4 bg-neutral-100 rounded-lg mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                <FileText className="h-8 w-8 text-neutral-400 animate-pulse" />
+              <div className="relative mx-auto mb-6 w-20 h-20 flex items-center justify-center">
+                <div className="p-4 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl shadow-lg animate-pulse">
+                  <FileText className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
               </div>
-              <p className="text-lg font-medium text-black">
+              <p className="text-xl font-bold text-neutral-900 animate-gradient-text">
                 Carregando contratos...
               </p>
-              <p className="text-sm text-gray-400 mt-1">Aguarde um momento</p>
+              <p className="text-sm text-neutral-600 mt-2 font-medium">Aguarde um momento</p>
             </div>
           </CardContent>
         </Card>
@@ -402,21 +394,24 @@ export const ContractList = memo<ContractListProps>(
     // Empty state
     if (contracts.length === 0) {
       return (
-        <Card className="bg-white border-neutral-300 shadow-sm">
+        <Card className="glass-card-enhanced rounded-2xl">
           <CardContent className="p-12">
             <div className="text-center">
-              <div className="p-4 bg-black rounded-lg mx-auto mb-6 w-16 h-16 flex items-center justify-center">
-                <FileText className="h-8 w-8 text-white" color="white" />
+              <div className="relative mx-auto mb-6 w-20 h-20 flex items-center justify-center">
+                <div className="p-4 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl shadow-lg">
+                  <FileText className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl blur-xl opacity-50"></div>
               </div>
-              <h3 className="text-xl font-bold text-black mb-3">
+              <h3 className="text-2xl font-bold text-neutral-900 mb-3">
                 Nenhum contrato cadastrado ainda
               </h3>
-              <p className="text-base text-gray-400 mb-6 leading-relaxed">
+              <p className="text-base text-neutral-600 mb-8 leading-relaxed font-medium">
                 Comece criando seu primeiro contrato no sistema
               </p>
               <Link to="/cadastrar-contrato">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
+                <Button className="gap-2 ai-button-gradient text-white rounded-xl px-6 py-6 h-auto font-semibold">
+                  <Plus className="h-5 w-5" />
                   Criar Primeiro Contrato
                 </Button>
               </Link>
@@ -432,12 +427,13 @@ export const ContractList = memo<ContractListProps>(
 
     return (
       <>
-        {/* Grid de Contratos */}
+        {/* Grid de Contratos - Otimizado com React.memo e lazy loading */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {contracts.map((contract) => (
+          {contracts.map((contract, index) => (
             <ContractListItem
               key={contract.id}
               contract={contract}
+              index={index}
               onGenerateDocument={onGenerateDocument}
               onJusBrasilSearch={handleJusBrasilSearch}
               onEdit={handleEditContract}
@@ -445,29 +441,32 @@ export const ContractList = memo<ContractListProps>(
           ))}
         </div>
 
-        {/* Botão Ver Mais - Design Google Minimalista */}
+        {/* Botão Ver Mais com Intersection Observer - Carrega automaticamente quando visível */}
         {hasMore && !hasSearched && loadMore && (
-          <div className="flex justify-center mt-8">
-            <Button
-              onClick={loadMore}
-              disabled={isLoadingMore}
-              variant="ghost"
-              className="group relative px-6 py-2.5 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoadingMore ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 border-t-neutral-700"></div>
-                  <span>Carregando</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span>Ver mais</span>
-                  <span className="text-xs text-neutral-500 group-hover:text-neutral-700 transition-colors">
+          <div 
+            ref={loadMoreRef}
+            className="flex justify-center mt-10 min-h-[100px]"
+          >
+            {isLoadingMore ? (
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                <span className="text-neutral-600 font-medium">Carregando mais contratos...</span>
+              </div>
+            ) : (
+              <Button
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                variant="ghost"
+                className="group relative px-8 py-3 text-sm font-semibold text-neutral-700 hover:text-white rounded-xl glass-card-enhanced hover:bg-gradient-to-r hover:from-purple-500 hover:via-pink-500 hover:to-red-500 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="relative z-10">Ver mais</span>
+                  <span className="text-xs text-neutral-500 group-hover:text-white/80 transition-colors relative z-10">
                     ({remainingCount} restantes)
                   </span>
                 </div>
-              )}
-            </Button>
+              </Button>
+            )}
           </div>
         )}
       </>

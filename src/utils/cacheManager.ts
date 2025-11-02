@@ -1,6 +1,9 @@
 /**
- * Gerenciador de cache simples para otimizar carregamento
+ * Gerenciador de cache híbrido (memória + localStorage)
+ * Usa persistentCache para persistência e cacheManager para velocidade
  */
+
+import { persistentCache } from './persistentCache';
 
 interface CacheEntry<T> {
   data: T;
@@ -11,36 +14,57 @@ interface CacheEntry<T> {
 class CacheManager {
   private cache: Map<string, CacheEntry<any>> = new Map();
   private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutos
+  private readonly PERSISTENT_TTL = 15 * 60 * 1000; // 15 minutos para localStorage
 
   /**
-   * Armazena dados no cache
+   * Armazena dados no cache (memória + localStorage)
    */
   set<T>(key: string, data: T, expiresIn: number = this.DEFAULT_TTL): void {
+    // Cache em memória (rápido)
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
       expiresIn,
     });
+
+    // Cache persistente (para dados importantes)
+    if (expiresIn >= this.PERSISTENT_TTL) {
+      persistentCache.set(key, data, {
+        expiresIn: this.PERSISTENT_TTL,
+      });
+    }
   }
 
   /**
-   * Recupera dados do cache se ainda válidos
+   * Recupera dados do cache (memória primeiro, depois localStorage)
    */
   get<T>(key: string): T | null {
+    // Tentar cache em memória primeiro (mais rápido)
     const entry = this.cache.get(key);
     
-    if (!entry) {
-      return null;
+    if (entry) {
+      const isExpired = Date.now() - entry.timestamp > entry.expiresIn;
+      
+      if (!isExpired) {
+        return entry.data as T;
+      } else {
+        this.cache.delete(key);
+      }
     }
 
-    const isExpired = Date.now() - entry.timestamp > entry.expiresIn;
-    
-    if (isExpired) {
-      this.cache.delete(key);
-      return null;
+    // Tentar cache persistente
+    const persistentData = persistentCache.get<T>(key);
+    if (persistentData) {
+      // Restaurar em memória para acesso rápido
+      this.cache.set(key, {
+        data: persistentData,
+        timestamp: Date.now(),
+        expiresIn: this.DEFAULT_TTL,
+      });
+      return persistentData;
     }
 
-    return entry.data as T;
+    return null;
   }
 
   /**
@@ -48,6 +72,7 @@ class CacheManager {
    */
   delete(key: string): void {
     this.cache.delete(key);
+    persistentCache.delete(key);
   }
 
   /**
@@ -55,6 +80,7 @@ class CacheManager {
    */
   clear(): void {
     this.cache.clear();
+    persistentCache.clear();
   }
 
   /**
@@ -71,6 +97,7 @@ class CacheManager {
     });
 
     keysToDelete.forEach(key => this.cache.delete(key));
+    persistentCache.cleanup();
   }
 }
 
@@ -78,6 +105,8 @@ class CacheManager {
 export const cacheManager = new CacheManager();
 
 // Cleanup automático a cada 10 minutos
-setInterval(() => {
-  cacheManager.cleanup();
-}, 10 * 60 * 1000);
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    cacheManager.cleanup();
+  }, 10 * 60 * 1000);
+}

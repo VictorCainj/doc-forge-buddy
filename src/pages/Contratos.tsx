@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { PremiumButton } from '@/components/ui/premium-button';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -30,12 +30,18 @@ import {
   DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE,
   STATUS_VISTORIA_WHATSAPP_TEMPLATE,
 } from '@/templates/documentos';
-import { ContractList, ContractModals } from '@/features/contracts/components';
+import { ContractList } from '@/features/contracts/components';
 import { splitNames } from '@/utils/nameHelpers';
 import { useContractReducer } from '@/features/contracts/hooks/useContractReducer';
 import OptimizedSearch from '@/components/ui/optimized-search';
 import { useAuth } from '@/hooks/useAuth';
 import { exportContractsToExcel } from '@/utils/exportContractsToExcel';
+import { createContractIndex, filterContractsByDate } from '@/utils/contractIndex';
+import { usePreloadContracts } from '@/hooks/usePreloadContracts';
+import { useDebouncedCallback } from '@/utils/debounce';
+
+// Lazy load de modals para code splitting
+const ContractModals = lazy(() => import('@/features/contracts/components').then(m => ({ default: m.ContractModals })));
 
 const Contratos = () => {
   const navigate = useNavigate();
@@ -46,6 +52,13 @@ const Contratos = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  
+  // Pré-carregamento de contratos em background
+  usePreloadContracts({
+    enabled: true,
+    maxContracts: 50,
+    priority: 'low',
+  });
 
   // Reducer state (substitui ~20 useState)
   const { state, actions } = useContractReducer();
@@ -77,7 +90,12 @@ const Contratos = () => {
     limit: hasDateFilters ? 1000 : 6, // Carregar mais quando há filtros de data
   });
 
-  // Contratos exibidos (filtro de mês/ano, busca ou paginação normal)
+  // Índice de contratos para busca rápida O(1) - DEVE VIR DEPOIS DA DECLARAÇÃO DE contracts
+  const contractIndex = useMemo(() => {
+    return createContractIndex(contracts);
+  }, [contracts]);
+
+  // Contratos exibidos (filtro de mês/ano, busca ou paginação normal) - OTIMIZADO
   const displayedContracts = useMemo(() => {
     let contractsToDisplay = contracts;
 
@@ -86,80 +104,23 @@ const Contratos = () => {
       contractsToDisplay = searchResults;
     }
 
-    // Função para parsear data brasileira (DD/MM/YYYY) - mesmo padrão usado na criação
-    const parseBrazilianDate = (dateStr: string): Date | null => {
-      if (!dateStr) return null;
-
-      // Se a data está no formato brasileiro DD/MM/YYYY
-      if (dateStr.includes('/')) {
-        const [dia, mes, ano] = dateStr.split('/');
-        const parsedDate = new Date(
-          parseInt(ano),
-          parseInt(mes) - 1,
-          parseInt(dia)
-        );
-
-        // Validar se a data é válida
-        if (isNaN(parsedDate.getTime())) {
-          return null;
-        }
-
-        return parsedDate;
-      } else {
-        // Se já está no formato ISO ou outro formato
-        const parsedDate = new Date(dateStr);
-
-        // Validar se a data é válida
-        if (isNaN(parsedDate.getTime())) {
-          return null;
-        }
-
-        return parsedDate;
-      }
-    };
-
-    // Aplicar filtro de mês e/ou ano se selecionados
+    // Aplicar filtro de mês e/ou ano usando índice (busca O(1))
     if (selectedMonth || selectedYear) {
-      contractsToDisplay = contractsToDisplay.filter((contract) => {
-        // Só considerar contratos com dataInicioRescisao válida
-        if (!contract.form_data?.dataInicioRescisao) {
-          return false; // Excluir contratos sem dataInicioRescisao
-        }
-
-        const contractDate = parseBrazilianDate(
-          contract.form_data.dataInicioRescisao
-        );
-
-        // Se não conseguiu parsear, excluir do resultado
-        if (!contractDate || isNaN(contractDate.getTime())) {
-          return false;
-        }
-
-        const currentYear = new Date().getFullYear();
-
-        if (selectedMonth && selectedYear) {
-          // Ambos selecionados: filtrar por mês e ano específicos
-          return (
-            contractDate.getMonth() + 1 === parseInt(selectedMonth) &&
-            contractDate.getFullYear() === parseInt(selectedYear)
-          );
-        } else if (selectedMonth) {
-          // Apenas mês selecionado: filtrar por mês do ano atual
-          return (
-            contractDate.getMonth() + 1 === parseInt(selectedMonth) &&
-            contractDate.getFullYear() === currentYear
-          );
-        } else if (selectedYear) {
-          // Apenas ano selecionado: filtrar por todos os meses daquele ano
-          return contractDate.getFullYear() === parseInt(selectedYear);
-        }
-
-        return false;
-      });
+      const month = selectedMonth ? parseInt(selectedMonth) : undefined;
+      const year = selectedYear ? parseInt(selectedYear) : undefined;
+      const filtered = filterContractsByDate(contractIndex, month, year);
+      
+      // Se há busca, filtrar apenas os resultados da busca
+      if (hasSearched && searchResults.length > 0) {
+        const filteredIds = new Set(filtered.map(c => c.id));
+        contractsToDisplay = contractsToDisplay.filter(c => filteredIds.has(c.id));
+      } else {
+        contractsToDisplay = filtered;
+      }
     }
 
     return contractsToDisplay;
-  }, [selectedMonth, selectedYear, hasSearched, searchResults, contracts]);
+  }, [selectedMonth, selectedYear, hasSearched, searchResults, contracts, contractIndex]);
 
   // ============================================================
   // DOCUMENT GENERATION HANDLERS
@@ -599,6 +560,15 @@ const Contratos = () => {
     }
   }, [loadMore, actions, state.currentPage]);
 
+  // Debounce para filtros de data (evitar recálculos desnecessários)
+  const debouncedSetMonth = useDebouncedCallback((month: string) => {
+    setSelectedMonth(month);
+  }, 300);
+
+  const debouncedSetYear = useDebouncedCallback((year: string) => {
+    setSelectedYear(year);
+  }, 300);
+
   // Handler para limpar filtro de mês/ano
   const handleClearDateFilter = useCallback(() => {
     setSelectedMonth('');
@@ -663,195 +633,210 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen premium-gradient-bg">
-        {/* Header Moderno */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/60 shadow-sm">
-          <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="icon-container w-14 h-14 bg-neutral-200 dark:bg-neutral-700 rounded-2xl flex items-center justify-center scale-on-hover">
-                    <FileText className="h-7 w-7 text-neutral-700 dark:text-neutral-300" />
+      <div className="min-h-screen ai-gradient-bg relative">
+
+        {/* Conteúdo principal com z-index */}
+        <div className="relative z-10">
+          {/* Header Modernizado com Glassmorphism */}
+          <div className="ai-header-glass sticky top-0 z-50">
+            <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative group">
+                      <div className="icon-container w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center scale-on-hover glow-border shadow-lg">
+                        <FileText className="h-8 w-8 text-white" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-300 -z-10" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                        <span className="animate-gradient-text">Contratos</span>
+                      </h1>
+                      <p className="text-neutral-600 mt-1.5 text-sm sm:text-base font-medium">
+                        Gerencie todos os contratos de locação
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
-                      Contratos
-                    </h1>
-                    <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
-                      Gerencie todos os contratos de locação
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <OptimizedSearch
-                    onSearch={performSearch}
-                    placeholder="Buscar contratos..."
-                    showResultsCount={true}
-                    resultsCount={totalResults}
-                    isLoading={isSearching}
-                    className="w-80"
-                  />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <OptimizedSearch
+                      onSearch={performSearch}
+                      placeholder="Buscar contratos..."
+                      showResultsCount={true}
+                      resultsCount={totalResults}
+                      isLoading={isSearching}
+                      className="w-80 glass-card-enhanced rounded-xl"
+                    />
 
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={selectedMonth}
-                      onValueChange={setSelectedMonth}
-                    >
-                      <SelectTrigger className="w-[140px] h-9 border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
-                        <SelectValue placeholder="Mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {meses.map((mes, index) => (
-                          <SelectItem
-                            key={index}
-                            value={(index + 1).toString()}
-                          >
-                            {mes}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={selectedMonth}
+                        onValueChange={debouncedSetMonth}
+                      >
+                        <SelectTrigger className="w-[140px] h-10 ai-select-glass rounded-xl font-medium">
+                          <SelectValue placeholder="Mês" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card-enhanced">
+                          {meses.map((mes, index) => (
+                            <SelectItem
+                              key={index}
+                              value={(index + 1).toString()}
+                              className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200"
+                            >
+                              {mes}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                    <Select
-                      value={selectedYear}
-                      onValueChange={setSelectedYear}
-                    >
-                      <SelectTrigger className="w-[120px] h-9 border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
-                        <SelectValue placeholder="Ano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableYears.map((year) => (
-                          <SelectItem key={year} value={year.toString()}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <Select
+                        value={selectedYear}
+                        onValueChange={debouncedSetYear}
+                      >
+                        <SelectTrigger className="w-[120px] h-10 ai-select-glass rounded-xl font-medium">
+                          <SelectValue placeholder="Ano" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card-enhanced">
+                          {availableYears.map((year) => (
+                            <SelectItem key={year} value={year.toString()} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                    {(selectedMonth || selectedYear) && (
+                      {(selectedMonth || selectedYear) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearDateFilter}
+                          className="h-10 px-4 text-neutral-600 hover:text-neutral-900 hover:bg-white/80 rounded-xl transition-all duration-300"
+                          aria-label="Limpar filtro de data"
+                        >
+                          Limpar
+                        </Button>
+                      )}
+                    </div>
+
+                    {hasSearched && (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={handleClearDateFilter}
-                        className="h-9 px-3 text-neutral-600 hover:text-neutral-900"
-                        aria-label="Limpar filtro de data"
+                        onClick={clearSearch}
+                        className="inline-flex items-center gap-2 px-4 py-2 h-10 rounded-xl glass-card-enhanced hover:bg-white/90 text-neutral-700 transition-all duration-300"
                       >
                         Limpar
                       </Button>
                     )}
+
+                    {displayedContracts.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleExportToExcel}
+                        disabled={isExporting || displayedContracts.length === 0}
+                        className="inline-flex items-center gap-2 px-4 py-2 h-10 rounded-xl glass-card-enhanced hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 text-emerald-700 border-emerald-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={`Exportar ${displayedContracts.length} contrato(s) para Excel`}
+                      >
+                        {isExporting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-300 border-t-emerald-700"></div>
+                            <span className="hidden sm:inline">
+                              Exportando...
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                              Exportar Excel
+                            </span>
+                          </>
+                        )}
+                      </Button>
+                    )}
+
+                    <Link to="/cadastrar-contrato">
+                      <PremiumButton icon={<Plus />} variant="primary">
+                        Novo Contrato
+                      </PremiumButton>
+                    </Link>
                   </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                  {hasSearched && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearSearch}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
-                    >
-                      Limpar
-                    </Button>
-                  )}
-
-                  {displayedContracts.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportToExcel}
-                      disabled={isExporting || displayedContracts.length === 0}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-white hover:bg-success-50 text-success-700 hover:border-success-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={`Exportar ${displayedContracts.length} contrato(s) para Excel`}
-                    >
-                      {isExporting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-success-300 border-t-success-700"></div>
-                          <span className="hidden sm:inline">
-                            Exportando...
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-4 w-4" />
-                          <span className="hidden sm:inline">
-                            Exportar Excel
-                          </span>
-                        </>
-                      )}
-                    </Button>
-                  )}
-
-                  <Link to="/cadastrar-contrato">
-                    <PremiumButton icon={<Plus />} variant="primary">
-                      Novo Contrato
-                    </PremiumButton>
-                  </Link>
+          {/* Welcome Section Reformulada */}
+          <div className="max-w-[1400px] mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div className="gradient-border-animated">
+              <div className="glass-card-enhanced flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 sm:gap-8 p-8 sm:p-10 rounded-[14px]">
+                <div className="flex flex-col gap-4">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900">
+                    Bem-vindo,{' '}
+                    <span className="animate-gradient-text inline-block text-4xl sm:text-5xl">
+                      {profile?.full_name ||
+                        user?.email?.split('@')[0] ||
+                        'Usuário'}
+                    </span>
+                  </h2>
+                  <p className="text-lg sm:text-xl text-neutral-700 font-semibold">
+                    Com quais contratos iremos trabalhar hoje?
+                  </p>
+                </div>
+                <div className="flex flex-col items-start sm:items-end gap-2">
+                  <p className="text-sm sm:text-base text-neutral-600 font-semibold uppercase tracking-wider">
+                    Hoje
+                  </p>
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-xl blur-lg opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
+                    <div className="relative bg-white/90 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/50 shadow-lg">
+                      <p className="text-xl sm:text-2xl font-bold relative">
+                        <span className="animate-gradient-text text-2xl sm:text-3xl">
+                          {formatDateBrazilian(new Date())}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Welcome Section */}
-        <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="animate-gradient-border">
-            <div className="animate-gradient-border-content flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 p-6 sm:p-8">
-              <div className="flex flex-col gap-3">
-                <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-                  Bem-vindo,{' '}
-                  <span className="animate-gradient-text inline-block">
-                    {profile?.full_name ||
-                      user?.email?.split('@')[0] ||
-                      'Usuário'}
-                  </span>
-                </h2>
-                <p className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 font-medium">
-                  Com quais contratos iremos trabalhar hoje?
-                </p>
-              </div>
-              <div className="flex flex-col items-start sm:items-end gap-1">
-                <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-medium uppercase tracking-wide">
-                  Hoje
-                </p>
-                <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 relative">
-                  <span className="relative inline-block animate-gradient-text">
-                    {formatDateBrazilian(new Date())}
-                  </span>
-                </p>
-              </div>
-            </div>
+          {/* Main Content */}
+          <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            {/* Lista de Contratos */}
+            <ContractList
+              contracts={displayedContracts}
+              isLoading={loading}
+              hasMore={hasMore}
+              loadMore={handleLoadMore}
+              isLoadingMore={state.loading.loadMore}
+              totalCount={totalCount}
+              displayedCount={displayedContracts.length}
+              hasSearched={hasSearched}
+              onGenerateDocument={generateDocument}
+            />
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          {/* Lista de Contratos */}
-          <ContractList
-            contracts={displayedContracts}
-            isLoading={loading}
-            hasMore={hasMore}
-            loadMore={handleLoadMore}
-            isLoadingMore={state.loading.loadMore}
-            totalCount={totalCount}
-            displayedCount={displayedContracts.length}
-            hasSearched={hasSearched}
-            onGenerateDocument={generateDocument}
+        {/* Modals - Lazy loaded */}
+        <Suspense fallback={null}>
+          <ContractModals
+            modals={state.modals}
+            selectedContract={state.selectedContract}
+            pendingDocument={state.pendingDocument}
+            formData={state.formData}
+            onFormDataChange={actions.setFormData}
+            onCloseModal={actions.closeModal}
+            onGenerateAgendamento={handleGenerateAgendamento}
+            onGenerateRecusaAssinatura={handleGenerateRecusaAssinatura}
+            onGenerateWhatsApp={handleGenerateWhatsApp}
+            onGenerateWithAssinante={handleGenerateWithAssinante}
+            onGenerateStatusVistoria={handleGenerateStatusVistoria}
           />
-        </div>
-
-        {/* Modals */}
-        <ContractModals
-          modals={state.modals}
-          selectedContract={state.selectedContract}
-          pendingDocument={state.pendingDocument}
-          formData={state.formData}
-          onFormDataChange={actions.setFormData}
-          onCloseModal={actions.closeModal}
-          onGenerateAgendamento={handleGenerateAgendamento}
-          onGenerateRecusaAssinatura={handleGenerateRecusaAssinatura}
-          onGenerateWhatsApp={handleGenerateWhatsApp}
-          onGenerateWithAssinante={handleGenerateWithAssinante}
-          onGenerateStatusVistoria={handleGenerateStatusVistoria}
-        />
+        </Suspense>
       </div>
     </TooltipProvider>
   );
