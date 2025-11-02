@@ -5,24 +5,27 @@ import { cn } from '@/lib/utils';
 interface PageTransitionProps {
   children: ReactNode;
   className?: string;
+  /** Desabilita animação inicial para carregamento mais rápido */
+  skipInitialAnimation?: boolean;
 }
 
-const PageTransition = ({ children, className }: PageTransitionProps) => {
+const PageTransition = ({ children, className, skipInitialAnimation = false }: PageTransitionProps) => {
   return (
     <motion.div
       className={cn(
-        'min-h-screen w-full motion-reduce:transition-none',
+        'min-h-screen w-full motion-reduce:transition-none gpu-accelerate',
         className
       )}
-      initial={{ opacity: 0 }}
+      initial={skipInitialAnimation ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
+      transition={{ duration: 0.05, ease: 'easeOut' }}
       style={{ 
         pointerEvents: 'auto',
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
         perspective: 1000,
+        willChange: 'opacity',
       }}
       onAnimationComplete={() => {
         // Remove will-change após animação para restaurar nitidez

@@ -72,7 +72,7 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       <Button
         ref={ref}
         className={cn(
-          'rounded-lg transition-all duration-200 shadow-sm hover:shadow-md',
+          'rounded-lg transition-all duration-75 active:scale-[0.98] shadow-sm hover:shadow-md',
           variantStyles[variant],
           sizeStyles[size],
           loading && 'opacity-50 cursor-not-allowed',

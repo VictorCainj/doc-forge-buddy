@@ -203,9 +203,19 @@ All colors MUST be HSL.
     display: none;
   }
 
-  /* Smooth transitions globais */
+  /* Smooth transitions globais - otimizado para performance */
   * {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* GPU acceleration para elementos animados */
+  button,
+  [role="button"],
+  .transition-all,
+  .transition-transform {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   /* Tipografia Google */
@@ -218,7 +228,12 @@ All colors MUST be HSL.
   }
 
   /* Remove blur de animações após conclusão - força nitidez máxima */
-  * {
+  /* Otimizado: removido * global para melhor performance */
+  button,
+  [role="button"],
+  .transition-all,
+  .transition-transform,
+  .motion-reduce\:transition-none {
     transform: translateZ(0);
     backface-visibility: hidden;
   }
@@ -269,11 +284,20 @@ All colors MUST be HSL.
     border-radius: calc(var(--radius) - 1px);
   }
 
+  /* Otimização de backdrop-filter para melhor performance */
+  .backdrop-blur-sm,
+  .backdrop-blur,
+  .glass-card {
+    will-change: filter;
+    transform: translateZ(0);
+  }
+  
+  /* Otimização de métricas cards - transições mais rápidas */
   .metric-card {
     background: var(--gradient-secondary);
     border: 1px solid hsl(var(--border));
     box-shadow: var(--shadow-card);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 75ms ease, box-shadow 75ms ease;
   }
 
   .metric-card:hover {
@@ -376,11 +400,11 @@ All colors MUST be HSL.
     background: rgb(23 23 23 / 0.5);
   }
 
-  /* Premium Card with subtle depth */
+  /* Premium Card com transições otimizadas */
   .premium-card {
     @apply bg-white rounded-xl border border-neutral-200/80;
     @apply shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_24px_rgba(0,0,0,0.04)];
-    @apply transition-all duration-300 ease-out;
+    @apply transition-all duration-100 ease-out;
     @apply relative overflow-hidden;
     background: linear-gradient(
       135deg,
@@ -400,7 +424,7 @@ All colors MUST be HSL.
       rgba(236, 72, 153, 0.02) 100%
     );
     opacity: 0;
-    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.1s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
   }
 
@@ -413,19 +437,19 @@ All colors MUST be HSL.
     opacity: 1;
   }
 
-  /* Elevated card with smooth lift effect */
+  /* Elevated card com transições otimizadas */
   .elevated-card {
     @apply bg-white rounded-xl border border-neutral-200;
     @apply shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)];
-    @apply transition-all duration-300;
+    @apply transition-all duration-100;
     @apply hover:shadow-[0_8px_24px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.06)];
     @apply hover:-translate-y-1;
     transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Subtle glow effect on hover */
+  /* Subtle glow effect com transições otimizadas */
   .glow-on-hover {
-    @apply transition-all duration-300;
+    @apply transition-all duration-100;
     @apply hover:shadow-[0_0_20px_rgba(59,130,246,0.15),0_8px_24px_rgba(0,0,0,0.08)];
   }
 
@@ -458,16 +482,16 @@ All colors MUST be HSL.
     opacity: 0.5;
   }
 
-  /* Smooth scale animation */
+  /* Smooth scale animation otimizado */
   .scale-on-hover {
-    @apply transition-transform duration-300 ease-out;
+    @apply transition-transform duration-100 ease-out;
     @apply hover:scale-[1.02];
   }
 
-  /* Icon container with subtle glow */
+  /* Icon container com transições otimizadas */
   .icon-container {
     @apply relative;
-    @apply transition-all duration-300 ease-out;
+    @apply transition-all duration-100 ease-out;
   }
 
   .icon-container::before {
@@ -480,7 +504,7 @@ All colors MUST be HSL.
       transparent 70%
     );
     opacity: 0;
-    transition: opacity 0.3s ease-out;
+    transition: opacity 0.1s ease-out;
     border-radius: inherit;
   }
 
@@ -790,6 +814,25 @@ All colors MUST be HSL.
     .person-manager-card
     .text-muted-foreground {
     color: rgb(148, 163, 184) !important;
+  }
+
+  /* Classes utilitárias para performance */
+  .transition-instant {
+    transition: all 0ms ease;
+  }
+  
+  .transition-fast {
+    transition: all 75ms ease;
+  }
+  
+  .transition-base {
+    transition: all 100ms ease;
+  }
+  
+  .gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   /* Screen reader only - Acessibilidade */

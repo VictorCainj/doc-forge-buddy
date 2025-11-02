@@ -57,63 +57,113 @@ export function useDashboardDesocupacao(filters: DashboardFilters) {
       });
 
       // Aplicar filtro de período baseado na data de início da rescisão
-      // Sempre filtra por período: do dia 01 até o final do mês
+      // Usar comparação direta de mês/ano para filtros de mês específico (igual à página /contratos)
       let contratosFiltrados = contratosComMotivo;
-      const { startDate, endDate } = getPeriodDates(filters);
-      // Início do dia às 00:00:00
-      const inicio = new Date(startDate + 'T00:00:00');
-      // Fim do dia às 23:59:59.999 para incluir todo o último dia
-      const fim = new Date(endDate + 'T23:59:59.999');
+
+      // Função para parsear data brasileira (DD/MM/YYYY) - mesmo padrão usado na página /contratos
+      const parseBrazilianDate = (dateStr: string): Date | null => {
+        if (!dateStr) return null;
+
+        // Se a data está no formato brasileiro DD/MM/YYYY
+        if (dateStr.includes('/')) {
+          const [dia, mes, ano] = dateStr.split('/');
+          const parsedDate = new Date(
+            parseInt(ano),
+            parseInt(mes) - 1,
+            parseInt(dia)
+          );
+
+          // Validar se a data é válida
+          if (isNaN(parsedDate.getTime())) {
+            return null;
+          }
+
+          return parsedDate;
+        } else {
+          // Se já está no formato ISO ou outro formato
+          const parsedDate = new Date(dateStr);
+
+          // Validar se a data é válida
+          if (isNaN(parsedDate.getTime())) {
+            return null;
+          }
+
+          return parsedDate;
+        }
+      };
 
       log.debug('Aplicando filtro por data de início da rescisão:', {
         periodo: filters.periodo,
-        startDate,
-        endDate,
-        inicio: inicio.toISOString(),
-        fim: fim.toISOString(),
+        ano: filters.ano,
+        mes: filters.mes,
+        dataInicio: filters.dataInicio,
+        dataFim: filters.dataFim,
       });
 
       contratosFiltrados = contratosComMotivo.filter((contrato) => {
         const dataInicioRescisao = contrato.form_data?.dataInicioRescisao;
         if (!dataInicioRescisao) {
-          // Log resumido para não poluir o console
           return false;
         }
 
-        // Validar se a data é válida e converter formato brasileiro (DD/MM/YYYY) para Date
-        let dataInicioRescisaoObj: Date;
+        const contractDate = parseBrazilianDate(dataInicioRescisao);
 
-        // Se a data está no formato brasileiro DD/MM/YYYY
-        if (dataInicioRescisao.includes('/')) {
-          const [dia, mes, ano] = dataInicioRescisao.split('/');
-          dataInicioRescisaoObj = new Date(
-            parseInt(ano),
-            parseInt(mes) - 1,
-            parseInt(dia)
-          );
-        } else {
-          // Se já está no formato ISO ou outro formato
-          dataInicioRescisaoObj = new Date(dataInicioRescisao);
-        }
-
-        if (isNaN(dataInicioRescisaoObj.getTime())) {
-          log.warn(
-            'Data de início da rescisão inválida:',
-            contrato.id,
-            dataInicioRescisao
-          );
+        // Se não conseguiu parsear, excluir do resultado
+        if (!contractDate || isNaN(contractDate.getTime())) {
           return false;
         }
 
-        // Verificar se a data de início da rescisão está dentro do período
-        // (do dia 01 às 00:00:00 até o último dia às 23:59:59.999)
+        // Para filtro de mês específico ou mês atual, usar comparação direta de mês/ano (igual à página /contratos)
+        if (
+          (filters.periodo === 'mes-especifico' && filters.ano && filters.mes) ||
+          filters.periodo === 'mes-atual'
+        ) {
+          let anoFiltro: number;
+          let mesFiltro: number;
+
+          if (filters.periodo === 'mes-especifico' && filters.ano && filters.mes) {
+            anoFiltro = filters.ano;
+            mesFiltro = filters.mes;
+          } else {
+            // Mês atual
+            const now = new Date();
+            anoFiltro = now.getFullYear();
+            mesFiltro = now.getMonth() + 1;
+          }
+
+          const estaNoPeriodo =
+            contractDate.getMonth() + 1 === mesFiltro &&
+            contractDate.getFullYear() === anoFiltro;
+
+          if (estaNoPeriodo) {
+            log.debug(
+              `Contrato incluído (${filters.periodo}):`,
+              contrato.id,
+              'Data início rescisão:',
+              dataInicioRescisao,
+              'Mês:',
+              contractDate.getMonth() + 1,
+              'Ano:',
+              contractDate.getFullYear()
+            );
+          }
+
+          return estaNoPeriodo;
+        }
+
+        // Para período personalizado, usar comparação por intervalo de datas
+        const { startDate, endDate } = getPeriodDates(filters);
+        // Início do dia às 00:00:00
+        const inicio = new Date(startDate + 'T00:00:00');
+        // Fim do dia às 23:59:59.999 para incluir todo o último dia
+        const fim = new Date(endDate + 'T23:59:59.999');
+
         const estaNoPeriodo =
-          dataInicioRescisaoObj >= inicio && dataInicioRescisaoObj <= fim;
+          contractDate >= inicio && contractDate <= fim;
 
-        // Log apenas para contratos incluídos para reduzir spam no console
         if (estaNoPeriodo) {
           log.debug(
-            'Contrato incluído:',
+            'Contrato incluído (intervalo):',
             contrato.id,
             'Data início rescisão:',
             dataInicioRescisao

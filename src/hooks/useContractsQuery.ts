@@ -36,7 +36,7 @@ export function useContractsQuery() {
     refetchOnWindowFocus: false, // Não refetch ao focar janela
   });
   
-  // Create contract mutation
+  // Create contract mutation com optimistic update
   const createMutation = useMutation({
     mutationFn: async (contract: any) => {
       const { data, error } = await supabase
@@ -48,16 +48,47 @@ export function useContractsQuery() {
       if (error) throw error;
       return (data as unknown) as Contract;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    onMutate: async (newContract) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['contracts'] });
+      
+      // Snapshot do valor anterior
+      const previousContracts = queryClient.getQueryData<Contract[]>(['contracts']);
+      
+      // Optimistic update: adicionar contrato temporário ao cache
+      if (previousContracts) {
+        const optimisticContract = {
+          ...newContract,
+          id: `temp-${Date.now()}`, // ID temporário
+          created_at: new Date().toISOString(),
+        } as Contract;
+        
+        queryClient.setQueryData<Contract[]>(['contracts'], (old = []) => [
+          optimisticContract,
+          ...old,
+        ]);
+      }
+      
+      return { previousContracts };
+    },
+    onSuccess: (data) => {
+      // Substituir contrato temporário pelo real
+      queryClient.setQueryData<Contract[]>(['contracts'], (old = []) => {
+        const filtered = old.filter(c => !c.id.startsWith('temp-'));
+        return [data, ...filtered];
+      });
       toast.success('Contrato criado com sucesso');
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _newContract, context) => {
+      // Rollback em caso de erro
+      if (context?.previousContracts) {
+        queryClient.setQueryData(['contracts'], context.previousContracts);
+      }
       toast.error(`Erro ao criar contrato: ${error.message}`);
     },
   });
   
-  // Update contract mutation
+  // Update contract mutation com optimistic update
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...updates }: any) => {
       const { data, error } = await supabase
@@ -70,16 +101,41 @@ export function useContractsQuery() {
       if (error) throw error;
       return (data as unknown) as Contract;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    onMutate: async ({ id, ...updates }) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['contracts'] });
+      
+      // Snapshot do valor anterior
+      const previousContracts = queryClient.getQueryData<Contract[]>(['contracts']);
+      
+      // Optimistic update: atualizar contrato no cache imediatamente
+      if (previousContracts) {
+        queryClient.setQueryData<Contract[]>(['contracts'], (old = []) =>
+          old.map((contract) =>
+            contract.id === id ? { ...contract, ...updates } : contract
+          )
+        );
+      }
+      
+      return { previousContracts };
+    },
+    onSuccess: (data) => {
+      // Atualizar com dados reais do servidor
+      queryClient.setQueryData<Contract[]>(['contracts'], (old = []) =>
+        old.map((contract) => (contract.id === data.id ? data : contract))
+      );
       toast.success('Contrato atualizado com sucesso');
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback em caso de erro
+      if (context?.previousContracts) {
+        queryClient.setQueryData(['contracts'], context.previousContracts);
+      }
       toast.error(`Erro ao atualizar contrato: ${error.message}`);
     },
   });
   
-  // Delete contract mutation
+  // Delete contract mutation com optimistic update
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -89,11 +145,30 @@ export function useContractsQuery() {
         
       if (error) throw error;
     },
+    onMutate: async (id) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['contracts'] });
+      
+      // Snapshot do valor anterior
+      const previousContracts = queryClient.getQueryData<Contract[]>(['contracts']);
+      
+      // Optimistic update: remover contrato do cache imediatamente
+      if (previousContracts) {
+        queryClient.setQueryData<Contract[]>(['contracts'], (old = []) =>
+          old.filter((contract) => contract.id !== id)
+        );
+      }
+      
+      return { previousContracts };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
       toast.success('Contrato deletado com sucesso');
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _id, context) => {
+      // Rollback em caso de erro
+      if (context?.previousContracts) {
+        queryClient.setQueryData(['contracts'], context.previousContracts);
+      }
       toast.error(`Erro ao deletar contrato: ${error.message}`);
     },
   });

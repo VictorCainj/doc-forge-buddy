@@ -215,8 +215,8 @@ export const shadows = {
 export const transitions = {
   duration: {
     instant: '0ms',
-    fast: '150ms',
-    base: '200ms',
+    fast: '75ms',
+    base: '100ms',
     slow: '300ms',
     slower: '500ms',
   },
@@ -235,12 +235,12 @@ export const transitions = {
   },
 
   // Transições pré-definidas
-  all: 'all 200ms ease',
+  all: 'all 100ms ease',
   colors:
-    'background-color 200ms ease, border-color 200ms ease, color 200ms ease',
-  opacity: 'opacity 200ms ease',
-  shadow: 'box-shadow 200ms ease',
-  transform: 'transform 200ms ease',
+    'background-color 100ms ease, border-color 100ms ease, color 100ms ease',
+  opacity: 'opacity 75ms ease',
+  shadow: 'box-shadow 100ms ease',
+  transform: 'transform 75ms ease',
 };
 
 // ============================================

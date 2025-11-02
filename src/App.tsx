@@ -44,10 +44,11 @@ const Tarefas = lazy(() => import('./pages/Tarefas'));
 const DashboardDesocupacao = lazy(() => import('./pages/DashboardDesocupacao'));
 
 /**
- * Configuração otimizada do React Query
+ * Configuração otimizada do React Query para performance instantânea
  * - staleTime: 2 min (mais agressivo para dados frescos)
  * - gcTime: 5 min (garbage collection mais rápido)
  * - Retry inteligente baseado no tipo de erro
+ * - keepPreviousData: true para transições suaves
  * - Configurações podem ser sobrescritas por query específica
  */
 const queryClient = new QueryClient({
@@ -56,12 +57,20 @@ const queryClient = new QueryClient({
       staleTime: 2 * 60 * 1000, // 2 minutos (dados ficam "frescos")
       gcTime: 5 * 60 * 1000, // 5 minutos (tempo em cache)
       refetchOnWindowFocus: true, // Refetch ao focar janela (útil para dados que mudam)
-      refetchOnMount: 'always', // Sempre buscar dados frescos ao montar
+      refetchOnMount: false, // Não refetch se dados ainda estão frescos
+      keepPreviousData: true, // Mantém dados anteriores durante refetch para transições suaves
       retry: (failureCount, error: any) => {
         // Retry inteligente baseado no erro
         if (error?.status === 404) return false; // Não retry para 404
         if (error?.status === 401) return false; // Não retry para 401 (auth)
         return failureCount < 2; // Máximo 2 tentativas
+      },
+    },
+    mutations: {
+      // Otimistic updates padrão habilitados
+      onMutate: async (variables) => {
+        // Permite que mutations individuais implementem optimistic updates
+        return variables;
       },
     },
   },
