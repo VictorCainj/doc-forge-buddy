@@ -359,8 +359,9 @@ const DashboardDesocupacao = () => {
                           onValueChange={(value) => setMes(parseInt(value))}
                         >
                           <SelectTrigger
+                            id="mes"
                             className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20"
-                            aria-label="Mês"
+                            aria-label="Selecione o mês"
                           >
                             <SelectValue placeholder="Selecione o mês" />
                           </SelectTrigger>

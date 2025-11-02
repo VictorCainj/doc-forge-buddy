@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     sourcemap: mode === 'development', // Source maps apenas em desenvolvimento
     minify: 'terser',
+    // Reduzir tamanho de bundles
+    reportCompressedSize: false,
+    // Otimizar para produção
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
@@ -44,9 +47,17 @@ export default defineConfig(({ mode }) => ({
         unsafe_methods: true,
         dead_code: true,
         unused: true,
+        // Remover código não utilizado
+        side_effects: false,
       },
       format: {
         comments: false,
+        // Manter compatibilidade com ES2020
+        ecma: 2020,
+      },
+      mangle: {
+        // Melhor minificação
+        safari10: true,
       },
     },
     rollupOptions: {
@@ -216,5 +227,15 @@ export default defineConfig(({ mode }) => ({
       'exceljs',
     ],
     exclude: ['html2pdf.js', 'html2canvas', 'jspdf'], // Excluir libs pesadas de otimização inicial
+    // Otimizar para reduzir polyfills desnecessários
+    esbuildOptions: {
+      target: 'es2020', // Navegadores modernos
+    },
+  },
+  // Configurações para reduzir JavaScript não utilizado
+  esbuild: {
+    target: 'es2020',
+    legalComments: 'none',
+    treeShaking: true,
   },
 }));

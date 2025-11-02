@@ -702,7 +702,10 @@ const Contratos = () => {
                         value={selectedMonth}
                         onValueChange={debouncedSetMonth}
                       >
-                        <SelectTrigger className="w-[140px] h-10 ai-select-glass rounded-xl font-medium">
+                        <SelectTrigger 
+                          className="w-[140px] h-10 ai-select-glass rounded-xl font-medium"
+                          aria-label="Selecione o mês"
+                        >
                           <SelectValue placeholder="Mês" />
                         </SelectTrigger>
                         <SelectContent className="glass-card-enhanced">
@@ -722,7 +725,10 @@ const Contratos = () => {
                         value={selectedYear}
                         onValueChange={debouncedSetYear}
                       >
-                        <SelectTrigger className="w-[120px] h-10 ai-select-glass rounded-xl font-medium">
+                        <SelectTrigger 
+                          className="w-[120px] h-10 ai-select-glass rounded-xl font-medium"
+                          aria-label="Selecione o ano"
+                        >
                           <SelectValue placeholder="Ano" />
                         </SelectTrigger>
                         <SelectContent className="glass-card-enhanced">
