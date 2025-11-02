@@ -22,7 +22,7 @@ import {
 import { TemplateProcessor } from '@/utils/templateProcessor';
 import { Contract } from '@/types/contract';
 import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
-import { processContractTemplate } from '@/features/contracts/utils/templateProcessor';
+import { processTemplate } from '@/shared/template-processing';
 import {
   NOTIFICACAO_AGENDAMENTO_TEMPLATE,
   EMAIL_CONVITE_VISTORIA_TEMPLATE,
@@ -307,10 +307,7 @@ const Contratos = () => {
         actions.setLoading('generating', null);
       } else if (documentosSemAssinatura.includes(documentType)) {
         const enhancedData = applyContractConjunctions(formData);
-        const processedTemplate = processContractTemplate(
-          template,
-          enhancedData
-        );
+        const processedTemplate = processTemplate(template, enhancedData);
         let documentTitle = `${documentType} - ${contract.title}`;
         if (documentType === 'Devolutiva Comercial') {
           documentTitle = `${documentType} - Rescisão - ${contract.title}`;
@@ -384,22 +381,21 @@ const Contratos = () => {
     enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
     enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
 
-    const processedTemplate = processContractTemplate(
+    const processedTemplate = processTemplate(
       NOTIFICACAO_AGENDAMENTO_TEMPLATE,
       enhancedData
     );
     const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${state.selectedContract.title}`;
 
     // Gerar também o e-mail de convite para Vistoria Final e Revistoria
-    let secondaryTemplate = null;
+    let secondaryTemplate: string | null = null;
     if (
       state.formData.tipoVistoria === 'final' ||
       state.formData.tipoVistoria === 'revistoria'
     ) {
       // Sempre definir David Issa como responsável técnico
-      enhancedData.nomeVistoriador =
-        state.formData.nomeVistoriador || 'David Issa';
-      secondaryTemplate = processContractTemplate(
+      enhancedData.nomeVistoriador = 'David Issa';
+      secondaryTemplate = processTemplate(
         EMAIL_CONVITE_VISTORIA_TEMPLATE,
         enhancedData
       );
@@ -454,7 +450,7 @@ const Contratos = () => {
     const template = state.pendingDocument.template;
     const documentType = state.pendingDocument.documentType;
 
-    const processedTemplate = processContractTemplate(template, enhancedData);
+    const processedTemplate = processTemplate(template, enhancedData);
     const documentTitle = `${documentType} - ${state.selectedContract.title}`;
 
     navigate('/gerar-documento', {
@@ -496,7 +492,7 @@ const Contratos = () => {
       ? `Olá, ${primeiroNomeLocatario}`
       : 'Olá';
 
-    const processedTemplate = processContractTemplate(
+    const processedTemplate = processTemplate(
       STATUS_VISTORIA_WHATSAPP_TEMPLATE,
       enhancedData
     );
@@ -556,7 +552,7 @@ const Contratos = () => {
         ? DEVOLUTIVA_PROPRIETARIO_WHATSAPP_TEMPLATE
         : DEVOLUTIVA_LOCATARIO_WHATSAPP_TEMPLATE;
 
-    const processedTemplate = processContractTemplate(template, enhancedData);
+    const processedTemplate = processTemplate(template, enhancedData);
     const documentTitle = `Devolutiva ${state.formData.whatsAppType === 'locador' ? 'Locador' : 'Locatário'} WhatsApp - ${state.selectedContract.title}`;
 
     navigate('/gerar-documento', {
@@ -632,16 +628,18 @@ const Contratos = () => {
       );
     } catch (error) {
       console.error('Erro ao exportar contratos:', error);
-      showError('Erro ao exportar contratos. Tente novamente.');
+      toast.error('Erro ao exportar contratos', {
+        description: 'Tente novamente.',
+      });
     } finally {
       setIsExporting(false);
     }
-  }, [displayedContracts, selectedMonth, selectedYear, hasSearched, showError]);
+  }, [displayedContracts, selectedMonth, selectedYear, hasSearched]);
 
   // Gerar lista de anos (últimos 5 anos + próximos 2 anos)
   const availableYears = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    const years = [];
+    const years: number[] = [];
     for (let i = currentYear - 5; i <= currentYear + 2; i++) {
       years.push(i);
     }
