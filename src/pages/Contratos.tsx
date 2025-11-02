@@ -623,7 +623,7 @@ const Contratos = () => {
         selectedYear,
         hasSearched,
       });
-      
+
       toast.success(
         `${displayedContracts.length} contrato(s) exportado(s) com sucesso!`,
         {
@@ -767,12 +767,16 @@ const Contratos = () => {
                       {isExporting ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-success-300 border-t-success-700"></div>
-                          <span className="hidden sm:inline">Exportando...</span>
+                          <span className="hidden sm:inline">
+                            Exportando...
+                          </span>
                         </>
                       ) : (
                         <>
                           <Download className="h-4 w-4" />
-                          <span className="hidden sm:inline">Exportar Excel</span>
+                          <span className="hidden sm:inline">
+                            Exportar Excel
+                          </span>
                         </>
                       )}
                     </Button>
