@@ -2,6 +2,7 @@ import { Contract } from '@/hooks/useContractAnalysis';
 import { CompleteContractData } from '@/hooks/useCompleteContractData';
 import { log } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
+import type { PromptEnhancementRequest, EnhancedPrompt } from '@/features/prompt/types/prompt';
 
 // Helper para chamar a edge function
 const callOpenAIProxy = async (action: string, data: any): Promise<any> => {
@@ -20,7 +21,34 @@ const callOpenAIProxy = async (action: string, data: any): Promise<any> => {
 
     if (error) {
       log.error(`Erro ao chamar ${action}:`, error);
-      throw new Error(`Edge Function returned a non-2xx status code`);
+      
+      // Tentar extrair mensagem de erro mais específica
+      let errorMessage = 'Edge Function returned a non-2xx status code';
+      
+      // Verificar se o erro tem uma mensagem específica
+      if (error.message) {
+        errorMessage = error.message;
+      } 
+      // Verificar se é um objeto com contexto
+      else if (error.context && error.context.body) {
+        try {
+          const errorBody = typeof error.context.body === 'string' 
+            ? JSON.parse(error.context.body) 
+            : error.context.body;
+          if (errorBody.error) {
+            errorMessage = errorBody.error;
+          }
+        } catch {
+          // Ignorar erro de parse
+        }
+      }
+      // Verificar se é string diretamente
+      else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      log.error(`Mensagem de erro detalhada para ${action}:`, errorMessage);
+      throw new Error(errorMessage);
     }
 
     if (!result) {
@@ -35,7 +63,16 @@ const callOpenAIProxy = async (action: string, data: any): Promise<any> => {
     return result.content;
   } catch (error) {
     log.error(`Erro na chamada callOpenAIProxy para ${action}:`, error);
-    throw error;
+    
+    // Se for um erro conhecido, propagar como está
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    // Caso contrário, criar um novo erro com informações
+    throw new Error(
+      `Erro ao chamar ${action}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+    );
   }
 };
 
@@ -450,5 +487,73 @@ export const calculateAvisoPrevioWithAI = async (
   } catch (error) {
     log.error('Erro ao calcular aviso prévio:', error);
     throw new Error('Erro ao processar o cálculo. Tente novamente.');
+  }
+};
+
+export const enhancePromptWithAI = async (
+  request: PromptEnhancementRequest
+): Promise<EnhancedPrompt> => {
+  try {
+    if (!request.userInput || request.userInput.trim().length === 0) {
+      throw new Error('Entrada do usuário não pode estar vazia');
+    }
+
+    log.debug('Iniciando expansão de prompt', {
+      inputLength: request.userInput.length,
+      hasContext: !!request.context,
+      options: request.options,
+    });
+
+    const response = await callOpenAIProxy('enhancePrompt', {
+      userInput: request.userInput.trim(),
+      context: request.context || {},
+      options: request.options || {
+        detailLevel: 'detailed',
+        tone: 'professional',
+        language: 'pt-BR',
+      },
+    });
+
+    // Validar estrutura da resposta
+    if (!response || typeof response !== 'object') {
+      throw new Error('Resposta inválida da API');
+    }
+
+    if (!response.enhancedPrompt) {
+      throw new Error('Prompt expandido não encontrado na resposta');
+    }
+
+    // Construir objeto EnhancedPrompt
+    const enhancedPrompt: EnhancedPrompt = {
+      original: request.userInput.trim(),
+      enhanced: response.enhancedPrompt,
+      context: {
+        sections: response.sections || [],
+        variables: response.variables || [],
+        suggestedImprovements: response.suggestedImprovements || [],
+      },
+      metadata: {
+        tokenCount: response.estimatedTokens || 0,
+        complexity: response.complexity || 'medium',
+        createdAt: new Date().toISOString(),
+        model: 'gpt-4o-mini',
+      },
+    };
+
+    log.debug('Prompt expandido com sucesso', {
+      originalLength: enhancedPrompt.original.length,
+      enhancedLength: enhancedPrompt.enhanced.length,
+      sectionsCount: enhancedPrompt.context.sections.length,
+      variablesCount: enhancedPrompt.context.variables.length,
+      complexity: enhancedPrompt.metadata.complexity,
+    });
+
+    return enhancedPrompt;
+  } catch (error) {
+    log.error('Erro ao expandir prompt:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Erro ao expandir o prompt. Tente novamente.');
   }
 };

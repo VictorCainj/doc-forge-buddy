@@ -9,36 +9,37 @@ interface ActionCardProps {
   onClick: () => void;
 }
 
+// Mapeamento de cores para elementos visuais - Design Limpo
 const colorClasses = {
   blue: {
-    iconBg: 'bg-neutral-50 border border-neutral-200',
-    hover: 'hover:border-neutral-300 hover:bg-neutral-100',
+    iconBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    hover: 'hover:bg-blue-50 hover:border-blue-300',
     text: 'text-neutral-800',
-    iconColor: 'text-neutral-700',
   },
   green: {
-    iconBg: 'bg-neutral-50 border border-neutral-200',
-    hover: 'hover:border-neutral-300 hover:bg-neutral-100',
+    iconBg: 'bg-success-50',
+    iconColor: 'text-success-600',
+    hover: 'hover:bg-success-50 hover:border-success-300',
     text: 'text-neutral-800',
-    iconColor: 'text-neutral-700',
   },
   purple: {
-    iconBg: 'bg-neutral-50 border border-neutral-200',
-    hover: 'hover:border-neutral-300 hover:bg-neutral-100',
+    iconBg: 'bg-purple-50',
+    iconColor: 'text-purple-600',
+    hover: 'hover:bg-purple-50 hover:border-purple-300',
     text: 'text-neutral-800',
-    iconColor: 'text-neutral-700',
   },
   orange: {
-    iconBg: 'bg-neutral-50 border border-neutral-200',
-    hover: 'hover:border-neutral-300 hover:bg-neutral-100',
+    iconBg: 'bg-warning-50',
+    iconColor: 'text-warning-600',
+    hover: 'hover:bg-warning-50 hover:border-warning-300',
     text: 'text-neutral-800',
-    iconColor: 'text-neutral-700',
   },
   red: {
-    iconBg: 'bg-neutral-50 border border-neutral-200',
-    hover: 'hover:border-neutral-300 hover:bg-neutral-100',
+    iconBg: 'bg-error-50',
+    iconColor: 'text-error-600',
+    hover: 'hover:bg-error-50 hover:border-error-300',
     text: 'text-neutral-800',
-    iconColor: 'text-neutral-700',
   },
 };
 
@@ -51,33 +52,34 @@ const ActionCard = memo<ActionCardProps>(({ action, onClick }) => {
       onClick={onClick}
       disabled={action.disabled || action.loading}
       className={cn(
-        'group relative w-full flex flex-col items-center justify-center gap-3 bg-white p-4 rounded-xl',
+        'group w-full flex items-center gap-3 bg-white p-3 rounded-lg',
         'border border-neutral-200 transition-all duration-200',
         'hover:shadow-sm hover:border-neutral-300',
         colors.hover,
         'disabled:opacity-50 disabled:cursor-not-allowed',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400/30'
+        'focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-500/30',
+        'text-left'
       )}
       aria-label={action.label}
     >
-      {/* Ícone com fundo neutro claro */}
+      {/* Ícone compacto */}
       <div
         className={cn(
-          'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-          'transition-all duration-200 group-hover:scale-105',
+          'flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center',
+          'transition-colors duration-200',
           colors.iconBg
         )}
       >
         {action.loading ? (
-          <Loader2 className={cn('h-5 w-5 animate-spin', colors.iconColor)} />
+          <Loader2 className={cn('h-4 w-4 animate-spin', colors.iconColor)} />
         ) : (
-          <Icon className={cn('h-5 w-5', colors.iconColor)} strokeWidth={2} />
+          <Icon className={cn('h-4 w-4', colors.iconColor)} strokeWidth={2} />
         )}
       </div>
 
-      {/* Label */}
-      <div className="flex-1 text-center min-w-0 w-full">
-        <span className={cn('text-sm font-medium block', colors.text)}>
+      {/* Label compacto */}
+      <div className="flex-1 min-w-0">
+        <span className={cn('text-sm font-medium block truncate', colors.text)}>
           {action.shortLabel || action.label}
         </span>
         {action.badge && (

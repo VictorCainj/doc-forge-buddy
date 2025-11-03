@@ -45,6 +45,7 @@ const Tarefas = lazy(() => import('./pages/Tarefas'));
 const DashboardDesocupacao = lazy(() => import('./pages/DashboardDesocupacao'));
 
 const Notificacoes = lazy(() => import('./pages/Notificacoes'));
+const Prompt = lazy(() => import('./pages/Prompt'));
 
 /**
  * Configuração otimizada do React Query para performance instantânea
@@ -178,6 +179,7 @@ const AnimatedAppRoutes = () => {
           element={renderProtected(<DashboardDesocupacao />)}
         />
         <Route path="/notificacoes" element={renderProtected(<Notificacoes />)} />
+        <Route path="/prompt" element={renderProtected(<Prompt />)} />
         <Route path="/admin" element={renderAdmin(<Admin />)} />
 
         {/* Rota 404 */}

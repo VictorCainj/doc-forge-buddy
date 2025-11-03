@@ -730,226 +730,232 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-purple-50/30 relative">
+      <div className="min-h-screen bg-neutral-50 relative">
 
         {/* Conteúdo principal com z-index */}
         <div className="relative z-10">
-          {/* Header Modernizado com Glassmorphism */}
-          <div className="ai-header-glass sticky top-0 z-50">
-            <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
-              <div className="mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative group">
-                      <div className="icon-container w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-                        <FileText className="h-8 w-8 text-white" />
-                      </div>
-                    </div>
-                    <div>
-                      <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        Contratos
-                      </h1>
-                      <p className="text-neutral-600 mt-1.5 text-sm sm:text-base font-medium">
-                        Gerencie todos os contratos de locação
-                      </p>
-                    </div>
+          {/* Header Compacto - Todos os elementos visíveis sem scroll */}
+          <div className="bg-white border-b border-neutral-200 sticky top-0 z-50 shadow-sm">
+            <div className="max-w-[1400px] mx-auto px-4 py-3 sm:px-6 lg:px-8">
+              {/* Linha 1: Título e Botão Novo Contrato */}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="icon-container w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                    <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                   </div>
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent truncate">
+                      Contratos
+                    </h1>
+                    <p className="text-xs sm:text-sm text-neutral-600 font-medium truncate">
+                      Gerencie todos os contratos de locação
+                    </p>
+                  </div>
+                </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <OptimizedSearch
-                      onSearch={performSearch}
-                      placeholder="Buscar contratos..."
-                      showResultsCount={true}
-                      resultsCount={totalResults}
-                      isLoading={isSearching}
-                      className="w-full sm:w-80"
-                    />
+                <Link to="/cadastrar-contrato" className="flex-shrink-0">
+                  <PremiumButton icon={<Plus />} variant="primary" className="h-9 sm:h-10 px-3 sm:px-4 text-sm">
+                    <span className="hidden sm:inline">Novo Contrato</span>
+                    <span className="sm:hidden">Novo</span>
+                  </PremiumButton>
+                </Link>
+              </div>
 
-                    {/* Filtro de Favoritos */}
-                    <Button
-                      variant={showFavoritesOnly ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className={`h-12 px-4 glass-card-enhanced rounded-xl border transition-all duration-200 font-medium ${
-                        showFavoritesOnly
-                          ? 'border-amber-300/50 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                          : 'border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
-                      }`}
-                      aria-label={showFavoritesOnly ? 'Mostrar todos os contratos' : 'Mostrar apenas favoritos'}
-                    >
-                      <Star className={`h-4 w-4 mr-2 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                      <span className="hidden sm:inline">Favoritos</span>
-                    </Button>
+              {/* Linha 2: Busca e Filtros Compactos */}
+              <div className="space-y-2">
+                {/* Campo de Busca */}
+                <div className="flex-shrink-0">
+                  <OptimizedSearch
+                    onSearch={performSearch}
+                    placeholder="Buscar contratos..."
+                    showResultsCount={true}
+                    resultsCount={totalResults}
+                    isLoading={isSearching}
+                    className="w-full"
+                  />
+                </div>
 
-                    {/* Filtro de Tags */}
-                    {allTags.length > 0 && (
-                      <Select value={selectedTagFilter} onValueChange={setSelectedTagFilter}>
-                        <SelectTrigger 
-                          className="w-[140px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium"
-                          aria-label="Filtrar por tag"
+                {/* Filtros em Grid Responsivo */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                  {/* Filtro de Favoritos */}
+                  <Button
+                    variant={showFavoritesOnly ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className={`h-9 bg-white rounded-lg border border-neutral-300 transition-all duration-200 font-medium text-xs sm:text-sm ${
+                      showFavoritesOnly
+                        ? 'border-amber-300/50 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                        : 'border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50'
+                    }`}
+                    aria-label={showFavoritesOnly ? 'Mostrar todos os contratos' : 'Mostrar apenas favoritos'}
+                  >
+                    <Star className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${showFavoritesOnly ? 'fill-current' : ''} sm:mr-1.5`} />
+                    <span className="hidden sm:inline">Favoritos</span>
+                  </Button>
+
+                  {/* Filtro de Tags */}
+                  {allTags.length > 0 && (
+                    <Select value={selectedTagFilter} onValueChange={setSelectedTagFilter}>
+                      <SelectTrigger 
+                        className="h-9 bg-white rounded-lg border border-neutral-300 hover:border-neutral-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 text-neutral-700 font-medium text-xs sm:text-sm"
+                        aria-label="Filtrar por tag"
+                      >
+                        <Tag className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                        <SelectValue placeholder="Tags" className="text-xs sm:text-sm" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-neutral-200">
+                        <SelectItem 
+                          value="" 
+                          className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer text-sm"
                         >
-                          <Tag className="h-4 w-4 mr-2" />
-                          <SelectValue placeholder="Tags" />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card-enhanced border-white/20">
-                          <SelectItem 
-                            value="" 
-                            className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer"
+                          Todas as tags
+                        </SelectItem>
+                        {allTags.map((tag) => (
+                          <SelectItem
+                            key={tag.id}
+                            value={tag.tag_name}
+                            className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer flex items-center gap-2 text-sm"
                           >
-                            Todas as tags
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                            {tag.tag_name}
                           </SelectItem>
-                          {allTags.map((tag) => (
-                            <SelectItem
-                              key={tag.id}
-                              value={tag.tag_name}
-                              className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
-                            >
-                              <div 
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: tag.color }}
-                              />
-                              {tag.tag_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
 
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={selectedMonth}
-                        onValueChange={debouncedSetMonth}
-                      >
-                        <SelectTrigger 
-                          className="w-[140px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium"
-                          aria-label="Selecione o mês"
+                  {/* Filtro de Mês */}
+                  <Select
+                    value={selectedMonth}
+                    onValueChange={debouncedSetMonth}
+                  >
+                    <SelectTrigger 
+                      className="h-9 bg-white rounded-lg border border-neutral-300 hover:border-neutral-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 text-neutral-700 font-medium text-xs sm:text-sm"
+                      aria-label="Selecione o mês"
+                    >
+                      <SelectValue placeholder="Mês" className="text-xs sm:text-sm" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-neutral-200">
+                      {meses.map((mes, index) => (
+                        <SelectItem
+                          key={index}
+                          value={(index + 1).toString()}
+                          className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer text-sm"
                         >
-                          <SelectValue placeholder="Mês" />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card-enhanced border-white/20">
-                          {meses.map((mes, index) => (
-                            <SelectItem
-                              key={index}
-                              value={(index + 1).toString()}
-                              className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer"
-                            >
-                              {mes}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                          {mes}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                      <Select
-                        value={selectedYear}
-                        onValueChange={debouncedSetYear}
-                      >
-                        <SelectTrigger 
-                          className="w-[120px] h-12 glass-card-enhanced rounded-xl border-white/20 hover:border-white/30 focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-transparent text-neutral-700 font-medium"
-                          aria-label="Selecione o ano"
+                  {/* Filtro de Ano */}
+                  <Select
+                    value={selectedYear}
+                    onValueChange={debouncedSetYear}
+                  >
+                    <SelectTrigger 
+                      className="h-9 bg-white rounded-lg border border-neutral-300 hover:border-neutral-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 text-neutral-700 font-medium text-xs sm:text-sm"
+                      aria-label="Selecione o ano"
+                    >
+                      <SelectValue placeholder="Ano" className="text-xs sm:text-sm" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-neutral-200">
+                      {availableYears.map((year) => (
+                        <SelectItem 
+                          key={year} 
+                          value={year.toString()} 
+                          className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer text-sm"
                         >
-                          <SelectValue placeholder="Ano" />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card-enhanced border-white/20">
-                          {availableYears.map((year) => (
-                            <SelectItem 
-                              key={year} 
-                              value={year.toString()} 
-                              className="hover:bg-purple-50 transition-colors duration-150 cursor-pointer"
-                            >
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                      {(selectedMonth || selectedYear || showFavoritesOnly || selectedTagFilter) && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            handleClearDateFilter();
-                            setShowFavoritesOnly(false);
-                            setSelectedTagFilter('');
-                          }}
-                          className="h-12 px-4 glass-card-enhanced rounded-xl border border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50 transition-all duration-200 font-medium"
-                          aria-label="Limpar todos os filtros"
-                        >
-                          Limpar Filtros
-                        </Button>
+                  {/* Botão Limpar Filtros */}
+                  {(selectedMonth || selectedYear || showFavoritesOnly || selectedTagFilter) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleClearDateFilter();
+                        setShowFavoritesOnly(false);
+                        setSelectedTagFilter('');
+                      }}
+                      className="h-9 bg-white rounded-lg border border-neutral-300 hover:border-neutral-400 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all duration-200 font-medium text-xs sm:text-sm col-span-2 lg:col-span-1"
+                      aria-label="Limpar todos os filtros"
+                    >
+                      <span className="hidden sm:inline">Limpar</span>
+                      <span className="sm:hidden">Limpar</span>
+                    </Button>
+                  )}
+
+                  {/* Botão Limpar Busca */}
+                  {hasSearched && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSearch}
+                      className="h-9 bg-white rounded-lg border border-neutral-300 hover:border-neutral-400 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-all duration-300 font-medium text-xs sm:text-sm"
+                    >
+                      <span className="hidden sm:inline">Limpar Busca</span>
+                      <span className="sm:hidden">Busca</span>
+                    </Button>
+                  )}
+
+                  {/* Botão Exportar Excel */}
+                  {displayedContracts.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleExportToExcel}
+                      disabled={isExporting || displayedContracts.length === 0}
+                      className="h-9 bg-white rounded-lg border border-success-300 hover:border-success-400 text-success-700 hover:text-success-800 hover:bg-success-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-xs sm:text-sm col-span-2 lg:col-span-1"
+                      title={`Exportar ${displayedContracts.length} contrato(s) para Excel`}
+                    >
+                      {isExporting ? (
+                        <div className="flex items-center gap-1.5">
+                          <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-emerald-500 border-t-transparent"></div>
+                          <span className="hidden sm:inline text-xs">Exportando...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline text-xs">Exportar</span>
+                        </div>
                       )}
-                    </div>
-
-                    {hasSearched && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearSearch}
-                        className="h-12 px-4 glass-card-enhanced rounded-xl border border-white/20 hover:border-white/30 text-neutral-600 hover:text-neutral-900 hover:bg-white/50 transition-all duration-300 font-medium"
-                      >
-                        Limpar Busca
-                      </Button>
-                    )}
-
-                    {displayedContracts.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleExportToExcel}
-                        disabled={isExporting || displayedContracts.length === 0}
-                        className="h-12 px-4 glass-card-enhanced rounded-xl border border-emerald-300/50 hover:border-emerald-400/50 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                        title={`Exportar ${displayedContracts.length} contrato(s) para Excel`}
-                      >
-                        {isExporting ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></div>
-                            <span className="hidden sm:inline">
-                              Exportando...
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Download className="h-4 w-4" />
-                            <span className="hidden sm:inline">
-                              Exportar Excel
-                            </span>
-                          </div>
-                        )}
-                      </Button>
-                    )}
-
-                    <Link to="/cadastrar-contrato">
-                      <PremiumButton icon={<Plus />} variant="primary">
-                        Novo Contrato
-                      </PremiumButton>
-                    </Link>
-                  </div>
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-          {/* Welcome Section Reformulada */}
-          <div className="max-w-[1400px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div className="glass-card-enhanced flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 rounded-xl">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-lg sm:text-xl font-semibold text-neutral-900">
+          {/* Welcome Section Compacta */}
+          <div className="max-w-[1400px] mx-auto px-4 py-2 sm:px-6 lg:px-8">
+            <div className="bg-white border border-neutral-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 shadow-sm">
+              <div className="flex flex-col gap-0.5">
+                <h2 className="text-base sm:text-lg font-semibold text-neutral-900">
                   Bem-vindo,{' '}
-                  <span className="inline-block text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <span className="inline-block text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                     {profile?.full_name ||
                       user?.email?.split('@')[0] ||
                       'Usuário'}
                   </span>
                 </h2>
-                <p className="text-sm sm:text-base text-neutral-600">
+                <p className="text-xs sm:text-sm text-neutral-600">
                   Com quais contratos iremos trabalhar hoje?
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <p className="text-xs text-neutral-500 uppercase tracking-wider font-medium">
                   Hoje
                 </p>
-                <div className="bg-white/90 px-4 py-2 rounded-lg border border-white/50">
-                  <p className="text-sm sm:text-base font-semibold text-neutral-700">
+                <div className="bg-white/90 px-3 py-1.5 rounded-lg border border-white/50">
+                  <p className="text-xs sm:text-sm font-semibold text-neutral-700">
                     {formatDateBrazilian(new Date())}
                   </p>
                 </div>

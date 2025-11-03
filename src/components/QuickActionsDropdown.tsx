@@ -466,70 +466,62 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
 
     return (
       <div className="relative">
-        {/* Botão trigger */}
+        {/* Botão trigger - Design Limpo e Minimalista */}
         <button
           onClick={() => setIsOpen(true)}
           className={cn(
-            'relative inline-flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all duration-700 text-sm font-semibold overflow-hidden',
-            'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient',
-            'text-white shadow-lg shadow-purple-500/50',
-            'hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105',
-            'before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-transparent before:to-white/20',
-            'before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-3000',
-            'backdrop-blur-sm border border-white/20',
-            isOpen && 'ring-2 ring-white/50 ring-offset-2 ring-offset-purple-600'
+            'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+            'bg-primary-600 hover:bg-primary-700',
+            'text-white text-sm font-semibold',
+            'shadow-sm hover:shadow-md',
+            'transition-all duration-200',
+            'border border-primary-600',
+            isOpen && 'ring-2 ring-primary-500/50 ring-offset-2'
           )}
+          aria-label="Abrir ações rápidas"
         >
-          <span className="relative z-10 flex items-center gap-2">
-            <span className="relative">
-              <span className="absolute inset-0 blur-md opacity-60 bg-white/60 animate-slow-pulse"></span>
-              <span className="relative drop-shadow-sm animate-gradient-text-button">Ações Rápidas</span>
-            </span>
+          <span className="flex items-center gap-2">
+            <span>Ações Rápidas</span>
             <ChevronRight
               className={cn(
-                'h-4 w-4 transition-transform duration-700 relative z-10 drop-shadow-sm text-white',
+                'h-4 w-4 transition-transform duration-200',
                 isOpen && 'rotate-90'
               )}
-              style={{ color: '#FFFFFF', stroke: '#FFFFFF' }}
             />
           </span>
         </button>
 
-        {/* Modal usando Dialog do shadcn/ui */}
+        {/* Modal usando Dialog do shadcn/ui - Design Limpo e Minimalista */}
         <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
           <DialogContent
-            className="max-w-6xl w-[90vw] max-h-[85vh] p-0 overflow-hidden flex flex-col"
+            className="max-w-6xl w-[95vw] max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white"
             aria-label="Ações rápidas do contrato"
           >
-            {/* Banner */}
-            <div className="px-6 py-8 border-b border-neutral-200 bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-pink-500/40 relative overflow-hidden">
-              {/* Gradiente animado de fundo */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient opacity-40"></div>
-              
-              <div className="flex flex-col items-center justify-center text-center relative z-10">
-                <div className="mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-[length:200%_100%] animate-gradient border border-white/50 shadow-lg shadow-purple-500/60 flex items-center justify-center">
-                    <Sparkles className="h-6 w-6 text-white" strokeWidth={2.5} style={{ color: '#FFFFFF', stroke: '#FFFFFF' }} />
+            {/* Header Compacto */}
+            <DialogHeader className="px-6 py-4 border-b border-neutral-200 bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="h-5 w-5 text-primary-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-semibold text-neutral-900">
+                      Ações Rápidas
+                    </DialogTitle>
+                    {contractNumber && (
+                      <DialogDescription className="text-sm text-neutral-600 mt-0.5 font-mono">
+                        Contrato {contractNumber}
+                      </DialogDescription>
+                    )}
                   </div>
                 </div>
-                {contractNumber && (
-                  <p className="text-lg font-medium text-white font-mono mb-2">
-                    {contractNumber}
-                  </p>
-                )}
-                <DialogTitle className="text-2xl font-semibold tracking-tight">
-                  <span className="relative inline-block">
-                    <span className="absolute inset-0 blur-md opacity-60 bg-white/60 animate-slow-pulse"></span>
-                    <span className="relative animate-gradient-text-button">Ações Rápidas</span>
-                  </span>
-                </DialogTitle>
               </div>
-            </div>
+            </DialogHeader>
 
-            {/* Conteúdo com scroll */}
-            <div className="flex-1 p-6 overflow-y-auto bg-neutral-50 min-h-0 max-h-[calc(85vh-200px)]">
+            {/* Conteúdo com scroll - Layout Compacto */}
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-neutral-50 min-h-0">
               <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sections.map((section) => (
                     <ActionSection
                       key={section.id}

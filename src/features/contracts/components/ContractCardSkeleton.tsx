@@ -16,7 +16,7 @@ interface ContractCardSkeletonProps {
  */
 export const ContractCardSkeleton = memo<ContractCardSkeletonProps>(({ className }) => {
   return (
-    <Card className={`glass-card-enhanced rounded-2xl overflow-visible min-h-fit ${className || ''}`}>
+    <Card className={`bg-white border border-neutral-200 rounded-lg overflow-visible min-h-fit ${className || ''}`}>
       <CardContent className="p-6 relative z-10">
         {/* Header do Contrato */}
         <div className="flex items-start justify-between mb-5">

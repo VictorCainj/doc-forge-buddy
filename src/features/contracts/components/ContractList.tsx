@@ -134,7 +134,7 @@ const ContractListItem = memo<{
         <ContractTags contractId={contract.id} contract={contract} maxVisible={3} />
       </div>
 
-      <Card className={`glass-card-enhanced ${gradientClass} rounded-2xl overflow-visible min-h-fit transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] group`}>
+      <Card className={`bg-white border border-neutral-200 ${gradientClass} rounded-lg overflow-visible min-h-fit transition-all duration-200 hover:shadow-md group`}>
         <CardContent className="p-6 relative z-10">
           {/* Header do Contrato - Clicável */}
           <div 
@@ -441,7 +441,7 @@ export const ContractList = memo<ContractListProps>(
     // Empty state
     if (contracts.length === 0) {
       return (
-        <Card className="glass-card-enhanced rounded-2xl">
+        <Card className="bg-white border border-neutral-200 rounded-lg">
           <CardContent className="p-12">
             <div className="text-center">
               <div className="relative mx-auto mb-6 w-20 h-20 flex items-center justify-center">
@@ -512,7 +512,7 @@ export const ContractList = memo<ContractListProps>(
                 onClick={loadMore}
                 disabled={isLoadingMore}
                 variant="ghost"
-                className="group relative px-8 py-3 text-sm font-semibold text-neutral-700 hover:text-white rounded-xl glass-card-enhanced hover:bg-gradient-to-r hover:from-purple-500 hover:via-pink-500 hover:to-red-500 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                className="group relative px-8 py-3 text-sm font-semibold text-neutral-700 hover:text-white rounded-lg bg-white border border-neutral-200 hover:bg-primary-600 hover:border-primary-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-3">
                   <span className="relative z-10">Ver mais</span>

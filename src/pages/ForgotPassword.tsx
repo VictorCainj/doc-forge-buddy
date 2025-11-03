@@ -85,7 +85,7 @@ const ForgotPassword = () => {
 
           {/* Main Content */}
           <div className="flex items-center justify-center p-6 min-h-[60vh]">
-            <Card className="glass-card w-full max-w-md border-border shadow-soft">
+            <Card className="bg-white w-full max-w-md border border-neutral-200 shadow-sm">
               <CardHeader className="space-y-1 text-center pb-4">
                 <div className="flex items-center justify-center mb-6">
                   <div className="w-16 h-16 bg-success-500 rounded-full flex items-center justify-center mx-auto shadow-lg">

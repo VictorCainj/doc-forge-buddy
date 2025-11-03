@@ -128,7 +128,7 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
           </Button>
         </div>
         <div className="max-w-6xl mx-auto">
-          <Card className="glass-card">
+          <Card className="bg-white border border-neutral-200 shadow-sm">
             <CardContent className="p-0">
               <DocumentForm
                 title="Termo de Recusa de Assinatura - E-mail"

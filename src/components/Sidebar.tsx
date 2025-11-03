@@ -9,6 +9,7 @@ import {
   Settings,
   ClipboardList,
   BarChart,
+  Sparkles,
 } from '@/utils/iconMapper';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -93,6 +94,20 @@ const Sidebar = () => {
           className={cn(
             'h-5 w-5 flex-shrink-0',
             location.pathname === '/analise-vistoria'
+              ? 'text-neutral-900 dark:text-neutral-100'
+              : 'text-neutral-700 dark:text-neutral-200'
+          )}
+        />
+      ),
+    },
+    {
+      label: 'Construtor de Prompts',
+      href: '/prompt',
+      icon: (
+        <Sparkles
+          className={cn(
+            'h-5 w-5 flex-shrink-0',
+            location.pathname === '/prompt'
               ? 'text-neutral-900 dark:text-neutral-100'
               : 'text-neutral-700 dark:text-neutral-200'
           )}

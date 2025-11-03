@@ -82,11 +82,11 @@ export const OptimizedSearch: React.FC<OptimizedSearchProps> = ({
       <div 
         className={`
           relative flex items-center gap-2
-          glass-card-enhanced rounded-xl
-          border transition-all duration-200
+          bg-white rounded-lg
+          border border-neutral-300 transition-all duration-200
           ${isFocused 
-            ? 'border-purple-400/50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/20' 
-            : 'border-white/20 hover:border-white/30'
+            ? 'border-primary-500 shadow-md ring-2 ring-primary-500/20' 
+            : 'hover:border-neutral-400'
           }
         `}
       >

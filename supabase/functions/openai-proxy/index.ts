@@ -25,7 +25,8 @@ interface OpenAIRequest {
     | 'generateDualResponses'
     | 'extractNames'
     | 'compareVistoriaImages'
-    | 'calculateAvisoPrevio';
+    | 'calculateAvisoPrevio'
+    | 'enhancePrompt';
   data: any;
 }
 
@@ -39,7 +40,44 @@ serve(async (req) => {
   }
 
   try {
-    const { action, data }: OpenAIRequest = await req.json();
+    console.log('Edge Function chamada, método:', req.method);
+    
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('Request body parseado com sucesso');
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Erro ao processar requisição JSON',
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const { action, data }: OpenAIRequest = requestBody;
+    console.log('Action recebida:', action);
+    console.log('Data recebida:', JSON.stringify(data, null, 2));
+
+    if (!action) {
+      console.error('Erro: action não fornecido');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Ação não fornecida',
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
     if (!openaiApiKey) {
@@ -1020,6 +1058,195 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
         temperature = 0.4;
         break;
 
+      case 'enhancePrompt':
+        console.log('enhancePrompt case iniciado');
+        console.log('data recebido:', JSON.stringify(data, null, 2));
+        
+        if (!data || !data.userInput) {
+          console.error('Erro: userInput não fornecido');
+          throw new Error('Entrada do usuário não fornecida');
+        }
+
+        const {
+          userInput,
+          context = {},
+          options = {},
+        } = data;
+
+        console.log('userInput:', userInput);
+        console.log('context:', JSON.stringify(context));
+        console.log('options:', JSON.stringify(options));
+
+        // Validar opções com valores padrão seguros
+        const validDetailLevels = ['basic', 'detailed', 'comprehensive'];
+        const validTones = ['professional', 'casual', 'formal'];
+        const validLanguages = ['pt-BR', 'en'];
+
+        const safeOptions = {
+          detailLevel: (options && options.detailLevel && validDetailLevels.includes(options.detailLevel)) 
+            ? options.detailLevel 
+            : 'detailed',
+          tone: (options && options.tone && validTones.includes(options.tone)) 
+            ? options.tone 
+            : 'professional',
+          language: (options && options.language && validLanguages.includes(options.language)) 
+            ? options.language 
+            : 'pt-BR',
+        };
+
+        console.log('safeOptions:', JSON.stringify(safeOptions));
+
+        // Construir contexto inteligente
+        let contextPrompt = '';
+        if (context.contractId) {
+          contextPrompt += `\nContexto do Contrato: ID ${context.contractId}`;
+        }
+        if (context.documentType) {
+          contextPrompt += `\nTipo de Documento: ${context.documentType}`;
+        }
+        if (context.userPreferences) {
+          contextPrompt += `\nPreferências do usuário: ${JSON.stringify(context.userPreferences)}`;
+        }
+
+        const detailLevelMap: Record<string, string> = {
+          basic: 'básico',
+          detailed: 'detalhado',
+          comprehensive: 'abrangente',
+        };
+
+        const toneMap: Record<string, string> = {
+          professional: 'profissional',
+          casual: 'casual',
+          formal: 'formal',
+        };
+
+        // Garantir valores válidos
+        const detailLevel = detailLevelMap[safeOptions.detailLevel] || detailLevelMap.detailed;
+        const tone = toneMap[safeOptions.tone] || toneMap.professional;
+        const language = safeOptions.language === 'pt-BR' ? 'Português Brasileiro' : 'Inglês';
+
+        messages = [
+          {
+            role: 'system',
+            content: `Você é um especialista em engenharia de prompts (prompt engineering) universal. 
+Sua função é transformar solicitações curtas e simples em prompts completos, detalhados e eficazes 
+para qualquer tipo de tarefa - código, design, comunicação, documentação, análise, etc.
+
+DETECÇÃO INTELIGENTE DE CONTEXTO:
+Analise a solicitação do usuário e identifique automaticamente o domínio principal:
+- Desenvolvimento de código (programação, APIs, estruturas, etc.)
+- Design (UI/UX, interfaces, layouts, etc.)
+- Comunicação (emails, mensagens, documentos, etc.)
+- Documentação (relatórios, especificações, guias, etc.)
+- Análise de dados (relatórios, métricas, insights, etc.)
+- Gestão imobiliária (contratos, vistorias, documentos legais, etc.)
+- Outros domínios específicos
+
+APLICAÇÃO CONTEXTUAL DE CONHECIMENTO:
+
+1. PARA CÓDIGO/PROGRAMAÇÃO:
+   - Instruções claras de programação e desenvolvimento
+   - Especificações técnicas precisas (linguagem, versão, frameworks)
+   - Padrões de código, naming conventions e organização
+   - Estrutura de arquivos e arquitetura
+   - Testes, validações e tratamento de erros
+   - Considerar React, TypeScript, Tailwind CSS quando relevante
+
+2. PARA DESIGN/UI/UX:
+   - Especificações de interface e experiência do usuário
+   - Princípios de design (Material Design 3, acessibilidade, responsividade)
+   - Componentes visuais, layouts e hierarquia visual
+   - Paleta de cores, tipografia e espaçamento
+   - Animações e interações quando aplicável
+   - Design system e componentes reutilizáveis
+
+3. PARA COMUNICAÇÃO/DOCUMENTOS:
+   - Tom e estilo apropriados ao contexto
+   - Estrutura e organização clara
+   - Formalidade e profissionalismo quando necessário
+   - Objetividade e clareza
+   - Formatação e apresentação adequada
+
+4. PARA CONTEXTO IMOBILIÁRIO (quando detectado):
+   - Terminologia correta: locador, locatário, fiador, vistoria, apontamentos
+   - Documentos legais: termos, notificações, distratos
+   - Processos: vistorias inicial/final, rescisão, desocupação
+   - Comunicação profissional com locadores/locatários/prestadores
+   - Conformidade legal e formalidade documental
+
+5. PARA ANÁLISE/DADOS:
+   - Metodologia de análise apropriada
+   - Estrutura de relatórios e apresentação
+   - Métricas e KPIs relevantes
+   - Visualizações e gráficos quando aplicável
+
+INSTRUÇÕES GERAIS:
+1. Analise profundamente a intenção do usuário
+2. Detecte o domínio automaticamente e aplique contexto apropriado
+3. Expanda o prompt com informações relevantes ao domínio identificado
+4. Estruture em seções lógicas e bem organizadas
+5. Adicione diretrizes claras e específicas quando necessário
+6. Inclua exemplos práticos quando apropriado
+7. Defina formato de saída esperado claramente
+8. Adicione variáveis/placeholders quando útil para reutilização
+9. Garanta que o prompt seja completo e autocontido
+10. Mantenha foco no objetivo principal da solicitação
+
+CONHECIMENTO DA APLICAÇÃO (quando contexto imobiliário detectado):
+Se a solicitação envolver gestão imobiliária, você pode referenciar:
+- Sistema: Doc Forge Buddy - Plataforma de gestão imobiliária
+- Funcionalidades: contratos, vistorias, documentos, tarefas, prestadores
+- Tecnologias: React 18, TypeScript, Tailwind CSS, Supabase
+- Design: Material Design 3, componentes shadcn/ui, responsivo
+
+NÍVEL DE DETALHAMENTO: ${detailLevel}
+TOM: ${tone}
+IDIOMA: ${language}
+
+${contextPrompt ? `CONTEXTO ADICIONAL:\n${contextPrompt}` : ''}
+
+IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional.
+
+FORMATO DE RESPOSTA (JSON OBRIGATÓRIO):
+{
+  "enhancedPrompt": "prompt completo e expandido aqui",
+  "sections": [
+    {
+      "title": "Título da seção",
+      "content": "Conteúdo detalhado",
+      "order": 1
+    }
+  ],
+  "variables": [
+    {
+      "name": "nome_variavel",
+      "description": "Descrição clara",
+      "example": "exemplo",
+      "required": true
+    }
+  ],
+  "suggestedImprovements": ["sugestão 1", "sugestão 2"],
+  "complexity": "low|medium|high",
+  "estimatedTokens": 150
+}
+
+Responda APENAS com o JSON acima, sem markdown, sem explicações, sem texto adicional.`,
+          },
+          {
+            role: 'user',
+            content: `Transforme esta solicitação em um prompt completo, profissional e eficaz que será usado para qualquer propósito (código, design, comunicação, análise, etc.):\n\n"${userInput}"`,
+          },
+        ];
+
+        model = 'gpt-4o-mini';
+        temperature = 0.7;
+        maxTokens = 3000;
+        // Remover responseFormat temporariamente pois pode não ser suportado
+        // responseFormat = { type: 'json_object' };
+        console.log('Configuração final:', { model, temperature, maxTokens, messagesLength: messages.length });
+        console.log('enhancePrompt case concluído com sucesso');
+        break;
+
       case 'textToSpeech':
         if (!data.text) {
           throw new Error('Texto não fornecido');
@@ -1074,6 +1301,12 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
     if (
       !['generateImage', 'transcribeAudio', 'textToSpeech'].includes(action as string)
     ) {
+      // Validar que messages foi configurado
+      if (!messages || messages.length === 0) {
+        console.error('Erro: messages não foi configurado para ação:', action);
+        throw new Error(`Configuração inválida para ação: ${action}`);
+      }
+
       // Timeout de 60 segundos para a chamada da API
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -1101,9 +1334,19 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const error = await response.text();
-          console.error('OpenAI API Error:', error);
-          throw new Error(`Erro na API da OpenAI: ${response.status}`);
+          const errorText = await response.text();
+          let errorMessage = `Erro na API da OpenAI: ${response.status}`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.error && errorJson.error.message) {
+              errorMessage = errorJson.error.message;
+            }
+          } catch {
+            // Se não conseguir parsear, usar o texto direto
+            errorMessage = errorText || errorMessage;
+          }
+          console.error('OpenAI API Error:', errorText);
+          throw new Error(errorMessage);
         }
 
         const completion = await response.json();
@@ -1116,8 +1359,14 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
         // Processar resposta baseada na ação
         let processedContent = content;
 
-        if (action === 'generateTask' || action === 'extractApontamentos') {
-          processedContent = JSON.parse(content);
+        if (action === 'generateTask' || action === 'extractApontamentos' || action === 'enhancePrompt') {
+          try {
+            processedContent = JSON.parse(content);
+          } catch (parseError) {
+            console.error('Erro ao fazer parse JSON:', parseError);
+            console.error('Conteúdo recebido:', content);
+            throw new Error('Erro ao processar resposta JSON da API');
+          }
         } else {
           processedContent = content.trim();
         }
@@ -1141,8 +1390,13 @@ Escreva um texto conciso (máximo 3-4 frases) em português brasileiro analisand
       }
     }
   } catch (error) {
+    console.error('Erro capturado no catch geral:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+    
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
+
+    console.error('Retornando erro:', errorMessage);
 
     return new Response(
       JSON.stringify({

@@ -91,7 +91,7 @@ const ChatStats = memo(({ isVisible = false, onToggle }: ChatStatsProps) => {
   if (!isVisible) return null;
 
   return (
-    <Card className="glass-card">
+    <Card className="bg-white border border-neutral-200 shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
 import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
@@ -13,12 +13,35 @@ import {
   Search,
   Trash2,
   ClipboardList,
+  ChevronDown,
+  ChevronUp,
 } from '@/utils/iconMapper';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SystemStats } from '@/types/admin';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+
+/**
+ * Tipo para definição de opções administrativas
+ */
+interface AdminOption {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  component: React.ReactNode;
+  color: {
+    icon: string;
+    bg: string;
+    border: string;
+  };
+}
 
 const Admin = () => {
+  // Estado para controlar qual opção está expandida
+  const [expandedOption, setExpandedOption] = useState<string | null>(null);
+
   // Buscar estatísticas do sistema
   const { data: stats, isLoading } = useQuery({
     queryKey: ['system-stats'],
@@ -56,9 +79,10 @@ const Admin = () => {
     },
   });
 
+  // Cards de estatísticas compactos
   const statsCards = [
     {
-      title: 'Total de Usuários',
+      title: 'Usuários',
       value: stats?.totalUsers || 0,
       icon: Users,
       description: `${stats?.activeUsers || 0} ativos`,
@@ -69,7 +93,7 @@ const Admin = () => {
       title: 'Contratos',
       value: stats?.totalDocuments || 0,
       icon: FileText,
-      description: 'Contratos salvos',
+      description: 'Documentos salvos',
       color: 'text-success-600',
       bgColor: 'bg-success-50',
     },
@@ -78,8 +102,8 @@ const Admin = () => {
       value: stats?.totalPrestadores || 0,
       icon: Users,
       description: 'Cadastrados',
-      color: 'text-primary-700',
-      bgColor: 'bg-primary-100',
+      color: 'text-info-600',
+      bgColor: 'bg-info-50',
     },
     {
       title: 'Vistorias',
@@ -91,159 +115,215 @@ const Admin = () => {
     },
   ];
 
+  // Opções administrativas com suas configurações
+  const adminOptions: AdminOption[] = [
+    {
+      id: 'users',
+      title: 'Gerenciamento de Usuários',
+      description: 'Visualize, edite e gerencie permissões de usuários do sistema',
+      icon: Users,
+      component: <UserManagement />,
+      color: {
+        icon: 'text-primary-600',
+        bg: 'bg-primary-50',
+        border: 'border-primary-200',
+      },
+    },
+    {
+      id: 'motivos',
+      title: 'Motivos de Despejo',
+      description: 'Configure e gerencie os motivos de despejo disponíveis',
+      icon: ClipboardList,
+      component: <EvictionReasonsManagement />,
+      color: {
+        icon: 'text-success-600',
+        bg: 'bg-success-50',
+        border: 'border-success-200',
+      },
+    },
+    {
+      id: 'vistorias',
+      title: 'Análises de Vistoria',
+      description: 'Revise e gerencie análises de vistoria realizadas',
+      icon: Search,
+      component: <VistoriaAnalisesPanel />,
+      color: {
+        icon: 'text-info-600',
+        bg: 'bg-info-50',
+        border: 'border-info-200',
+      },
+    },
+    {
+      id: 'contracts',
+      title: 'Gestão de Contratos',
+      description: 'Administre contratos e documentos salvos no sistema',
+      icon: FileText,
+      component: <ContractsManagement />,
+      color: {
+        icon: 'text-warning-600',
+        bg: 'bg-warning-50',
+        border: 'border-warning-200',
+      },
+    },
+    {
+      id: 'cleanup',
+      title: 'Limpeza de Dados',
+      description: 'Remova duplicatas e mantenha a integridade dos dados',
+      icon: Trash2,
+      component: <CleanupDuplicatesPanel />,
+      color: {
+        icon: 'text-error-600',
+        bg: 'bg-error-50',
+        border: 'border-error-200',
+      },
+    },
+    {
+      id: 'audit',
+      title: 'Logs de Auditoria',
+      description: 'Visualize histórico de ações e atividades do sistema',
+      icon: Shield,
+      component: <AuditLogsViewer />,
+      color: {
+        icon: 'text-neutral-700',
+        bg: 'bg-neutral-50',
+        border: 'border-neutral-200',
+      },
+    },
+  ];
+
+  /**
+   * Alterna a expansão de uma opção administrativa
+   */
+  const toggleOption = (optionId: string) => {
+    setExpandedOption(expandedOption === optionId ? null : optionId);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-purple-50/30">
-      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        {/* Cabeçalho Moderno */}
-        <div className="mb-10">
-          <div className="flex flex-col items-center gap-4 mb-4">
-            <div className="icon-container w-14 h-14 bg-neutral-200 dark:bg-neutral-700 rounded-2xl flex items-center justify-center shadow-lg">
-              <Shield className="h-7 w-7 text-neutral-700 dark:text-neutral-300" />
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {/* Cabeçalho Minimalista */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-neutral-200 rounded-lg flex items-center justify-center">
+              <Shield className="h-5 w-5 text-neutral-700" />
             </div>
-            <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Painel de Administração
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900 tracking-tight">
+                Administração
               </h1>
-              <p className="text-neutral-600 mt-1.5 text-sm sm:text-base">
-                Gerencie usuários, permissões e análises de vistoria
+              <p className="text-sm text-neutral-600 mt-0.5">
+                Gerencie recursos e configurações do sistema
               </p>
             </div>
           </div>
         </div>
 
-        {/* Cards de Estatísticas Modernos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          {statsCards.map((stat, index) => {
+        {/* Cards de Estatísticas Compactos */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {statsCards.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div
+              <Card
                 key={stat.title}
-                className="group relative elevated-card p-5 hover:border-neutral-300/80 overflow-hidden"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="elevation-1 border-neutral-200 hover:elevation-2 transition-all duration-200"
               >
-                {/* Efeito de brilho sutil no hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 -z-0" />
-
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={`icon-container p-3 rounded-xl ${stat.bgColor} transition-transform duration-200`}
-                    >
-                      <Icon className={`h-5 w-5 ${stat.color}`} />
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={cn('p-2 rounded-lg', stat.bgColor)}>
+                      <Icon className={cn('h-4 w-4', stat.color)} />
                     </div>
                     {isLoading ? (
-                      <div className="w-12 h-4 bg-neutral-200 rounded animate-pulse" />
+                      <div className="w-8 h-5 bg-neutral-200 rounded animate-pulse" />
                     ) : (
-                      <div className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
+                      <span className="text-xl font-semibold text-neutral-900">
                         {stat.value}
-                      </div>
+                      </span>
                     )}
                   </div>
-                  <h3 className="text-sm font-semibold text-neutral-900 mb-1">
+                  <h3 className="text-xs font-medium text-neutral-700 mb-0.5">
                     {stat.title}
                   </h3>
                   {!isLoading && (
-                    <p className="text-xs text-neutral-500">
-                      {stat.description}
-                    </p>
+                    <p className="text-xs text-neutral-500">{stat.description}</p>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
 
-        {/* Tabs de Funcionalidades Modernizadas */}
-        <Tabs defaultValue="users" className="space-y-6">
-          <div className="bg-white border border-neutral-200 rounded-xl p-2 shadow-sm">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 bg-transparent h-auto">
-              <TabsTrigger
-                value="users"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Usuários</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="motivos"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                <ClipboardList className="h-4 w-4" />
-                <span className="hidden sm:inline">Motivos</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="vistorias"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">Vistorias</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="cleanup"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Limpeza</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="audit"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Auditoria</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="contracts"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Contratos</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        {/* Opções Administrativas em Cards Expansíveis */}
+        <div className="space-y-3">
+          {adminOptions.map((option) => {
+            const Icon = option.icon;
+            const isExpanded = expandedOption === option.id;
 
-          <TabsContent
-            value="users"
-            className="space-y-4"
-          >
-            <UserManagement />
-          </TabsContent>
+            return (
+              <Card
+                key={option.id}
+                className={cn(
+                  'elevation-1 border transition-all duration-200',
+                  isExpanded
+                    ? `${option.color.border} elevation-2`
+                    : 'border-neutral-200 hover:border-neutral-300'
+                )}
+              >
+                {/* Cabeçalho do Card - Sempre Visível */}
+                <button
+                  onClick={() => toggleOption(option.id)}
+                  className="w-full text-left"
+                  aria-expanded={isExpanded}
+                  aria-controls={`option-${option.id}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* Ícone */}
+                        <div
+                          className={cn(
+                            'flex-shrink-0 p-2.5 rounded-lg',
+                            option.color.bg
+                          )}
+                        >
+                          <Icon className={cn('h-5 w-5', option.color.icon)} />
+                        </div>
 
-          <TabsContent
-            value="motivos"
-            className="space-y-4"
-          >
-            <EvictionReasonsManagement />
-          </TabsContent>
+                        {/* Título e Descrição */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-semibold text-neutral-900 mb-0.5">
+                            {option.title}
+                          </h3>
+                          <p className="text-sm text-neutral-600 line-clamp-1">
+                            {option.description}
+                          </p>
+                        </div>
+                      </div>
 
-          <TabsContent
-            value="vistorias"
-            className="space-y-4"
-          >
-            <VistoriaAnalisesPanel />
-          </TabsContent>
+                      {/* Ícone de Expansão */}
+                      <div className="flex-shrink-0">
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-neutral-500" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-neutral-500" />
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </button>
 
-          <TabsContent
-            value="cleanup"
-            className="space-y-4"
-          >
-            <CleanupDuplicatesPanel />
-          </TabsContent>
-
-          <TabsContent
-            value="audit"
-            className="space-y-4"
-          >
-            <AuditLogsViewer />
-          </TabsContent>
-
-          <TabsContent
-            value="contracts"
-            className="space-y-4"
-          >
-            <ContractsManagement />
-          </TabsContent>
-        </Tabs>
+                {/* Conteúdo Expansível */}
+                {isExpanded && (
+                  <div
+                    id={`option-${option.id}`}
+                    className="border-t border-neutral-200 transition-all duration-200"
+                  >
+                    <div className="p-4 pt-4">{option.component}</div>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

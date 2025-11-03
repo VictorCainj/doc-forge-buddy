@@ -40,7 +40,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = React.memo(
   }) => {
     return (
       <div className="min-h-screen bg-background">
-        <header className="glass-card border-border px-6 py-3">
+        <header className="bg-white border-b border-neutral-200 px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg font-bold text-sm">
@@ -100,7 +100,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = React.memo(
 
         <main className="bg-background min-h-screen">
           <div className="max-w-4xl mx-auto p-6">
-            <div className="glass-card border-border overflow-hidden">
+            <div className="bg-white border border-neutral-200 overflow-hidden">
               <div className="p-6 overflow-hidden">
                 <div
                   id="document-content"

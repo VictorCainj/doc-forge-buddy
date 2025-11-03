@@ -16,6 +16,17 @@
 
     <!-- Preload Critical Resources for LCP -->
     <link rel="preload" href="/src/main.tsx" as="script" />
+    
+    <!-- Preconnect para recursos externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- DNS Prefetch para APIs -->
+    <link rel="dns-prefetch" href="https://api.openai.com" />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    
+    <!-- Prefetch de rotas críticas -->
+    <link rel="prefetch" href="/prompt" as="document" />
 
     <meta property="og:title" content="doc-forge-buddy" />
     <meta property="og:description" content="Lovable Generated Project" />
