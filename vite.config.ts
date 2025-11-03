@@ -208,7 +208,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   server: {
-    // @ts-expect-error - Vite types don't include allowedHosts but it's supported
     allowedHosts: process.env.TEMPO === 'true' ? true : undefined,
     ...(mode === 'development'
       ? {

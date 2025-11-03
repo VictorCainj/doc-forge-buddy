@@ -246,10 +246,11 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Erro na função check-notifications:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errorMessage,
         timestamp: new Date().toISOString(),
       }),
       {

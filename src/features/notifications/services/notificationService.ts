@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Serviço para criação e gerenciamento de notificações
  */

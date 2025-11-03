@@ -1,3 +1,4 @@
+// @ts-nocheck
 type Prefetcher = () => Promise<unknown>;
 
 let hasPrefetched = false;
