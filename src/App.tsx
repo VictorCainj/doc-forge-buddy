@@ -46,6 +46,7 @@ const DashboardDesocupacao = lazy(() => import('./pages/DashboardDesocupacao'));
 
 const Notificacoes = lazy(() => import('./pages/Notificacoes'));
 const Prompt = lazy(() => import('./pages/Prompt'));
+const InstalarPWA = lazy(() => import('./pages/InstalarPWA'));
 
 /**
  * Configuração otimizada do React Query para performance instantânea
@@ -180,6 +181,7 @@ const AnimatedAppRoutes = () => {
         />
         <Route path="/notificacoes" element={renderProtected(<Notificacoes />)} />
         <Route path="/prompt" element={renderProtected(<Prompt />)} />
+        <Route path="/instalar-pwa" element={renderProtected(<InstalarPWA />)} />
         <Route path="/admin" element={renderAdmin(<Admin />)} />
 
         {/* Rota 404 */}
