@@ -58,6 +58,18 @@ export const fromSupabaseJson = <T>(json: Json): T => {
 };
 
 /**
+ * Helper para limpar payload removendo campos undefined
+ * Isso evita problemas com políticas RLS do Supabase
+ */
+export const cleanPayload = <T extends Record<string, unknown>>(
+  payload: T
+): Partial<T> => {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([_, value]) => value !== undefined)
+  ) as Partial<T>;
+};
+
+/**
  * Type guard para verificar se dados são válidos de vistoria
  */
 export const isDadosVistoriaDB = (data: unknown): data is DadosVistoriaDB => {

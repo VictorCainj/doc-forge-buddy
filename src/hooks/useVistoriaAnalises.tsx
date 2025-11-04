@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   toSupabaseJson,
   UpdateVistoriaAnalisePayload,
+  cleanPayload,
 } from '@/types/vistoria.extended';
 import { generateUniqueImageSerial } from '@/utils/imageSerialGenerator';
 import { log } from '@/utils/logger';
@@ -144,9 +145,12 @@ export const useVistoriaAnalises = () => {
             : undefined,
         };
 
+        // Remover campos undefined do payload para evitar problemas com RLS
+        const cleanedPayload = cleanPayload(updatePayload);
+
         const { error: updateError } = await supabase
           .from('vistoria_analises')
-          .update(updatePayload)
+          .update(cleanedPayload)
           .eq('id', analiseId)
           .eq('user_id', user.id);
 
@@ -239,9 +243,12 @@ export const useVistoriaAnalises = () => {
           : undefined,
       };
 
+      // Remover campos undefined do payload para evitar problemas com RLS
+      const cleanedPayload = cleanPayload(updatePayload);
+
       const { error: analiseError } = await supabase
         .from('vistoria_analises')
-        .update(updatePayload)
+        .update(cleanedPayload)
         .eq('id', id)
         .eq('user_id', user.id);
 
