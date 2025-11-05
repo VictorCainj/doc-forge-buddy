@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useTermoLocatario } from '@/features/documents/hooks/useTermoLocatario';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -282,9 +282,7 @@ describe('useTermoLocatario', () => {
       });
     });
 
-    await waitFor(() => {
-      expect(updateResult).toBe(true);
-    });
+    expect(updateResult).toBe(true);
   });
 
   it('deve armazenar pendingFormData', () => {
