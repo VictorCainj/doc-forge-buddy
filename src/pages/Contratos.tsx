@@ -754,9 +754,9 @@ const Contratos = () => {
                 </div>
 
                 <Link to="/cadastrar-contrato" className="flex-shrink-0">
-                  <PremiumButton icon={<Plus />} variant="primary" className="h-9 sm:h-10 px-3 sm:px-4 text-sm">
-                    <span className="hidden sm:inline">Novo Contrato</span>
-                    <span className="sm:hidden">Novo</span>
+                  <PremiumButton icon={<Plus className="text-white" />} variant="primary" className="h-9 sm:h-10 px-3 sm:px-4 text-sm text-white">
+                    <span className="hidden sm:inline text-white">Novo Contrato</span>
+                    <span className="sm:hidden text-white">Novo</span>
                   </PremiumButton>
                 </Link>
               </div>

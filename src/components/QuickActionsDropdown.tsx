@@ -471,20 +471,20 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
           onClick={() => setIsOpen(true)}
           className={cn(
             'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-            'bg-primary-600 hover:bg-primary-700',
+            'bg-accent hover:bg-accent/90',
             'text-white text-sm font-semibold',
             'shadow-sm hover:shadow-md',
             'transition-all duration-200',
-            'border border-primary-600',
-            isOpen && 'ring-2 ring-primary-500/50 ring-offset-2'
+            'border-0',
+            isOpen && 'ring-2 ring-accent/50 ring-offset-2'
           )}
           aria-label="Abrir ações rápidas"
         >
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 text-white">
             <span>Ações Rápidas</span>
             <ChevronRight
               className={cn(
-                'h-4 w-4 transition-transform duration-200',
+                'h-4 w-4 text-white transition-transform duration-200',
                 isOpen && 'rotate-90'
               )}
             />

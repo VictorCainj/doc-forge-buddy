@@ -86,31 +86,33 @@ export const AnaliseHeader = ({
             <button
               disabled={apontamentosCount === 0 || !selectedContract || saving}
               onClick={onSave}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 disabled:hover:shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:hover:shadow-sm"
             >
               {saving ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Salvando...
+                  <span className="text-white">Salvando...</span>
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" />
-                  {isEditMode
-                    ? 'Atualizar Análise'
-                    : hasExistingAnalise
-                      ? 'Atualizar Análise Existente'
-                      : 'Salvar Análise'}
+                  <Save className="h-4 w-4 text-white" />
+                  <span className="text-white">
+                    {isEditMode
+                      ? 'Atualizar Análise'
+                      : hasExistingAnalise
+                        ? 'Atualizar Análise Existente'
+                        : 'Salvar Análise'}
+                  </span>
                 </>
               )}
             </button>
             <button
               disabled={apontamentosCount === 0 || !selectedContract}
               onClick={onGenerateDocument}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/90 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed border-0"
             >
-              <FileText className="h-4 w-4" />
-              Gerar Documento
+              <FileText className="h-4 w-4 text-white" />
+              <span className="text-white">Gerar Documento</span>
             </button>
           </div>
         </div>
