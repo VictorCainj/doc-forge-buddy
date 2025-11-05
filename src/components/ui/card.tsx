@@ -2,12 +2,19 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// Card Google Material Design 3 - Enhanced with premium effects
+// Card Google Material Design 3 - Clean white background with darker borders
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('premium-card', className)} {...props} />
+  <div 
+    ref={ref} 
+    className={cn(
+      'bg-white rounded-xl border border-neutral-300 shadow-sm transition-all duration-200 hover:shadow-md hover:border-neutral-400',
+      className
+    )} 
+    {...props} 
+  />
 ));
 Card.displayName = 'Card';
 

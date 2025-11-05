@@ -148,9 +148,7 @@ export const ContractCard = memo<ContractCardProps>(
     // Date calculations removed - not used
 
     return (
-      <Card className="group relative bg-white border border-neutral-200/80 hover:border-neutral-300 hover:shadow-xl transition-all duration-500 overflow-visible backdrop-blur-sm shadow-sm">
-        {/* Gradiente sutil no topo */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-lg"></div>
+      <Card className="group relative bg-white border border-neutral-300 hover:border-neutral-400 hover:shadow-xl transition-all duration-500 overflow-visible shadow-sm">
         
         <CardContent className="relative p-6">
           {/* Header do Contrato */}
