@@ -730,7 +730,7 @@ const Contratos = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-neutral-50 relative">
+      <div className="min-h-screen bg-white relative">
 
         {/* Conteúdo principal com z-index */}
         <div className="relative z-10">
