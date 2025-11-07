@@ -1035,135 +1035,149 @@ export function generateHTMLReport(data: HTMLReportData): string {
    
    
    <script>
-     async function copyReport() {
-       const copyButton = document.getElementById('copyButton');
-       const copyText = document.getElementById('copyText');
-       
-       try {
-         copyButton.classList.add('copying');
-         copyText.textContent = 'Copiando...';
-         
-         // Obter o conteúdo HTML do body (sem os botões)
-         const bodyContent = document.body.cloneNode(true);
-         
-         // Remover botões de ação e scripts
-         const buttons = bodyContent.querySelectorAll('.print-button, .copy-button, .no-print, script');
-         buttons.forEach(btn => btn.remove());
-         
-         // Criar um container temporário para processar o HTML
-         const tempContainer = document.createElement('div');
-         tempContainer.innerHTML = bodyContent.innerHTML;
-         
-         // Adicionar estilos inline aos elementos principais para garantir formatação ao colar
-         const mainElements = tempContainer.querySelectorAll('.header, .total-card, .dashboard, .contracts-section, table, .pie-section, .legend, .footer');
-         mainElements.forEach(el => {
-           const computedStyle = window.getComputedStyle(el);
-           if (!el.getAttribute('style')) {
-             el.setAttribute('style', '');
-           }
-         });
-         
-         // Obter HTML limpo (apenas o conteúdo visual, sem tags html/head/body)
-         const htmlContent = tempContainer.innerHTML;
-         
-         // Extrair texto simples para fallback
-         const textContent = tempContainer.innerText || tempContainer.textContent || '';
-         
-         // Copiar usando método que preserva formatação HTML
-         try {
-           // Criar elemento temporário invisível com o conteúdo
-           const hiddenDiv = document.createElement('div');
-           hiddenDiv.style.position = 'fixed';
-           hiddenDiv.style.left = '-999999px';
-           hiddenDiv.style.top = '0';
-           hiddenDiv.style.opacity = '0';
-           hiddenDiv.style.pointerEvents = 'none';
-           hiddenDiv.innerHTML = htmlContent;
-           
-           document.body.appendChild(hiddenDiv);
-           
-           // Selecionar e copiar
-           const selection = window.getSelection();
-           const range = document.createRange();
-           range.selectNodeContents(hiddenDiv);
-           selection?.removeAllRanges();
-           selection?.addRange(range);
-           
-           // Tentar copiar com Clipboard API primeiro
-           if (navigator.clipboard && navigator.clipboard.write) {
-             try {
-               const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-               const textBlob = new Blob([textContent], { type: 'text/plain' });
-               
-               await navigator.clipboard.write([
-                 new ClipboardItem({
-                   'text/html': htmlBlob,
-                   'text/plain': textBlob
-                 })
-               ]);
-               
-               selection?.removeAllRanges();
-               document.body.removeChild(hiddenDiv);
-               
-               copyButton.classList.remove('copying');
-               copyButton.classList.add('copied');
-               copyText.textContent = 'Copiado!';
-               
-               setTimeout(() => {
-                 copyButton.classList.remove('copied');
-                 copyText.textContent = 'Copiar';
-               }, 2000);
-               return;
-             } catch (clipboardErr) {
-               // Continuar para fallback
-             }
-           }
-           
-           // Fallback: usar execCommand
-           const success = document.execCommand('copy');
-           
-           selection?.removeAllRanges();
-           document.body.removeChild(hiddenDiv);
-           
-           if (success) {
-             copyButton.classList.remove('copying');
-             copyButton.classList.add('copied');
-             copyText.textContent = 'Copiado!';
-             
-             setTimeout(() => {
-               copyButton.classList.remove('copied');
-               copyText.textContent = 'Copiar';
-             }, 2000);
-           } else {
-             throw new Error('execCommand falhou');
-           }
-         } catch (err) {
-           // Último fallback: copiar apenas texto
-           try {
-             await navigator.clipboard.writeText(textContent);
-             
-             copyButton.classList.remove('copying');
-             copyButton.classList.add('copied');
-             copyText.textContent = 'Copiado!';
-             
-             setTimeout(() => {
-               copyButton.classList.remove('copied');
-               copyText.textContent = 'Copiar';
-             }, 2000);
-           } catch (finalErr) {
-             throw finalErr;
-           }
-         }
-       } catch (error) {
-         console.error('Erro ao copiar:', error);
-         copyButton.classList.remove('copying');
-         copyText.textContent = 'Erro';
-         
-         setTimeout(() => {
-           copyText.textContent = 'Copiar';
-         }, 2000);
-       }
-     }
+      async function copyReport() {
+        const copyButton = document.getElementById('copyButton');
+        const copyText = document.getElementById('copyText');
+        
+        try {
+          copyButton.classList.add('copying');
+          copyText.textContent = 'Copiando...';
+          
+          // Obter todos os estilos do documento
+          const styles = Array.from(document.styleSheets)
+            .map(styleSheet => {
+              try {
+                return Array.from(styleSheet.cssRules)
+                  .map(rule => rule.cssText)
+                  .join('\\n');
+              } catch (e) {
+                return '';
+              }
+            })
+            .join('\\n');
+          
+          // Obter o conteúdo HTML do body (sem os botões)
+          const bodyContent = document.body.cloneNode(true);
+          
+          // Remover botões de ação e scripts
+          const buttons = bodyContent.querySelectorAll('.print-button, .copy-button, .no-print, script');
+          buttons.forEach(btn => btn.remove());
+          
+          // Criar HTML completo com estilos embutidos
+          const fullHTML = \`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+\${styles}
+  </style>
+</head>
+<body>
+\${bodyContent.innerHTML}
+</body>
+</html>
+          \`;
+          
+          // Extrair texto simples para fallback
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = bodyContent.innerHTML;
+          const textContent = tempDiv.innerText || tempDiv.textContent || '';
+          
+          // Copiar usando método que preserva formatação HTML
+          try {
+            // Tentar copiar com Clipboard API primeiro
+            if (navigator.clipboard && navigator.clipboard.write) {
+              try {
+                const htmlBlob = new Blob([fullHTML], { type: 'text/html' });
+                const textBlob = new Blob([textContent], { type: 'text/plain' });
+                
+                await navigator.clipboard.write([
+                  new ClipboardItem({
+                    'text/html': htmlBlob,
+                    'text/plain': textBlob
+                  })
+                ]);
+                
+                copyButton.classList.remove('copying');
+                copyButton.classList.add('copied');
+                copyText.textContent = 'Copiado!';
+                
+                setTimeout(() => {
+                  copyButton.classList.remove('copied');
+                  copyText.textContent = 'Copiar';
+                }, 2000);
+                return;
+              } catch (clipboardErr) {
+                console.log('Clipboard API falhou, tentando fallback');
+              }
+            }
+            
+            // Fallback: criar elemento temporário e usar execCommand
+            const hiddenDiv = document.createElement('div');
+            hiddenDiv.style.position = 'fixed';
+            hiddenDiv.style.left = '-999999px';
+            hiddenDiv.style.top = '0';
+            hiddenDiv.style.opacity = '0';
+            hiddenDiv.style.pointerEvents = 'none';
+            hiddenDiv.innerHTML = fullHTML;
+            
+            document.body.appendChild(hiddenDiv);
+            
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(hiddenDiv);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            
+            const success = document.execCommand('copy');
+            
+            selection?.removeAllRanges();
+            document.body.removeChild(hiddenDiv);
+            
+            if (success) {
+              copyButton.classList.remove('copying');
+              copyButton.classList.add('copied');
+              copyText.textContent = 'Copiado!';
+              
+              setTimeout(() => {
+                copyButton.classList.remove('copied');
+                copyText.textContent = 'Copiar';
+              }, 2000);
+            } else {
+              throw new Error('execCommand falhou');
+            }
+          } catch (err) {
+            // Último fallback: copiar apenas texto
+            try {
+              await navigator.clipboard.writeText(textContent);
+              
+              copyButton.classList.remove('copying');
+              copyButton.classList.add('copied');
+              copyText.textContent = 'Copiado!';
+              
+              setTimeout(() => {
+                copyButton.classList.remove('copied');
+                copyText.textContent = 'Copiar';
+              }, 2000);
+            } catch (finalErr) {
+              throw finalErr;
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao copiar:', error);
+          copyButton.classList.remove('copying');
+          copyText.textContent = 'Erro';
+          
+          setTimeout(() => {
+            copyText.textContent = 'Copiar';
+          }, 2000);
+        }
+      }
      // Melhorar tooltips com posicionamento baseado no mouse
      document.addEventListener('DOMContentLoaded', function() {
        // Limpar tooltips existentes

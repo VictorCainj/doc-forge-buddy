@@ -621,68 +621,68 @@ function createFinalizadosSheet(
   ];
   const nomeMes = nomesMesesCompletos[mesFiltro - 1];
 
-  // Filtrar contratos finalizados: terminaram no mês E entregaram chaves, OU entregaram chaves no mês
+  // Filtrar contratos finalizados: 
+  // Contratos que foram NOTIFICADOS no mês (dataInicioRescisao) E já entregaram as chaves
   const contratosFinalizados = data.contratos.filter((contrato) => {
     // Deve ter entregado as chaves (status entregue = true)
     if (contrato.entregaChaves?.entregue !== true) {
       return false;
     }
 
-    // Verificar se entregou as chaves no mês do filtro
-    if (contrato.entregaChaves?.dataEntrega) {
-      const dataEntrega = parseDate(contrato.entregaChaves.dataEntrega);
-      if (
-        dataEntrega &&
-        dataEntrega.getMonth() + 1 === mesFiltro &&
-        dataEntrega.getFullYear() === anoFiltro
-      ) {
-        return true; // Entregou chaves no mês do filtro
-      }
+    // Deve ter sido notificado no mês do filtro (baseado em dataInicioRescisao)
+    if (!contrato.dataInicioRescisao) {
+      return false;
     }
 
-    // OU verificar se terminou no mês do filtro
-    if (contrato.dataTerminoRescisao) {
-      const dataTermino = parseDate(contrato.dataTerminoRescisao);
-      if (
-        dataTermino &&
-        dataTermino.getMonth() + 1 === mesFiltro &&
-        dataTermino.getFullYear() === anoFiltro
-      ) {
-        return true; // Terminou no mês do filtro E já entregou as chaves
-      }
+    const dataInicioRescisao = parseDate(contrato.dataInicioRescisao);
+    if (
+      !dataInicioRescisao ||
+      dataInicioRescisao.getMonth() + 1 !== mesFiltro ||
+      dataInicioRescisao.getFullYear() !== anoFiltro
+    ) {
+      return false;
     }
 
-    return false;
+    // Passou nas validações: foi notificado no mês E já entregou as chaves
+    return true;
   });
 
   // Título
   worksheet.getCell(1, 1).value =
-    `CONTRATOS FINALIZADOS - ${nomeMes.toUpperCase()}`;
+    `CONTRATOS FINALIZADOS - ${nomeMes.toUpperCase()} (Notificados no Mês)`;
   Object.assign(worksheet.getCell(1, 1), createTitleStyle(colors.primary));
   mergeTitleCells(worksheet, 1, 1, 6);
   worksheet.getRow(1).height = 25;
 
+  // Subtítulo explicativo
+  worksheet.getCell(2, 1).value = 
+    'Contratos que foram notificados em ' + nomeMes + ' e já entregaram as chaves (no próprio mês ou em meses posteriores)';
+  worksheet.getCell(2, 1).font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF757575' } };
+  worksheet.getCell(2, 1).alignment = { horizontal: 'center', vertical: 'middle' };
+  mergeTitleCells(worksheet, 2, 1, 6);
+  worksheet.getRow(2).height = 20;
+
   // Linha vazia
-  worksheet.getRow(2).height = 10;
+  worksheet.getRow(3).height = 10;
 
   // Cabeçalhos
   const headers = [
     'Número do Contrato',
     'Nome do Locatário',
     'Endereço do Imóvel',
+    'Data Notificação',
     'Data Término Rescisão',
-    'Status Entrega Chaves',
     'Data Entrega Chaves',
   ];
 
   headers.forEach((header, idx) => {
-    const cell = worksheet.getCell(3, idx + 1);
+    const cell = worksheet.getCell(4, idx + 1);
     cell.value = header;
     Object.assign(cell, createHeaderStyle(colors.headerLight));
   });
-  worksheet.getRow(3).height = 25;
+  worksheet.getRow(4).height = 25;
 
-  // Separar contratos em grupos
+  // Separar contratos em grupos baseado na data de entrega das chaves
   const contratosNoMes = contratosFinalizados.filter((contrato) => {
     if (!contrato.entregaChaves?.dataEntrega) return false;
     const dataEntrega = parseDate(contrato.entregaChaves.dataEntrega);
@@ -703,118 +703,93 @@ function createFinalizadosSheet(
     );
   });
 
-  // Dados principais (tabela geral)
-  contratosFinalizados.forEach((contrato, rowIdx) => {
-    const row = rowIdx + 4;
-    const isEven = rowIdx % 2 === 0;
+  // ========== SEÇÃO 1: CHAVES ENTREGUES NO MÊS ==========
+  let currentRow = 5;
+  
+  if (contratosNoMes.length > 0) {
+    const sectionTitleRow = currentRow;
+    worksheet.getCell(sectionTitleRow, 1).value = 
+      `CHAVES ENTREGUES EM ${nomeMes.toUpperCase()} (${contratosNoMes.length} contratos)`;
+    Object.assign(worksheet.getCell(sectionTitleRow, 1), createTitleStyle(colors.secondary));
+    mergeTitleCells(worksheet, sectionTitleRow, 1, 6);
+    worksheet.getRow(sectionTitleRow).height = 22;
+    currentRow++;
 
-    const entregouChaves = contrato.entregaChaves?.entregue === true;
-    const dataEntrega = contrato.entregaChaves?.dataEntrega;
+    // Dados dos contratos que entregaram no mês
+    contratosNoMes.forEach((contrato, idx) => {
+      const row = currentRow;
+      const isEven = idx % 2 === 0;
 
-    const values = [
-      contrato.numeroContrato || 'N/A',
-      contrato.nomeLocatario || 'N/A',
-      contrato.enderecoImovel || 'N/A',
-      contrato.dataTerminoRescisao || 'N/A',
-      entregouChaves ? 'Sim' : 'Não',
-      dataEntrega || 'N/A',
-    ];
+      const values = [
+        contrato.numeroContrato || 'N/A',
+        contrato.nomeLocatario || 'N/A',
+        contrato.enderecoImovel || 'N/A',
+        contrato.dataInicioRescisao || 'N/A',
+        contrato.dataTerminoRescisao || 'N/A',
+        contrato.entregaChaves?.dataEntrega || 'N/A',
+      ];
 
-    values.forEach((value, colIdx) => {
-      const cell = worksheet.getCell(row, colIdx + 1);
-      cell.value = value;
-
-      // Status Entrega Chaves tem estilo especial
-      if (colIdx === 4) {
-        Object.assign(cell, createStatusStyle(value));
-      } else {
+      values.forEach((value, colIdx) => {
+        const cell = worksheet.getCell(row, colIdx + 1);
+        cell.value = value;
         Object.assign(cell, createDataStyle(isEven));
         cell.alignment = {
           horizontal: colIdx === 1 || colIdx === 2 ? 'left' : 'center',
           vertical: 'middle',
         };
-      }
+      });
+      worksheet.getRow(row).height = 20;
+      currentRow++;
     });
-    worksheet.getRow(row).height = 20;
-  });
 
-  // Início da seção de detalhes e estatísticas
-  let currentRow = contratosFinalizados.length + 4;
+    // Espaço
+    worksheet.getRow(currentRow).height = 10;
+    currentRow++;
+  }
 
+  // ========== SEÇÃO 2: CHAVES ENTREGUES EM OUTROS MESES ==========
+  if (contratosOutroMes.length > 0) {
+    const sectionTitleRow = currentRow;
+    worksheet.getCell(sectionTitleRow, 1).value = 
+      `CHAVES ENTREGUES EM OUTROS MESES (${contratosOutroMes.length} contratos)`;
+    Object.assign(worksheet.getCell(sectionTitleRow, 1), createTitleStyle(colors.highlight));
+    mergeTitleCells(worksheet, sectionTitleRow, 1, 6);
+    worksheet.getRow(sectionTitleRow).height = 22;
+    currentRow++;
+
+    // Dados dos contratos que entregaram em outro mês
+    contratosOutroMes.forEach((contrato, idx) => {
+      const row = currentRow;
+      const isEven = idx % 2 === 0;
+
+      const values = [
+        contrato.numeroContrato || 'N/A',
+        contrato.nomeLocatario || 'N/A',
+        contrato.enderecoImovel || 'N/A',
+        contrato.dataInicioRescisao || 'N/A',
+        contrato.dataTerminoRescisao || 'N/A',
+        contrato.entregaChaves?.dataEntrega || 'N/A',
+      ];
+
+      values.forEach((value, colIdx) => {
+        const cell = worksheet.getCell(row, colIdx + 1);
+        cell.value = value;
+        Object.assign(cell, createDataStyle(isEven));
+        cell.alignment = {
+          horizontal: colIdx === 1 || colIdx === 2 ? 'left' : 'center',
+          vertical: 'middle',
+        };
+      });
+      worksheet.getRow(row).height = 20;
+      currentRow++;
+    });
+  }
+
+  // ========== ESTATÍSTICAS RESUMIDAS ==========
   if (contratosFinalizados.length > 0) {
     // Espaço
     worksheet.getRow(currentRow).height = 15;
     currentRow++;
-
-    // ========== DETALHES: CONTRATOS QUE ENTREGARAM CHAVES EM OUTRO MÊS ==========
-    if (contratosOutroMes.length > 0) {
-      const titleRow = currentRow;
-      worksheet.getCell(titleRow, 1).value =
-        'DETALHES - ENTREGUES AS CHAVES EM OUTRO MÊS';
-      Object.assign(
-        worksheet.getCell(titleRow, 1),
-        createTitleStyle(colors.primary) // Azul escuro neutro
-      );
-      mergeTitleCells(worksheet, titleRow, 1, 6);
-      worksheet.getRow(titleRow).height = 25;
-      currentRow++;
-
-      // Cabeçalhos
-      const detailHeaders = [
-        'Número do Contrato',
-        'Nome do Locatário',
-        'Data Término Rescisão',
-        'Mês Entrega',
-        'Data Entrega Chaves',
-      ];
-      detailHeaders.forEach((header, idx) => {
-        const col =
-          idx === 0 ? 1 : idx === 1 ? 2 : idx === 2 ? 4 : idx === 3 ? 5 : 6;
-        const cell = worksheet.getCell(currentRow, col);
-        cell.value = header;
-        Object.assign(cell, createHeaderStyle(colors.headerOrange));
-      });
-      worksheet.getRow(currentRow).height = 25;
-      currentRow++;
-
-      // Dados
-      contratosOutroMes.forEach((contrato, idx) => {
-        const row = currentRow;
-        const isEven = idx % 2 === 0;
-
-        let mesEntrega = 'N/A';
-        if (contrato.entregaChaves?.dataEntrega) {
-          const dataEntrega = parseDate(contrato.entregaChaves.dataEntrega);
-          if (dataEntrega) {
-            mesEntrega = nomesMesesCompletos[dataEntrega.getMonth()];
-          }
-        }
-
-        worksheet.getCell(row, 1).value = contrato.numeroContrato || 'N/A';
-        worksheet.getCell(row, 2).value = contrato.nomeLocatario || 'N/A';
-        worksheet.getCell(row, 4).value = contrato.dataTerminoRescisao || 'N/A';
-        worksheet.getCell(row, 5).value = mesEntrega;
-        worksheet.getCell(row, 6).value =
-          contrato.entregaChaves?.dataEntrega || 'N/A';
-
-        [1, 2, 4, 5, 6].forEach((col) => {
-          const cell = worksheet.getCell(row, col);
-          Object.assign(cell, createDataStyle(isEven));
-          cell.alignment = {
-            horizontal: col === 2 ? 'left' : 'center',
-            vertical: 'middle',
-          };
-        });
-        worksheet.getRow(row).height = 20;
-        currentRow++;
-      });
-
-      // Espaço
-      worksheet.getRow(currentRow).height = 10;
-      currentRow++;
-    }
-
-    // ========== ESTATÍSTICAS RESUMIDAS ==========
     const statsTitleRow = currentRow;
     worksheet.getCell(statsTitleRow, 1).value = 'ESTATÍSTICAS RESUMIDAS';
     Object.assign(
@@ -920,22 +895,22 @@ function createFinalizadosSheet(
     { width: 20 },
     { width: 30 },
     { width: 40 },
-    { width: 20 },
+    { width: 18 },
     { width: 20 },
     { width: 20 },
   ];
 
-  // Adicionar filtros
-  worksheet.autoFilter = 'A3:F3';
+  // Adicionar filtros nos cabeçalhos
+  worksheet.autoFilter = 'A4:F4';
 
   // Congelar painéis
   worksheet.views = [
     {
       state: 'frozen',
-      ySplit: 3,
+      ySplit: 4,
       xSplit: 0,
-      topLeftCell: 'A4',
-      activeCell: 'A4',
+      topLeftCell: 'A5',
+      activeCell: 'A5',
     },
   ];
 
