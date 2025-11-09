@@ -30,3 +30,5 @@ node_modules/.vite
 # Build
 dist/
 build/
+
+.vercel
