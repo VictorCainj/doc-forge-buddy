@@ -1,0 +1,111 @@
+﻿[90mstderr[2m | src/__tests__/utils/passwordPolicy.test.ts[2m > [22m[2mpasswordPolicy[2m > 
+[22m[2mcheckPasswordCompromised[2m > [22m[2mdeve retornar false para senha n├úo comprometida (mock)
+[22m[39mErro ao verificar senha comprometida: TypeError: response.text is not a function
+    at checkPasswordCompromised [90m(C:\Users\Victor Cain\Documents\My 
+Project\doc-forge-buddy\[39msrc\utils\passwordPolicy.ts:169:33[90m)[39m
+    at [90mC:\Users\Victor Cain\Documents\My 
+Project\doc-forge-buddy\[39msrc\__tests__\utils\passwordPolicy.test.ts:126:22
+    at [90mfile:///C:/Users/Victor%20Cain/Documents/My%20Project/doc-forge-buddy/[39mnode_modules/[4m@vitest[24m/ru
+nner/dist/chunk-hooks.js:752:20
+
+ [32mÔ£ô[39m src/__tests__/utils/passwordPolicy.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 135[2mms[22m[39m
+ [32mÔ£ô[39m src/utils/__tests__/removeImageFromHTML.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32mÔ£ô[39m src/services/__tests__/ImageService.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32mÔ£ô[39m src/features/contracts/hooks/__tests__/useContractReducer.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 293[2mms[22m[39m
+ [32mÔ£ô[39m src/__tests__/features/useDocumentFormState.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 212[2mms[22m[39m
+
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m[41m Failed Tests 4 [49m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/hooks/useContractData.test.tsx[2m > [22museContractData[2m > 
+[22mdeleteContract[2m > [22mdeve lan├ºar erro ao deletar contrato
+[31m[1mAssertionError[22m: promise resolved "undefined" instead of rejecting[39m
+
+[32m- Expected:[39m 
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2mÔØ»[22m src/__tests__/hooks/useContractData.test.tsx:[2m244:56[22m[39m
+    [90m242| [39m      })[33m;[39m
+    [90m243| [39m
+    [90m244| [39m      await expect(result.current.deleteContract('123')).rejects.toBeDÔÇª
+    [90m   | [39m                                                       [31m^[39m
+    [90m245| [39m    })[33m;[39m
+    [90m246| [39m  })[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/4]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/hooks/useContractData.test.tsx[2m > [22museContractData[2m > 
+[22mupdateContract[2m > [22mdeve lan├ºar erro ao atualizar contrato
+[31m[1mAssertionError[22m: promise resolved "undefined" instead of rejecting[39m
+
+[32m- Expected:[39m 
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2mÔØ»[22m src/__tests__/hooks/useContractData.test.tsx:[2m291:7[22m[39m
+    [90m289| [39m      [35mawait[39m [34mexpect[39m(
+    [90m290| [39m        result[33m.[39mcurrent[33m.[39m[34mupdateContract[39m([32m'123'[39m[33m,[39m { 
+nome[33m:[39m [32m'Jo├úo'[39m })
+    [90m291| [39m      )[33m.[39mrejects[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m   | [39m      [31m^[39m
+    [90m292| [39m    })[33m;[39m
+    [90m293| [39m  })[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/4]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/hooks/useContractData.test.tsx[2m > [22museContractData[2m > 
+[22mclearError[2m > [22mdeve limpar erro
+[31m[1mAssertionError[22m: expected 'Erro ao buscar contrato' to be null[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+"Erro ao buscar contrato"
+
+[36m [2mÔØ»[22m src/__tests__/hooks/useContractData.test.tsx:[2m326:36[22m[39m
+    [90m324| [39m      result[33m.[39mcurrent[33m.[39m[34mclearError[39m()[33m;[39m
+    [90m325| [39m
+    [90m326| [39m      
+[34mexpect[39m(result[33m.[39mcurrent[33m.[39merror)[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                                   [31m^[39m
+    [90m327| [39m    })[33m;[39m
+    [90m328| [39m  })[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/4]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/utils/inputValidation.test.ts[2m > [22minputValidation[2m > 
+[22mvalidatePhone[2m > [22mdeve validar celular com 9 d├¡gitos
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2mÔØ»[22m src/__tests__/utils/inputValidation.test.ts:[2m77:41[22m[39m
+    [90m 75| [39m    [34mit[39m([32m'deve validar celular com 9 d├¡gitos'[39m[33m,[39m () [33m=>[39m {
+    [90m 76| [39m      [35mconst[39m validPhone [33m=[39m [32m'11988887777'[39m[33m;[39m
+    [90m 77| [39m      
+[34mexpect[39m([34mvalidatePhone[39m(validPhone))[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m   | [39m                                        [31m^[39m
+    [90m 78| [39m    })[33m;[39m
+    [90m 79| [39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/4]ÔÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m146 passed[39m[22m[90m (150)[39m
+[2m   Start at [22m 17:39:47
+[2m   Duration [22m 22.62s[2m (transform 5.40s, setup 11.71s, collect 13.00s, tests 5.24s, environment 85.87s, prepare 8.13s)[22m
+

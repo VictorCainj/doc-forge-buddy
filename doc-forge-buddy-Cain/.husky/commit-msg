@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Hook para validar mensagem de commit usando commitlint
+echo "📝 Validando mensagem de commit com commitlint..."
+
+# Verificar se o commitlint está disponível
+if ! command -v npx >/dev/null 2>&1; then
+    echo "❌ npx não encontrado. Instale o Node.js/npm para usar os pre-commit hooks."
+    exit 1
+fi
+
+# Executar commitlint
+npx commitlint --edit $1
+
+# Verificar se houve erro
+if [ $? -ne 0 ]; then
+    echo "❌ Mensagem de commit não passou na validação do commitlint!"
+    echo ""
+    echo "Dicas para corrigir:"
+    echo "1. Use conventional commits: <type>(<scope>): <subject>"
+    echo "2. Tipos válidos: feat, fix, docs, style, refactor, test, chore, ci, perf, build, revert"
+    echo "3. Mantenha a subject (descrição) em até 50 caracteres"
+    echo "4. Use a forma imperative (ex: 'add' ao invés de 'added')"
+    echo ""
+    echo "Exemplos:"
+    echo "  feat: add user authentication feature"
+    echo "  fix(auth): resolve login issue"
+    echo "  docs: update API documentation"
+    echo "  refactor: improve performance of data processing"
+    exit 1
+fi
+
+echo "✅ Mensagem de commit está válida!"
+exit 0

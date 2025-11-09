@@ -1,0 +1,40 @@
+---
+description: Regras para o desenvolvimento frontend (React + Tailwind + shadcn/ui)
+---
+
+# 💅 Frontend Guidelines
+
+## Sistema de Design - Material Design 3
+- **Paleta de cores obrigatória**: Google Material Design 3
+- **Cores disponíveis**: `primary`, `success`, `warning`, `error`, `info`, `neutral`
+- **Tonalidades**: 50-100 (fundos claros), 200 (bordas), 500-600 (principais), 700+ (textos)
+- **Bordas**: Sistema Material (4px, 8px, 12px, 16px, 20px)
+- **Sombras**: Elevations Material Design (`elevation-1` a `elevation-5`)
+- **Animações**: Timing functions Material (`material-standard`, `material-decelerate`)
+
+## Componentes e Tipagem
+- **TypeScript** fortemente tipado obrigatório
+- **Componentes pequenos** e reutilizáveis
+- **PascalCase** para componentes, **camelCase** para funções/variáveis
+- Evitar *prop drilling* — usar Context ou React Query
+- Preferir componentes **shadcn/ui** antes de criar do zero
+
+## Estado e Performance
+- **React Query** para dados do servidor
+- **Context API** para autenticação e estado de UI
+- **localStorage** via hooks customizados para persistência
+- **React.memo()** para componentes que re-renderizam frequentemente
+- **useMemo()** e **useCallback()** para otimizações
+
+## Estilo e Layout
+- **Classes Tailwind** obrigatórias (não CSS puro)
+- **Mobile-first** responsivo
+- **Acessibilidade** (a11y) em todos os componentes
+- **Dark mode** ready (classes condicionais)
+- Evitar lógica complexa dentro do JSX
+
+## Navegação e Carregamento
+- **Lazy loading** para todas as páginas
+- **Code splitting** automático
+- **Suspense** com fallbacks apropriados
+- **Error boundaries** para tratamento de erros

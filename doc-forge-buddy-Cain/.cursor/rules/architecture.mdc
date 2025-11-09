@@ -1,0 +1,54 @@
+---
+description: Orientações gerais de arquitetura para o projeto Doc Forge Buddy.
+---
+
+# 📘 Arquitetura do Projeto
+
+## Stack Tecnológico
+- **React 18 + TypeScript** com estrutura modular em features
+- **Vite 7** como bundler com code splitting otimizado
+- **Tailwind CSS + shadcn/ui** para sistema de design
+- **Supabase** (PostgreSQL + Auth + Storage + Edge Functions)
+- **TanStack React Query** para gerenciamento de estado do servidor
+- **React Router v6** para navegação com lazy loading
+- **React Hook Form + Zod** para formulários e validação
+
+## Estrutura de Features (Domain-Driven)
+```
+src/features/
+├── contracts/      # Gestão de contratos
+│   ├── components/ # Componentes específicos
+│   ├── hooks/      # Hooks customizados
+│   └── utils/      # Utilitários
+├── documents/      # Geração de documentos
+│   ├── components/
+│   ├── hooks/
+│   └── utils/
+└── vistoria/       # Sistema de vistorias
+    ├── components/
+    ├── hooks/
+    └── utils/
+```
+
+## Gerenciamento de Estado
+- **React Query**: Dados assíncronos do servidor (contratos, usuários, etc.)
+- **Context API**: Autenticação (`AuthProvider`) e estado de UI
+- **localStorage**: Persistência local via hooks customizados
+- **Form State**: React Hook Form para formulários complexos
+
+## Componentes e Hooks
+- **Componentes funcionais** com hooks obrigatórios
+- **Hooks customizados** para lógica de negócio isolada
+- **React.memo()** para otimização de re-renders
+- **Lazy loading** para todas as páginas (17 páginas)
+
+## Integrações
+- **Supabase**: Backend completo (DB + Auth + Storage)
+- **OpenAI**: Via Edge Functions (`openai-proxy`)
+- **PDF/DOCX**: Geração de documentos (`html2pdf.js`, `jspdf`, `docx`)
+
+## Performance
+- Code splitting automático e manual
+- Bundle otimizado com chunks específicos
+- Cache inteligente com React Query
+- Otimização de imagens e assets

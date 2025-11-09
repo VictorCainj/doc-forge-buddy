@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Pre-commit hook para qualidade de código
+echo "🔍 Executando pre-commit hooks para qualidade de código..."
+
+# Verificar se o Node.js está disponível
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ Node.js não encontrado. Instale o Node.js para usar os pre-commit hooks."
+    exit 1
+fi
+
+# Verificar se o lint-staged está disponível
+if ! command -v npx >/dev/null 2>&1; then
+    echo "❌ npx não encontrado. Instale o Node.js/npm para usar os pre-commit hooks."
+    exit 1
+fi
+
+# Executar lint-staged (configurado no package.json)
+echo "🔧 Executando lint-staged..."
+npx lint-staged
+
+# Verificar se houve erro
+if [ $? -ne 0 ]; then
+    echo "❌ Pre-commit hook falhou! Corrija os erros antes de fazer o commit."
+    exit 1
+fi
+
+echo "✅ Pre-commit hooks executados com sucesso!"
+exit 0

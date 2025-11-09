@@ -1,0 +1,101 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Pre-push hook para validações de qualidade antes do push
+echo "🚀 Executando pre-push hooks para validação de qualidade..."
+
+# Verificar se é uma branch de feature ou hotfix
+current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+
+echo "📊 Branch atual: $current_branch"
+
+# Para branches de feature/hotfix, executar validações mais rigorosas
+if [[ "$current_branch" =~ ^(feature|hotfix|bugfix)/ ]] || [[ "$current_branch" =~ ^[0-9]+-.+$ ]]; then
+    echo "🔍 Executando validações completas para branch de feature/hotfix..."
+    
+    # Verificar se todas as dependências estão instaladas
+    echo "📦 Verificando dependências..."
+    if [ ! -d "node_modules" ]; then
+        echo "❌ Dependências não estão instaladas. Execute 'npm install' primeiro."
+        exit 1
+    fi
+    
+    # Executar type check
+    echo "🔍 Executando TypeScript type check..."
+    npx tsc --noEmit
+    if [ $? -ne 0 ]; then
+        echo "❌ TypeScript type check falhou! Corrija os erros antes de fazer push."
+        exit 1
+    fi
+    
+    # Executar ESLint
+    echo "🔍 Executando ESLint..."
+    npm run lint
+    if [ $? -ne 0 ]; then
+        echo "❌ ESLint falhou! Corrija os erros antes de fazer push."
+        exit 1
+    fi
+    
+    # Executar testes unitários
+    echo "🧪 Executando testes unitários..."
+    npm run test:unit
+    if [ $? -ne 0 ]; then
+        echo "❌ Testes unitários falharam! Corrija os testes antes de fazer push."
+        exit 1
+    fi
+    
+    # Executar testes de integração
+    echo "🔗 Executando testes de integração..."
+    npm run test:integration
+    if [ $? -ne 0 ]; then
+        echo "❌ Testes de integração falharam! Corrija os testes antes de fazer push."
+        exit 1
+    fi
+    
+    # Verificar cobertura de testes
+    echo "📊 Verificando cobertura de testes..."
+    npm run validate-coverage
+    if [ $? -ne 0 ]; then
+        echo "❌ Cobertura de testes insuficiente! Melhore os testes antes de fazer push."
+        exit 1
+    fi
+    
+    # Executar build de teste
+    echo "🏗️  Executando build de teste..."
+    npm run build
+    if [ $? -ne 0 ]; then
+        echo "❌ Build falhou! Corrija os erros de build antes de fazer push."
+        exit 1
+    fi
+    
+    # Executar testes E2E
+    echo "🌐 Executando testes E2E..."
+    npm run test:e2e
+    if [ $? -ne 0 ]; then
+        echo "❌ Testes E2E falharam! Corrija os testes antes de fazer push."
+        exit 1
+    fi
+    
+    echo "✅ Todas as validações foram executadas com sucesso!"
+    
+else
+    echo "ℹ️  Pulando validações rigorosas para branch: $current_branch"
+    echo "🔍 Executando apenas validações básicas..."
+    
+    # Executar apenas type check e lint
+    npx tsc --noEmit
+    if [ $? -ne 0 ]; then
+        echo "❌ TypeScript type check falhou!"
+        exit 1
+    fi
+    
+    npm run lint
+    if [ $? -ne 0 ]; then
+        echo "❌ ESLint falhou!"
+        exit 1
+    fi
+    
+    echo "✅ Validações básicas executadas com sucesso!"
+fi
+
+echo "🎉 Pre-push hooks concluídos com sucesso!"

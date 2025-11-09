@@ -1,0 +1,64 @@
+codecov:
+  notify:
+    # Quando enviar novos coverage, apenas notificar se houver mudanças significativas
+    require_ci_to_pass: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        base: auto
+      components:
+        target: 90%
+        threshold: 2%
+        paths:
+          - "src/components/"
+        base: auto
+    
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+        base: auto
+      components:
+        target: 90%
+        threshold: 3%
+        paths:
+          - "src/components/"
+        base: auto
+
+comment:
+  layout: "reach, diff, flags, files, footer"
+  behavior: default
+  require_changes: no
+  require_base: no
+  require_head: yes
+  branches:
+    - main
+    - develop
+
+flags:
+  unittests:
+    paths:
+      - src/
+    carryforward: true
+
+ignore:
+  - "node_modules/"
+  - "src/test/"
+  - "src/stories/"
+  - "**/*.d.ts"
+  - "**/*.config.ts"
+  - "**/*.config.js"
+  - "dist/"
+  - "coverage/"
+  - "e2e/"
+  - "docs/"
+  - "public/"
+  - "scripts/"

@@ -1,0 +1,35 @@
+# Chromatic Configuration
+# Visual testing for Storybook components
+# Obtém o token em: https://www.chromatic.com
+
+# Project name (deve ser único na Chromatic)
+project_name: "doc-forge-buddy-component-library"
+
+# Build command (deve apontar para o build do storybook)
+build_command: "npm run build:storybook"
+
+# Storybook static build directory
+storybook_build_dir: "storybook-static"
+
+# Exclude stories (opcional)
+# exclude: 
+#   - "**/stories.exclude.@(js|jsx|ts|tsx)"
+
+# Skip stories (opcional)
+# skip: 
+#   - "**/unfinished.@(js|jsx|ts|tsx)"
+
+# Exit configuration
+exit_zero_on_changes: true
+auto_accept_changes: "main"
+only_changed: true
+
+# File filter (opcional)
+# only_story_files: 
+#   - "src/components/ui/**/*.stories.@(tsx|ts)"
+
+# Ignore files (opcional)
+# ignore_last_build_on_branch: "main"
+
+# Upload behavior
+upload_drafts: false

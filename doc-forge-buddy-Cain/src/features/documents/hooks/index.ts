@@ -1,0 +1,10 @@
+export { useTermoLocatario } from './useTermoLocatario';
+export { useDocumentFormState } from './useDocumentFormState';
+export { useDocumentPreview } from './useDocumentPreview';
+export { useFontSizeAdjustment } from './useFontSizeAdjustment';
+export { usePersonManagement } from './usePersonManagement';
+export { useTermoData } from './useTermoData';
+export { useTermoValidation } from './useTermoValidation';
+export { useTermoGeneration } from './useTermoGeneration';
+export { useTermoLocadorData } from './useTermoLocadorData';
+export { useTermoLocadorGeneration } from './useTermoLocadorGeneration';

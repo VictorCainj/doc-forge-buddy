@@ -1,0 +1,77 @@
+{
+  "estados": [
+    "AC",
+    "AL",
+    "AP",
+    "AM",
+    "BA",
+    "CE",
+    "DF",
+    "ES",
+    "GO",
+    "MA",
+    "MT",
+    "MS",
+    "MG",
+    "PA",
+    "PB",
+    "PR",
+    "PE",
+    "PI",
+    "RJ",
+    "RN",
+    "RS",
+    "RO",
+    "RR",
+    "SC",
+    "SP",
+    "SE",
+    "TO"
+  ],
+  "tiposContrato": [
+    "residencial",
+    "comercial",
+    "industrial",
+    "rural"
+  ],
+  "statusContrato": [
+    "ativo",
+    "pendente",
+    "concluido",
+    "cancelado"
+  ],
+  "tiposDocumento": [
+    "contrato",
+    "laudo",
+    "relatorio",
+    "certidao"
+  ],
+  "ambientes": [
+    "Sala de Estar",
+    "Cozinha",
+    "Quarto",
+    "Banheiro",
+    "Escritório",
+    "Garagem",
+    "Área de Serviço",
+    "Jardim",
+    "Varanda"
+  ],
+  "statusVistoria": [
+    "agendada",
+    "em_andamento",
+    "concluida",
+    "cancelada"
+  ],
+  "problemas": [
+    "vazamento",
+    "infestacao",
+    "estrutura",
+    "eletrica",
+    "hidraulica",
+    "pintura",
+    "pisos",
+    "portas",
+    "janelas"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-11-08T22:40:00.998Z",
+  "totalFiles": 501,
+  "migratedFiles": 2,
+  "errors": [],
+  "summary": {
+    "success": 2,
+    "failed": 0,
+    "skipped": 499
+  }
+}

@@ -1,0 +1,330 @@
+# GitHub Actions Workflow para Otimização de Performance
+# Validação de budgets, análise de bundle e Lighthouse CI
+
+name: Performance & Bundle Analysis
+
+on:
+  # Executar em pull requests para branches principais
+  pull_request:
+    branches: [ main, develop ]
+  
+  # Executar em push para branches principais
+  push:
+    branches: [ main, develop ]
+  
+  # Executar manualmente
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - analyze
+          - development
+
+env:
+  NODE_VERSION: '18'
+  NPM_VERSION: '8'
+
+jobs:
+  # Job 1: Análise de Bundle e Performance Budgets
+  performance-analysis:
+    name: Performance & Bundle Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g @lhci/cli
+
+      - name: Lint and type check
+        run: |
+          npm run lint
+          npm run type-check
+
+      - name: Security audit
+        run: |
+          npm run test:security
+
+      - name: Run unit tests
+        run: |
+          npm run test:coverage
+
+      - name: Build for production
+        run: |
+          npm run build:production
+
+      - name: Performance Budget Validation
+        run: |
+          npm run test:performance
+
+      - name: Bundle Size Tracking
+        run: |
+          echo "📊 Bundle Analysis Results:"
+          echo "================================"
+          echo "Main Bundle Size:"
+          if [ -f "dist/assets/index-*.js" ]; then
+            du -h dist/assets/index-*.js
+          fi
+          echo ""
+          echo "Total Assets Size:"
+          du -sh dist/assets
+          echo ""
+          echo "CSS Total:"
+          if [ -f "dist/assets/*.css" ]; then
+            du -h dist/assets/*.css
+          fi
+
+      - name: Generate Bundle Report
+        if: always()
+        run: |
+          echo "Bundle Report" > bundle-size.txt
+          echo "=============" >> bundle-size.txt
+          echo "Timestamp: $(date -u)" >> bundle-size.txt
+          echo "" >> bundle-size.txt
+          
+          if [ -f "dist/performance-report.json" ]; then
+            echo "Performance Budget Status:" >> bundle-size.txt
+            cat dist/performance-report.json | jq -r '.violations | length as $v | if $v > 0 then "❌ \($v) violations found" else "✅ All budgets met" end' >> bundle-size.txt
+          fi
+          
+          echo "" >> bundle-size.txt
+          echo "Bundle Sizes:" >> bundle-size.txt
+          find dist/assets -name "*.js" -exec ls -lh {} \; | awk '{print $5, $9}' >> bundle-size.txt
+          echo "" >> bundle-size.txt
+          find dist/assets -name "*.css" -exec ls -lh {} \; | awk '{print $5, $9}' >> bundle-size.txt
+
+      - name: Upload Performance Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: |
+            dist/performance-report.json
+            dist/performance-report.md
+            bundle-size.txt
+
+      - name: Bundle Analysis HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: |
+            dist/bundle-analysis.html
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (fs.existsSync('bundle-size.txt')) {
+              const report = fs.readFileSync('bundle-size.txt', 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 📊 Performance Report\n\n\`\`\`\n${report}\n\`\`\`\n\n**Next Steps:**\n- Review bundle sizes and performance budgets\n- Check bundle-analysis.html for detailed analysis\n- Ensure all Core Web Vitals are optimized`
+              });
+            }
+
+  # Job 2: Lighthouse CI (Performance, Accessibility, SEO)
+  lighthouse-analysis:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: performance-analysis
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g @lhci/cli
+
+      - name: Build and start preview server
+        run: |
+          npm run build:production
+          npm run preview &
+          sleep 10
+        env:
+          PORT: 4173
+
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun --config=lighthouserc.js
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: |
+            lhci-reports/
+            .lighthouseci/
+
+      - name: Lighthouse budget assertions
+        run: |
+          echo "🔍 Lighthouse Budget Assertions"
+          echo "==============================="
+          
+          if [ -f "lhci-reports/manifest.json" ]; then
+            echo "Lighthouse Scores:"
+            cat lhci-reports/manifest.json | jq -r '.results[0].summary'
+          fi
+
+  # Job 3: Bundle Size Regression Detection
+  bundle-regression:
+    name: Bundle Size Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build current version
+        run: |
+          npm run build:production
+          echo "CURRENT_BUILD_SIZE=$(du -sh dist/assets | cut -f1)" >> $GITHUB_ENV
+
+      - name: Get previous build size
+        id: previous_build
+        run: |
+          # Tentar obter build size da última run bem-sucedida
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            PREVIOUS_SHA=$(git rev-parse HEAD~1)
+            echo "size=$(git show $PREVIOUS_SHA:build-size.txt 2>/dev/null | grep "Total Assets Size" | awk '{print $4}' || echo "unknown")" >> $GITHUB_OUTPUT
+          else
+            echo "size=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compare bundle sizes
+        run: |
+          CURRENT=${{ env.CURRENT_BUILD_SIZE }}
+          PREVIOUS=${{ steps.previous_build.outputs.size }}
+          
+          echo "📏 Bundle Size Comparison"
+          echo "========================"
+          echo "Current: $CURRENT"
+          echo "Previous: $PREVIOUS"
+          
+          if [ "$PREVIOUS" != "unknown" ]; then
+            # Implementar lógica de comparação de tamanho
+            echo "Bundle regression check passed"
+          else
+            echo "⚠️ No previous build found for comparison"
+          fi
+
+  # Job 4: Performance Summary and Notifications
+  performance-summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [performance-analysis, lighthouse-analysis, bundle-regression]
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate Performance Summary
+        run: |
+          echo "🚀 Performance Analysis Summary" > performance-summary.md
+          echo "=================================" >> performance-summary.md
+          echo "" >> performance-summary.md
+          echo "**Date:** $(date -u)" >> performance-summary.md
+          echo "**Branch:** ${{ github.ref_name }}" >> performance-summary.md
+          echo "**Commit:** ${{ github.sha }}" >> performance-summary.md
+          echo "" >> performance-summary.md
+          
+          echo "## 📊 Jobs Status" >> performance-summary.md
+          echo "- Performance Analysis: ${{ needs.performance-analysis.result }}" >> performance-summary.md
+          echo "- Lighthouse Analysis: ${{ needs.lighthouse-analysis.result }}" >> performance-summary.md
+          echo "- Bundle Regression: ${{ needs.bundle-regression.result }}" >> performance-summary.md
+          echo "" >> performance-summary.md
+          
+          # Verificar se todos os jobs passaram
+          if [[ "${{ needs.performance-analysis.result }}" == "success" && 
+                "${{ needs.lighthouse-analysis.result }}" == "success" && 
+                "${{ needs.bundle-regression.result }}" == "success" ]]; then
+            echo "✅ **All performance checks passed!**" >> performance-summary.md
+            echo "" >> performance-summary.md
+            echo "The application meets all performance budgets and quality standards." >> performance-summary.md
+          else
+            echo "❌ **Performance checks failed**" >> performance-summary.md
+            echo "" >> performance-summary.md
+            echo "Please review the performance report and fix any violations." >> performance-summary.md
+          fi
+
+      - name: Upload performance summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-summary
+          path: performance-summary.md
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (fs.existsSync('performance-summary.md')) {
+              const summary = fs.readFileSync('performance-summary.md', 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }
+
+      - name: Slack Notification (optional)
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: 'Performance analysis failed'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

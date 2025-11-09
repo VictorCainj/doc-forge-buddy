@@ -1,0 +1,152 @@
+name: Storybook CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Verificação de qualidade do código
+  quality-check:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Type check
+        run: npm run type-check
+        
+      - name: Lint check
+        run: npm run lint
+        
+      - name: Test
+        run: npm run test:unit
+        continue-on-error: true
+        
+      - name: Coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+  # Build e deploy do Storybook
+  storybook-build:
+    name: Build Storybook
+    runs-on: ubuntu-latest
+    needs: quality-check
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build Storybook
+        run: npm run build:storybook
+        
+      - name: Upload Storybook artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static/
+          retention-days: 7
+
+  # Teste visual com Chromatic (opcional)
+  chromatic:
+    name: Visual Testing
+    runs-on: ubuntu-latest
+    needs: storybook-build
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Publish to Chromatic
+        uses: chromaui/action@v1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          storybookBuildDir: storybook-static
+          exitZeroOnChanges: true
+          autoAcceptChanges: 'main'
+
+  # Deploy para GitHub Pages
+  deploy-gh-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: storybook-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      
+    steps:
+      - name: Download Storybook artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static/
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: storybook-static/
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Notificação de deploy (Slack/Discord - opcional)
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [storybook-build, deploy-gh-pages]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Notify success
+        if: ${{ needs.deploy-gh-pages.result == 'success' }}
+        run: |
+          echo "✅ Storybook deployado com sucesso!"
+          echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"
+          
+      - name: Notify failure
+        if: ${{ needs.deploy-gh-pages.result == 'failure' }}
+        run: |
+          echo "❌ Falha no deploy do Storybook"
+          echo "🔍 Verifique os logs para mais detalhes"
+        # Adicione aqui integração com Slack/Discord

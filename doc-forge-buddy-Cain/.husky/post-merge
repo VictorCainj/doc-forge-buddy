@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Post-merge hook para instalar dependências automaticamente
+echo "🔄 Executando post-merge hook..."
+
+# Verificar se o package.json foi alterado
+if git diff --cached --name-only | grep -q "package.json"; then
+    echo "📦 package.json foi alterado, verificando dependências..."
+    
+    if [ -f "package-lock.json" ] || [ -f "yarn.lock" ] || [ -f "pnpm-lock.yaml" ]; then
+        echo "📥 Instalando dependências..."
+        npm install
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Dependências instaladas com sucesso!"
+        else
+            echo "❌ Falha ao instalar dependências!"
+            exit 1
+        fi
+    else
+        echo "ℹ️  Nenhum lockfile encontrado, pulando instalação de dependências."
+    fi
+else
+    echo "ℹ️  package.json não foi alterado, pulando post-merge."
+fi

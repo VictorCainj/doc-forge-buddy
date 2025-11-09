@@ -1,0 +1,258 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    name: Security Audit Analysis
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+    
+    - name: Install dependencies
+      run: npm ci
+      continue-on-error: true
+    
+    - name: Run security audit
+      id: npm-audit
+      run: |
+        echo "=== NPM AUDIT ===" 
+        npm audit --audit-level moderate --json > npm-audit.json || true
+        
+        # Count vulnerabilities by severity
+        CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' npm-audit.json)
+        HIGH=$(jq '.metadata.vulnerabilities.high // 0' npm-audit.json)
+        MEDIUM=$(jq '.metadata.vulnerabilities.moderate // 0' npm-audit.json)
+        LOW=$(jq '.metadata.vulnerabilities.low // 0' npm-audit.json)
+        
+        echo "Critical: $CRITICAL"
+        echo "High: $HIGH" 
+        echo "Medium: $MEDIUM"
+        echo "Low: $LOW"
+        
+        # Set output for next step
+        echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+        echo "high=$HIGH" >> $GITHUB_OUTPUT
+        echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+        echo "low=$LOW" >> $GITHUB_OUTPUT
+        
+        # Check if we have critical or high vulnerabilities
+        if [[ "$CRITICAL" -gt 0 || "$HIGH" -gt 0 ]]; then
+          echo "::warning::Found $CRITICAL critical and $HIGH high vulnerabilities"
+        fi
+    
+    - name: Check for high/critical vulnerabilities
+      if: steps.npm-audit.outputs.critical > 0 || steps.npm-audit.outputs.high > 0
+      run: |
+        echo "::error::Found ${{ steps.npm-audit.outputs.critical }} critical and ${{ steps.npm-audit.outputs.high }} high vulnerabilities"
+        echo "Please fix these vulnerabilities before merging"
+        
+        # Show vulnerability details
+        jq -r '.vulnerabilities | to_entries[] | "\(.key): \(.value.severity) - \(.value.title // "No description")"' npm-audit.json || true
+        
+        exit 1
+      continue-on-error: false
+
+    - name: Check outdated packages
+      id: outdated-check
+      run: |
+        echo "=== OUTDATED PACKAGES ==="
+        npm outdated --json > outdated.json || true
+        OUTDATED_COUNT=$(jq 'keys | length' outdated.json)
+        echo "outdated_count=$OUTDATED_COUNT" >> $GITHUB_OUTPUT
+        
+        if [[ "$OUTDATED_COUNT" -gt 0 ]]; then
+          echo "::notice::Found $OUTDATED_COUNT outdated packages"
+          jq -r 'to_entries[] | "\(.key): current=\(.value.current) latest=\(.value.latest)"' outdated.json || true
+        fi
+
+    - name: Run Snyk scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      continue-on-error: true
+      with:
+        args: --severity-threshold=medium
+
+    - name: Run custom security scanner
+      id: security-scanner
+      run: |
+        echo "=== CUSTOM SECURITY SCANNER ==="
+        npm run security:report -- --report
+      continue-on-error: true
+
+    - name: Generate security report
+      if: always()
+      run: |
+        echo "=== SECURITY REPORT ===" > security-report.md
+        echo "" >> security-report.md
+        echo "Generated on: $(date)" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## NPM Audit Results" >> security-report.md
+        echo "### Vulnerabilities Summary" >> security-report.md
+        echo "- Critical: ${{ steps.npm-audit.outputs.critical }}" >> security-report.md
+        echo "- High: ${{ steps.npm-audit.outputs.high }}" >> security-report.md
+        echo "- Medium: ${{ steps.npm-audit.outputs.medium }}" >> security-report.md
+        echo "- Low: ${{ steps.npm-audit.outputs.low }}" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## Outdated Packages" >> security-report.md
+        echo "Count: ${{ steps.outdated-check.outputs.outdated_count }}" >> security-report.md
+        echo "" >> security-report.md
+        
+        if [[ -f "security-report.json" ]]; then
+          echo "## Detailed Scan Results" >> security-report.md
+          echo "```json" >> security-report.md
+          cat security-report.json >> security-report.md
+          echo "```" >> security-report.md
+        fi
+        
+        if [[ -f "npm-audit.json" ]]; then
+          echo "## NPM Audit Details" >> security-report.md
+          echo "```json" >> security-report.md
+          cat npm-audit.json >> security-report.md
+          echo "```" >> security-report.md
+        fi
+
+    - name: Upload security artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports-${{ github.run_number }}
+        path: |
+          security-report.md
+          security-report.json
+          npm-audit.json
+          outdated.json
+        retention-days: 30
+
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          let comment = `## 🔒 Security Scan Results
+          
+          ### Vulnerabilities Found
+          - **Critical**: ${{ steps.npm-audit.outputs.critical }}
+          - **High**: ${{ steps.npm-audit.outputs.high }}
+          - **Medium**: ${{ steps.npm-audit.outputs.medium }}
+          - **Low**: ${{ steps.npm-audit.outputs.low }}
+          
+          ### Outdated Packages
+          - **Count**: ${{ steps.outdated-check.outputs.outdated_count }}
+          `;
+          
+          if (${{ steps.npm-audit.outputs.critical }} > 0 || ${{ steps.npm-audit.outputs.high }} > 0) {
+            comment += `
+          
+          ⚠️ **Attention Required**: High or critical vulnerabilities detected!
+          
+          Please review and fix these issues before merging.
+          `;
+          }
+          
+          try {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not comment on PR:', error);
+          }
+
+    - name: Security gates check
+      run: |
+        echo "=== SECURITY GATES CHECK ==="
+        
+        # Check if we pass the security gates
+        CRITICAL=${{ steps.npm-audit.outputs.critical }}
+        HIGH=${{ steps.npm-audit.outputs.high }}
+        
+        if [[ "$CRITICAL" -gt 0 ]]; then
+          echo "❌ SECURITY GATE FAILED: Found $CRITICAL critical vulnerabilities"
+          echo "This PR cannot be merged until critical vulnerabilities are fixed."
+          exit 1
+        fi
+        
+        if [[ "$HIGH" -gt 5 ]]; then
+          echo "❌ SECURITY GATE FAILED: Found $HIGH high vulnerabilities (threshold: 5)"
+          echo "Please fix high vulnerabilities or provide justification."
+          exit 1
+        fi
+        
+        echo "✅ Security gates passed"
+
+  license-check:
+    runs-on: ubuntu-latest
+    name: License Compliance Check
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check licenses
+      id: license-check
+      run: |
+        echo "=== LICENSE CHECK ==="
+        
+        # Install license checker if not present
+        npm list license-checker > /dev/null 2>&1 || npx license-checker --init
+        
+        npx license-checker --json > licenses.json 2>/dev/null || true
+        
+        echo "Found licenses file generated"
+        
+        # Check for problematic licenses
+        if command -v jq > /dev/null; then
+          PROBLEMATIC=$(jq -r 'to_entries | map(select(.value.licenses | test("GPL|AGPL|LGPL|BSL|CPOL"))) | length' licenses.json)
+          echo "problematic_licenses=$PROBLEMATIC" >> $GITHUB_OUTPUT
+        fi
+
+    - name: License compliance report
+      if: always()
+      run: |
+        echo "=== LICENSE COMPLIANCE REPORT ==="
+        
+        if [[ -f "licenses.json" ]]; then
+          echo "License scan completed. Found file with license information."
+          echo "Total packages scanned: $(jq 'keys | length' licenses.json)"
+          
+          PROBLEMATIC=${{ steps.license-check.outputs.problematic_licenses || 0 }}
+          if [[ "$PROBLEMATIC" -gt 0 ]]; then
+            echo "⚠️ Found $PROBLEMATIC packages with potentially problematic licenses"
+            jq -r 'to_entries | map(select(.value.licenses | test("GPL|AGPL|LGPL|BSL|CPOL"))) | .[] | "\(.key): \(.value.licenses)"' licenses.json
+          fi
+        fi

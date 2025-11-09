@@ -1,0 +1,45 @@
+{
+  "name": "eslint-config-custom",
+  "version": "1.0.0",
+  "description": "Custom ESLint configuration for Doc Forge Buddy project",
+  "main": "index.js",
+  "keywords": [
+    "eslint",
+    "eslintconfig",
+    "react",
+    "typescript",
+    "performance",
+    "security",
+    "best-practices"
+  ],
+  "author": "Doc Forge Buddy Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=9.0.0",
+    "@typescript-eslint/eslint-plugin": ">=8.0.0",
+    "@typescript-eslint/parser": ">=8.0.0",
+    "eslint-plugin-react": ">=7.0.0",
+    "eslint-plugin-react-hooks": ">=5.0.0",
+    "eslint-plugin-jsx-a11y": ">=6.0.0",
+    "eslint-plugin-import": ">=2.0.0",
+    "eslint-plugin-security": ">=3.0.0",
+    "eslint-plugin-sonarjs": ">=2.0.0",
+    "eslint-plugin-unused-imports": ">=4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/doc-forge-buddy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/doc-forge-buddy/issues"
+  },
+  "homepage": "https://github.com/your-org/doc-forge-buddy#readme",
+  "files": [
+    "index.js",
+    "rules/**/*"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

@@ -1,0 +1,43 @@
+---
+description: Regras para qualidade de código, linting e testes.
+---
+
+# 🔍 Qualidade de Código
+
+## ESLint e TypeScript
+- **ESLint** configurado com regras de segurança e qualidade
+- **TypeScript strict mode** obrigatório
+- **Regras de segurança**: `no-console`, `no-debugger`, `no-eval`, `no-alert`
+- **Regras de qualidade**: `prefer-const`, `no-var`, `@typescript-eslint/no-unused-vars`
+- **Scripts**: `npm run lint`, `npm run lint:fix`, `npm run type-check`
+
+## Testes com Vitest
+- **Vitest** configurado com coverage e UI
+- **Thresholds**: 80% statements, 75% branches, 80% functions, 80% lines
+- **Setup**: `src/test/setup.ts` com jsdom
+- **Scripts**: `test`, `test:watch`, `test:ui`, `test:coverage`
+- **Cobertura**: Exclui types, configs e arquivos de setup
+
+## Padrões de Código
+- **Nomenclatura consistente**: PascalCase (componentes), camelCase (funções)
+- **Imports organizados**: Relativos para arquivos próximos, absolutos para distantes
+- **Comentários**: JSDoc para funções públicas, comentários inline para lógica complexa
+- **Error handling**: Try/catch obrigatório para operações assíncronas
+
+## Performance
+- **Bundle analysis**: `npm run analyze` para monitorar tamanho
+- **Code splitting**: Lazy loading para páginas e componentes pesados
+- **Memoização**: `React.memo()`, `useMemo()`, `useCallback()` quando apropriado
+- **Otimização**: Evitar re-renders desnecessários
+
+## Segurança
+- **Validação**: Zod para todos os dados de entrada
+- **Sanitização**: DOMPurify para conteúdo HTML
+- **RLS**: Row Level Security em todas as operações de banco
+- **Auditoria**: Logs de operações críticas
+
+## Monitoramento
+- **Logging estruturado**: `src/utils/logger.ts`
+- **Error boundaries**: Para capturar erros de componentes
+- **Métricas**: Performance e uso via React Query DevTools
+- **Alertas**: Monitoramento de erros críticos

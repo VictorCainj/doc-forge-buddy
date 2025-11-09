@@ -1,0 +1,35 @@
+---
+description: Regras para geração de documentos e PDFs.
+---
+
+# 📜 Documentos e PDFs
+
+## Estrutura de Templates
+- Templates são **constantes TypeScript** exportadas em `src/templates/`
+- Sintaxe **Handlebars** embutida nas strings (`{{variavel}}`, `{{#if}}`)
+- Processamento via regex customizado em `DocumentForm.tsx` e `templateProcessor.ts`
+- **Não usar arquivos .handlebars** separados
+
+## Bibliotecas de Geração
+- **html2pdf.js**: Geração de PDF a partir de HTML renderizado
+- **jspdf**: Geração de PDF programática para casos específicos
+- **html2canvas**: Captura de elementos DOM para conversão
+- **docx**: Exportação editável para Microsoft Word
+
+## Padrões de Implementação
+- Renderizar template completo antes de gerar PDF
+- Validar todos os placeholders antes da renderização
+- Usar **classes Tailwind** em vez de inline styles nos templates
+- Implementar fallbacks para dados ausentes
+
+## Casos de Uso
+- **Contratos**: Templates dinâmicos com dados do locador/locatário
+- **Vistorias**: Relatórios com imagens e apontamentos
+- **Termos**: Documentos legais com assinaturas
+- **Relatórios**: Análises e estatísticas
+
+## Otimização
+- Lazy loading de templates pesados
+- Cache de templates processados
+- Compressão de imagens antes da inclusão
+- Preview em tempo real durante edição

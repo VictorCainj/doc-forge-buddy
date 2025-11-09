@@ -1,0 +1,19 @@
+{
+  "version": "v1.0.0",
+  "language-settings": {
+    "NODE": {
+      "targetFile": "package.json"
+    }
+  },
+  "org": "doc-forge-team",
+  "project": {
+    "id": "doc-forge-buddy"
+  },
+  "severity-threshold": "medium",
+  "ignore": {
+    "empty": {}
+  },
+  "policies": {
+    "empty": {}
+  }
+}
