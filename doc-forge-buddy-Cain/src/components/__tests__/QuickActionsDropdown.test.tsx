@@ -248,6 +248,34 @@ describe('QuickActionsDropdown', () => {
     });
   });
 
+  it('deve usar onScheduleAgendamento quando fornecido', async () => {
+    const user = userEvent.setup();
+    const mockOnScheduleAgendamento = vi.fn();
+
+    render(
+      <QuickActionsDropdown
+        contractId="contract-1"
+        onGenerateDocument={mockOnGenerateDocument}
+        onScheduleAgendamento={mockOnScheduleAgendamento}
+      />
+    );
+
+    const triggerButton = screen.getByLabelText('Abrir ações rápidas');
+    await user.click(triggerButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog')).toBeInTheDocument();
+    });
+
+    const agendamentoButton = screen.getByText('Notificação de Agendamento');
+    await user.click(agendamentoButton);
+
+    await waitFor(() => {
+      expect(mockOnScheduleAgendamento).toHaveBeenCalledWith('contract-1');
+    });
+    expect(mockOnGenerateDocument).not.toHaveBeenCalled();
+  });
+
   it('deve fechar o modal após uma ação ser executada', async () => {
     const user = userEvent.setup();
     render(

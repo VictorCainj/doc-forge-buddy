@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { NotificationAutoCreator } from '@/features/notifications/utils/notificationAutoCreator';
 import { useEvictionReasons } from '@/hooks/useEvictionReasons';
 import { splitNames } from '@/utils/nameHelpers';
+import type { ContractFormData } from '@/types/shared/contract';
 
 const CadastrarContrato = () => {
   // Buscar motivos de desocupação ativos
@@ -22,7 +23,7 @@ const CadastrarContrato = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Partial<ContractFormData>>({});
 
   // Estados para modo de edição
   const [isEditMode, setIsEditMode] = useState(false);
@@ -41,14 +42,20 @@ const CadastrarContrato = () => {
       setContractId(state.contractId);
 
       // Mapear campos para garantir compatibilidade
-      const mappedData = {
-        ...state.contractData,
+      const mappedData: Partial<ContractFormData> = {
+        ...(state.contractData as Partial<ContractFormData>),
         // Garantir que nomeProprietario seja usado (pode vir como nomesResumidosLocadores)
         nomeProprietario:
           state.contractData.nomeProprietario ||
           state.contractData.nomesResumidosLocadores ||
           '',
       };
+
+      const versaoAtual = Number(
+        (state.contractData as Partial<ContractFormData>)?.versao ?? 1
+      );
+
+      mappedData.versao = Number.isFinite(versaoAtual) ? versaoAtual : 1;
 
       setFormData(mappedData);
     }
@@ -305,25 +312,46 @@ const CadastrarContrato = () => {
     setIsSubmitting(true);
 
     try {
-      // Adicionar campos automáticos e garantir compatibilidade
-      const enhancedData = {
-        ...data,
-        prazoDias: '30', // Sempre 30 dias
-        dataComunicacao: data.dataInicioRescisao, // Data de comunicação = data de início
-        // Garantir compatibilidade com ambos os nomes de campo
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const previousFormData = isEditMode ? (formData as Partial<ContractFormData>) : null;
+      const previousVersion = Number(previousFormData?.versao ?? 0);
+      const nextVersion = isEditMode
+        ? Number.isFinite(previousVersion) && previousVersion > 0
+          ? previousVersion + 1
+          : 1
+        : 1;
+
+      const enhancedData: ContractFormData = {
+        ...(data as unknown as ContractFormData),
+        prazoDias: '30',
+        dataComunicacao: data.dataInicioRescisao,
         nomesResumidosLocadores:
           data.nomeProprietario || data.nomesResumidosLocadores || '',
+        versao: nextVersion,
       };
 
+      const updatedAtIso = new Date().toISOString();
+      const title = `Contrato ${
+        data.numeroContrato || '[NÚMERO]'
+      } - ${
+        splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'
+      } - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`;
+
       if (isEditMode && contractId) {
-        // Modo de edição - atualizar contrato existente
         const { error } = await supabase
           .from('saved_terms')
           .update({
-            title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'} - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`,
+            title,
             content: JSON.stringify(enhancedData),
             form_data: enhancedData,
-            updated_at: new Date().toISOString(),
+            updated_at: updatedAtIso,
           })
           .eq('id', contractId);
 
@@ -331,46 +359,27 @@ const CadastrarContrato = () => {
 
         toast.success('Contrato atualizado com sucesso!');
       } else {
-        // Modo de criação - inserir novo contrato
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          throw new Error('Usuário não autenticado');
-        }
-
-        const contractData = {
-          title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'} - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`,
-          content: JSON.stringify(enhancedData),
-          form_data: enhancedData,
-          document_type: 'contrato',
-          user_id: user.id,
-        };
-
-        const { error } = await supabase
+        const { data: created, error } = await supabase
           .from('saved_terms')
-          .insert(contractData);
+          .insert({
+            title,
+            content: JSON.stringify(enhancedData),
+            form_data: enhancedData,
+            document_type: 'contrato',
+            user_id: user.id,
+          })
+          .select('id')
+          .single();
 
         if (error) {
           console.error('Erro ao inserir contrato:', error);
-          console.error('Dados enviados:', contractData);
+          console.error('Dados enviados:', enhancedData);
           throw error;
         }
 
-        // Buscar o contrato criado para obter o ID
-        const { data: createdContract } = await supabase
-          .from('saved_terms')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('title', contractData.title)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (createdContract) {
+        if (created?.id) {
           await NotificationAutoCreator.onContractCreated(
-            createdContract.id,
+            created.id,
             data.numeroContrato || 'N/A'
           );
         }
@@ -378,6 +387,7 @@ const CadastrarContrato = () => {
         toast.success('Contrato cadastrado com sucesso!');
       }
 
+      setFormData(enhancedData);
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
     } catch (error: any) {

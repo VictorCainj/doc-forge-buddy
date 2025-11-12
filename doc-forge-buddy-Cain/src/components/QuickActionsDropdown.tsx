@@ -59,10 +59,16 @@ interface QuickActionsDropdownProps {
     template: string,
     title: string
   ) => void;
+  onScheduleAgendamento?: (contractId: string) => void;
 }
 
 const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
-  ({ contractId, contractNumber, onGenerateDocument }) => {
+  ({
+    contractId,
+    contractNumber,
+    onGenerateDocument,
+    onScheduleAgendamento,
+  }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [loadingActions, setLoadingActions] = useState<Set<string>>(
       new Set()
@@ -114,6 +120,19 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
 
     // Função helper simplificada para fechar modal
     const handleCloseModal = useCallback(() => setIsOpen(false), []);
+
+    const handleAgendamento = useCallback(() => {
+      if (onScheduleAgendamento) {
+        onScheduleAgendamento(contractId);
+      } else {
+        onGenerateDocument(
+          contractId,
+          NOTIFICACAO_AGENDAMENTO_TEMPLATE,
+          'Notificação de Agendamento'
+        );
+      }
+      handleCloseModal();
+    }, [contractId, handleCloseModal, onGenerateDocument, onScheduleAgendamento]);
 
     // Função otimizada para buscar dados do contrato
     const fetchContractData = useCallback(async (contractId: string) => {
@@ -266,10 +285,14 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
           onGenerateDocument(contractId, DEVOLUTIVA_LOCATARIO_TEMPLATE, 'Devolutiva Locatário');
           handleCloseModal();
         }),
-        createAction('notificacao-agendamento', 'Notificação de Agendamento', 'Agendamento', Calendar, 'blue', () => {
-          onGenerateDocument(contractId, NOTIFICACAO_AGENDAMENTO_TEMPLATE, 'Notificação de Agendamento');
-          handleCloseModal();
-        }),
+        createAction(
+          'notificacao-agendamento',
+          'Notificação de Agendamento',
+          'Agendamento',
+          Calendar,
+          'blue',
+          handleAgendamento
+        ),
 
         // Comunicação - WhatsApp
         createAction('whatsapp-proprietaria', 'WhatsApp - Proprietária', 'Proprietária', MessageSquare, 'blue', () => {
@@ -307,7 +330,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
           handleCloseModal();
         }),
       ];
-    }, [contractId, navigate, onGenerateDocument, fetchContractData, handleCloseModal, loadingActions, hasAnalise, checkingAnalise, openAnaliseVistoria]);
+    }, [contractId, navigate, onGenerateDocument, fetchContractData, handleCloseModal, loadingActions, hasAnalise, checkingAnalise, openAnaliseVistoria, handleAgendamento]);
 
     // Seções organizadas de forma otimizada
     const sections = useMemo<ActionSectionType[]>(() => {

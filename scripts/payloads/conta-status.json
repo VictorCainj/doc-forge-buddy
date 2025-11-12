@@ -1,0 +1,43 @@
+{
+  "evento": "contrato.status_conta.alterado",
+  "timestamp": "2025-12-02T14:05:00.000Z",
+  "versao": 2,
+  "origem": "doc-forge-buddy-app",
+  "usuario_id": "6be5ce6f-2f9d-4a5c-9f3f-9b6da30b1a4c",
+  "contrato": {
+    "id": "9d5a5c80-6040-4a1f-8c59-9447bb09aa54",
+    "numero": "13734",
+    "status": "rescisao",
+    "dados": {
+      "numeroContrato": "13734",
+      "nomeProprietario": "Carlos Souza",
+      "nomeLocatario": "Mariana Lima",
+      "enderecoImovel": "Rua das Flores, 123",
+      "motivoDesocupacao": "Venda do imóvel",
+      "dataInicioRescisao": "15/12/2025",
+      "dataTerminoRescisao": "15/01/2026",
+      "dataComunicacao": "15/12/2025",
+      "prazoDias": "30",
+      "versao": 2,
+      "solicitarAgua": "sim",
+      "solicitarCondominio": "nao",
+      "solicitarGas": "sim"
+    },
+    "totem_metadados": {
+      "hash": "c8c6f5d65a4e4eab2a75c4e948012b4687dccf28c7f20d2be1de35f219318b4f",
+      "ultima_atualizacao": "2025-12-02T14:05:00.000Z"
+    }
+  },
+  "alteracoes": [],
+  "contas": [
+    {
+      "tipo": "energia",
+      "entregue": true,
+      "data_entrega": "2025-12-02T14:00:00.000Z"
+    }
+  ],
+  "vistoria": {
+    "data": "2026-01-05",
+    "dias_para_vistoria": 34
+  }
+}

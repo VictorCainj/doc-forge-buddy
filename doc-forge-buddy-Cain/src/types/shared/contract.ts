@@ -36,6 +36,7 @@ export interface ContractFormData extends BaseFormData {
   dataTerminoRescisao?: string;
   dataComunicacao?: string;
   prazoDias?: string;
+  versao?: number;
 
   // Dados do locatário
   nomeLocatario?: string;
@@ -170,6 +171,24 @@ export interface BillStatus {
 }
 
 // =============================================================================
+// OCORRÊNCIAS DE CONTRATO
+// =============================================================================
+
+export interface ContractOccurrence extends BaseEntity {
+  contract_id: string;
+  content: string;
+  ai_corrected?: boolean;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface CreateContractOccurrence {
+  contract_id: string;
+  content: string;
+  ai_corrected?: boolean;
+  metadata?: Record<string, unknown> | null;
+}
+
+// =============================================================================
 // FAVORITOS E TAGS
 // =============================================================================
 
@@ -262,6 +281,24 @@ export const mapSupabaseContractBill = (dbBill: Tables<'contract_bills'>['Row'])
     created_at: dbBill.created_at,
     updated_at: dbBill.updated_at,
     user_id: dbBill.user_id
+  };
+};
+
+/**
+ * Mapeia contract_occurrences do Supabase para ContractOccurrence
+ */
+export const mapSupabaseContractOccurrence = (
+  dbOccurrence: Tables<'contract_occurrences'>['Row']
+): ContractOccurrence => {
+  return {
+    id: dbOccurrence.id,
+    contract_id: dbOccurrence.contract_id,
+    content: dbOccurrence.content,
+    ai_corrected: dbOccurrence.ai_corrected ?? undefined,
+    metadata: (dbOccurrence.metadata as Record<string, unknown> | null) ?? null,
+    created_at: dbOccurrence.created_at,
+    updated_at: dbOccurrence.updated_at,
+    user_id: dbOccurrence.user_id
   };
 };
 

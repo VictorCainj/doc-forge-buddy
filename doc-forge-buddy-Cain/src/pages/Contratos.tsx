@@ -1,82 +1,124 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileText, Plus, Edit } from '@/utils/iconMapper';
+import { useQuery } from '@tanstack/react-query';
+import { FileText, Plus, Edit, Loader2 } from '@/utils/iconMapper';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { PremiumButton } from '@/components/ui/premium-button';
+import { Button } from '@/components/ui/button';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ExcelIcon } from '@/components/icons/ExcelIcon';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useStandardToast } from '@/utils/toastHelpers';
-import { formatDateBrazilian } from '@/utils/core/dateFormatter';
+import {
+  formatDateBrazilian,
+  convertDateToBrazilian,
+} from '@/utils/core/dateFormatter';
+import { exportContractsToExcel, ExportContractsOptions } from '@/utils/exportContractsToExcel';
 import { supabase } from '@/integrations/supabase/client';
 import { Contract } from '@/types/shared/contract';
+import type { Contract as DomainContract } from '@/types/domain/contract';
 import QuickActionsDropdown from '@/components/QuickActionsDropdown';
 import { applyContractConjunctions } from '@/features/contracts/utils/contractConjunctions';
 import { processTemplate } from '@/shared/template-processing';
+import {
+  NOTIFICACAO_AGENDAMENTO_TEMPLATE,
+} from '@/templates/documentos';
 import { ContractBillsSection } from '@/features/contracts/components/ContractBillsSection';
+import { ContractOccurrencesButton } from '@/features/contracts/components/ContractOccurrencesModal';
 import { OptimizedSearch } from '@/components/ui/optimized-search';
 
 const CONTRACTS_PER_PAGE = 5;
 
-// Hook para buscar contratos do Supabase
+// Hook para buscar contratos do Supabase com cache React Query
 const useContracts = () => {
   const { user } = useAuth();
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  
-  useEffect(() => {
-    const fetchContracts = async () => {
-      if (!user) {
-        setContracts([]);
-        return;
+  const userId = user?.id;
+
+  const queryResult = useQuery<Contract[]>({
+    queryKey: ['contracts', userId],
+    queryFn: async () => {
+      if (!userId) {
+        return [];
       }
 
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const { data, error: supabaseError } = await supabase
-          .from('saved_terms')
-          .select('*')
-          .eq('document_type', 'contrato')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+      const { data, error: supabaseError } = await supabase
+        .from('saved_terms')
+        .select('*')
+        .eq('document_type', 'contrato')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-        if (supabaseError) {
-          throw supabaseError;
-        }
+      if (supabaseError) {
+        throw supabaseError;
+      }
 
-        // Mapear os dados do Supabase para o tipo Contract
-        const processedContracts: Contract[] = (data || []).map((dbTerm) => {
-          // Processar form_data se for string JSON
-          const formData = typeof dbTerm.form_data === 'string' 
-            ? JSON.parse(dbTerm.form_data) 
+      return (data || []).map((dbTerm) => {
+        const formData =
+          typeof dbTerm.form_data === 'string'
+            ? JSON.parse(dbTerm.form_data)
             : dbTerm.form_data || {};
 
-          return {
-            id: dbTerm.id,
-            title: dbTerm.title || '',
-            content: dbTerm.content || '',
-            document_type: dbTerm.document_type || 'contrato',
-            form_data: formData,
-            created_at: dbTerm.created_at || '',
-            updated_at: dbTerm.updated_at || '',
-            user_id: dbTerm.user_id
-          } as Contract;
-        });
-        
-        setContracts(processedContracts);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err : new Error('Erro ao buscar contratos');
-        setError(errorMessage);
-        console.error('Erro ao buscar contratos:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchContracts();
-  }, [user]);
-  
-  return { data: contracts, isLoading, error };
+        return {
+          id: dbTerm.id,
+          title: dbTerm.title || '',
+          content: dbTerm.content || '',
+          document_type: dbTerm.document_type || 'contrato',
+          form_data: formData,
+          created_at: dbTerm.created_at || '',
+          updated_at: dbTerm.updated_at || '',
+          user_id: dbTerm.user_id,
+        } as Contract;
+      });
+    },
+    enabled: Boolean(userId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    keepPreviousData: true,
+  });
+
+  const contracts = queryResult.data ?? [];
+  const typedError = queryResult.error
+    ? queryResult.error instanceof Error
+      ? queryResult.error
+      : new Error((queryResult.error as { message?: string }).message ?? 'Erro ao buscar contratos')
+    : null;
+
+  if (typedError) {
+    console.error('Erro ao buscar contratos:', typedError);
+  }
+
+  return {
+    data: userId ? contracts : ([] as Contract[]),
+    isLoading: userId ? queryResult.isLoading && contracts.length === 0 : false,
+    error: userId ? typedError : null,
+  };
 };
 
 // Reducer hook (removido - usar estado local)
@@ -102,12 +144,18 @@ const ContractList = ({
   contracts,
   isLoading,
   onGenerateDocument,
+  onScheduleAgendamento,
   hasMore,
   onLoadMore,
 }: {
   contracts: Contract[];
   isLoading: boolean;
-  onGenerateDocument: (contractId: string, template: string, title: string) => void;
+  onGenerateDocument: (
+    contractId: string,
+    template: string,
+    title: string
+  ) => void;
+  onScheduleAgendamento?: (contractId: string) => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
 }) => {
@@ -216,15 +264,20 @@ const ContractList = ({
             </div>
             
             {/* Botões de Ação */}
-            <div className="flex items-center justify-between gap-3 border-t border-neutral-200 pt-4">
-              {/* Botão de Ações Rápidas - Esquerda */}
-              <QuickActionsDropdown
-                contractId={contract.id}
-                contractNumber={numeroContrato}
-                onGenerateDocument={onGenerateDocument}
-              />
-              
-              {/* Botão Editar - Direita */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <QuickActionsDropdown
+                  contractId={contract.id}
+                  contractNumber={numeroContrato}
+                  onGenerateDocument={onGenerateDocument}
+                  onScheduleAgendamento={onScheduleAgendamento}
+                />
+                <ContractOccurrencesButton
+                  contractId={contract.id}
+                  contractNumber={numeroContrato}
+                />
+              </div>
+
               <Link
                 to={`/editar-contrato/${contract.id}`}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
@@ -368,9 +421,49 @@ const getContractDate = (contract: any) => {
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 };
 
+type ExportScope = 'all' | 'notified-month' | 'current-view';
+
+const parseDateForFilter = (dateStr?: string | null): Date | null => {
+  if (!dateStr) return null;
+
+  if (dateStr.includes('/')) {
+    const [day, month, year] = dateStr.split('/');
+    const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(dateStr);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const filterContractsByNotificationMonth = (
+  contracts: Contract[],
+  targetMonth?: number,
+  targetYear?: number
+): Contract[] => {
+  const now = new Date();
+  const month = targetMonth ?? now.getMonth() + 1;
+  const year = targetYear ?? now.getFullYear();
+
+  return contracts.filter((contract) => {
+    const formData = contract.form_data || {};
+    const referenceDate =
+      parseDateForFilter(formData.dataInicioRescisao) ||
+      parseDateForFilter(formData.dataComunicacao) ||
+      parseDateForFilter(formData.dataTerminoRescisao);
+
+    if (!referenceDate) return false;
+
+    return (
+      referenceDate.getMonth() + 1 === month &&
+      referenceDate.getFullYear() === year
+    );
+  });
+};
+
 const Contratos = () => {
   const navigate = useNavigate();
-  const { showError } = useStandardToast();
+  const { showError, showCustom } = useStandardToast();
   const { profile, user } = useAuth();
 
   // Estado para exportação
@@ -392,15 +485,54 @@ const Contratos = () => {
   const [contractIndex, setContractIndex] = useState(0);
   const [favoritesSet, setFavoritesSet] = useState(new Set());
   const [allTags, setAllTags] = useState([]);
-  const [availableYears, setAvailableYears] = useState([]);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [meses] = useState(['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']);
   const [searchResetCounter, setSearchResetCounter] = useState(0);
+  const [isMonthExportDialogOpen, setIsMonthExportDialogOpen] = useState(false);
+  const [exportMonth, setExportMonth] = useState<string>(() => String(new Date().getMonth() + 1));
+  const [exportYear, setExportYear] = useState<string>(() => String(new Date().getFullYear()));
+
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleContract, setScheduleContract] = useState<Contract | null>(null);
+  const [scheduleForm, setScheduleForm] = useState({
+    tipoVistoria: 'final',
+    dataVistoria: '',
+    horaVistoria: '',
+  });
+  const [isGeneratingSchedule, setIsGeneratingSchedule] = useState(false);
 
   // Atualizar displayedContracts quando contracts mudar
   useEffect(() => {
     setDisplayedContracts(contracts);
     // Resetar contador visível quando novos contratos são carregados
     setVisibleCount(CONTRACTS_PER_PAGE);
+  }, [contracts]);
+
+  useEffect(() => {
+    const years = new Set<number>();
+
+    contracts.forEach((contract) => {
+      const formData = contract.form_data || {};
+      const candidateDates = [
+        parseDateForFilter(formData.dataInicioRescisao),
+        parseDateForFilter(formData.dataTerminoRescisao),
+        parseDateForFilter(formData.dataComunicacao),
+      ];
+      candidateDates
+        .filter((date): date is Date => !!date && !Number.isNaN(date.getTime()))
+        .forEach((date) => years.add(date.getFullYear()));
+    });
+
+    if (years.size === 0) {
+      years.add(new Date().getFullYear());
+    }
+
+    const sortedYears = Array.from(years)
+      .sort((a, b) => b - a)
+      .map(String);
+
+    setAvailableYears(sortedYears);
+    setExportYear((prev) => (sortedYears.includes(prev) ? prev : sortedYears[0]));
   }, [contracts]);
   
   // Calcular contratos visíveis
@@ -457,6 +589,47 @@ const Contratos = () => {
     setHasSearched(false);
     setSearchResetCounter((prev) => prev + 1);
   }, [contracts]);
+
+  const handleOpenScheduleModal = useCallback(
+    (contractId: string) => {
+      const contractToSchedule = contracts.find(
+        (contract) => contract.id === contractId
+      );
+
+      if (!contractToSchedule) {
+        showError('validation', {
+          description: 'Contrato não encontrado para agendamento.',
+        });
+        return;
+      }
+
+      setScheduleContract(contractToSchedule);
+      setScheduleForm((prev) => ({
+        tipoVistoria: prev.tipoVistoria || 'final',
+        dataVistoria: '',
+        horaVistoria: '',
+      }));
+      setIsScheduleModalOpen(true);
+    },
+    [contracts, showError]
+  );
+
+  const handleCloseScheduleModal = useCallback(() => {
+    setIsScheduleModalOpen(false);
+    setScheduleContract(null);
+    setScheduleForm({
+      tipoVistoria: 'final',
+      dataVistoria: '',
+      horaVistoria: '',
+    });
+  }, []);
+
+  const handleScheduleFormChange = useCallback(
+    (key: 'tipoVistoria' | 'dataVistoria' | 'horaVistoria', value: string) => {
+      setScheduleForm((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
   
   const loadMore = () => {};
   const isFavorite = () => false;
@@ -528,12 +701,206 @@ const Contratos = () => {
     }
   }, [navigate, showError]);
   
-  const handleGenerateAgendamento = () => console.log('Gerar agendamento');
+  const handleGenerateAgendamento = useCallback(async () => {
+    if (!scheduleContract) {
+      showError('validation', {
+        description: 'Selecione um contrato para gerar o agendamento.',
+      });
+      return;
+    }
+
+    if (!scheduleForm.dataVistoria || !scheduleForm.horaVistoria) {
+      showError('validation', {
+        description: 'Informe a data e a hora da vistoria.',
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingSchedule(true);
+
+      const { data: contractData, error: contractError } = await supabase
+        .from('saved_terms')
+        .select('*')
+        .eq('id', scheduleContract.id)
+        .single();
+
+      if (contractError || !contractData) {
+        showError('Erro ao carregar dados do contrato');
+        return;
+      }
+
+      const formData =
+        typeof contractData.form_data === 'string'
+          ? JSON.parse(contractData.form_data)
+          : contractData.form_data || {};
+
+      const enhancedData = applyContractConjunctions(formData);
+      enhancedData.dataAtual = formatDateBrazilian(new Date());
+
+      let dataVistoriaFormatada = scheduleForm.dataVistoria;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(scheduleForm.dataVistoria)) {
+        const [year, month, day] = scheduleForm.dataVistoria.split('-');
+        const dateObj = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day)
+        );
+        dataVistoriaFormatada = formatDateBrazilian(dateObj);
+      } else {
+        dataVistoriaFormatada = convertDateToBrazilian(scheduleForm.dataVistoria);
+      }
+
+      enhancedData.dataVistoria = dataVistoriaFormatada;
+      enhancedData.horaVistoria = scheduleForm.horaVistoria;
+      enhancedData.tipoVistoria = scheduleForm.tipoVistoria;
+
+      const tipoVistoriaTexto =
+        scheduleForm.tipoVistoria === 'revistoria'
+          ? 'Revistoria'
+          : 'Vistoria Final';
+
+      enhancedData.tipoVistoriaTexto = tipoVistoriaTexto;
+      enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
+      enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
+
+      const processedTemplate = processTemplate(
+        NOTIFICACAO_AGENDAMENTO_TEMPLATE,
+        enhancedData
+      );
+
+      const contractNumber =
+        enhancedData.numeroContrato ||
+        scheduleContract.form_data?.numeroContrato ||
+        scheduleContract.title ||
+        '';
+
+      const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${contractNumber}`;
+
+      navigate('/gerar-documento', {
+        state: {
+          title: documentTitle,
+          template: processedTemplate,
+          formData: enhancedData,
+          documentType: 'Notificação de Agendamento',
+          contractId: scheduleContract.id,
+        },
+      });
+
+      handleCloseScheduleModal();
+    } catch (error) {
+      console.error('Erro ao gerar agendamento:', error);
+      showError('Erro ao gerar documento. Tente novamente.');
+    } finally {
+      setIsGeneratingSchedule(false);
+    }
+  }, [
+    handleCloseScheduleModal,
+    navigate,
+    scheduleContract,
+    scheduleForm.dataVistoria,
+    scheduleForm.horaVistoria,
+    scheduleForm.tipoVistoria,
+    showError,
+  ]);
   const handleGenerateRecusaAssinatura = () => console.log('Gerar recusa');
   const handleGenerateWhatsApp = () => console.log('Gerar WhatsApp');
   const handleGenerateWithAssinante = () => console.log('Gerar com assinante');
   const handleGenerateStatusVistoria = () => console.log('Gerar status');
-  const handleExportToExcel = () => console.log('Exportar Excel');
+
+  const handleExportContracts = useCallback(
+    async (scope: ExportScope, month?: number, year?: number) => {
+      if (!contracts || contracts.length === 0) {
+        showCustom({
+          title: 'Nenhum contrato para exportar',
+          description: 'Cadastre um contrato para gerar a planilha.',
+        });
+        return false;
+      }
+
+      setIsExporting(true);
+      let exportSucceeded = false;
+
+      try {
+        let contractsToExport: Contract[] = [];
+        const exportOptions: ExportContractsOptions = {};
+
+        if (scope === 'current-view') {
+          contractsToExport = displayedContracts;
+          exportOptions.hasSearched = hasSearched;
+        } else if (scope === 'notified-month') {
+          const now = new Date();
+          const targetMonth = month ?? now.getMonth() + 1;
+          const targetYear = year ?? now.getFullYear();
+          contractsToExport = filterContractsByNotificationMonth(
+            contracts,
+            targetMonth,
+            targetYear
+          );
+          exportOptions.selectedMonth = String(targetMonth);
+          exportOptions.selectedYear = String(targetYear);
+        } else {
+          contractsToExport = contracts;
+        }
+
+        if (!contractsToExport || contractsToExport.length === 0) {
+          showCustom({
+            title:
+              scope === 'notified-month'
+                ? 'Sem notificações no período escolhido'
+                : 'Nenhum contrato na seleção atual',
+            description:
+              scope === 'notified-month'
+                ? 'Nenhum contrato foi notificado no mês selecionado.'
+                : 'Aplique outro filtro ou veja todos os contratos para exportar.',
+          });
+          return false;
+        }
+
+        await exportContractsToExcel(
+          contractsToExport as unknown as DomainContract[],
+          exportOptions
+        );
+
+        showCustom({
+          title: 'Planilha preparada',
+          description:
+            'Exportação concluída com sucesso. O arquivo é compatível com o Google Sheets.',
+        });
+        exportSucceeded = true;
+      } catch (error) {
+        console.error('Erro ao exportar contratos:', error);
+        showError('load', {
+          title: 'Erro na exportação',
+          description: 'Não foi possível gerar a planilha. Tente novamente em instantes.',
+        });
+      } finally {
+        setIsExporting(false);
+      }
+
+      return exportSucceeded;
+    },
+    [contracts, displayedContracts, hasSearched, showCustom, showError]
+  );
+
+  const handleConfirmMonthExport = useCallback(async () => {
+    const monthNumber = parseInt(exportMonth, 10);
+    const yearNumber = parseInt(exportYear, 10);
+
+    if (Number.isNaN(monthNumber) || Number.isNaN(yearNumber)) {
+      showCustom({
+        title: 'Período inválido',
+        description: 'Selecione um mês e um ano válidos para exportar.',
+      });
+      return;
+    }
+
+    const exported = await handleExportContracts('notified-month', monthNumber, yearNumber);
+    if (exported) {
+      setIsMonthExportDialogOpen(false);
+    }
+  }, [exportMonth, exportYear, handleExportContracts, showCustom]);
+
   const handleClearDateFilter = () => console.log('Limpar filtro');
   const generateDocumentWithAssinante = () => console.log('Gerar com assinante');
   
@@ -552,6 +919,7 @@ const Contratos = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-white relative">
+        {isExporting && <LoadingOverlay message="Gerando planilha..." />}
         {/* Conteúdo principal com z-index */}
         <div className="relative z-10">
           {/* Header Compacto - Todos os elementos visíveis sem scroll */}
@@ -573,13 +941,65 @@ const Contratos = () => {
                   </div>
                 </div>
 
-                <Link to="/cadastrar-contrato" className="flex-shrink-0">
-                  <button className="inline-flex items-center gap-2 px-6 py-3 h-12 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-medium text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-opacity-50">
-                    <Plus className="h-5 w-5" />
-                    <span className="hidden sm:inline">Novo Contrato</span>
-                    <span className="sm:hidden">Novo</span>
-                  </button>
-                </Link>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <PremiumButton
+                        icon={
+                          isExporting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ExcelIcon className="w-5 h-5" />
+                          )
+                        }
+                        disabled={isExporting}
+                        className="bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 hover:from-emerald-400 hover:via-green-500 hover:to-teal-500"
+                      >
+                        Exportar planilha
+                      </PremiumButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64">
+                      <DropdownMenuLabel>Exportar contratos</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onSelect={async () => {
+                          await handleExportContracts('all');
+                        }}
+                      >
+                        Todos os contratos
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={async () => {
+                          await handleExportContracts('notified-month');
+                        }}
+                      >
+                        Notificados no mês atual
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => {
+                          setIsMonthExportDialogOpen(true);
+                        }}
+                      >
+                        Notificados em outro mês...
+                      </DropdownMenuItem>
+                      {hasSearched && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => handleExportContracts('current-view')}>
+                            Resultado da busca
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Link to="/cadastrar-contrato" className="flex-shrink-0">
+                    <button className="inline-flex items-center gap-2 px-6 py-3 h-12 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-medium text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-opacity-50">
+                      <Plus className="h-5 w-5" />
+                      <span className="hidden sm:inline">Novo Contrato</span>
+                      <span className="sm:hidden">Novo</span>
+                    </button>
+                  </Link>
+                </div>
               </div>
 
               {/* Linha 2: Busca e Filtros Compactos */}
@@ -636,11 +1056,153 @@ const Contratos = () => {
               contracts={visibleContracts}
               isLoading={isLoading}
               onGenerateDocument={handleGenerateDocument}
+              onScheduleAgendamento={handleOpenScheduleModal}
               hasMore={hasMoreContracts}
               onLoadMore={handleLoadMore}
             />
           </div>
         </div>
+
+        <Dialog
+          open={isScheduleModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleCloseScheduleModal();
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[420px]">
+            <DialogHeader>
+              <DialogTitle>Agendar Vistoria</DialogTitle>
+              <DialogDescription>
+                Preencha a data e hora da vistoria para gerar a notificação.
+                {scheduleContract && (
+                  <span className="block text-sm text-neutral-600 mt-1">
+                    Contrato:{' '}
+                    <span className="font-semibold text-neutral-800">
+                      {scheduleContract.form_data?.numeroContrato ||
+                        scheduleContract.title ||
+                        scheduleContract.id}
+                    </span>
+                  </span>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="schedule-tipo-vistoria">Tipo de Vistoria</Label>
+                <Select
+                  value={scheduleForm.tipoVistoria}
+                  onValueChange={(value) =>
+                    handleScheduleFormChange('tipoVistoria', value)
+                  }
+                >
+                  <SelectTrigger id="schedule-tipo-vistoria">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="final">Vistoria Final</SelectItem>
+                    <SelectItem value="revistoria">Revistoria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="schedule-data">Data da Vistoria</Label>
+                <Input
+                  id="schedule-data"
+                  type="date"
+                  value={scheduleForm.dataVistoria}
+                  onChange={(event) =>
+                    handleScheduleFormChange('dataVistoria', event.target.value)
+                  }
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="schedule-hora">Hora da Vistoria</Label>
+                <Input
+                  id="schedule-hora"
+                  type="time"
+                  value={scheduleForm.horaVistoria}
+                  onChange={(event) =>
+                    handleScheduleFormChange('horaVistoria', event.target.value)
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseScheduleModal}
+                disabled={isGeneratingSchedule}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleGenerateAgendamento}
+                disabled={isGeneratingSchedule}
+              >
+                {isGeneratingSchedule ? 'Gerando...' : 'Gerar Notificação'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isMonthExportDialogOpen} onOpenChange={setIsMonthExportDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Exportar notificações por mês</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <p className="text-sm font-medium text-neutral-700">Mês</p>
+                <Select value={exportMonth} onValueChange={setExportMonth}>
+                  <SelectTrigger className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
+                    <SelectValue placeholder="Selecione o mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {meses.map((mes, index) => (
+                      <SelectItem key={mes} value={String(index + 1)}>
+                        {mes}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <p className="text-sm font-medium text-neutral-700">Ano</p>
+                <Select value={exportYear} onValueChange={setExportYear}>
+                  <SelectTrigger className="border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20">
+                    <SelectValue placeholder="Selecione o ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableYears.map((yearOption) => (
+                      <SelectItem key={yearOption} value={yearOption}>
+                        {yearOption}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsMonthExportDialogOpen(false)}
+                disabled={isExporting}
+              >
+                Cancelar
+              </Button>
+              <Button type="button" onClick={handleConfirmMonthExport} disabled={isExporting}>
+                {isExporting ? 'Exportando...' : 'Exportar'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Modals - Lazy loaded */}
         <React.Suspense fallback={null}>

@@ -7,7 +7,7 @@ import {
   BillType,
   BillStatus,
   ContractFormData,
-} from '@/types/contract';
+} from '@/types/shared/contract';
 
 interface UseContractBillsProps {
   contractId: string;
@@ -35,6 +35,7 @@ export function useContractBills({
 }: UseContractBillsProps): UseContractBillsReturn {
   const [bills, setBills] = useState<ContractBill[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [resolvedContractId, setResolvedContractId] = useState<string | null>(null);
 
   /**
    * Determina quais contas devem existir para este contrato
@@ -114,6 +115,8 @@ export function useContractBills({
 
         realContractId = contractDataFromDB.id;
       }
+
+      setResolvedContractId(realContractId);
 
       // Buscar bills existentes usando o ID correto
       const { data: existingBills, error } = await supabase

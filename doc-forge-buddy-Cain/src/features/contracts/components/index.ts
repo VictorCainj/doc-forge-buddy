@@ -10,3 +10,4 @@ export { KeyDeliveryDateModal } from './KeyDeliveryDateModal';
 export { ContractStatusBadge } from './ContractStatusBadge';
 export { ContractTags } from './ContractTags';
 export { ContractCardSkeleton, ContractCardSkeletonGrid } from './ContractCardSkeleton';
+export { ContractOccurrencesModal, ContractOccurrencesButton } from './ContractOccurrencesModal';

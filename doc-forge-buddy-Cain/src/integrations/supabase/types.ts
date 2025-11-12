@@ -364,6 +364,54 @@ export type Database = {
           },
         ];
       };
+      contract_occurrences: {
+        Row: {
+          ai_corrected: boolean | null;
+          content: string;
+          contract_id: string;
+          created_at: string;
+          id: string;
+          metadata: Json | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          ai_corrected?: boolean | null;
+          content: string;
+          contract_id: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          ai_corrected?: boolean | null;
+          content?: string;
+          contract_id?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'contract_occurrences_contract_id_fkey';
+            columns: ['contract_id'];
+            isOneToOne: false;
+            referencedRelation: 'saved_terms';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'contract_occurrences_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
       knowledge_entries: {
         Row: {
           content: string;

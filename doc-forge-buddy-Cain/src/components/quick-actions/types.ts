@@ -28,5 +28,6 @@ export interface QuickActionsDropdownProps {
     template: string,
     title: string
   ) => void;
+  onScheduleAgendamento?: (contractId: string) => void;
 }
 

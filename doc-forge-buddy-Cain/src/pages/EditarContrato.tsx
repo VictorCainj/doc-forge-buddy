@@ -12,10 +12,10 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { ContractFormData } from '@/types/contract';
 import { NotificationAutoCreator } from '@/features/notifications/utils/notificationAutoCreator';
 import { useEvictionReasons } from '@/hooks/useEvictionReasons';
 import { splitNames } from '@/utils/nameHelpers';
+import type { ContractFormData } from '@/types/shared/contract';
 
 const EditarContrato = () => {
   // Buscar motivos de desocupação ativos
@@ -24,7 +24,7 @@ const EditarContrato = () => {
   const params = useParams();
   const contractId = params.id as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Partial<ContractFormData>>({});
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -58,7 +58,7 @@ const EditarContrato = () => {
         // console.log('Contract data loaded:', contractData);
 
         // Mapear campos para garantir compatibilidade
-        const mappedData: Record<string, string> = {
+        const mappedData: Partial<ContractFormData> = {
           ...(contractData.form_data as ContractFormData),
           // Garantir que nomeProprietario seja usado (pode vir como nomesResumidosLocadores)
           nomeProprietario:
@@ -68,9 +68,8 @@ const EditarContrato = () => {
             '',
         };
 
-        // console.log('Mapped data:', mappedData);
-        // console.log('nomeProprietario:', mappedData.nomeProprietario);
-        // console.log('nomeLocatario:', mappedData.nomeLocatario);
+        const versaoAtual = Number(mappedData.versao ?? 1);
+        mappedData.versao = Number.isFinite(versaoAtual) ? versaoAtual : 1;
 
         setFormData(mappedData);
         setIsModalOpen(true);
@@ -334,30 +333,47 @@ const EditarContrato = () => {
     setIsSubmitting(true);
 
     try {
-      // Adicionar campos automáticos e garantir compatibilidade
-      const enhancedData: Record<string, string> = {
-        ...data,
-        prazoDias: '30', // Sempre 30 dias
-        dataComunicacao: data.dataInicioRescisao, // Data de comunicação = data de início
-        // Garantir compatibilidade com ambos os nomes de campo
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const previousFormData = formData;
+      const previousVersion = Number(previousFormData?.versao ?? 0);
+      const nextVersion = Number.isFinite(previousVersion) && previousVersion > 0 ? previousVersion + 1 : 1;
+
+      const enhancedData: ContractFormData = {
+        ...(data as unknown as ContractFormData),
+        prazoDias: '30',
+        dataComunicacao: data.dataInicioRescisao,
         nomesResumidosLocadores:
           data.nomeProprietario || data.nomesResumidosLocadores || '',
+        versao: nextVersion,
       };
+
+      const updatedAtIso = new Date().toISOString();
+      const title = `Contrato ${
+        data.numeroContrato || '[NÚMERO]'
+      } - ${
+        splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'
+      } - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`;
 
       // Atualizar contrato existente
       const { error } = await supabase
         .from('saved_terms')
         .update({
-          title: `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'} - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`,
+          title,
           content: JSON.stringify(enhancedData),
           form_data: enhancedData,
-          updated_at: new Date().toISOString(),
+          updated_at: updatedAtIso,
         })
         .eq('id', contractId);
 
       if (error) throw error;
 
-      // Criar notificação de atualização (não bloqueia se falhar)
       try {
         await NotificationAutoCreator.onContractUpdated(
           contractId,
@@ -365,10 +381,10 @@ const EditarContrato = () => {
         );
       } catch (notificationError) {
         console.warn('Erro ao criar notificação (não crítico):', notificationError);
-        // Continuar mesmo se a notificação falhar
       }
 
       toast.success('Contrato atualizado com sucesso!');
+      setFormData(enhancedData);
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
     } catch (error: any) {

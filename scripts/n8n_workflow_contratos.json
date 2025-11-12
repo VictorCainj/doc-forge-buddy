@@ -1,0 +1,55 @@
+{
+  "name": "Contratos WhatsApp",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contratos",
+        "responseMode": "onReceived",
+        "responseCode": "200"
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/AC6e80a476655ca79eb1106d4a7015b889/Messages.json",
+        "authentication": "basicAuth",
+        "sendBody": true,
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{\n  \"To\": \"whatsapp:+55XXXXXXXXXXX\",\n  \"From\": \"whatsapp:+14155238886\",\n  \"Body\": \"Contrato {{$json.id}} do cliente Sr. {{$json.cliente}} foi {{$json.status}} em {{$json.dataAtual}}.\"\n}"
+      },
+      "id": "2",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

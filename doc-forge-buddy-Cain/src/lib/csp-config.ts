@@ -58,7 +58,11 @@ export const getProdCSPConfig = (nonce?: string): CSPConfig => ({
   styleSrc: ["'self'", ...(nonce ? [`'nonce-${nonce}'`] : [])],
   imgSrc: ["'self'", "data:", "https:"],
   fontSrc: ["'self'", "https:"],
-  connectSrc: ["'self'", "https://*.supabase.co", "wss://*.supabase.co"],
+  connectSrc: [
+    "'self'",
+    "https://*.supabase.co",
+    "wss://*.supabase.co"
+  ],
   frameSrc: ["'none'"],
   objectSrc: ["'none'"],
   baseUri: "'self'",

@@ -45,6 +45,7 @@ export interface ContractFormData {
   dataTerminoRescisao?: string;
   dataComunicacao?: string;
   prazoDias?: string;
+  versao?: number;
 
   // Dados do locatário
   nomeLocatario?: string;
