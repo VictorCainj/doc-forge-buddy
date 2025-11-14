@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import DocumentFormWizard from '@/components/modals/DocumentFormWizard';
 import { FormStep } from '@/hooks/use-form-wizard';
-import { splitNames } from '@/utils/nameHelpers';
+import { getContractLocatarioNames } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
   nomeLocatario: string;
   quantidadeChaves?: string;
+  primeiroLocatario?: string;
+  segundoLocatario?: string;
+  terceiroLocatario?: string;
+  quartoLocatario?: string;
   [key: string]: string | undefined;
 }
 
@@ -26,6 +30,24 @@ export const TermoLocatarioForm: React.FC<TermoLocatarioFormProps> = ({
   getTemplate,
   onFormDataChange,
 }) => {
+  const locatarioOptions = useMemo(
+    () => [
+      { value: 'todos', label: 'Todos os locatários' },
+      ...getContractLocatarioNames(contractData).map((nome) => ({
+        value: nome,
+        label: nome,
+      })),
+      { value: 'custom', label: 'Outra pessoa (preencher abaixo)' },
+    ],
+    [
+      contractData.nomeLocatario,
+      contractData.primeiroLocatario,
+      contractData.segundoLocatario,
+      contractData.terceiroLocatario,
+      contractData.quartoLocatario,
+    ]
+  );
+
   const steps: FormStep[] = [
     {
       id: 'vistoria',
@@ -45,17 +67,7 @@ export const TermoLocatarioForm: React.FC<TermoLocatarioFormProps> = ({
           type: 'select',
           required: false,
           placeholder: 'Selecione uma opção',
-          options: [
-            { value: 'todos', label: 'Todos os locatários' },
-            ...(contractData.nomeLocatario
-              ? splitNames(contractData.nomeLocatario)
-                  .filter((nome) => nome && nome.length > 2)
-                  .map((nome) => ({
-                    value: nome,
-                    label: nome,
-                  }))
-              : []),
-          ],
+          options: locatarioOptions,
         },
         {
           name: 'usarQuantidadeChavesContrato',

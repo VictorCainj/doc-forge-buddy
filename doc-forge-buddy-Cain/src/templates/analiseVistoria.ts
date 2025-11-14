@@ -471,13 +471,13 @@ export const ANALISE_VISTORIA_TEMPLATE = async (dados: {
           </div>
           
           <!-- Seção de Considerações -->
-          <div style="background: #E5E7EB; padding: 16px 20px; border-top: 1px solid #D1D5DB;">
+          <div style="background: #F9FAFB; padding: 16px 20px; border-top: 1px solid #E5E7EB;">
             <div style="margin-bottom: 12px;">
-              <h4 style="color: #1F2937; margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">CONSIDERAÇÕES DO DEPARTAMENTO DE RESCISÃO</h4>
+              <h4 style="color: #374151; margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">CONSIDERAÇÕES DO DEPARTAMENTO DE RESCISÃO</h4>
             </div>
             ${
               apontamento.observacao
-                ? `<p style="margin: 0; color: #1F2937; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">${apontamento.observacao}</p>`
+                ? `<p style="margin: 0; color: #374151; font-size: 13px; line-height: 1.6; font-weight: 400;">${apontamento.observacao}</p>`
                 : `<p style="margin: 0; color: #6B7280; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: italic;">Nenhuma consideração registrada.</p>`
             }
           </div>

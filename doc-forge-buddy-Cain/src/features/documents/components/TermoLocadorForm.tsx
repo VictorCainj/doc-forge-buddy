@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import DocumentFormWizard from '@/components/modals/DocumentFormWizard';
 import { FormStep } from '@/hooks/use-form-wizard';
+import { getContractLocadorNames } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
   nomeProprietario: string;
   quantidadeChaves?: string;
+  nomesResumidosLocadores?: string;
   [key: string]: string | undefined;
 }
 
@@ -25,12 +27,42 @@ export const TermoLocadorForm: React.FC<TermoLocadorFormProps> = ({
   getTemplate,
   onFormDataChange,
 }) => {
+  const locadorOptions = useMemo(
+    () => [
+      { value: 'todos', label: 'Todos os proprietários' },
+      ...getContractLocadorNames({
+        nomesResumidosLocadores: contractData.nomesResumidosLocadores,
+        nomeProprietario: contractData.nomeProprietario,
+      }).map((nome) => ({
+        value: nome,
+        label: nome,
+      })),
+      { value: 'custom', label: 'Outra pessoa (preencher abaixo)' },
+    ],
+    [contractData.nomesResumidosLocadores, contractData.nomeProprietario]
+  );
+
   const steps: FormStep[] = [
     {
       id: 'entrega',
       title: 'Entrega de Chaves',
       description: 'Detalhes da entrega das chaves',
       fields: [
+        {
+          name: 'incluirNomeCompleto',
+          label: 'Quem está retirando as chaves',
+          type: 'select',
+          required: false,
+          placeholder: 'Selecione uma opção',
+          options: locadorOptions,
+        },
+        {
+          name: 'nomeQuemRetira',
+          label: 'Nome de Quem Retira a Chave',
+          type: 'text',
+          required: true,
+          placeholder: 'Primeiro selecione quem está retirando a chave',
+        },
         {
           name: 'usarQuantidadeChavesContrato',
           label: 'Selecionar chaves entregues no início da locação',
@@ -60,24 +92,6 @@ export const TermoLocadorForm: React.FC<TermoLocadorFormProps> = ({
             field: 'usarQuantidadeChavesContrato',
             value: 'nao',
           },
-        },
-        {
-          name: 'tipoContrato',
-          label: 'Tipo de Contrato',
-          type: 'select',
-          required: true,
-          placeholder: 'Selecione o tipo de contrato',
-          options: [
-            { value: 'residencial', label: 'Residencial' },
-            { value: 'comercial', label: 'Comercial' },
-          ],
-        },
-        {
-          name: 'qualificacaoCompleta',
-          label: 'Qualificação Completa do Proprietário',
-          type: 'text',
-          required: true,
-          placeholder: 'Digite a qualificação completa',
         },
         {
           name: 'assinanteSelecionado',

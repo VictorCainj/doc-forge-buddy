@@ -445,7 +445,7 @@ está suja
 
         <Separator className="bg-neutral-200" />
 
-        {/* Observação */}
+        {/* Considerações do Departamento de Rescisão */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label
@@ -453,7 +453,7 @@ está suja
               className="text-sm font-medium flex items-center space-x-2 text-neutral-900"
             >
               <AlertCircle className="h-4 w-4 text-neutral-600" />
-              <span>Análise Técnica</span>
+              <span>Considerações do Departamento de Rescisão</span>
             </Label>
             <div className="flex items-center gap-2">
               <button
@@ -489,7 +489,7 @@ está suja
           </div>
           <Textarea
             id="observacao"
-            placeholder="Sua análise sobre a contestação do locatário..."
+            placeholder="Digite as considerações do Departamento de Rescisão sobre este apontamento..."
             value={currentApontamento.observacao || ''}
             onChange={(e) =>
               setCurrentApontamento((prev: any) => ({

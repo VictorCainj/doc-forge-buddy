@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { splitNames, formatNamesList } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
@@ -8,6 +9,16 @@ interface ContractData {
   nomeLocatario: string;
   quantidadeChaves?: string;
   generoLocatario?: string;
+  nomesResumidosLocadores?: string;
+  qualificacaoCompletaLocatarios?: string;
+  qualificacaoCompletaLocadores?: string;
+  celularLocatario?: string;
+  emailLocatario?: string;
+  primeiroLocatario?: string;
+  segundoLocatario?: string;
+  terceiroLocatario?: string;
+  quartoLocatario?: string;
+  generoProprietario?: string;
   [key: string]: string | undefined;
 }
 
@@ -50,7 +61,7 @@ export function useTermoLocadorGeneration(contractData: ContractData) {
 </div>
 
 <div style="text-align: center; margin-bottom: 20px; font-size: ${titleSize}px; font-weight: bold;">
-TERMO DE ENTREGA DE CHAVES {{numeroContrato}}
+TERMO DE RECEBIMENTO – {{numeroContrato}}
 </div>
 
 <div style="text-align: justify; line-height: 1.6; margin-bottom: 15px; font-size: ${fontSize}px;">
@@ -59,11 +70,6 @@ TERMO DE ENTREGA DE CHAVES {{numeroContrato}}
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
 <strong>{{locadorTerm}} DO IMÓVEL:</strong> {{nomeProprietario}}
-</div>
-
-<div style="margin: 15px 0; font-size: ${fontSize}px;">
-<strong>DADOS DO LOCATÁRIO:</strong> {{nomeLocatario}}<br>
-<strong>Celular:</strong> {{celularLocatario}} &nbsp;&nbsp;&nbsp;&nbsp; <strong>E-mail:</strong> {{emailLocatario}}
 </div>
 
 <div style="margin: 15px 0; font-size: ${fontSize}px;">
@@ -76,6 +82,11 @@ Foi entregue {{tipoQuantidadeChaves}}
 </div>
 
   <div style="margin-top: 50px; text-align: center;">
+    <div style="margin-bottom: 40px;">
+      __________________________________________<br>
+      <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{nomeQuemRetira}}</span>
+    </div>
+
     <div>
       __________________________________________<br>
       <span style="font-size: ${signatureSize}px; text-transform: uppercase;">{{assinanteSelecionado}}</span>
@@ -89,16 +100,50 @@ Foi entregue {{tipoQuantidadeChaves}}
 
   const handleGenerate = useCallback(
     (data: Record<string, string>) => {
-      // Detectar se há múltiplos proprietários
-      const isMultipleProprietarios = contractData.nomeProprietario.includes(' e ');
+      const nomeProprietarioBase =
+        contractData.nomesResumidosLocadores || contractData.nomeProprietario;
 
-      // Definir termos baseados na quantidade
-      let locadorTerm;
+      // Detectar se há múltiplos proprietários baseado no gênero selecionado
+      // Não usar mais detecção baseada em vírgulas ou "e" no nome
+      const generoProprietario = contractData.generoProprietario;
+      const isMultipleProprietarios =
+        generoProprietario === 'masculinos' || generoProprietario === 'femininos';
+
+      // Detectar múltiplos locatários
+      const isMultipleLocatarios =
+        contractData.primeiroLocatario &&
+        (contractData.segundoLocatario ||
+          contractData.terceiroLocatario ||
+          contractData.quartoLocatario);
+
+      // Definir termos baseados na quantidade e gênero do locador
+      let locadorTerm: string;
       if (isMultipleProprietarios) {
         locadorTerm = 'LOCADORES';
       } else {
-        // Usar gênero neutro para locador
-        locadorTerm = 'LOCADOR';
+        const generoProprietario = contractData.generoProprietario;
+        if (generoProprietario === 'feminino') {
+          locadorTerm = 'LOCADORA';
+        } else if (generoProprietario === 'masculino') {
+          locadorTerm = 'LOCADOR';
+        } else {
+          locadorTerm = 'LOCADOR';
+        }
+      }
+
+      // Definir título dos dados do locatário conforme quantidade e gênero
+      let dadosLocatarioTitulo: string;
+      if (isMultipleLocatarios) {
+        dadosLocatarioTitulo = 'DADOS DOS LOCATÁRIOS';
+      } else {
+        const generoLocatario = contractData.generoLocatario;
+        if (generoLocatario === 'feminino') {
+          dadosLocatarioTitulo = 'DADOS DA LOCATÁRIA';
+        } else if (generoLocatario === 'masculino') {
+          dadosLocatarioTitulo = 'DADOS DO LOCATÁRIO';
+        } else {
+          dadosLocatarioTitulo = 'DADOS DO LOCATÁRIO';
+        }
       }
 
       // Processar quantidade de chaves
@@ -116,8 +161,55 @@ Foi entregue {{tipoQuantidadeChaves}}
 
       // Texto de entrega de chaves para termo do locador
       const tipoContrato = data.tipoContrato || 'residencial';
-      const qualificacaoCompleta = data.qualificacaoCompleta || contractData.nomeProprietario;
-      const textoEntregaChaves = `Pelo presente, entregamos as chaves do imóvel sito à ${contractData.enderecoImovel}, ora locado ${qualificacaoCompleta}, devidamente qualificado no contrato de locação ${tipoContrato} firmado em ${contractData.dataFirmamentoContrato}.`;
+      const qualificacaoCompleta =
+        data.qualificacaoCompleta ||
+        contractData.qualificacaoCompletaLocadores ||
+        nomeProprietarioBase;
+      const textoEntregaChaves = `${
+        isMultipleProprietarios ? 'Pelo presente, entregamos as chaves do' : 'Pelo presente, entrego as chaves do'
+      } imóvel sito à ${contractData.enderecoImovel}.`;
+
+      const celularLocatario =
+        contractData.celularLocatario || data.celularLocatario || '';
+      const emailLocatario = contractData.emailLocatario || data.emailLocatario || '';
+
+      // Coletar todos os locatários dos campos individuais (mantendo individualidade no cadastro)
+      const locatariosIndividuais: string[] = [];
+      if (contractData.primeiroLocatario) locatariosIndividuais.push(contractData.primeiroLocatario);
+      if (contractData.segundoLocatario) locatariosIndividuais.push(contractData.segundoLocatario);
+      if (contractData.terceiroLocatario) locatariosIndividuais.push(contractData.terceiroLocatario);
+      if (contractData.quartoLocatario) locatariosIndividuais.push(contractData.quartoLocatario);
+      
+      // Se não houver campos individuais, usar nomeLocatario como fallback
+      const nomesLocatarioArray = locatariosIndividuais.length > 0
+        ? locatariosIndividuais
+        : splitNames(contractData.nomeLocatario || '');
+      
+      // Formatação convencional: 1 nome sem separador, 2 nomes com "e", 3+ nomes com vírgulas e "e"
+      const nomeLocatarioFormatado = nomesLocatarioArray.length > 0
+        ? formatNamesList(nomesLocatarioArray)
+        : contractData.nomeLocatario || '';
+      
+      // Formatar nome do proprietário também com formatação convencional
+      const nomesProprietarioArray = splitNames(nomeProprietarioBase || '');
+      const nomeProprietarioFormatado = nomesProprietarioArray.length > 0
+        ? formatNamesList(nomesProprietarioArray)
+        : nomeProprietarioBase || '';
+
+      let nomeQuemRetira = data.nomeQuemRetira || nomeProprietarioBase || '';
+      if (data.incluirNomeCompleto === 'todos') {
+        nomeQuemRetira = nomeProprietarioBase;
+      } else if (
+        data.incluirNomeCompleto &&
+        data.incluirNomeCompleto.trim() !== '' &&
+        data.incluirNomeCompleto !== 'custom'
+      ) {
+        nomeQuemRetira = data.incluirNomeCompleto;
+      }
+
+      if (!nomeQuemRetira) {
+        nomeQuemRetira = nomeProprietarioBase || contractData.nomeProprietario;
+      }
 
       const enhancedData = {
         ...data,
@@ -125,9 +217,14 @@ Foi entregue {{tipoQuantidadeChaves}}
 
         // Dados específicos do termo do locador
         locadorTerm,
-        nomeProprietario: contractData.nomeProprietario,
-        nomeLocatario: contractData.nomeLocatario,
+        dadosLocatarioTitulo,
+        nomeProprietario: nomeProprietarioFormatado,
+        nomeLocatario: nomeLocatarioFormatado,
+        nomeQuemRetira,
         tipoQuantidadeChaves,
+        celularLocatario,
+        emailLocatario,
+        qualificacaoCompleta: qualificacaoCompleta || '',
 
         // Processar observação
         observacao,

@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   TermoLocatarioHeader,
   TermoLocatarioSidebar,
   TermoLocatarioForm,
-  TermoLocatarioContactModal,
 } from '@/features/documents/components';
-import { useTermoLocatario, useTermoData, useTermoValidation, useTermoGeneration } from '@/features/documents/hooks';
+import { useTermoData, useTermoGeneration } from '@/features/documents/hooks';
 
 interface ContractData {
   numeroContrato: string;
@@ -32,27 +31,53 @@ interface ContractData {
   [key: string]: string | undefined;
 }
 
+type ContractLocationState = {
+  contractData?: ContractData | { formData?: ContractData } | null;
+};
+
 const TermoLocatario: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const contractData = location.state?.contractData as ContractData;
+  const locationState = location.state as ContractLocationState | undefined;
+
+  const contractData = useMemo<ContractData | undefined>(() => {
+    const stateData = locationState?.contractData as
+      | ContractData
+      | { formData?: ContractData }
+      | undefined;
+
+    if (!stateData) {
+      return undefined;
+    }
+
+    if (
+      typeof stateData === 'object' &&
+      stateData !== null &&
+      'formData' in stateData &&
+      stateData.formData
+    ) {
+      const { formData, ...rest } = stateData as {
+        formData: ContractData;
+        [key: string]: unknown;
+      };
+
+      return {
+        ...formData,
+        ...Object.fromEntries(
+          Object.entries(rest).filter(
+            ([, value]) => value === undefined || typeof value === 'string'
+          )
+        ),
+      } as ContractData;
+    }
+
+    return stateData as ContractData;
+  }, [locationState]);
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
     return null;
   }
-
-  // Hooks customizados
-  const {
-    showContactModal,
-    setShowContactModal,
-    contactData,
-    setContactData,
-    pendingFormData,
-    setPendingFormData,
-    validateContactFields,
-    handleSaveContactData,
-  } = useTermoLocatario(contractData);
 
   const {
     autoFillData,
@@ -65,19 +90,12 @@ const TermoLocatario: React.FC = () => {
   const formattedContractData = getFormattedContractData();
 
   // Função para lidar com a geração do documento
-  const handleGenerateDocument = (data: Record<string, string>) => {
-    // Validar campos de contato antes de gerar o documento
-    const contactValidation = validateContactFields(data);
-
-    if (!contactValidation.isValid) {
-      // Mostrar modal para preenchimento dos campos de contato
-      setPendingFormData(data);
-      setShowContactModal(true);
-      throw new Error('VALIDATION_REQUIRED'); // Interromper o fluxo
-    }
-
-    return handleGenerate(data);
-  };
+  const handleGenerateDocument = (data: Record<string, string>) =>
+    handleGenerate({
+      ...data,
+      celularLocatario: contractData.celularLocatario ?? '',
+      emailLocatario: contractData.emailLocatario ?? '',
+    });
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -107,23 +125,6 @@ const TermoLocatario: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal de Validação de Contato */}
-      <TermoLocatarioContactModal
-        open={showContactModal}
-        contactData={contactData}
-        pendingFormData={pendingFormData}
-        onCelularChange={(value) =>
-          setContactData((prev) => ({ ...prev, celularLocatario: value }))
-        }
-        onEmailChange={(value) =>
-          setContactData((prev) => ({ ...prev, emailLocatario: value }))
-        }
-        onSave={handleSaveContactData}
-        onCancel={() => {
-          setShowContactModal(false);
-          setPendingFormData(null);
-        }}
-      />
     </div>
   );
 };

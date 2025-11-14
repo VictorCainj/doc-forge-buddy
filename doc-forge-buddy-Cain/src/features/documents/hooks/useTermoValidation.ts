@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { splitNames } from '@/utils/nameHelpers';
+import { getContractLocatarioNames } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
@@ -69,20 +69,22 @@ export function useTermoValidation(contractData: ContractData) {
 
   // Validar opções de nomes de quem retira
   const validateNomeQuemRetiraOptions = useCallback(() => {
-    const options = [
-      { value: 'todos', label: 'Todos os locatários' },
-      ...(contractData.nomeLocatario
-        ? splitNames(contractData.nomeLocatario)
-            .filter((nome) => nome && nome.length > 2)
-            .map((nome) => ({
-              value: nome,
-              label: nome,
-            }))
-        : []),
-    ];
+    const nomes = getContractLocatarioNames(contractData);
 
-    return options;
-  }, [contractData.nomeLocatario]);
+    return [
+      { value: 'todos', label: 'Todos os locatários' },
+      ...nomes.map((nome) => ({
+        value: nome,
+        label: nome,
+      })),
+    ];
+  }, [
+    contractData.nomeLocatario,
+    contractData.primeiroLocatario,
+    contractData.segundoLocatario,
+    contractData.terceiroLocatario,
+    contractData.quartoLocatario,
+  ]);
 
   // Validar se o nome selecionado para quem retira é válido
   const validateNomeQuemRetira = useCallback(

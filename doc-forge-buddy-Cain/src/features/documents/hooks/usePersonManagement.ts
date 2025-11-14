@@ -44,7 +44,7 @@ export const usePersonManagement = ({
             id: `locador-${index}`,
             name: nome,
           }))
-          .filter((l) => l.name);
+          .filter(l => l.name);
         if (locadoresIniciais.length > 0) {
           setLocadores(locadoresIniciais);
         }
@@ -58,7 +58,7 @@ export const usePersonManagement = ({
             id: `locatario-${index}`,
             name: nome,
           }))
-          .filter((l) => l.name);
+          .filter(l => l.name);
         if (locatariosIniciais.length > 0) {
           setLocatarios(locatariosIniciais);
         }
@@ -72,7 +72,7 @@ export const usePersonManagement = ({
             id: `fiador-${index}`,
             name: nome,
           }))
-          .filter((f) => f.name);
+          .filter(f => f.name);
         if (fiadoresIniciais.length > 0) {
           setFiadores(fiadoresIniciais);
         }
@@ -90,33 +90,23 @@ export const usePersonManagement = ({
   useEffect(() => {
     if (hasPersonManagerSteps) {
       // Atualizar dados dos locadores
+      // Cada locador é tratado individualmente, sem separadores
       if (locadores.length > 0) {
-        const nomesLocadoresArray = locadores.map((l) => l.name);
-        const nomesLocadores =
-          nomesLocadoresArray.length > 1
-            ? nomesLocadoresArray.slice(0, -1).join(', ') +
-              ' e ' +
-              nomesLocadoresArray[nomesLocadoresArray.length - 1]
-            : nomesLocadoresArray[0];
-
-        updateField('nomeProprietario', nomesLocadores);
+        // Usar apenas o primeiro nome para compatibilidade, mas manter campos individuais
+        const primeiroNome = locadores[0]?.name || '';
+        updateField('nomeProprietario', primeiroNome);
       } else {
         updateField('nomeProprietario', '');
       }
 
       // Atualizar dados dos locatários
+      // Cada locatário é tratado individualmente, sem separadores
       if (locatarios.length > 0) {
-        const nomesLocatariosArray = locatarios.map((l) => l.name);
-        const nomesLocatarios =
-          nomesLocatariosArray.length > 1
-            ? nomesLocatariosArray.slice(0, -1).join(', ') +
-              ' e ' +
-              nomesLocatariosArray[nomesLocatariosArray.length - 1]
-            : nomesLocatariosArray[0];
+        // Usar apenas o primeiro nome para compatibilidade, mas manter campos individuais
+        const primeiroNome = locatarios[0]?.name || '';
+        updateField('nomeLocatario', primeiroNome);
 
-        updateField('nomeLocatario', nomesLocatarios);
-
-        // Definir primeiro, segundo, terceiro e quarto locatário
+        // Definir primeiro, segundo, terceiro e quarto locatário individualmente
         updateField('primeiroLocatario', locatarios[0]?.name || '');
         updateField('segundoLocatario', locatarios[1]?.name || '');
         updateField('terceiroLocatario', locatarios[2]?.name || '');
@@ -130,16 +120,11 @@ export const usePersonManagement = ({
       }
 
       // Atualizar dados dos fiadores
+      // Cada fiador é tratado individualmente, sem separadores
       if (fiadores.length > 0) {
-        const nomesFiadoresArray = fiadores.map((f) => f.name);
-        const nomesFiadores =
-          nomesFiadoresArray.length > 1
-            ? nomesFiadoresArray.slice(0, -1).join(', ') +
-              ' e ' +
-              nomesFiadoresArray[nomesFiadoresArray.length - 1]
-            : nomesFiadoresArray[0];
-
-        updateField('nomeFiador', nomesFiadores);
+        // Usar apenas o primeiro nome para compatibilidade, mas manter campos individuais
+        const primeiroNome = fiadores[0]?.name || '';
+        updateField('nomeFiador', primeiroNome);
       } else {
         updateField('nomeFiador', '');
       }

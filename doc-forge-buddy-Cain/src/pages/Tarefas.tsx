@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PremiumButton } from '@/components/ui/premium-button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -26,8 +25,9 @@ import {
   Clock,
   AlertCircle,
 } from '@/utils/iconMapper';
-import { TaskCard } from '@/components/TaskCard';
+import { TaskBlock } from '@/components/TaskBlock';
 import { TaskModal } from '@/components/TaskModal';
+import { TaskDetailModal } from '@/components/TaskDetailModal';
 import { AITaskCreationModal } from '@/components/AITaskCreationModal';
 import { DailySummaryModal } from '@/components/modals/DailySummaryModal';
 import { TaskCompletionModal } from '@/components/TaskCompletionModal';
@@ -55,8 +55,9 @@ const Tarefas = () => {
     isDeleting,
   } = useTasks();
 
-  const [selectedTab, setSelectedTab] = useState<string>('in_progress');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
@@ -65,36 +66,34 @@ const Tarefas = () => {
   const [dailySummary, setDailySummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
 
-  // Garantir que o filtro sempre comece com 'in_progress' selecionado
-  useEffect(() => {
-    setSelectedTab('in_progress');
-  }, []);
-
-  // Filtrar tarefas por status e busca
+  // Filtrar tarefas por busca
   const filteredTasks = useMemo(() => {
-    let filtered = tasks;
-
-    // Filtrar por status
-    if (selectedTab !== 'all') {
-      filtered = filtered.filter((task) => task.status === selectedTab);
+    if (!searchQuery.trim()) {
+      return tasks;
     }
 
-    // Filtrar por busca (título, subtítulo, descrição e observação)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((task) => {
-        return (
-          task.title.toLowerCase().includes(query) ||
-          task.subtitle?.toLowerCase().includes(query) ||
-          task.description.toLowerCase().includes(query) ||
-          task.observacao?.toLowerCase().includes(query)
-        );
-      });
-    }
+    const query = searchQuery.toLowerCase();
+    return tasks.filter((task) => {
+      return (
+        task.title.toLowerCase().includes(query) ||
+        task.subtitle?.toLowerCase().includes(query) ||
+        task.description.toLowerCase().includes(query) ||
+        task.observacao?.toLowerCase().includes(query)
+      );
+    });
+  }, [tasks, searchQuery]);
 
-    return filtered;
-  }, [tasks, selectedTab, searchQuery]);
+  // Agrupar tarefas por status
+  const tasksByStatus = useMemo(() => {
+    return {
+      not_started: filteredTasks.filter((t) => t.status === 'not_started'),
+      in_progress: filteredTasks.filter((t) => t.status === 'in_progress'),
+      completed: filteredTasks.filter((t) => t.status === 'completed'),
+    };
+  }, [filteredTasks]);
 
   // Contar tarefas por status
   const taskCounts = useMemo(() => {
@@ -186,6 +185,101 @@ const Tarefas = () => {
         description: 'Não foi possível alterar o status. Tente novamente.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleDragStart = (taskId: string) => {
+    setDraggedTaskId(taskId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = () => {
+    setDragOverStatus(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
+    setDragOverStatus(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetStatus: TaskStatus) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const taskId = e.dataTransfer.getData('taskId');
+    const currentStatus = e.dataTransfer.getData('currentStatus') as TaskStatus;
+    
+    setDragOverStatus(null);
+    setDraggedTaskId(null);
+
+    if (taskId && currentStatus !== targetStatus) {
+      await handleChangeStatus(taskId, targetStatus);
+    }
+  };
+
+  const handleCreateTaskInBlock = async (taskData: { title: string; description: string; status: TaskStatus }) => {
+    const createData: CreateTaskInput = {
+      title: taskData.title,
+      description: taskData.description,
+      status: taskData.status,
+    };
+    await handleCreateTask(createData);
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDetailModalOpen(true);
+  };
+
+  const handleEditTaskInModal = async (task: Task, updates: CreateTaskInput) => {
+    try {
+      await updateTask({ id: task.id, updates });
+      toast({
+        title: 'Tarefa atualizada',
+        description: 'As alterações foram salvas com sucesso.',
+      });
+      // Atualizar a tarefa selecionada se for a mesma
+      if (selectedTask?.id === task.id) {
+        // Buscar a tarefa atualizada da lista
+        const updatedTask = tasks.find((t) => t.id === task.id);
+        if (updatedTask) {
+          setSelectedTask(updatedTask);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar tarefa:', error);
+      toast({
+        title: 'Erro ao atualizar tarefa',
+        description: 'Não foi possível atualizar a tarefa. Tente novamente.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const handleDeleteTaskInModal = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+      toast({
+        title: 'Tarefa excluída',
+        description: 'A tarefa foi excluída com sucesso.',
+      });
+      if (selectedTask?.id === taskId) {
+        setIsTaskDetailModalOpen(false);
+        setSelectedTask(null);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir tarefa:', error);
+      toast({
+        title: 'Erro ao excluir tarefa',
+        description: 'Não foi possível excluir a tarefa. Tente novamente.',
+        variant: 'destructive',
+      });
+      throw error;
     }
   };
 
@@ -287,9 +381,9 @@ const Tarefas = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-neutral-600 mx-auto mb-4" />
           <p className="text-sm text-neutral-600">Carregando tarefas...</p>
         </div>
       </div>
@@ -297,13 +391,13 @@ const Tarefas = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Header Moderno */}
         <div className="mb-10">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <ClipboardList className="h-7 w-7 text-white" />
+            <div className="w-14 h-14 bg-white border border-neutral-300 rounded-xl flex items-center justify-center shadow-sm">
+              <ClipboardList className="h-7 w-7 text-neutral-700" />
             </div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
@@ -323,7 +417,7 @@ const Tarefas = () => {
               placeholder="Buscar tarefas por título, descrição, subtítulo ou observação..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 rounded-xl border-neutral-300 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+              className="pl-12 h-12 rounded-lg border-neutral-300 bg-white focus:border-neutral-400 focus:ring-neutral-200 transition-all duration-200"
             />
           </div>
 
@@ -358,159 +452,173 @@ const Tarefas = () => {
 
         {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-neutral-100 group-hover:scale-110 transition-transform duration-300">
-                  <ClipboardList className="h-5 w-5 text-neutral-700" />
-                </div>
-                <Badge variant="outline" className="border-neutral-300">
-                  Todas
-                </Badge>
+          <div className="group relative bg-white border border-neutral-300 rounded-lg p-6 hover:shadow-md hover:border-neutral-400 transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-neutral-100 border border-neutral-200">
+                <ClipboardList className="h-5 w-5 text-neutral-700" />
               </div>
-              <p className="text-sm text-neutral-500 mb-1">Total</p>
-              <p className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
-                {taskCounts.all}
-              </p>
+              <Badge variant="outline" className="border-neutral-300 bg-white text-neutral-700">
+                Todas
+              </Badge>
             </div>
+            <p className="text-xs text-neutral-500 mb-1 uppercase tracking-wide">Total</p>
+            <p className="text-3xl font-bold text-neutral-900">
+              {taskCounts.all}
+            </p>
           </div>
 
-          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-neutral-100 group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="h-5 w-5 text-neutral-700" />
-                </div>
-                <Badge variant="outline" className="border-neutral-300">
-                  Pendentes
-                </Badge>
+          <div className="group relative bg-white border border-neutral-300 rounded-lg p-6 hover:shadow-md hover:border-neutral-400 transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-neutral-100 border border-neutral-200">
+                <Clock className="h-5 w-5 text-neutral-700" />
               </div>
-              <p className="text-sm text-neutral-500 mb-1">Não Iniciadas</p>
-              <p className="text-3xl font-bold text-neutral-900 group-hover:text-neutral-700 transition-colors">
-                {taskCounts.not_started}
-              </p>
+              <Badge variant="outline" className="border-neutral-300 bg-white text-neutral-700">
+                Pendentes
+              </Badge>
             </div>
+            <p className="text-xs text-neutral-500 mb-1 uppercase tracking-wide">Não Iniciadas</p>
+            <p className="text-3xl font-bold text-neutral-900">
+              {taskCounts.not_started}
+            </p>
           </div>
 
-          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-blue-100 group-hover:scale-110 transition-transform duration-300">
-                  <AlertCircle className="h-5 w-5 text-blue-700" />
-                </div>
-                <Badge
-                  variant="outline"
-                  className="border-blue-300 bg-blue-50 text-blue-700"
-                >
-                  Ativas
-                </Badge>
+          <div className="group relative bg-white border border-neutral-300 rounded-lg p-6 hover:shadow-md hover:border-neutral-400 transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <AlertCircle className="h-5 w-5 text-amber-700" />
               </div>
-              <p className="text-sm text-neutral-500 mb-1">Em Andamento</p>
-              <p className="text-3xl font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">
-                {taskCounts.in_progress}
-              </p>
+              <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
+                Ativas
+              </Badge>
             </div>
+            <p className="text-xs text-neutral-500 mb-1 uppercase tracking-wide">Em Andamento</p>
+            <p className="text-3xl font-bold text-neutral-900">
+              {taskCounts.in_progress}
+            </p>
           </div>
 
-          <div className="group relative bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all duration-300 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-green-100 group-hover:scale-110 transition-transform duration-300">
-                  <CheckCircle2 className="h-5 w-5 text-green-700" />
-                </div>
-                <Badge
-                  variant="outline"
-                  className="border-green-300 bg-green-50 text-green-700"
-                >
-                  Finalizadas
-                </Badge>
+          <div className="group relative bg-white border border-neutral-300 rounded-lg p-6 hover:shadow-md hover:border-neutral-400 transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                <CheckCircle2 className="h-5 w-5 text-emerald-700" />
               </div>
-              <p className="text-sm text-neutral-500 mb-1">Concluídas</p>
-              <p className="text-3xl font-bold text-neutral-900 group-hover:text-green-600 transition-colors">
-                {taskCounts.completed}
-              </p>
+              <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700">
+                Finalizadas
+              </Badge>
             </div>
+            <p className="text-xs text-neutral-500 mb-1 uppercase tracking-wide">Concluídas</p>
+            <p className="text-3xl font-bold text-neutral-900">
+              {taskCounts.completed}
+            </p>
           </div>
         </div>
 
-        {/* Tabs e Lista de Tarefas */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <div className="bg-white border border-neutral-200 rounded-xl p-2 shadow-sm mb-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent h-auto">
-              <TabsTrigger
-                value="all"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                Todas ({taskCounts.all})
-              </TabsTrigger>
-              <TabsTrigger
-                value="not_started"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                Não Iniciadas ({taskCounts.not_started})
-              </TabsTrigger>
-              <TabsTrigger
-                value="in_progress"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                Em Andamento ({taskCounts.in_progress})
-              </TabsTrigger>
-              <TabsTrigger
-                value="completed"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:font-semibold hover:bg-neutral-50 transition-all duration-200"
-              >
-                Concluídas ({taskCounts.completed})
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        {/* Layout de Blocos */}
+        <div 
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          onDragEnd={handleDragEnd}
+        >
+          <TaskBlock
+            status="not_started"
+            tasks={tasksByStatus.not_started}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onChangeStatus={handleChangeStatus}
+            onRequestCompletion={handleRequestCompletion}
+            onCreateTask={handleCreateTaskInBlock}
+            onTaskClick={handleTaskClick}
+            onDragStart={handleDragStart}
+            onDragOver={(e) => {
+              handleDragOver(e);
+              setDragOverStatus('not_started');
+            }}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, 'not_started')}
+            isDragging={draggedTaskId !== null}
+            dragOver={dragOverStatus === 'not_started'}
+          />
+          <TaskBlock
+            status="in_progress"
+            tasks={tasksByStatus.in_progress}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onChangeStatus={handleChangeStatus}
+            onRequestCompletion={handleRequestCompletion}
+            onCreateTask={handleCreateTaskInBlock}
+            onTaskClick={handleTaskClick}
+            onDragStart={handleDragStart}
+            onDragOver={(e) => {
+              handleDragOver(e);
+              setDragOverStatus('in_progress');
+            }}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, 'in_progress')}
+            isDragging={draggedTaskId !== null}
+            dragOver={dragOverStatus === 'in_progress'}
+          />
+          <TaskBlock
+            status="completed"
+            tasks={tasksByStatus.completed}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onChangeStatus={handleChangeStatus}
+            onRequestCompletion={handleRequestCompletion}
+            onCreateTask={handleCreateTaskInBlock}
+            onTaskClick={handleTaskClick}
+            onDragStart={handleDragStart}
+            onDragOver={(e) => {
+              handleDragOver(e);
+              setDragOverStatus('completed');
+            }}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, 'completed')}
+            isDragging={draggedTaskId !== null}
+            dragOver={dragOverStatus === 'completed'}
+          />
+        </div>
 
-          <TabsContent
-            value={selectedTab}
-            className="mt-6"
-          >
-            {filteredTasks.length === 0 ? (
-              <Card className="border-neutral-200 shadow-sm">
-                <CardContent className="py-16 text-center">
-                  <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <ClipboardList className="h-8 w-8 text-neutral-400" />
-                  </div>
-                  <p className="text-neutral-500 mb-6">
-                    {selectedTab === 'all'
-                      ? 'Nenhuma tarefa cadastrada ainda.'
-                      : 'Nenhuma tarefa encontrada com este status.'}
-                  </p>
-                  <Button
-                    onClick={handleNewTask}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Criar Primeira Tarefa
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {filteredTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onEdit={handleEditTask}
-                    onDelete={handleDeleteTask}
-                    onChangeStatus={handleChangeStatus}
-                    onRequestCompletion={handleRequestCompletion}
-                  />
-                ))}
+        {/* Mensagem quando não há tarefas */}
+        {filteredTasks.length === 0 && (
+          <Card className="border-neutral-300 bg-white shadow-sm mt-6">
+            <CardContent className="py-16 text-center">
+              <div className="w-16 h-16 bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <ClipboardList className="h-8 w-8 text-neutral-400" />
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              <p className="text-neutral-600 mb-6 font-medium">
+                {searchQuery.trim()
+                  ? 'Nenhuma tarefa encontrada com os termos de busca.'
+                  : 'Nenhuma tarefa cadastrada ainda.'}
+              </p>
+              <Button
+                onClick={handleNewTask}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <Plus className="h-4 w-4" />
+                Criar Primeira Tarefa
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Modals */}
+      <TaskDetailModal
+        open={isTaskDetailModalOpen}
+        onOpenChange={(open) => {
+          setIsTaskDetailModalOpen(open);
+          if (!open) setSelectedTask(null);
+        }}
+        task={selectedTask}
+        onEdit={handleEditTaskInModal}
+        onDelete={handleDeleteTaskInModal}
+        onChangeStatus={handleChangeStatus}
+        onRequestCompletion={handleRequestCompletion}
+        isSubmitting={isCreating || isUpdating || isDeleting}
+        onTaskUpdated={(updatedTask) => {
+          setSelectedTask(updatedTask);
+        }}
+      />
+
       <TaskModal
         open={isTaskModalOpen}
         onOpenChange={(open) => {

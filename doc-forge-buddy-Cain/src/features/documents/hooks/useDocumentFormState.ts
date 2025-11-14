@@ -54,58 +54,68 @@ export const useDocumentFormState = ({
 
   // Auto-preencher nome quando selecionar "incluir nome completo"
   useEffect(() => {
+    const baseName =
+      formData.tipoTermo === 'locador'
+        ? contractData?.nomesResumidosLocadores || contractData?.nomeProprietario
+        : contractData?.nomeLocatario;
+
+    const fallbackName =
+      formData.tipoTermo === 'locador'
+        ? contractData?.nomeProprietario
+        : contractData?.nomeLocatario;
+
+    if (!formData.incluirNomeCompleto) {
+      if (!formData.nomeQuemRetira && (baseName || fallbackName)) {
+        updateField('nomeQuemRetira', baseName || fallbackName || '');
+      }
+      return;
+    }
+
+    if (formData.incluirNomeCompleto === 'custom') {
+      if (
+        formData.nomeQuemRetira === baseName ||
+        formData.nomeQuemRetira === fallbackName ||
+        formData.nomeQuemRetira === 'custom'
+      ) {
+        updateField('nomeQuemRetira', '');
+      }
+      return;
+    }
+
     if (
-      formData.incluirNomeCompleto === 'sim' &&
-      contractData?.nomeProprietario
+      (formData.incluirNomeCompleto === 'sim' ||
+        formData.incluirNomeCompleto === 'todos') &&
+      (baseName || fallbackName) &&
+      formData.nomeQuemRetira !== (baseName || fallbackName)
     ) {
-      if (formData.nomeQuemRetira !== contractData.nomeProprietario) {
-        updateField('nomeQuemRetira', contractData.nomeProprietario);
-      }
-    } else if (
-      formData.incluirNomeCompleto === 'todos' &&
-      contractData?.nomeProprietario
+      updateField('nomeQuemRetira', baseName || fallbackName || '');
+      return;
+    }
+
+    if (
+      formData.incluirNomeCompleto === 'nao' &&
+      !formData.nomeQuemRetira &&
+      (baseName || fallbackName)
     ) {
-      if (formData.nomeQuemRetira !== contractData.nomeProprietario) {
-        updateField('nomeQuemRetira', contractData.nomeProprietario);
-      }
-    } else if (
-      formData.incluirNomeCompleto &&
+      updateField('nomeQuemRetira', baseName || fallbackName || '');
+      return;
+    }
+
+    if (
       formData.incluirNomeCompleto !== 'nao' &&
       formData.incluirNomeCompleto !== 'sim' &&
       formData.incluirNomeCompleto !== 'todos' &&
-      contractData?.nomeProprietario
+      formData.incluirNomeCompleto !== 'custom' &&
+      formData.nomeQuemRetira !== formData.incluirNomeCompleto
     ) {
-      if (formData.nomeQuemRetira !== formData.incluirNomeCompleto) {
-        updateField('nomeQuemRetira', formData.incluirNomeCompleto);
-      }
-    } else if (
-      formData.incluirNomeCompleto === 'sim' &&
-      contractData?.nomeLocatario
-    ) {
-      if (formData.nomeQuemRetira !== contractData.nomeLocatario) {
-        updateField('nomeQuemRetira', contractData.nomeLocatario);
-      }
-    } else if (
-      formData.incluirNomeCompleto === 'todos' &&
-      contractData?.nomeLocatario
-    ) {
-      if (formData.nomeQuemRetira !== contractData.nomeLocatario) {
-        updateField('nomeQuemRetira', contractData.nomeLocatario);
-      }
-    } else if (
-      formData.incluirNomeCompleto &&
-      formData.incluirNomeCompleto !== 'nao' &&
-      formData.incluirNomeCompleto !== 'sim' &&
-      formData.incluirNomeCompleto !== 'todos'
-    ) {
-      if (formData.nomeQuemRetira !== formData.incluirNomeCompleto) {
-        updateField('nomeQuemRetira', formData.incluirNomeCompleto);
-      }
+      updateField('nomeQuemRetira', formData.incluirNomeCompleto);
     }
   }, [
     formData.incluirNomeCompleto,
     formData.nomeQuemRetira,
+    formData.tipoTermo,
     contractData?.nomeProprietario,
+    contractData?.nomesResumidosLocadores,
     contractData?.nomeLocatario,
     updateField,
   ]);

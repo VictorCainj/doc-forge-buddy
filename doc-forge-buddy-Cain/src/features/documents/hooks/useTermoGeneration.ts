@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { splitNames } from '@/utils/nameHelpers';
+import { splitNames, formatNamesList } from '@/utils/nameHelpers';
 
 interface ContractData {
   numeroContrato: string;
@@ -133,11 +133,11 @@ Foi entregue {{tipoQuantidadeChaves}}
           contractData.terceiroLocatario ||
           contractData.quartoLocatario);
 
-      // Detectar se há múltiplos proprietários baseado na quantidade adicionada
-      const nomeProprietario =
-        contractData.nomesResumidosLocadores || contractData.nomeProprietario;
+      // Detectar se há múltiplos proprietários baseado no gênero selecionado
+      // Não usar mais detecção baseada em vírgulas ou "e" no nome
+      const generoProprietario = contractData.generoProprietario;
       const isMultipleProprietarios =
-        nomeProprietario && nomeProprietario.includes(' e ');
+        generoProprietario === 'masculinos' || generoProprietario === 'femininos';
 
       // Definir termos baseados na quantidade e gênero
       let locadorTerm;
@@ -256,11 +256,31 @@ Foi entregue {{tipoQuantidadeChaves}}
         fiadores.push(...nomesFiadores);
       }
 
-      // Aplicar formatação de nomes - sem negrito nos nomes
-      const nomeProprietarioFormatado =
-        contractData.nomesResumidosLocadores || contractData.nomeProprietario; // Sem negrito
+      // Aplicar formatação de nomes - formatação convencional para exibição
+      // Coletar nomes de proprietários e aplicar formatação convencional
+      const nomesProprietarioArray = splitNames(
+        contractData.nomesResumidosLocadores || contractData.nomeProprietario || ''
+      );
+      const nomeProprietarioFormatado = nomesProprietarioArray.length > 0
+        ? formatNamesList(nomesProprietarioArray)
+        : contractData.nomeProprietario || '';
 
-      const nomeLocatarioFormatado = contractData.nomeLocatario || '';
+      // Coletar todos os locatários dos campos individuais (mantendo individualidade no cadastro)
+      const locatariosIndividuais: string[] = [];
+      if (contractData.primeiroLocatario) locatariosIndividuais.push(contractData.primeiroLocatario);
+      if (contractData.segundoLocatario) locatariosIndividuais.push(contractData.segundoLocatario);
+      if (contractData.terceiroLocatario) locatariosIndividuais.push(contractData.terceiroLocatario);
+      if (contractData.quartoLocatario) locatariosIndividuais.push(contractData.quartoLocatario);
+      
+      // Se não houver campos individuais, usar nomeLocatario como fallback
+      const nomesLocatarioArray = locatariosIndividuais.length > 0
+        ? locatariosIndividuais
+        : splitNames(contractData.nomeLocatario || '');
+      
+      // Formatação convencional: 1 nome sem separador, 2 nomes com "e", 3+ nomes com vírgulas e "e"
+      const nomeLocatarioFormatado = nomesLocatarioArray.length > 0
+        ? formatNamesList(nomesLocatarioArray)
+        : contractData.nomeLocatario || '';
 
       // Texto de entrega de chaves para termo do locatário
       const tipoContrato = data.tipoContrato || 'residencial';

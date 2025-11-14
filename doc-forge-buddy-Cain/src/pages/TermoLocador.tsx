@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   TermoLocadorHeader,
@@ -14,13 +14,60 @@ interface ContractData {
   nomeProprietario: string;
   nomeLocatario: string;
   quantidadeChaves?: string;
+  celularLocatario?: string;
+  emailLocatario?: string;
+  nomesResumidosLocadores?: string;
+  qualificacaoCompletaLocatarios?: string;
+  generoLocatario?: string;
+  primeiroLocatario?: string;
+  segundoLocatario?: string;
+  terceiroLocatario?: string;
+  quartoLocatario?: string;
   [key: string]: string | undefined;
 }
+
+type ContractLocationState = {
+  contractData?: ContractData | { formData?: ContractData } | null;
+};
 
 const TermoLocador: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const contractData = location.state?.contractData as ContractData;
+  const locationState = location.state as ContractLocationState | undefined;
+
+  const contractData = useMemo<ContractData | undefined>(() => {
+    const stateData = locationState?.contractData as
+      | ContractData
+      | { formData?: ContractData }
+      | undefined;
+
+    if (!stateData) {
+      return undefined;
+    }
+
+    if (
+      typeof stateData === 'object' &&
+      stateData !== null &&
+      'formData' in stateData &&
+      stateData.formData
+    ) {
+      const { formData, ...rest } = stateData as {
+        formData: ContractData;
+        [key: string]: unknown;
+      };
+
+      return {
+        ...formData,
+        ...Object.fromEntries(
+          Object.entries(rest).filter(
+            ([, value]) => value === undefined || typeof value === 'string'
+          )
+        ),
+      } as ContractData;
+    }
+
+    return stateData as ContractData;
+  }, [locationState]);
 
   if (!contractData?.numeroContrato) {
     navigate('/contratos');
@@ -41,6 +88,13 @@ const TermoLocador: React.FC = () => {
 
   const formattedContractData = getFormattedContractData();
 
+  const handleGenerateDocument = (data: Record<string, string>) =>
+    handleGenerate({
+      ...data,
+      celularLocatario: contractData.celularLocatario ?? '',
+      emailLocatario: contractData.emailLocatario ?? '',
+    });
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -60,7 +114,7 @@ const TermoLocador: React.FC = () => {
               <TermoLocadorForm
                 contractData={contractData}
                 initialData={autoFillData}
-                onGenerate={handleGenerate}
+                onGenerate={handleGenerateDocument}
                 getTemplate={getTemplate}
                 onFormDataChange={setAutoFillData}
               />

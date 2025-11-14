@@ -9,7 +9,7 @@ export const DocumentPreviewContent = ({ html }: DocumentPreviewContentProps) =>
   
   return (
     <div
-      className="max-h-96 overflow-y-auto bg-white document-preview-container"
+      className="w-full document-preview-container prose prose-sm max-w-none"
       dangerouslySetInnerHTML={{ __html: safeHTML }}
     />
   );

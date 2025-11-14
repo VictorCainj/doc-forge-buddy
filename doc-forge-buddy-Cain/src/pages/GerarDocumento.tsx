@@ -7,6 +7,7 @@ import {
   Minimize2,
   Maximize2,
   FileText,
+  Copy,
 } from '@/utils/iconMapper';
 import { CopyButton } from '@/components/ui/copy-button';
 import { toast } from 'sonner';
@@ -19,8 +20,17 @@ const GerarDocumento = () => {
   const [fontSize, setFontSize] = useState(14);
 
   // Dados passados via state da navegação
-  const { title, template, secondaryTemplate, formData, documentType, preserveAnalysisState, contractId } =
-    location.state || {};
+  const {
+    title,
+    template,
+    secondaryTemplate,
+    formData,
+    documentType,
+    preserveAnalysisState,
+    contractId,
+    invitationMessage,
+    invitationMessageHtml,
+  } = location.state || {};
 
   // Se não há dados, redirecionar para contratos
   if (!title || !template) {
@@ -31,6 +41,24 @@ const GerarDocumento = () => {
   // Verificar se há template secundário (e-mail de convite)
   const hasSecondaryTemplate =
     secondaryTemplate && secondaryTemplate.trim() !== '';
+  const rawInvitationHtml =
+    typeof invitationMessageHtml === 'string' && invitationMessageHtml.trim().length > 0
+      ? invitationMessageHtml.trim()
+      : '';
+  const invitationMessageText =
+    typeof invitationMessage === 'string' ? invitationMessage.trim() : '';
+  const hasInvitationMessage =
+    rawInvitationHtml !== '' || invitationMessageText !== '';
+  const invitationHtml = rawInvitationHtml || invitationMessageText.replace(/\n/g, '<br />');
+
+  const secondaryBlockForCopy = hasSecondaryTemplate ? secondaryTemplate : '';
+
+  const combinedDocumentContent =
+    documentType === 'Convite para Acompanhamento'
+      ? invitationMessageText || invitationHtml || template
+      : [template, secondaryBlockForCopy]
+          .filter((section) => section && section.trim().length > 0)
+          .join('\n\n');
 
   // Função para gerar título baseado no tipo de documento
   const getDocumentTitle = () => {
@@ -59,6 +87,8 @@ const GerarDocumento = () => {
         return `Título: Termo de Recusa de Assinatura - E-mail (Etapa 1) - Contrato ${contractNumber}`;
       case 'Termo de Recusa de Assinatura - PDF':
         return `Título: Registro de Vistoria de Saída - Recusa de Assinatura (Etapa 2) - Contrato ${contractNumber}`;
+      case 'Convite para Acompanhamento':
+        return `Convite para Acompanhamento da Vistoria de Saída - Contrato N° ${contractNumber}`;
       default:
         return `Título: ${documentType} - Contrato ${contractNumber}`;
     }
@@ -79,6 +109,31 @@ const GerarDocumento = () => {
       toast.success(`Fonte aumentada para ${fontSize + 1}px`);
     } else {
       toast.info('Já no tamanho máximo de fonte (20px)');
+    }
+  };
+
+  const handleCopyRenderedContent = async (elementId: string) => {
+    try {
+      const element = document.getElementById(elementId);
+      if (!element) {
+        toast.error('Elemento não encontrado para copiar');
+        return;
+      }
+
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+
+      const textToCopy = selection.toString();
+      selection?.removeAllRanges();
+
+      await navigator.clipboard.writeText(textToCopy);
+      toast.success('Conteúdo copiado!');
+    } catch (error) {
+      console.error('Erro ao copiar conteúdo renderizado:', error);
+      toast.error('Erro ao copiar. Tente novamente.');
     }
   };
 
@@ -165,10 +220,8 @@ const GerarDocumento = () => {
         </style>
       `;
 
-      // Montar conteúdo completo incluindo template secundário se existir
-      const printContent = hasSecondaryTemplate
-        ? `${template}<div style="page-break-before: always; margin-top: 60px;"></div>${secondaryTemplate}`
-        : template;
+      // Montar conteúdo completo incluindo convite e template secundário se existirem
+      const printContent = template;
 
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -210,13 +263,6 @@ const GerarDocumento = () => {
 
   // Verificar se é uma mensagem do WhatsApp
   const isWhatsAppMessage = documentType?.includes('WhatsApp');
-
-  // Verificar se é uma devolutiva (não deve mostrar botão Exportar)
-  const isDevolutiva =
-    documentType &&
-    (documentType.includes('Devolutiva') ||
-      documentType === 'Notificação de Desocupação e Agendamento de Vistoria' ||
-      documentType === 'Notificação de Desocupação - Comercial');
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -306,15 +352,23 @@ const GerarDocumento = () => {
               >
                 <Maximize2 className="h-4 w-4" />
               </Button>
-              <CopyButton
-                content={
-                  hasSecondaryTemplate
-                    ? `${template}\n\n${secondaryTemplate}`
-                    : template
-                }
-                size="sm"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
-              />
+              {documentType === 'Convite para Acompanhamento' ? (
+                <Button
+                  onClick={() => handleCopyRenderedContent('document-content')}
+                  size="sm"
+                  variant="outline"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar
+                </Button>
+              ) : (
+                <CopyButton
+                  content={combinedDocumentContent}
+                  size="sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                />
+              )}
               <Button
                 onClick={handlePrint}
                 variant="primary"
@@ -355,6 +409,35 @@ const GerarDocumento = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Convite para Acompanhamento */}
+        {hasInvitationMessage && documentType !== 'Convite para Acompanhamento' && (
+          <Card className="shadow-sm">
+            <CardContent className="p-0">
+              <div
+                className="p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto"
+                style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
+                id="invitation-content-rendered"
+              >
+                <div dangerouslySetInnerHTML={{ __html: invitationHtml }} />
+              </div>
+            </CardContent>
+            <div className="bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex items-center justify-between">
+              <p className="text-sm text-neutral-600">
+                Copie este convite para envio por e-mail.
+              </p>
+              <Button
+                onClick={() => handleCopyRenderedContent('invitation-content-rendered')}
+                size="sm"
+                variant="outline"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+              >
+                <Copy className="h-4 w-4" />
+                Copiar
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Segundo Documento - E-mail de Convite (apenas para Vistoria Final) */}
         {hasSecondaryTemplate && (

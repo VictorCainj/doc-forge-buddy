@@ -127,9 +127,11 @@ export function useTermoLocatario(contractData: ContractData) {
         contractData.terceiroLocatario ||
         contractData.quartoLocatario);
 
-    // Detectar múltiplos proprietários
-    const nomeProprietario = contractData.nomesResumidosLocadores || contractData.nomeProprietario;
-    const isMultipleProprietarios = nomeProprietario && nomeProprietario.includes(' e ');
+    // Detectar múltiplos proprietários baseado no gênero selecionado
+    // Não usar mais detecção baseada em vírgulas ou "e" no nome
+    const generoProprietario = contractData.generoProprietario;
+    const isMultipleProprietarios =
+      generoProprietario === 'masculinos' || generoProprietario === 'femininos';
 
     // Definir termos baseados na quantidade e gênero
     let locadorTerm;
@@ -167,7 +169,11 @@ export function useTermoLocatario(contractData: ContractData) {
     let nomeQuemRetira = data.nomeQuemRetira;
     if (data.incluirNomeCompleto === 'todos') {
       nomeQuemRetira = contractData.nomeLocatario;
-    } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== '') {
+    } else if (
+      data.incluirNomeCompleto &&
+      data.incluirNomeCompleto !== '' &&
+      data.incluirNomeCompleto !== 'custom'
+    ) {
       nomeQuemRetira = data.incluirNomeCompleto;
     }
 

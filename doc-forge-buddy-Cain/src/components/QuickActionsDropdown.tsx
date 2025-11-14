@@ -60,6 +60,7 @@ interface QuickActionsDropdownProps {
     title: string
   ) => void;
   onScheduleAgendamento?: (contractId: string) => void;
+  onGenerateInvitation?: (contractId: string) => void;
 }
 
 const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
@@ -68,6 +69,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
     contractNumber,
     onGenerateDocument,
     onScheduleAgendamento,
+    onGenerateInvitation,
   }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [loadingActions, setLoadingActions] = useState<Set<string>>(
@@ -133,6 +135,13 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
       }
       handleCloseModal();
     }, [contractId, handleCloseModal, onGenerateDocument, onScheduleAgendamento]);
+
+    const handleInvitation = useCallback(() => {
+      if (onGenerateInvitation) {
+        onGenerateInvitation(contractId);
+      }
+      handleCloseModal();
+    }, [contractId, handleCloseModal, onGenerateInvitation]);
 
     // Função otimizada para buscar dados do contrato
     const fetchContractData = useCallback(async (contractId: string) => {
@@ -293,6 +302,17 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
           'blue',
           handleAgendamento
         ),
+        createAction(
+          'convite-acompanhamento',
+          'Convite para Acompanhamento',
+          'Convite',
+          Mail,
+          'blue',
+          () => {
+            onGenerateInvitation?.(contractId);
+            handleCloseModal();
+          }
+        ),
 
         // Comunicação - WhatsApp
         createAction('whatsapp-proprietaria', 'WhatsApp - Proprietária', 'Proprietária', MessageSquare, 'blue', () => {
@@ -346,6 +366,7 @@ const QuickActionsDropdown = memo<QuickActionsDropdownProps>(
             'devolutiva-email-locador',
             'devolutiva-email-locatario', 
             'notificacao-agendamento',
+            'convite-acompanhamento',
             'whatsapp-proprietaria',
             'whatsapp-comercial',
             'whatsapp-locataria',

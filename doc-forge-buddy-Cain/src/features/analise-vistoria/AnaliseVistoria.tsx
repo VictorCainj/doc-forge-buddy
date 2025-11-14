@@ -3,7 +3,7 @@ import { useVistoriaState } from './hooks/useVistoriaState';
 import { useVistoriaHandlers } from './hooks/useVistoriaHandlers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from '@/utils/iconMapper';
+import { AlertCircle, Plus, X } from '@/utils/iconMapper';
 import { useToast } from '@/components/ui/use-toast';
 import { useVistoriaAnalises } from '@/hooks/useVistoriaAnalises';
 import { useVistoriaImages } from '@/hooks/useVistoriaImages';
@@ -11,13 +11,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/utils/logger';
 import { formatDateBrazilian } from '@/utils/core/dateFormatter';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { generateEmailHTML } from '@/utils/emailHTMLGenerator';
 
 // Import dos subcomponentes
 import { ApontamentoForm } from './components/ApontamentoForm';
 import { VistoriaResults } from './components/VistoriaResults';
 import { PrestadorSelector } from './components/PrestadorSelector';
 import { VistoriaActions } from './components/VistoriaActions';
+import { DocumentPreviewProminent } from './components/DocumentPreviewProminent';
+import { ApontamentosListMinimal } from './components/ApontamentosListMinimal';
 
 // Import dos tipos
 import { 
@@ -30,6 +33,7 @@ import { deduplicateImagesBySerial } from '@/utils/imageSerialGenerator';
 const AnaliseVistoria: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const params = useParams<{ contractId?: string }>();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
   
@@ -103,6 +107,8 @@ const AnaliseVistoria: React.FC = () => {
   // Estados adicionais específicos do componente
   const [externalImageUrl, setExternalImageUrl] = React.useState('');
   const [showExternalUrlInput, setShowExternalUrlInput] = React.useState(false);
+  const [documentPreview, setDocumentPreview] = React.useState<string>('');
+  const [showForm, setShowForm] = React.useState(false);
 
   // Função para carregar dados da análise em modo de edição
   const loadAnalysisData = useCallback(
@@ -378,6 +384,258 @@ const AnaliseVistoria: React.FC = () => {
     [contracts, toast, base64ToFile]
   );
 
+  // Ref para evitar múltiplas chamadas simultâneas
+  const loadingAnaliseRef = React.useRef<string | null>(null);
+
+  // Função para verificar e carregar análise existente quando contrato é selecionado
+  const checkAndLoadExistingAnalise = useCallback(
+    async (contractId: string) => {
+      if (!contractId || loadingAnaliseRef.current === contractId) {
+        return;
+      }
+
+      try {
+        loadingAnaliseRef.current = contractId;
+        setLoadingExistingAnalise(true);
+        log.debug('Verificando análise existente para contrato:', contractId);
+
+        // Buscar análise com dados completos
+        const { data: analiseData, error: analiseError } = await supabase
+          .from('vistoria_analises')
+          .select('*')
+          .eq('contract_id', contractId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (analiseData && !analiseError) {
+          log.debug('Análise encontrada:', analiseData.id);
+          setHasExistingAnalise(true);
+          setExistingAnaliseId(analiseData.id);
+          setEditingAnaliseId(analiseData.id);
+          setSavedAnaliseId(analiseData.id);
+          setIsEditMode(true);
+
+          // Carregar imagens da análise
+          const { data: imagesData, error: imagesError } = await supabase
+            .from('vistoria_images')
+            .select('*')
+            .eq('vistoria_id', analiseData.id)
+            .order('created_at', { ascending: true });
+
+          if (imagesError) {
+            log.error('Erro ao carregar imagens:', imagesError);
+          }
+
+          // Log detalhado das imagens carregadas
+          log.debug('Imagens carregadas do banco:', {
+            total: imagesData?.length || 0,
+            detalhes: imagesData?.map((img: any) => ({
+              id: img.id,
+              apontamento_id: img.apontamento_id,
+              tipo_vistoria: img.tipo_vistoria,
+              file_name: img.file_name,
+              image_url: img.image_url,
+            })) || [],
+          });
+
+          // Verificar se os apontamentos têm IDs
+          const apontamentosData = analiseData.apontamentos as any[];
+          if (apontamentosData) {
+            log.debug('IDs dos apontamentos:', {
+              total: apontamentosData.length,
+              ids: apontamentosData.map((ap: any) => ({
+                ambiente: ap.ambiente,
+                id: ap.id,
+                temId: !!ap.id,
+              })),
+            });
+          }
+
+          // Criar objeto completo da análise
+          const completeAnalise: VistoriaAnaliseWithImages = {
+            ...analiseData,
+            images: imagesData || [],
+          };
+
+          log.debug('Carregando análise completa:', {
+            analiseId: completeAnalise.id,
+            apontamentos: completeAnalise.apontamentos?.length || 0,
+            imagens: completeAnalise.images?.length || 0,
+          });
+
+          // Carregar automaticamente a análise completa
+          await loadAnalysisData(completeAnalise, false);
+
+          toast({
+            title: 'Análise carregada',
+            description:
+              'A análise existente para este contrato foi carregada automaticamente.',
+          });
+        } else {
+          log.debug('Nenhuma análise encontrada para o contrato');
+          setHasExistingAnalise(false);
+          setExistingAnaliseId(null);
+          setIsEditMode(false);
+          setEditingAnaliseId(null);
+          setSavedAnaliseId(null);
+        }
+      } catch (error) {
+        log.error('Erro ao verificar análise existente:', error);
+        setHasExistingAnalise(false);
+        setExistingAnaliseId(null);
+      } finally {
+        setLoadingExistingAnalise(false);
+        loadingAnaliseRef.current = null;
+      }
+    },
+    [loadAnalysisData, toast]
+  );
+
+  // Ref para rastrear o último contrato processado
+  const lastProcessedContractRef = React.useRef<string | null>(null);
+
+  // Carregar contrato automaticamente pela URL
+  useEffect(() => {
+    const contractId = params.contractId;
+
+    if (contractId && contracts.length > 0 && !selectedContract) {
+      log.debug('Carregando contrato da URL:', contractId);
+      const contract = contracts.find((c) => c.id === contractId);
+
+      if (contract) {
+        setSelectedContract(contract);
+        log.debug('Contrato encontrado e selecionado:', contract.title);
+      } else {
+        log.warn('Contrato não encontrado na lista:', contractId);
+        toast({
+          title: 'Contrato não encontrado',
+          description:
+            'O contrato especificado na URL não foi encontrado. Selecione um contrato manualmente.',
+          variant: 'destructive',
+        });
+      }
+    }
+  }, [params.contractId, contracts, selectedContract, toast]);
+
+  // Carregar análise existente quando contrato é selecionado
+  useEffect(() => {
+    const contractId = selectedContract?.id;
+    
+    if (contractId) {
+      // Evitar processamento duplicado do mesmo contrato
+      if (lastProcessedContractRef.current === contractId) {
+        return;
+      }
+
+      log.debug('Contrato selecionado, verificando análise existente:', contractId);
+      lastProcessedContractRef.current = contractId;
+      
+      // Limpar estado anterior
+      setApontamentos([]);
+      setCurrentApontamento({
+        ambiente: '',
+        subtitulo: '',
+        descricao: '',
+        descricaoServico: '',
+        vistoriaInicial: { fotos: [], descritivoLaudo: '' },
+        vistoriaFinal: { fotos: [] },
+        observacao: '',
+        classificacao: undefined,
+        tipo: 'material',
+        valor: 0,
+        quantidade: 0,
+      });
+
+      // Preencher dados básicos da vistoria com dados do contrato
+      setDadosVistoria({
+        locatario: (selectedContract as any).form_data?.numeroContrato || '',
+        endereco: (selectedContract as any).form_data?.enderecoImovel || '',
+        dataVistoria: formatDateBrazilian(
+          new Date().toISOString().split('T')[0]
+        ),
+      });
+
+      // Verificar e carregar análise existente
+      checkAndLoadExistingAnalise(contractId);
+    } else {
+      // Limpar quando contrato é desselecionado
+      lastProcessedContractRef.current = null;
+      setApontamentos([]);
+      setHasExistingAnalise(false);
+      setExistingAnaliseId(null);
+      setIsEditMode(false);
+      setEditingAnaliseId(null);
+      setSavedAnaliseId(null);
+    }
+  }, [selectedContract?.id, checkAndLoadExistingAnalise]);
+
+  // Função para atualizar preview do documento
+  const updateDocumentPreview = useCallback(async () => {
+    if (apontamentos.length === 0) {
+      setDocumentPreview('');
+      return;
+    }
+
+    try {
+      const apontamentosValidos = apontamentos.filter((ap) => ap.ambiente && ap.descricao);
+      if (apontamentosValidos.length === 0) {
+        setDocumentPreview('');
+        return;
+      }
+
+      const template = await ANALISE_VISTORIA_TEMPLATE({
+        locatario: selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '',
+        endereco: selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '',
+        dataVistoria: dadosVistoria.dataVistoria || formatDateBrazilian(new Date().toISOString().split('T')[0]),
+        documentMode,
+        apontamentos: apontamentosValidos,
+      });
+
+      setDocumentPreview(template);
+    } catch (error) {
+      log.error('Erro ao atualizar preview:', error);
+      setDocumentPreview('');
+    }
+  }, [apontamentos, dadosVistoria, documentMode, selectedContract]);
+
+  // Atualizar preview quando apontamentos mudarem
+  React.useEffect(() => {
+    updateDocumentPreview();
+  }, [updateDocumentPreview]);
+
+  // Função para aprovar apontamento (classificar como responsabilidade)
+  const handleApproveApontamento = useCallback(
+    (id: string) => {
+      setApontamentos((prev) =>
+        prev.map((ap) =>
+          ap.id === id ? { ...ap, classificacao: 'responsabilidade' as const } : ap
+        )
+      );
+      toast({
+        title: 'Apontamento aprovado',
+        description: 'Classificado como responsabilidade do locatário.',
+      });
+    },
+    [toast]
+  );
+
+  // Função para rejeitar/aprovar revisão (classificar como revisão)
+  const handleRejectApontamento = useCallback(
+    (id: string) => {
+      setApontamentos((prev) =>
+        prev.map((ap) =>
+          ap.id === id ? { ...ap, classificacao: 'revisao' as const } : ap
+        )
+      );
+      toast({
+        title: 'Apontamento marcado para revisão',
+        description: 'Classificado como passível de revisão.',
+      });
+    },
+    [toast]
+  );
+
   // Função para limpar todos os dados
   const clearAllData = useCallback(() => {
     setApontamentos([]);
@@ -401,6 +659,8 @@ const AnaliseVistoria: React.FC = () => {
     setExistingAnaliseId(null);
     setHasExistingAnalise(false);
     setPublicDocumentId(null);
+    setDocumentPreview('');
+    setShowForm(false);
     toast({
       title: 'Dados limpos',
       description: 'Todos os dados foram removidos com sucesso.',
@@ -487,7 +747,250 @@ const AnaliseVistoria: React.FC = () => {
     toast,
   ]);
 
-  // Função para gerar documento
+  // Função para copiar documento para e-mail
+  const copyToEmail = useCallback(async () => {
+    if (apontamentos.length === 0) {
+      toast({
+        title: 'Erro',
+        description: 'Adicione pelo menos um apontamento antes de copiar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Validar apontamentos
+      const apontamentosValidos = apontamentos.filter((apontamento) => {
+        return apontamento.ambiente && apontamento.descricao;
+      });
+
+      if (apontamentosValidos.length === 0) {
+        toast({
+          title: 'Erro',
+          description: 'Todos os apontamentos devem ter ambiente e descrição.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Gerando documento...',
+        description: 'Processando imagens e formatando para e-mail.',
+      });
+
+      // Gerar HTML compatível com e-mail
+      const emailHTML = await generateEmailHTML({
+        locatario: selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '',
+        endereco: selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '',
+        dataVistoria: dadosVistoria.dataVistoria || formatDateBrazilian(new Date().toISOString().split('T')[0]),
+        documentMode,
+        apontamentos: apontamentosValidos,
+      });
+
+      // Copiar para área de transferência usando Clipboard API moderna
+      try {
+        // Método 1: Tentar usar Clipboard API com ClipboardItem (suporta HTML)
+        if (navigator.clipboard && window.ClipboardItem) {
+          try {
+            const htmlBlob = new Blob([emailHTML], { type: 'text/html' });
+            // Extrair texto puro para fallback
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = emailHTML;
+            const textContent = tempDiv.textContent || tempDiv.innerText || '';
+            const textBlob = new Blob([textContent], { type: 'text/plain' });
+            
+            const clipboardItem = new ClipboardItem({
+              'text/html': htmlBlob,
+              'text/plain': textBlob,
+            });
+            
+            await navigator.clipboard.write([clipboardItem]);
+            
+            toast({
+              title: 'Documento copiado!',
+              description: 'O conteúdo foi copiado para a área de transferência. Cole no corpo do e-mail.',
+            });
+            return;
+          } catch (clipboardError) {
+            log.warn('ClipboardItem não funcionou, tentando método alternativo:', clipboardError);
+          }
+        }
+
+        // Método 2: Criar elemento temporário e usar execCommand
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'fixed';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.contentEditable = 'true';
+        tempDiv.innerHTML = emailHTML;
+        document.body.appendChild(tempDiv);
+
+        // Selecionar todo o conteúdo
+        const range = document.createRange();
+        range.selectNodeContents(tempDiv);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+        // Copiar usando execCommand
+        const success = document.execCommand('copy');
+        
+        document.body.removeChild(tempDiv);
+        selection?.removeAllRanges();
+
+        if (success) {
+          toast({
+            title: 'Documento copiado!',
+            description: 'O conteúdo foi copiado para a área de transferência. Cole no corpo do e-mail.',
+          });
+        } else {
+          throw new Error('execCommand falhou');
+        }
+      } catch (err) {
+        log.error('Erro ao copiar:', err);
+        toast({
+          title: 'Erro ao copiar',
+          description: 'Não foi possível copiar automaticamente. Tente selecionar e copiar manualmente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      log.error('Erro ao copiar documento:', error);
+      toast({
+        title: 'Erro ao copiar',
+        description: 'Não foi possível copiar o documento. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  }, [
+    apontamentos,
+    dadosVistoria,
+    documentMode,
+    selectedContract,
+    toast,
+  ]);
+
+  // Função para imprimir documento
+  const printDocument = useCallback(async () => {
+    if (apontamentos.length === 0) {
+      toast({
+        title: 'Erro',
+        description: 'Adicione pelo menos um apontamento antes de imprimir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Validar apontamentos
+      const apontamentosValidos = apontamentos.filter((apontamento) => {
+        return apontamento.ambiente && apontamento.descricao;
+      });
+
+      if (apontamentosValidos.length === 0) {
+        toast({
+          title: 'Erro',
+          description: 'Todos os apontamentos devem ter ambiente e descrição.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Gerar template
+      const template = await ANALISE_VISTORIA_TEMPLATE({
+        locatario: selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '',
+        endereco: selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '',
+        dataVistoria: dadosVistoria.dataVistoria || formatDateBrazilian(new Date().toISOString().split('T')[0]),
+        documentMode,
+        apontamentos: apontamentosValidos,
+      });
+
+      // Criar janela de impressão
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível abrir a janela de impressão. Verifique se os pop-ups estão bloqueados.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Imprimir - Análise de Vistoria</title>
+          <style>
+            @page {
+              margin: 1cm;
+              size: A4;
+            }
+            @media print {
+              body {
+                margin: 0;
+                padding: 20px;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                line-height: 1.6;
+                color: #000;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+                page-break-inside: avoid;
+              }
+              .apontamento {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+              }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 12px;
+              line-height: 1.6;
+              color: #000;
+              padding: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          ${template}
+        </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      
+      // Aguardar carregamento e imprimir
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.onafterprint = () => {
+            printWindow.close();
+          };
+        }, 250);
+      };
+    } catch (error) {
+      log.error('Erro ao imprimir documento:', error);
+      toast({
+        title: 'Erro ao imprimir',
+        description: 'Não foi possível imprimir o documento.',
+        variant: 'destructive',
+      });
+    }
+  }, [
+    apontamentos,
+    dadosVistoria,
+    documentMode,
+    selectedContract,
+    toast,
+  ]);
+
+  // Função para gerar documento (navega para página de visualização)
   const generateDocument = useCallback(async () => {
     if (apontamentos.length === 0) {
       toast({
@@ -600,7 +1103,7 @@ const AnaliseVistoria: React.FC = () => {
     <div className="min-h-screen bg-neutral-50">
       {/* Header com Ações Principais */}
       <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-[1400px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <VistoriaActions
             isEditMode={isEditMode}
             apontamentosCount={apontamentos.length}
@@ -611,14 +1114,16 @@ const AnaliseVistoria: React.FC = () => {
             onClearAll={clearAllData}
             onSave={saveAnalysis}
             onGenerateDocument={generateDocument}
+            onCopyToEmail={copyToEmail}
+            onPrint={printDocument}
           />
         </div>
       </div>
 
-      {/* Container Principal com Espaçamento Lateral */}
-      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      {/* Container Principal com Layout Otimizado */}
+      <div className="max-w-[1600px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Validação de Contrato Carregado */}
-        {!selectedContract && !loading && (
+        {!selectedContract && !loading && !params.contractId && !loadingExistingAnalise && (
           <Card className="mb-6 bg-amber-50 border-amber-200">
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -631,48 +1136,121 @@ const AnaliseVistoria: React.FC = () => {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Formulário de Novo Apontamento */}
-          <ApontamentoForm
-            currentApontamento={currentApontamento}
-            setCurrentApontamento={setCurrentApontamento}
-            documentMode={documentMode}
-            editingApontamento={editingApontamento}
-            onSave={editingApontamento ? handleSaveEdit : handleAddApontamento}
-            onCancel={handleCancelEdit}
-            isAILoading={isAILoading}
-            onCorrectText={handleCorrectText}
-            onAIAnalysis={handleAIAnalysisForCurrentApontamento}
-            showExtractionPanel={showExtractionPanel}
-            setShowExtractionPanel={setShowExtractionPanel}
-            extractionText={extractionText}
-            setExtractionText={setExtractionText}
-            onExtractApontamentos={handleExtractApontamentos}
-            showExternalUrlInput={showExternalUrlInput}
-            setShowExternalUrlInput={setShowExternalUrlInput}
-            externalImageUrl={externalImageUrl}
-            setExternalImageUrl={setExternalImageUrl}
-          />
+        {selectedContract && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Pré-Documento em Destaque (Ocupa 70% do espaço) */}
+            <div className="lg:col-span-8">
+              <Card className="h-[calc(100vh-200px)] flex flex-col bg-white border-neutral-200 shadow-sm">
+                <CardContent className="flex-1 p-6 overflow-hidden">
+                  <DocumentPreviewProminent
+                    documentPreview={documentPreview}
+                    apontamentosCount={apontamentos.length}
+                    documentMode={documentMode}
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Resultados e Lista de Apontamentos */}
-          <VistoriaResults
-            apontamentos={apontamentos}
-            documentMode={documentMode}
-            selectedContract={selectedContract}
-            dadosVistoria={dadosVistoria}
-            onEdit={handleEditApontamento}
-            onRemove={handleRemoveApontamento}
-          />
-        </div>
+            {/* Barra Lateral: Lista Minimalista + Formulário Colapsável (30% do espaço) */}
+            <div className="lg:col-span-4 space-y-4">
+              {/* Botão para adicionar novo apontamento */}
+              {!showForm && (
+                <Button
+                  onClick={() => setShowForm(true)}
+                  className="w-full h-10 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Apontamento
+                </Button>
+              )}
 
-        {/* Seleção de Prestador - Apenas no modo orçamento */}
-        {documentMode === 'orcamento' && selectedContract && prestadores && (
-          <div className="mt-6">
-            <PrestadorSelector
-              selectedPrestadorId={selectedPrestadorId}
-              prestadores={prestadores}
-              onSelectPrestador={setSelectedPrestadorId}
-            />
+              {/* Formulário Colapsável */}
+              {showForm && (
+                <Card className="border-neutral-200 shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-sm text-neutral-900">
+                        {editingApontamento ? 'Editar Apontamento' : 'Novo Apontamento'}
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowForm(false);
+                          handleCancelEdit();
+                        }}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <ApontamentoForm
+                      currentApontamento={currentApontamento}
+                      setCurrentApontamento={setCurrentApontamento}
+                      documentMode={documentMode}
+                      editingApontamento={editingApontamento}
+                      onSave={() => {
+                        editingApontamento ? handleSaveEdit() : handleAddApontamento();
+                        setShowForm(false);
+                      }}
+                      onCancel={() => {
+                        handleCancelEdit();
+                        setShowForm(false);
+                      }}
+                      isAILoading={isAILoading}
+                      onCorrectText={handleCorrectText}
+                      onAIAnalysis={handleAIAnalysisForCurrentApontamento}
+                      showExtractionPanel={showExtractionPanel}
+                      setShowExtractionPanel={setShowExtractionPanel}
+                      extractionText={extractionText}
+                      setExtractionText={setExtractionText}
+                      onExtractApontamentos={handleExtractApontamentos}
+                      showExternalUrlInput={showExternalUrlInput}
+                      setShowExternalUrlInput={setShowExternalUrlInput}
+                      externalImageUrl={externalImageUrl}
+                      setExternalImageUrl={setExternalImageUrl}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Lista Minimalista de Apontamentos */}
+              <Card className="border-neutral-200 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-neutral-900">
+                      Apontamentos ({apontamentos.length})
+                    </h3>
+                  </div>
+                  <div className="max-h-[calc(100vh-500px)] overflow-y-auto">
+                    <ApontamentosListMinimal
+                      apontamentos={apontamentos}
+                      documentMode={documentMode}
+                      onApprove={handleApproveApontamento}
+                      onReject={handleRejectApontamento}
+                      onEdit={(id) => {
+                        handleEditApontamento(id);
+                        setShowForm(true);
+                      }}
+                      onRemove={handleRemoveApontamento}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Seleção de Prestador - Apenas no modo orçamento */}
+              {documentMode === 'orcamento' && prestadores && (
+                <Card className="border-neutral-200 shadow-sm">
+                  <CardContent className="p-4">
+                    <PrestadorSelector
+                      selectedPrestadorId={selectedPrestadorId}
+                      prestadores={prestadores}
+                      onSelectPrestador={setSelectedPrestadorId}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         )}
       </div>

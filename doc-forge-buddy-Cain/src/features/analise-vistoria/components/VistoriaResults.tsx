@@ -252,7 +252,7 @@ export const VistoriaResults: React.FC<VistoriaResultsProps> = ({
                       )}
                       {apontamento.observacao && (
                         <p className="text-sm text-neutral-700 mb-2">
-                          <strong>Análise:</strong> {apontamento.observacao}
+                          <strong>Considerações do Departamento de Rescisão:</strong> {apontamento.observacao}
                         </p>
                       )}
                     </div>

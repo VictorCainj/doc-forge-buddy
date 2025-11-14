@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Contract, ContractFormData } from '@/types/contract';
 import { DateHelpers } from '@/utils/core/dateHelpers';
 import { TemplateProcessor } from '@/utils/templateProcessor';
-import { splitNames } from '@/utils/nameHelpers';
+import { splitNames, formatNamesList, formatNamesListWithHTML } from '@/utils/nameHelpers';
 
 export interface UseDocumentGenerationReturn {
   applyConjunctions: (formData: ContractFormData) => ContractFormData;
@@ -71,23 +71,22 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
   );
 
   // Função para detectar múltiplos locatários
+  // ATENÇÃO: Esta função não deve mais ser usada para detecção baseada em vírgulas ou "e"
+  // A detecção deve ser feita pelos campos individuais (primeiroLocatario, segundoLocatario, etc.)
+  // ou pelo gênero selecionado manualmente (masculinos/femininos)
   const isMultipleLocatarios = useCallback((nomeLocatario: string) => {
-    if (!nomeLocatario) return false;
-    return (
-      nomeLocatario.includes(',') ||
-      nomeLocatario.includes(' e ') ||
-      nomeLocatario.includes(' E ')
-    );
+    // Mantido apenas para compatibilidade com código legado
+    // Retorna false pois não devemos mais detectar por vírgulas ou "e"
+    return false;
   }, []);
 
   // Função para detectar múltiplos proprietários
+  // ATENÇÃO: Esta função não deve mais ser usada para detecção baseada em vírgulas ou "e"
+  // A detecção deve ser feita pelo gênero selecionado manualmente (masculinos/femininos)
   const isMultipleProprietarios = useCallback((nomeProprietario: string) => {
-    if (!nomeProprietario) return false;
-    return (
-      nomeProprietario.includes(',') ||
-      nomeProprietario.includes(' e ') ||
-      nomeProprietario.includes(' E ')
-    );
+    // Mantido apenas para compatibilidade com código legado
+    // Retorna false pois não devemos mais detectar por vírgulas ou "e"
+    return false;
   }, []);
 
   // Função para aplicar conjunções verbais
@@ -146,9 +145,11 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
       enhancedData.terceiroLocatario = formData.terceiroLocatario || '';
       enhancedData.quartoLocatario = formData.quartoLocatario || '';
 
-      // Aplicar conjunções para proprietários baseado na quantidade adicionada
+      // Aplicar conjunções para proprietários baseado no gênero selecionado
+      // Não usar mais detecção baseada em vírgulas ou "e" no nome
+      const generoProprietario = formData.generoProprietario;
       const isMultipleProprietariosCheck =
-        formData.nomeProprietario && formData.nomeProprietario.includes(' e ');
+        generoProprietario === 'masculinos' || generoProprietario === 'femininos';
       if (isMultipleProprietariosCheck) {
         enhancedData.proprietarioTerm = 'os proprietários';
         enhancedData.locadorTermComercial = 'locadores';
@@ -201,6 +202,7 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
         primeiroNomeProprietarioCapitalizado;
 
       // Processar nomes para saudação WhatsApp - Proprietários
+      // Formatação convencional para exibição: vírgulas e "e" quando há múltiplos nomes
       const nomeProprietarioCompletoSaudacao =
         formData.nomesResumidosLocadores || formData.nomeProprietario || '';
       if (nomeProprietarioCompletoSaudacao) {
@@ -215,27 +217,31 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
           );
         });
 
-        let tratamentoProprietario = '';
-        if (primeirosNomes.length > 1) {
-          tratamentoProprietario =
-            primeirosNomes.slice(0, -1).join(', ') +
-            ' e ' +
-            primeirosNomes[primeirosNomes.length - 1];
-        } else {
-          tratamentoProprietario = primeirosNomes[0] || '[PRIMEIRO NOME]';
-        }
+        // Formatação convencional: 1 nome sem separador, 2 nomes com "e", 3+ nomes com vírgulas e "e"
+        const tratamentoProprietario = primeirosNomes.length > 0
+          ? formatNamesList(primeirosNomes)
+          : '[PRIMEIRO NOME]';
         enhancedData.proprietarioPrezadoWhatsapp = tratamentoProprietario;
       } else {
         enhancedData.proprietarioPrezadoWhatsapp = '[PRIMEIRO NOME]';
       }
 
       // Processar nomes para saudação WhatsApp - Locatários
+      // Formatação convencional para exibição: vírgulas e "e" quando há múltiplos nomes
       const nomeLocatarioCompletoSaudacao =
         formData.nomeLocatario || formData.primeiroLocatario || '';
       if (nomeLocatarioCompletoSaudacao) {
-        const nomesLocatariosSaudacao = splitNames(
-          nomeLocatarioCompletoSaudacao
-        );
+        // Coletar todos os locatários dos campos individuais (mantendo individualidade no cadastro)
+        const locatariosIndividuais: string[] = [];
+        if (formData.primeiroLocatario) locatariosIndividuais.push(formData.primeiroLocatario);
+        if (formData.segundoLocatario) locatariosIndividuais.push(formData.segundoLocatario);
+        if (formData.terceiroLocatario) locatariosIndividuais.push(formData.terceiroLocatario);
+        if (formData.quartoLocatario) locatariosIndividuais.push(formData.quartoLocatario);
+        
+        const nomesLocatariosSaudacao = locatariosIndividuais.length > 0
+          ? locatariosIndividuais
+          : splitNames(nomeLocatarioCompletoSaudacao);
+        
         const primeirosNomes = nomesLocatariosSaudacao.map((nome) => {
           const primeiroNome = nome.split(' ')[0];
           return (
@@ -244,15 +250,10 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
           );
         });
 
-        let tratamentoLocatario = '';
-        if (primeirosNomes.length > 1) {
-          tratamentoLocatario =
-            primeirosNomes.slice(0, -1).join(', ') +
-            ' e ' +
-            primeirosNomes[primeirosNomes.length - 1];
-        } else {
-          tratamentoLocatario = primeirosNomes[0] || '[PRIMEIRO NOME]';
-        }
+        // Formatação convencional: 1 nome sem separador, 2 nomes com "e", 3+ nomes com vírgulas e "e"
+        const tratamentoLocatario = primeirosNomes.length > 0
+          ? formatNamesList(primeirosNomes)
+          : '[PRIMEIRO NOME]';
         enhancedData.locatarioPrezadoWhatsapp = tratamentoLocatario;
       } else {
         enhancedData.locatarioPrezadoWhatsapp = '[PRIMEIRO NOME]';
@@ -312,36 +313,20 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
         enhancedData.fiador3 = fiadores[2] || '';
         enhancedData.fiador4 = fiadores[3] || '';
 
-        // Criar lista formatada de fiadores
+        // Criar lista formatada de fiadores - formatação convencional para exibição
         if (fiadores.length > 0) {
-          const nomesFiadoresFormatados =
-            fiadores.length > 1
-              ? fiadores
-                  .slice(0, -1)
-                  .map((nome) => `<strong>${nome}</strong>`)
-                  .join(', ') +
-                ' e ' +
-                `<strong>${fiadores[fiadores.length - 1]}</strong>`
-              : `<strong>${fiadores[0]}</strong>`;
+          const nomesFiadoresFormatados = formatNamesListWithHTML(fiadores);
           enhancedData.nomeFiadoresFormatado = nomesFiadoresFormatados;
         }
       }
 
-      // Processar nomes formatados para proprietários
+      // Processar nomes formatados para proprietários - formatação convencional para exibição
       const nomesProprietarioArray = splitNames(
         formData.nomesResumidosLocadores || formData.nomeProprietario || ''
       );
 
       if (nomesProprietarioArray.length > 0) {
-        const nomeProprietarioFormatado =
-          nomesProprietarioArray.length > 1
-            ? nomesProprietarioArray
-                .slice(0, -1)
-                .map((nome) => `<strong>${nome}</strong>`)
-                .join(', ') +
-              ' e ' +
-              `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
-            : `<strong>${nomesProprietarioArray[0]}</strong>`;
+        const nomeProprietarioFormatado = formatNamesListWithHTML(nomesProprietarioArray);
         enhancedData.nomeProprietarioFormatado = nomeProprietarioFormatado;
       }
 

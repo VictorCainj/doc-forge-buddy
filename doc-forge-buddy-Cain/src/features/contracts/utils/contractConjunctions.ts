@@ -4,7 +4,7 @@ import {
   gerarDocumentosSolicitados,
   ConfiguracaoDocumentos,
 } from '@/utils/documentosSolicitados';
-import { splitNames } from '@/utils/nameHelpers';
+import { splitNames, formatNamesList, formatNamesListWithHTML } from '@/utils/nameHelpers';
 import { ContractFormData } from '@/types/contract';
 
 /**
@@ -42,7 +42,8 @@ export function applyContractConjunctions(
   // PRIORIDADE: Gênero selecionado manualmente > Detecção automática
   const generoLocatario = safeFormData.generoLocatario;
 
-  // Detecção automática (usado apenas como fallback)
+  // Detecção automática baseada nos campos individuais
+  // Cada locatário é registrado individualmente, sem separadores
   const hasMultipleLocatarioFields = !!(
     safeFormData.primeiroLocatario &&
     (safeFormData.segundoLocatario ||
@@ -50,15 +51,9 @@ export function applyContractConjunctions(
       safeFormData.quartoLocatario)
   );
 
-  const nomeLocatarioCheck =
-    safeFormData.nomeLocatario || safeFormData.primeiroLocatario || '';
-  const hasMultipleNamesInField =
-    nomeLocatarioCheck.includes(',') ||
-    nomeLocatarioCheck.includes(' e ') ||
-    nomeLocatarioCheck.includes(' E ');
-
-  const autoDetectedMultiple =
-    hasMultipleLocatarioFields || hasMultipleNamesInField;
+  // Não usar mais detecção baseada em vírgulas ou "e" no nome
+  // A detecção deve ser feita apenas pelos campos individuais
+  const autoDetectedMultiple = hasMultipleLocatarioFields;
 
   // Determinar se é plural baseado no gênero selecionado OU detecção automática
   const isMultipleLocatarios =
@@ -153,11 +148,12 @@ export function applyContractConjunctions(
   // PRIORIDADE: Gênero selecionado manualmente > Detecção automática
   const generoProprietario = safeFormData.generoProprietario;
 
-  // Detecção automática (usado apenas como fallback)
+  // Detecção automática baseada nos campos individuais
+  // Não usar mais detecção baseada em vírgulas ou "e" no nome
+  // A detecção deve ser feita apenas pelos campos individuais quando disponíveis
+  // Por enquanto, manter compatibilidade com dados antigos, mas priorizar gênero manual
   const nomeProprietarioCheck = safeFormData.nomeProprietario || '';
-  const autoDetectedMultipleProprietarios =
-    nomeProprietarioCheck.includes(' e ') ||
-    nomeProprietarioCheck.includes(' E ');
+  const autoDetectedMultipleProprietarios = false; // Não usar mais detecção por vírgulas/e
 
   const _isMultipleProprietarios =
     generoProprietario === 'masculinos' ||
@@ -250,11 +246,12 @@ export function applyContractConjunctions(
     primeiroNomeProprietario.slice(1).toLowerCase();
 
   // Gerar saudação para devolutiva do proprietário
+  // Não usar mais detecção baseada em vírgulas ou "e" no nome
+  // Usar apenas o gênero selecionado manualmente para determinar plural
   const nomeProprietarioSaudacao =
     safeFormData.nomeProprietario || safeFormData.nomesResumidosLocadores || '';
   const hasMultipleProprietarioNames =
-    nomeProprietarioSaudacao.includes(' e ') ||
-    nomeProprietarioSaudacao.includes(' E ');
+    generoProprietario === 'masculinos' || generoProprietario === 'femininos';
 
   // Determinar tratamento baseado no gênero selecionado manualmente
   let tratamentoProprietario;
@@ -280,26 +277,22 @@ export function applyContractConjunctions(
       const primeiro = nome.split(' ')[0];
       return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
     });
-    const nomesFormatados =
-      primeirosNomes.length > 1
-        ? primeirosNomes
-            .slice(0, -1)
-            .map((nome) => `<strong>${nome}</strong>`)
-            .join(', ') +
-          ' e ' +
-          `<strong>${primeirosNomes[primeirosNomes.length - 1]}</strong>`
-        : `<strong>${primeirosNomes[0]}</strong>`;
+    // Formatação convencional para exibição: vírgulas e "e" quando há múltiplos nomes
+    const nomesFormatados = formatNamesListWithHTML(primeirosNomes);
     enhancedData.saudacaoProprietario = `${tratamentoProprietario} ${nomesFormatados}`;
   } else {
     enhancedData.saudacaoProprietario = `${tratamentoProprietario} <strong>${enhancedData.primeiroNomeProprietario}</strong>`;
   }
 
   // Gerar saudação para devolutiva do locatário
+  // Não usar mais detecção baseada em vírgulas ou "e" no nome
+  // Usar apenas o gênero selecionado manualmente ou campos individuais para determinar plural
   const nomeLocatarioSaudacao =
     safeFormData.nomeLocatario || safeFormData.primeiroLocatario || '';
   const hasMultipleLocatarioNames =
-    nomeLocatarioSaudacao.includes(' e ') ||
-    nomeLocatarioSaudacao.includes(' E ');
+    generoLocatario === 'masculinos' ||
+    generoLocatario === 'femininos' ||
+    hasMultipleLocatarioFields;
 
   // Determinar tratamento baseado no gênero selecionado manualmente
   let tratamentoLocatario;
@@ -320,20 +313,23 @@ export function applyContractConjunctions(
   }
 
   if (hasMultipleLocatarioNames) {
-    const nomesLocatarios = splitNames(nomeLocatarioSaudacao);
+    // Coletar todos os locatários dos campos individuais primeiro
+    const locatariosIndividuais: string[] = [];
+    if (safeFormData.primeiroLocatario) locatariosIndividuais.push(safeFormData.primeiroLocatario);
+    if (safeFormData.segundoLocatario) locatariosIndividuais.push(safeFormData.segundoLocatario);
+    if (safeFormData.terceiroLocatario) locatariosIndividuais.push(safeFormData.terceiroLocatario);
+    if (safeFormData.quartoLocatario) locatariosIndividuais.push(safeFormData.quartoLocatario);
+    
+    const nomesLocatarios = locatariosIndividuais.length > 0
+      ? locatariosIndividuais
+      : splitNames(nomeLocatarioSaudacao);
+    
     const primeirosNomes = nomesLocatarios.map((nome) => {
       const primeiro = nome.split(' ')[0];
       return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
     });
-    const nomesFormatados =
-      primeirosNomes.length > 1
-        ? primeirosNomes
-            .slice(0, -1)
-            .map((nome) => `<strong>${nome}</strong>`)
-            .join(', ') +
-          ' e ' +
-          `<strong>${primeirosNomes[primeirosNomes.length - 1]}</strong>`
-        : `<strong>${primeirosNomes[0]}</strong>`;
+    // Formatação convencional para exibição: vírgulas e "e" quando há múltiplos nomes
+    const nomesFormatados = formatNamesListWithHTML(primeirosNomes);
     enhancedData.saudacaoLocatario = `${tratamentoLocatario} ${nomesFormatados}`;
   } else {
     enhancedData.saudacaoLocatario = `${tratamentoLocatario} <strong>${enhancedData.primeiroNomeLocatario}</strong>`;
@@ -348,33 +344,35 @@ export function applyContractConjunctions(
   const hora = agora.getHours();
   enhancedData.saudacaoComercial = hora < 12 ? 'bom dia' : 'boa tarde';
 
-  // Formatar nomes com negrito
-  const nomeLocatario =
-    safeFormData.nomeLocatario ||
-    safeFormData.primeiroLocatario ||
-    '[NOME DO LOCATÁRIO]';
-  const nomesLocatarioArray = splitNames(nomeLocatario);
-  enhancedData.nomeLocatarioFormatado =
-    nomesLocatarioArray.length > 1
-      ? nomesLocatarioArray.slice(0, -1).join(', ') +
-        ' e ' +
-        nomesLocatarioArray[nomesLocatarioArray.length - 1]
-      : nomesLocatarioArray[0];
+  // Formatar nomes para exibição em documentos - formatação convencional com vírgulas e "e"
+  // Coletar todos os locatários dos campos individuais (mantendo individualidade no cadastro)
+  const locatariosIndividuais: string[] = [];
+  if (safeFormData.primeiroLocatario) locatariosIndividuais.push(safeFormData.primeiroLocatario);
+  if (safeFormData.segundoLocatario) locatariosIndividuais.push(safeFormData.segundoLocatario);
+  if (safeFormData.terceiroLocatario) locatariosIndividuais.push(safeFormData.terceiroLocatario);
+  if (safeFormData.quartoLocatario) locatariosIndividuais.push(safeFormData.quartoLocatario);
+  
+  // Se não houver campos individuais, usar nomeLocatario como fallback
+  const nomesLocatarioArray = locatariosIndividuais.length > 0 
+    ? locatariosIndividuais 
+    : splitNames(safeFormData.nomeLocatario || safeFormData.primeiroLocatario || '[NOME DO LOCATÁRIO]');
+  
+  // Formatação convencional: 1 nome sem separador, 2 nomes com "e", 3+ nomes com vírgulas e "e"
+  enhancedData.nomeLocatarioFormatado = nomesLocatarioArray.length > 0
+    ? formatNamesList(nomesLocatarioArray)
+    : '[NOME DO LOCATÁRIO]';
 
+  // Coletar todos os locadores dos campos individuais
   const nomeProprietario =
     safeFormData.nomeProprietario ||
     safeFormData.nomesResumidosLocadores ||
     '[NOME DO PROPRIETÁRIO]';
   const nomesProprietarioArray = splitNames(nomeProprietario);
+  // Formatação convencional com HTML: vírgulas e "e" quando há múltiplos nomes
   enhancedData.nomeProprietarioFormatado =
-    nomesProprietarioArray.length > 1
-      ? nomesProprietarioArray
-          .slice(0, -1)
-          .map((nome) => `<strong>${nome}</strong>`)
-          .join(', ') +
-        ' e ' +
-        `<strong>${nomesProprietarioArray[nomesProprietarioArray.length - 1]}</strong>`
-      : `<strong>${nomesProprietarioArray[0]}</strong>`;
+    nomesProprietarioArray.length > 0
+      ? formatNamesListWithHTML(nomesProprietarioArray)
+      : '<strong>[NOME DO PROPRIETÁRIO]</strong>';
 
   // Gerar lista de todos os primeiros nomes (locadores + locatários) para e-mail de convite
   const todosPrimeirosNomes: string[] = [];
@@ -397,17 +395,9 @@ export function applyContractConjunctions(
     todosPrimeirosNomes.push(primeiroNomeCapitalizado);
   });
 
-  // Formatando a lista com vírgulas e "e" antes do último
+  // Formatando a lista com formatação convencional: vírgulas e "e" quando há múltiplos nomes
   if (todosPrimeirosNomes.length > 0) {
-    if (todosPrimeirosNomes.length === 1) {
-      enhancedData.todosNomesConviteVistoria = todosPrimeirosNomes[0];
-    } else {
-      enhancedData.todosNomesConviteVistoria =
-        todosPrimeirosNomes.slice(0, -1).join(', ') +
-        ' e ' +
-        todosPrimeirosNomes[todosPrimeirosNomes.length - 1] +
-        '.';
-    }
+    enhancedData.todosNomesConviteVistoria = formatNamesList(todosPrimeirosNomes) + '.';
   } else {
     enhancedData.todosNomesConviteVistoria = '';
   }
