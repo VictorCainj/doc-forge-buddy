@@ -5,6 +5,7 @@ export * from './conversationProfile';
 export * from './dashboardDesocupacao';
 export * from './dualChat';
 export * from './evictionReasons';
+export * from './occurrenceTypes';
 export * from './orcamento';
 export * from './sentimentAnalysis';
 export * from './vistoria.extended';

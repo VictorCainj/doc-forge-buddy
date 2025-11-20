@@ -1,5 +1,6 @@
 import { ptBR } from 'date-fns/locale';
 import { format } from 'date-fns/format';
+import { anonymizeName, anonymizeAddress } from './privacyUtils';
 
 export interface ApontamentoVistoria {
   id: string;
@@ -22,10 +23,22 @@ export interface DadosVistoria {
   apontamentos: ApontamentoVistoria[];
 }
 
-export const generateVistoriaDocument = (dados: DadosVistoria): string => {
+export const generateVistoriaDocument = (
+  dados: DadosVistoria,
+  shouldAnonymize: boolean = false
+): string => {
   const dataAtual = format(new Date(), "dd 'de' MMMM 'de' yyyy", {
     locale: ptBR,
   });
+
+  // Aplicar anonimização se necessário
+  const dadosProcessados = shouldAnonymize
+    ? {
+        ...dados,
+        locatario: anonymizeName(dados.locatario),
+        endereco: anonymizeAddress(dados.endereco),
+      }
+    : dados;
 
   let documento = `
 <!DOCTYPE html>
@@ -215,11 +228,11 @@ export const generateVistoriaDocument = (dados: DadosVistoria): string => {
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Locatário:</span>
-                    <span class="info-value">${dados.locatario}</span>
+                    <span class="info-value">${dadosProcessados.locatario}</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Endereço:</span>
-                    <span class="info-value">${dados.endereco}</span>
+                    <span class="info-value">${dadosProcessados.endereco}</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Data da Vistoria:</span>
@@ -310,9 +323,10 @@ export const generateVistoriaDocument = (dados: DadosVistoria): string => {
 
 export const downloadVistoriaDocument = (
   dados: DadosVistoria,
-  filename: string = 'analise-vistoria.html'
+  filename: string = 'analise-vistoria.html',
+  shouldAnonymize: boolean = false
 ) => {
-  const documento = generateVistoriaDocument(dados);
+  const documento = generateVistoriaDocument(dados, shouldAnonymize);
   const blob = new Blob([documento], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 

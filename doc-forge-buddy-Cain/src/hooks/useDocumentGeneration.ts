@@ -9,6 +9,8 @@ import { Contract, ContractFormData } from '@/types/contract';
 import { DateHelpers } from '@/utils/core/dateHelpers';
 import { TemplateProcessor } from '@/utils/templateProcessor';
 import { splitNames, formatNamesList, formatNamesListWithHTML } from '@/utils/nameHelpers';
+import { usePrivacyMode } from './usePrivacyMode';
+import { anonymizeContractData } from '@/utils/privacyUtils';
 
 export interface UseDocumentGenerationReturn {
   applyConjunctions: (formData: ContractFormData) => ContractFormData;
@@ -27,6 +29,7 @@ export interface UseDocumentGenerationReturn {
 
 export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
   const navigate = useNavigate();
+  const { isPrivacyModeActive } = usePrivacyMode();
 
   // Função para gerar meses dos comprovantes (sempre os 3 últimos meses da data atual)
   const generateMesesComprovantes = useCallback(() => {
@@ -283,6 +286,7 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
         formData.assinanteSelecionado || '[NOME DO ASSINANTE]';
 
       // Adicionar variáveis de endereço e contrato
+      // A anonimização será aplicada no processamento do template se necessário
       enhancedData.enderecoImovel =
         formData.endereco || formData.enderecoImovel || '[ENDEREÇO]';
       enhancedData.numeroContrato =
@@ -352,9 +356,14 @@ export const useDocumentGeneration = (): UseDocumentGenerationReturn => {
       const enhancedData = applyConjunctions(formData);
       enhancedData.assinanteSelecionado = assinante;
 
+      // Aplicar anonimização se o modo de privacidade estiver ativo
+      const finalData = isPrivacyModeActive
+        ? anonymizeContractData(enhancedData)
+        : enhancedData;
+
       const processedTemplate = TemplateProcessor.processTemplate(
         template,
-        enhancedData
+        finalData
       );
 
       // Usar o título que já foi definido (já vem com formatação correta)

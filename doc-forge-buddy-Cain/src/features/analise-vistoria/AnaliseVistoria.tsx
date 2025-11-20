@@ -13,6 +13,8 @@ import { formatDateBrazilian } from '@/utils/core/dateFormatter';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { useNavigate, useParams } from 'react-router-dom';
 import { generateEmailHTML } from '@/utils/emailHTMLGenerator';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeName, anonymizeAddress } from '@/utils/privacyUtils';
 
 // Import dos subcomponentes
 import { ApontamentoForm } from './components/ApontamentoForm';
@@ -36,6 +38,7 @@ const AnaliseVistoria: React.FC = () => {
   const params = useParams<{ contractId?: string }>();
   const { saveAnalise, updateAnalise } = useVistoriaAnalises();
   const { fileToBase64, base64ToFile } = useVistoriaImages();
+  const { isPrivacyModeActive } = usePrivacyMode();
   
   // Hooks customizados para gerenciar estado e handlers
   const {
@@ -584,9 +587,20 @@ const AnaliseVistoria: React.FC = () => {
         return;
       }
 
+      // Aplicar anonimização se necessário
+      const locatarioOriginal2 = selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '';
+      const enderecoOriginal2 = selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '';
+      
+      const locatarioProcessado2 = isPrivacyModeActive
+        ? anonymizeName(locatarioOriginal2)
+        : locatarioOriginal2;
+      const enderecoProcessado2 = isPrivacyModeActive
+        ? anonymizeAddress(enderecoOriginal2)
+        : enderecoOriginal2;
+
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '',
-        endereco: selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '',
+        locatario: locatarioProcessado2,
+        endereco: enderecoProcessado2,
         dataVistoria: dadosVistoria.dataVistoria || formatDateBrazilian(new Date().toISOString().split('T')[0]),
         documentMode,
         apontamentos: apontamentosValidos,
@@ -896,10 +910,21 @@ const AnaliseVistoria: React.FC = () => {
         return;
       }
 
+      // Aplicar anonimização se necessário
+      const locatarioOriginal = selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '';
+      const enderecoOriginal = selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '';
+      
+      const locatarioProcessado = isPrivacyModeActive
+        ? anonymizeName(locatarioOriginal)
+        : locatarioOriginal;
+      const enderecoProcessado = isPrivacyModeActive
+        ? anonymizeAddress(enderecoOriginal)
+        : enderecoOriginal;
+
       // Gerar template
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: selectedContract?.form_data?.numeroContrato || dadosVistoria.locatario || '',
-        endereco: selectedContract?.form_data?.enderecoImovel || dadosVistoria.endereco || '',
+        locatario: locatarioProcessado,
+        endereco: enderecoProcessado,
         dataVistoria: dadosVistoria.dataVistoria || formatDateBrazilian(new Date().toISOString().split('T')[0]),
         documentMode,
         apontamentos: apontamentosValidos,
@@ -1016,10 +1041,21 @@ const AnaliseVistoria: React.FC = () => {
         return;
       }
 
+      // Aplicar anonimização se necessário
+      const locatarioOriginal3 = selectedContract?.form_data.numeroContrato || dadosVistoria.locatario || '';
+      const enderecoOriginal3 = selectedContract?.form_data.enderecoImovel || dadosVistoria.endereco || '';
+      
+      const locatarioProcessado3 = isPrivacyModeActive
+        ? anonymizeName(locatarioOriginal3)
+        : locatarioOriginal3;
+      const enderecoProcessado3 = isPrivacyModeActive
+        ? anonymizeAddress(enderecoOriginal3)
+        : enderecoOriginal3;
+
       // Preparar dados do documento
       const dadosDocumento = {
-        locatario: selectedContract?.form_data.numeroContrato || dadosVistoria.locatario || '',
-        endereco: selectedContract?.form_data.enderecoImovel || dadosVistoria.endereco || '',
+        locatario: locatarioProcessado3,
+        endereco: enderecoProcessado3,
         dataVistoria: dadosVistoria.dataVistoria || formatDateBrazilian(new Date().toISOString().split('T')[0]),
         documentMode,
         apontamentos: apontamentosValidos,

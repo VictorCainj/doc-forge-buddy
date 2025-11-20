@@ -24,6 +24,8 @@ import {
 } from '@/templates/documentos';
 import { splitNames } from '@/utils/nameHelpers';
 import { useAuth } from '@/hooks/useAuth';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeContractData } from '@/utils/privacyUtils';
 import { exportContractsToExcel } from '@/utils/exportContractsToExcel';
 import { ContractReducerState, ContractReducerActions } from '../types';
 
@@ -69,6 +71,7 @@ export const useContractActions = ({
 }: UseContractActionsProps): UseContractActionsReturn => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPrivacyModeActive } = usePrivacyMode();
 
   const generateDocumentWithAssinante = useCallback(
     (
@@ -139,9 +142,14 @@ export const useContractActions = ({
         enhancedData.temFiador4 = fiadores.length > 3 ? 'sim' : 'nao';
       }
 
+      // Aplicar anonimização se necessário
+      const finalData = isPrivacyModeActive
+        ? anonymizeContractData(enhancedData)
+        : enhancedData;
+
       const processedTemplate = TemplateProcessor.processTemplate(
         template,
-        enhancedData
+        finalData
       );
 
       setTimeout(() => {
@@ -156,7 +164,7 @@ export const useContractActions = ({
         actions.setLoading('generating', null);
       }, 800);
     },
-    [state.formData, actions, navigate]
+    [state.formData, actions, navigate, isPrivacyModeActive]
   );
 
   const generateDocument = useCallback(
@@ -212,7 +220,10 @@ export const useContractActions = ({
         actions.setLoading('generating', null);
       } else if (documentosSemAssinatura.includes(documentType)) {
         const enhancedData = applyContractConjunctions(formData);
-        const processedTemplate = processTemplate(template, enhancedData);
+        const finalData = isPrivacyModeActive
+          ? anonymizeContractData(enhancedData)
+          : enhancedData;
+        const processedTemplate = processTemplate(template, finalData);
         let documentTitle = `${documentType} - ${contract.title}`;
         if (documentType === 'Devolutiva Comercial') {
           documentTitle = `${documentType} - Rescisão - ${contract.title}`;
@@ -282,9 +293,14 @@ export const useContractActions = ({
     enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
     enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
 
+    // Aplicar anonimização se necessário
+    const finalData = isPrivacyModeActive
+      ? anonymizeContractData(enhancedData)
+      : enhancedData;
+
     const processedTemplate = processTemplate(
       NOTIFICACAO_AGENDAMENTO_TEMPLATE,
-      enhancedData
+      finalData
     );
     const documentTitle = `Notificação de Agendamento - ${tipoVistoriaTexto} - ${state.selectedContract.title}`;
 

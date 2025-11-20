@@ -20,6 +20,7 @@ import { ContractStatusBadge } from './ContractStatusBadge';
 import { ContractTags } from './ContractTags';
 import { useContractFavorites } from '@/hooks/useContractFavorites';
 import { getCardGradientClassByStatus } from '@/utils/contractGradients';
+import { useAnonymizedData } from '@/hooks/useAnonymizedData';
 
 interface ContractCardProps {
   contract: Contract;
@@ -46,6 +47,7 @@ export const ContractCard: React.FC<ContractCardProps> = memo<ContractCardProps>
   ({ contract, onGenerateDocument }) => {
     const { isFavorite, toggleFavorite } = useContractFavorites();
     const navigate = useNavigate();
+    const { anonymize, isPrivacyModeActive } = useAnonymizedData();
 
     const handleEdit = useCallback(() => {
       navigate(`/editar-contrato/${contract.id}`);
@@ -186,16 +188,18 @@ export const ContractCard: React.FC<ContractCardProps> = memo<ContractCardProps>
                     </p>
                     <div className="flex items-center gap-2 group/name">
                       <p className="text-sm font-semibold text-neutral-800 truncate leading-tight">
-                        {contract.form_data.nomeProprietario}
+                        {anonymize.namesList(contract.form_data.nomeProprietario)}
                       </p>
-                      <button
-                        onClick={handleProprietarioSearch}
-                        className="opacity-0 group-hover/name:opacity-100 transition-opacity duration-200 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
-                        title="Buscar no JusBrasil"
-                        aria-label={`Buscar ${contract.form_data.nomeProprietario} no JusBrasil`}
-                      >
-                        <Search className="h-3.5 w-3.5 text-blue-600" />
-                      </button>
+                      {!isPrivacyModeActive && (
+                        <button
+                          onClick={handleProprietarioSearch}
+                          className="opacity-0 group-hover/name:opacity-100 transition-opacity duration-200 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
+                          title="Buscar no JusBrasil"
+                          aria-label={`Buscar ${contract.form_data.nomeProprietario} no JusBrasil`}
+                        >
+                          <Search className="h-3.5 w-3.5 text-blue-600" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -216,16 +220,18 @@ export const ContractCard: React.FC<ContractCardProps> = memo<ContractCardProps>
                     </p>
                     <div className="flex items-center gap-2 group/name">
                       <p className="text-sm font-semibold text-neutral-800 truncate leading-tight">
-                        {contract.form_data.nomeLocatario}
+                        {anonymize.name(contract.form_data.nomeLocatario)}
                       </p>
-                      <button
-                        onClick={handleLocatarioSearch}
-                        className="opacity-0 group-hover/name:opacity-100 transition-opacity duration-200 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
-                        title="Buscar no JusBrasil"
-                        aria-label={`Buscar ${contract.form_data.nomeLocatario} no JusBrasil`}
-                      >
-                        <Search className="h-3.5 w-3.5 text-purple-600" />
-                      </button>
+                      {!isPrivacyModeActive && (
+                        <button
+                          onClick={handleLocatarioSearch}
+                          className="opacity-0 group-hover/name:opacity-100 transition-opacity duration-200 p-1.5 hover:bg-white/80 rounded-lg hover:scale-110"
+                          title="Buscar no JusBrasil"
+                          aria-label={`Buscar ${contract.form_data.nomeLocatario} no JusBrasil`}
+                        >
+                          <Search className="h-3.5 w-3.5 text-purple-600" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -282,8 +288,11 @@ export const ContractCard: React.FC<ContractCardProps> = memo<ContractCardProps>
                     Endereço
                   </p>
                   <p
-                    className="text-sm font-semibold text-neutral-800 line-clamp-2 cursor-pointer hover:text-blue-600 hover:underline transition-colors duration-200 leading-relaxed"
+                    className={`text-sm font-semibold text-neutral-800 line-clamp-2 leading-relaxed ${
+                      !isPrivacyModeActive ? 'cursor-pointer hover:text-blue-600 hover:underline transition-colors duration-200' : ''
+                    }`}
                     onClick={(e) => {
+                      if (isPrivacyModeActive) return;
                       e.stopPropagation();
                       const endereco =
                         contract.form_data.endereco ||
@@ -293,11 +302,12 @@ export const ContractCard: React.FC<ContractCardProps> = memo<ContractCardProps>
                         window.open(earthUrl, '_blank', 'noopener,noreferrer');
                       }
                     }}
-                    title="Clique para abrir no Google Earth"
+                    title={isPrivacyModeActive ? undefined : "Clique para abrir no Google Earth"}
                   >
-                    {contract.form_data.endereco ||
-                      contract.form_data.enderecoImovel ||
-                      '[ENDEREÇO NÃO INFORMADO]'}
+                    {anonymize.address(
+                      contract.form_data.endereco ||
+                        contract.form_data.enderecoImovel
+                    ) || '[ENDEREÇO NÃO INFORMADO]'}
                   </p>
                 </div>
               </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Key } from '@/utils/iconMapper';
+import { useAnonymizedData } from '@/hooks/useAnonymizedData';
 
 interface ContractData {
   numeroContrato: string;
@@ -14,6 +15,7 @@ interface TermoLocatarioHeaderProps {
 
 export const TermoLocatarioHeader: React.FC<TermoLocatarioHeaderProps> = ({ contractData }) => {
   const navigate = useNavigate();
+  const { anonymize } = useAnonymizedData();
 
   return (
     <div className="bg-white border-b border-neutral-200 shadow-sm">
@@ -54,7 +56,7 @@ export const TermoLocatarioHeader: React.FC<TermoLocatarioHeaderProps> = ({ cont
                 Contrato {contractData.numeroContrato}
               </p>
               <p className="text-xs text-neutral-600">
-                {contractData.enderecoImovel}
+                {anonymize.address(contractData.enderecoImovel)}
               </p>
             </div>
           </div>

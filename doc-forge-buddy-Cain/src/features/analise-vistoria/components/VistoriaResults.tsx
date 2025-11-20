@@ -15,6 +15,8 @@ import { ApontamentoVistoria } from '../types/vistoria';
 import { formatDateBrazilian } from '@/utils/core/dateFormatter';
 import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { useToast } from '@/components/ui/use-toast';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeName, anonymizeAddress } from '@/utils/privacyUtils';
 
 interface VistoriaResultsProps {
   apontamentos: ApontamentoVistoria[];
@@ -40,6 +42,7 @@ export const VistoriaResults: React.FC<VistoriaResultsProps> = ({
   onRemove,
 }) => {
   const { toast } = useToast();
+  const { isPrivacyModeActive } = usePrivacyMode();
   const [documentPreview, setDocumentPreview] = useState<string>('');
   const [previewImageModal, setPreviewImageModal] = useState<string | null>(null);
 
@@ -101,10 +104,21 @@ export const VistoriaResults: React.FC<VistoriaResultsProps> = ({
         };
       });
 
+      // Aplicar anonimização se necessário
+      const locatarioOriginal = selectedContract?.form_data.numeroContrato || dadosVistoria.locatario || '';
+      const enderecoOriginal = selectedContract?.form_data.enderecoImovel || dadosVistoria.endereco || '';
+      
+      const locatarioProcessado = isPrivacyModeActive
+        ? anonymizeName(locatarioOriginal)
+        : locatarioOriginal;
+      const enderecoProcessado = isPrivacyModeActive
+        ? anonymizeAddress(enderecoOriginal)
+        : enderecoOriginal;
+
       // Gerar template do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: selectedContract?.form_data.numeroContrato || dadosVistoria.locatario || '',
-        endereco: selectedContract?.form_data.enderecoImovel || dadosVistoria.endereco || '',
+        locatario: locatarioProcessado,
+        endereco: enderecoProcessado,
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
         apontamentos: apontamentosComFotos,
@@ -115,7 +129,7 @@ export const VistoriaResults: React.FC<VistoriaResultsProps> = ({
       console.error('Erro ao atualizar pré-visualização:', error);
       setDocumentPreview('');
     }
-  }, [apontamentos, dadosVistoria, documentMode, selectedContract]);
+  }, [apontamentos, dadosVistoria, documentMode, selectedContract, isPrivacyModeActive]);
 
   // Atualizar pré-visualização do documento em tempo real
   React.useEffect(() => {

@@ -176,6 +176,7 @@ export function useTermoLocatario(contractData: ContractData) {
     ) {
       nomeQuemRetira = data.incluirNomeCompleto;
     }
+    // Se incluirNomeCompleto === 'custom', usar o valor de nomeQuemRetira que foi preenchido pelo usuário
 
     // Processar quantidade de chaves
     let tipoQuantidadeChaves = data.tipoQuantidadeChaves;

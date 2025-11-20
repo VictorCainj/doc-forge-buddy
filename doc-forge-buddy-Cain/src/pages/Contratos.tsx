@@ -50,8 +50,11 @@ import { applyContractConjunctions } from '@/features/contracts/utils/contractCo
 import { processTemplate } from '@/shared/template-processing';
 import { NOTIFICACAO_AGENDAMENTO_TEMPLATE } from '@/templates/documentos';
 import { ContractBillsSection } from '@/features/contracts/components/ContractBillsSection';
-import { ContractOccurrencesButton } from '@/features/contracts/components/ContractOccurrencesModal';
+import { ContractOccurrencesButtonImproved as ContractOccurrencesButton } from '@/features/contracts/components/ContractOccurrencesModalImproved';
 import { OptimizedSearch } from '@/components/ui/optimized-search';
+import { useAnonymizedData } from '@/hooks/useAnonymizedData';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeContractData } from '@/utils/privacyUtils';
 
 const CONTRACTS_PER_PAGE = 5;
 
@@ -166,6 +169,7 @@ const ContractList = ({
   hasMore?: boolean;
   onLoadMore?: () => void;
 }) => {
+  const { anonymize } = useAnonymizedData();
   if (isLoading) {
     return (
       <div className='space-y-4'>
@@ -214,6 +218,7 @@ const ContractList = ({
           contract.form_data?.numeroContrato ||
           contract.form_data?.numero_contrato ||
           '[NÚMERO NÃO DEFINIDO]';
+        // Dados serão anonimizados no componente se necessário
         const nomeLocador =
           contract.form_data?.nomeProprietario ||
           contract.form_data?.primeiroNomeProprietario ||
@@ -251,7 +256,7 @@ const ContractList = ({
                   Locador
                 </p>
                 <p className='text-sm font-semibold text-gray-900'>
-                  {nomeLocador}
+                  {anonymize.namesList(nomeLocador)}
                 </p>
               </div>
 
@@ -261,7 +266,7 @@ const ContractList = ({
                   Locatário
                 </p>
                 <p className='text-sm font-semibold text-gray-900'>
-                  {nomeLocatario}
+                  {anonymize.name(nomeLocatario)}
                 </p>
               </div>
 
@@ -270,7 +275,7 @@ const ContractList = ({
                 <p className='text-xs font-medium text-gray-500 uppercase tracking-wide mb-1'>
                   Endereço
                 </p>
-                <p className='text-sm text-gray-700'>{endereco}</p>
+                <p className='text-sm text-gray-700'>{anonymize.address(endereco)}</p>
               </div>
             </div>
 
@@ -326,67 +331,6 @@ const ContractList = ({
   );
 };
 
-// Component de estatísticas
-const ContractStats = ({ stats }: { stats: any }) => {
-  return (
-    <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-      <div className='bg-white border border-neutral-200 rounded-lg p-6'>
-        <div className='flex items-center'>
-          <div className='p-2 bg-blue-100 rounded-lg'>
-            <FileText className='h-6 w-6 text-blue-600' />
-          </div>
-          <div className='ml-4'>
-            <p className='text-sm font-medium text-gray-600'>
-              Total de Contratos
-            </p>
-            <p className='text-2xl font-bold text-gray-900'>
-              {stats?.total || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className='bg-white border border-neutral-200 rounded-lg p-6'>
-        <div className='flex items-center'>
-          <div className='p-2 bg-yellow-100 rounded-lg'>
-            <div className='h-6 w-6 bg-yellow-600 rounded'></div>
-          </div>
-          <div className='ml-4'>
-            <p className='text-sm font-medium text-gray-600'>Pendentes</p>
-            <p className='text-2xl font-bold text-gray-900'>
-              {stats?.pending || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className='bg-white border border-neutral-200 rounded-lg p-6'>
-        <div className='flex items-center'>
-          <div className='p-2 bg-green-100 rounded-lg'>
-            <div className='h-6 w-6 bg-green-600 rounded'></div>
-          </div>
-          <div className='ml-4'>
-            <p className='text-sm font-medium text-gray-600'>Concluídos</p>
-            <p className='text-2xl font-bold text-gray-900'>
-              {stats?.completed || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className='bg-white border border-neutral-200 rounded-lg p-6'>
-        <div className='flex items-center'>
-          <div className='p-2 bg-red-100 rounded-lg'>
-            <div className='h-6 w-6 bg-red-600 rounded'></div>
-          </div>
-          <div className='ml-4'>
-            <p className='text-sm font-medium text-gray-600'>Cancelados</p>
-            <p className='text-2xl font-bold text-gray-900'>
-              {stats?.cancelled || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 interface ContractFiltersProps {
   onSearch: (term: string) => void | Promise<void>;
@@ -503,6 +447,8 @@ const Contratos = () => {
   const navigate = useNavigate();
   const { showError, showCustom } = useStandardToast();
   const { profile, user } = useAuth();
+  const { anonymize } = useAnonymizedData();
+  const { isPrivacyModeActive } = usePrivacyMode();
 
   // Estado para exportação
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -932,30 +878,6 @@ const Contratos = () => {
     setFilters(prev => ({ ...prev, [key]: value }));
   const clearAllFilters = () => setFilters({});
 
-  // Calcular estatísticas
-  const stats = React.useMemo(
-    () => ({
-      total: contracts.length,
-      pending: contracts.filter(c => {
-        const status = c.form_data?.status || c.form_data?.statusContrato;
-        return status === 'pendente' || status === 'Pendente';
-      }).length,
-      completed: contracts.filter(c => {
-        const status = c.form_data?.status || c.form_data?.statusContrato;
-        return (
-          status === 'concluido' ||
-          status === 'Concluído' ||
-          status === 'concluído'
-        );
-      }).length,
-      cancelled: contracts.filter(c => {
-        const status = c.form_data?.status || c.form_data?.statusContrato;
-        return status === 'cancelado' || status === 'Cancelado';
-      }).length,
-    }),
-    [contracts]
-  );
-
   // Função para gerar documentos (usada pelo QuickActionsDropdown)
   const handleGenerateDocument = useCallback(
     async (contractId: string, template: string, title: string) => {
@@ -1056,9 +978,14 @@ const Contratos = () => {
       enhancedData.tipoVistoriaTextoMinusculo = tipoVistoriaTexto.toLowerCase();
       enhancedData.tipoVistoriaTextoMaiusculo = tipoVistoriaTexto.toUpperCase();
 
+      // Aplicar anonimização se necessário
+      const finalData = isPrivacyModeActive
+        ? anonymizeContractData(enhancedData)
+        : enhancedData;
+
       const processedTemplate = processTemplate(
         NOTIFICACAO_AGENDAMENTO_TEMPLATE,
-        enhancedData
+        finalData
       );
 
       const contractNumber =
@@ -1353,9 +1280,6 @@ const Contratos = () => {
 
           {/* Main Content */}
           <div className='max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6'>
-            {/* Estatísticas */}
-            <ContractStats stats={stats} />
-
             {/* Lista de Contratos */}
             <ContractList
               contracts={visibleContracts}

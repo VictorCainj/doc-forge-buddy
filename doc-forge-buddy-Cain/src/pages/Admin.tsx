@@ -4,6 +4,8 @@ import { AuditLogsViewer } from '@/components/admin/AuditLogsViewer';
 import { VistoriaAnalisesPanel } from '@/components/admin/VistoriaAnalisesPanel';
 import { CleanupDuplicatesPanel } from '@/components/admin/CleanupDuplicatesPanel';
 import { EvictionReasonsManagement } from '@/components/admin/EvictionReasonsManagement';
+import { OccurrenceTypesManagement } from '@/components/admin/OccurrenceTypesManagement';
+import { PrivacySettings } from '@/components/admin/PrivacySettings';
 import { ContractsManagement } from '@/components/admin/ContractsManagement';
 import {
   Users,
@@ -139,6 +141,30 @@ const Admin = () => {
         icon: 'text-success-600',
         bg: 'bg-success-50',
         border: 'border-success-200',
+      },
+    },
+    {
+      id: 'tipos-ocorrencia',
+      title: 'Tipos de Ocorrência',
+      description: 'Configure e gerencie os tipos de ocorrência disponíveis para contratos',
+      icon: FileText,
+      component: <OccurrenceTypesManagement />,
+      color: {
+        icon: 'text-blue-600',
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
+      },
+    },
+    {
+      id: 'privacidade',
+      title: 'Privacidade e Anonimização',
+      description: 'Configure a anonimização de dados pessoais para gravações e demonstrações',
+      icon: Shield,
+      component: <PrivacySettings />,
+      color: {
+        icon: 'text-purple-600',
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
       },
     },
     {

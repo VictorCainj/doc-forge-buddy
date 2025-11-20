@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import { splitNames, formatNamesList } from '@/utils/nameHelpers';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeContractData } from '@/utils/privacyUtils';
 
 interface ContractData {
   numeroContrato: string;
@@ -23,6 +25,8 @@ interface ContractData {
 }
 
 export function useTermoGeneration(contractData: ContractData) {
+  const { isPrivacyModeActive } = usePrivacyMode();
+  
   const getCurrentDate = useCallback(() => {
     const today = new Date();
     const day = today.getDate();
@@ -180,10 +184,15 @@ Foi entregue {{tipoQuantidadeChaves}}
 
       if (data.incluirNomeCompleto === 'todos') {
         nomeQuemRetira = contractData.nomeLocatario;
-      } else if (data.incluirNomeCompleto && data.incluirNomeCompleto !== '') {
+      } else if (
+        data.incluirNomeCompleto &&
+        data.incluirNomeCompleto !== '' &&
+        data.incluirNomeCompleto !== 'custom'
+      ) {
         // Se selecionou um locatário específico
         nomeQuemRetira = data.incluirNomeCompleto;
       }
+      // Se incluirNomeCompleto === 'custom', usar o valor de nomeQuemRetira que foi preenchido pelo usuário
 
       // Processar quantidade de chaves baseado na opção selecionada
       let tipoQuantidadeChaves = data.tipoQuantidadeChaves;
@@ -352,9 +361,14 @@ Foi entregue {{tipoQuantidadeChaves}}
         fiadores: JSON.stringify(fiadores),
       };
 
-      return enhancedData;
+      // Aplicar anonimização se necessário
+      const finalData = isPrivacyModeActive
+        ? anonymizeContractData(enhancedData)
+        : enhancedData;
+
+      return finalData;
     },
-    [contractData]
+    [contractData, isPrivacyModeActive]
   );
 
   return {

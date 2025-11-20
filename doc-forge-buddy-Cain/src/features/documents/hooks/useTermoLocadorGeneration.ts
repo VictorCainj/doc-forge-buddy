@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import { splitNames, formatNamesList } from '@/utils/nameHelpers';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeContractData } from '@/utils/privacyUtils';
 
 interface ContractData {
   numeroContrato: string;
@@ -23,6 +25,8 @@ interface ContractData {
 }
 
 export function useTermoLocadorGeneration(contractData: ContractData) {
+  const { isPrivacyModeActive } = usePrivacyMode();
+  
   const getCurrentDate = useCallback(() => {
     const today = new Date();
     const day = today.getDate();
@@ -233,9 +237,14 @@ Foi entregue {{tipoQuantidadeChaves}}
         textoEntregaChaves,
       };
 
-      return enhancedData;
+      // Aplicar anonimização se necessário
+      const finalData = isPrivacyModeActive
+        ? anonymizeContractData(enhancedData)
+        : enhancedData;
+
+      return finalData;
     },
-    [contractData]
+    [contractData, isPrivacyModeActive]
   );
 
   return {

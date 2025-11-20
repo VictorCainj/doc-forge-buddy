@@ -79,8 +79,53 @@ export const useTasks = () => {
       log.debug('Tarefa criada com sucesso:', data.id);
       return data as Task;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+    // Optimistic update: adiciona a tarefa imediatamente ao cache
+    onMutate: async (taskInput: CreateTaskInput) => {
+      if (!user?.id) return;
+
+      // Cancelar queries em andamento para evitar conflitos
+      await queryClient.cancelQueries({ queryKey: ['tasks', user.id] });
+
+      // Snapshot do estado anterior para rollback em caso de erro
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', user.id]);
+
+      // Criar tarefa temporária otimista
+      const optimisticTask: Task = {
+        id: `temp-${Date.now()}`, // ID temporário
+        user_id: user.id,
+        title: taskInput.title,
+        subtitle: taskInput.subtitle || '',
+        description: taskInput.description,
+        observacao: taskInput.observacao || '',
+        status: taskInput.status || 'not_started',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData<Task[]>(['tasks', user.id], (old = []) => [
+        optimisticTask,
+        ...old,
+      ]);
+
+      // Retornar contexto para rollback em caso de erro
+      return { previousTasks };
+    },
+    onError: (err, taskInput, context) => {
+      // Reverter para o estado anterior em caso de erro
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', user?.id], context.previousTasks);
+      }
+      log.error('Erro ao criar tarefa (rollback aplicado):', err);
+    },
+    onSuccess: (newTask) => {
+      // Atualizar cache com a tarefa real do servidor (substitui ID temporário)
+      queryClient.setQueryData<Task[]>(['tasks', user?.id], (old = []) => {
+        // Remover tarefa temporária e adicionar a real no início
+        const withoutTemp = old.filter((t) => !t.id.startsWith('temp-'));
+        return [newTask, ...withoutTemp];
+      });
+      log.debug('Tarefa criada e sincronizada:', newTask.id);
     },
   });
 
@@ -113,8 +158,42 @@ export const useTasks = () => {
       log.debug('Tarefa atualizada com sucesso:', id);
       return data as Task;
     },
+    // Optimistic update: atualiza a tarefa imediatamente no cache
+    onMutate: async ({ id, updates }) => {
+      if (!user?.id) return;
+
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['tasks', user.id] });
+
+      // Snapshot do estado anterior
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', user.id]);
+
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData<Task[]>(['tasks', user.id], (old = []) =>
+        old.map((task) =>
+          task.id === id
+            ? {
+                ...task,
+                ...updates,
+                updated_at: new Date().toISOString(),
+              }
+            : task
+        )
+      );
+
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      // Reverter para o estado anterior em caso de erro
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', user?.id], context.previousTasks);
+      }
+      log.error('Erro ao atualizar tarefa (rollback aplicado):', err);
+    },
     onSuccess: () => {
+      // Invalidar queries para sincronizar com o servidor
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+      log.debug('Tarefa atualizada e sincronizada');
     },
   });
 
@@ -139,8 +218,35 @@ export const useTasks = () => {
       log.debug('Tarefa excluída com sucesso:', id);
       return id;
     },
+    // Optimistic update: remove a tarefa imediatamente do cache
+    onMutate: async (id: string) => {
+      if (!user?.id) return;
+
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['tasks', user.id] });
+
+      // Snapshot do estado anterior
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', user.id]);
+      const taskToDelete = previousTasks?.find((t) => t.id === id);
+
+      // Remover do cache otimisticamente
+      queryClient.setQueryData<Task[]>(['tasks', user.id], (old = []) =>
+        old.filter((task) => task.id !== id)
+      );
+
+      return { previousTasks, taskToDelete };
+    },
+    onError: (err, id, context) => {
+      // Reverter para o estado anterior em caso de erro
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', user?.id], context.previousTasks);
+      }
+      log.error('Erro ao excluir tarefa (rollback aplicado):', err);
+    },
     onSuccess: () => {
+      // Invalidar queries para sincronizar com o servidor
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
+      log.debug('Tarefa excluída e sincronizada');
     },
   });
 
@@ -171,6 +277,9 @@ export const useTasks = () => {
       if (conclusion_text !== undefined) {
         updateData.conclusion_text = conclusion_text;
       }
+      if (status === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      }
 
       const { data, error } = await supabase
         .from('tasks')
@@ -193,9 +302,49 @@ export const useTasks = () => {
       log.debug(`Status da tarefa ${id} alterado para ${status}`);
       return data as Task;
     },
+    // Optimistic update: atualiza o status imediatamente no cache
+    onMutate: async ({ id, status, conclusion_text }) => {
+      if (!user?.id) return;
+
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['tasks', user.id] });
+
+      // Snapshot do estado anterior
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', user.id]);
+      const previousTask = previousTasks?.find((t) => t.id === id);
+
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData<Task[]>(['tasks', user.id], (old = []) =>
+        old.map((task) =>
+          task.id === id
+            ? {
+                ...task,
+                status,
+                conclusion_text: conclusion_text ?? task.conclusion_text,
+                completed_at:
+                  status === 'completed'
+                    ? new Date().toISOString()
+                    : task.completed_at,
+                updated_at: new Date().toISOString(),
+              }
+            : task
+        )
+      );
+
+      return { previousTasks, previousTask };
+    },
+    onError: (err, variables, context) => {
+      // Reverter para o estado anterior em caso de erro
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', user?.id], context.previousTasks);
+      }
+      log.error('Erro ao alterar status (rollback aplicado):', err);
+    },
     onSuccess: () => {
+      // Invalidar queries para sincronizar com o servidor
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['userLevel', user?.id] });
+      log.debug('Status alterado e sincronizado');
     },
   });
 

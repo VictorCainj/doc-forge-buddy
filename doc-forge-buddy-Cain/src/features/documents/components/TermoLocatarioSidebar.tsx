@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ContractBillsStatus } from '@/components/charts/ContractBillsStatus';
 import { FileText, User, User2, MapPin, Key } from '@/utils/iconMapper';
+import { useAnonymizedData } from '@/hooks/useAnonymizedData';
 
 interface ContractData {
   numeroContrato: string;
@@ -17,6 +18,8 @@ interface TermoLocatarioSidebarProps {
 }
 
 export const TermoLocatarioSidebar: React.FC<TermoLocatarioSidebarProps> = ({ contractData }) => {
+  const { anonymize } = useAnonymizedData();
+  
   return (
     <div className="space-y-6">
       {/* Status das Contas de Consumo */}
@@ -95,7 +98,7 @@ export const TermoLocatarioSidebar: React.FC<TermoLocatarioSidebarProps> = ({ co
                     Proprietário
                   </p>
                   <p className="text-sm font-semibold text-gray-600 truncate leading-tight">
-                    {contractData.nomeProprietario}
+                    {anonymize.namesList(contractData.nomeProprietario)}
                   </p>
                 </div>
               </div>
@@ -124,7 +127,7 @@ export const TermoLocatarioSidebar: React.FC<TermoLocatarioSidebarProps> = ({ co
                     Locatário
                   </p>
                   <p className="text-sm font-semibold text-gray-600 truncate leading-tight">
-                    {contractData.nomeLocatario}
+                    {anonymize.name(contractData.nomeLocatario)}
                   </p>
                 </div>
               </div>
@@ -161,7 +164,7 @@ export const TermoLocatarioSidebar: React.FC<TermoLocatarioSidebarProps> = ({ co
                   Endereço
                 </p>
                 <p className="text-sm font-medium text-gray-600 line-clamp-2 leading-relaxed">
-                  {contractData.enderecoImovel}
+                  {anonymize.address(contractData.enderecoImovel)}
                 </p>
               </div>
             </div>

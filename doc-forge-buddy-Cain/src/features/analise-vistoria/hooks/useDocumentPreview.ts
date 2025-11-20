@@ -3,6 +3,8 @@ import { ANALISE_VISTORIA_TEMPLATE } from '@/templates/analiseVistoria';
 import { log } from '@/utils/logger';
 import { useAnaliseVistoriaContext } from '../context/AnaliseVistoriaContext';
 import { usePrestadores } from '@/hooks/usePrestadores';
+import { usePrivacyMode } from '@/hooks/usePrivacyMode';
+import { anonymizeName, anonymizeAddress } from '@/utils/privacyUtils';
 
 export const useDocumentPreview = () => {
   const {
@@ -13,6 +15,7 @@ export const useDocumentPreview = () => {
     setDocumentPreview,
   } = useAnaliseVistoriaContext();
   const { prestadores } = usePrestadores();
+  const { isPrivacyModeActive } = usePrivacyMode();
 
   const updateDocumentPreview = useCallback(async () => {
     if (apontamentos.length === 0) {
@@ -69,10 +72,18 @@ export const useDocumentPreview = () => {
         };
       });
 
+      // Aplicar anonimização se necessário
+      const locatarioProcessado = isPrivacyModeActive
+        ? anonymizeName(dadosVistoria.locatario)
+        : dadosVistoria.locatario;
+      const enderecoProcessado = isPrivacyModeActive
+        ? anonymizeAddress(dadosVistoria.endereco)
+        : dadosVistoria.endereco;
+
       // Gerar template do documento
       const template = await ANALISE_VISTORIA_TEMPLATE({
-        locatario: dadosVistoria.locatario,
-        endereco: dadosVistoria.endereco,
+        locatario: locatarioProcessado,
+        endereco: enderecoProcessado,
         dataVistoria: dadosVistoria.dataVistoria,
         documentMode,
         prestador:
@@ -94,6 +105,7 @@ export const useDocumentPreview = () => {
     selectedPrestadorId,
     prestadores,
     setDocumentPreview,
+    isPrivacyModeActive,
   ]);
 
   // Atualizar pré-visualização do documento em tempo real
