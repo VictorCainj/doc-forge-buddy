@@ -19,7 +19,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          pdf: ['pdfmake', 'html2pdf.js', 'jspdf', 'pdfjs-dist'],
+          excel: ['exceljs'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-slot', 'lucide-react'],
         },
       },
     },

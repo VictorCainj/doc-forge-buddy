@@ -1,5 +1,3 @@
-import type { Preview } from '@storybook/react';
-import type { StorybookConfig } from '@storybook/react-vite';
 import type { Decorator } from '@storybook/react';
 
 declare module '@storybook/react' {

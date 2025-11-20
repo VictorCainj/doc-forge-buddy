@@ -4,8 +4,6 @@ import { createTestHelpers } from '../utils/test-helpers';
 
 test.describe('Documentos E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    const helpers = createTestHelpers(page);
-    
     // Login antes de cada teste
     await testDataManager.loginAsValidUser(page);
   });

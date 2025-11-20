@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 
@@ -54,7 +54,7 @@ export async function GET() {
 
         securityData.vulnerabilities = vulnerabilities;
       }
-    } catch (error) {
+    } catch (_) {
       console.log('NPM audit not available or no vulnerabilities found');
     }
 
@@ -72,7 +72,7 @@ export async function GET() {
 
       securityData.metrics.outdatedPackages = outdatedPackages.length;
       securityData.outdated = outdatedPackages;
-    } catch (error) {
+    } catch (_) {
       console.log('No outdated packages found');
     }
 
@@ -126,7 +126,7 @@ export async function POST() {
       
       // Limpar arquivo temporário
       execSync(`rm -f ${reportPath}`);
-    } catch (scanError) {
+    } catch (_) {
       console.log('Custom scanner not available, using fallback');
     }
 
