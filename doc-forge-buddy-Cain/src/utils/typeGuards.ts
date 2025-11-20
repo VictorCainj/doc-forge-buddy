@@ -1,5 +1,5 @@
 import { VistoriaAnaliseWithImages, ApontamentoVistoria, DadosVistoria } from '@/types/vistoria';
-import { Prestador } from '@/hooks/usePrestadores';
+import { Prestador } from '@/types/business';
 
 /**
  * Type guard para validar VistoriaAnaliseWithImages

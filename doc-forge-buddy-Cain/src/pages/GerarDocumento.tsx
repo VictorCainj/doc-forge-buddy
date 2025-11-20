@@ -42,14 +42,16 @@ const GerarDocumento = () => {
   const hasSecondaryTemplate =
     secondaryTemplate && secondaryTemplate.trim() !== '';
   const rawInvitationHtml =
-    typeof invitationMessageHtml === 'string' && invitationMessageHtml.trim().length > 0
+    typeof invitationMessageHtml === 'string' &&
+    invitationMessageHtml.trim().length > 0
       ? invitationMessageHtml.trim()
       : '';
   const invitationMessageText =
     typeof invitationMessage === 'string' ? invitationMessage.trim() : '';
   const hasInvitationMessage =
     rawInvitationHtml !== '' || invitationMessageText !== '';
-  const invitationHtml = rawInvitationHtml || invitationMessageText.replace(/\n/g, '<br />');
+  const invitationHtml =
+    rawInvitationHtml || invitationMessageText.replace(/\n/g, '<br />');
 
   const secondaryBlockForCopy = hasSecondaryTemplate ? secondaryTemplate : '';
 
@@ -57,7 +59,7 @@ const GerarDocumento = () => {
     documentType === 'Convite para Acompanhamento'
       ? invitationMessageText || invitationHtml || template
       : [template, secondaryBlockForCopy]
-          .filter((section) => section && section.trim().length > 0)
+          .filter(section => section && section.trim().length > 0)
           .join('\n\n');
 
   // Função para gerar título baseado no tipo de documento
@@ -132,6 +134,7 @@ const GerarDocumento = () => {
       await navigator.clipboard.writeText(textToCopy);
       toast.success('Conteúdo copiado!');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Erro ao copiar conteúdo renderizado:', error);
       toast.error('Erro ao copiar. Tente novamente.');
     }
@@ -265,14 +268,14 @@ const GerarDocumento = () => {
   const isWhatsAppMessage = documentType?.includes('WhatsApp');
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className='min-h-screen bg-neutral-50'>
       {/* Header Minimalista */}
-      <div className="bg-white border-b border-neutral-200 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className='bg-white border-b border-neutral-200 shadow-sm'>
+        <div className='max-w-[1400px] mx-auto px-8 py-6'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center space-x-4'>
               <Button
-                variant="ghost"
+                variant='ghost'
                 onClick={() => {
                   // Se for análise de vistoria, voltar para a página de análise com ID do contrato
                   if (documentType === 'Análise de Vistoria' && contractId) {
@@ -287,21 +290,21 @@ const GerarDocumento = () => {
                     navigate('/contratos');
                   }
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 border border-transparent transition-all duration-200"
+                className='inline-flex items-center gap-2 px-4 py-2 rounded-lg text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 border border-transparent transition-all duration-200'
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className='h-4 w-4' />
                 Voltar
               </Button>
-              <div className="h-6 w-px bg-neutral-300" />
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <FileText className="h-6 w-6 text-white" />
+              <div className='h-6 w-px bg-neutral-300' />
+              <div className='flex items-center gap-3'>
+                <div className='w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20'>
+                  <FileText className='h-6 w-6 text-white' />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight mb-0.5">
+                  <h1 className='text-2xl font-semibold text-neutral-900 tracking-tight mb-0.5'>
                     {getDocumentTitle()}
                   </h1>
-                  <p className="text-sm text-neutral-600">
+                  <p className='text-sm text-neutral-600'>
                     {isWhatsAppMessage
                       ? 'Mensagem para WhatsApp'
                       : 'Visualização do documento gerado'}
@@ -310,7 +313,7 @@ const GerarDocumento = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className='flex items-center gap-2'>
               {documentType === 'Análise de Vistoria' && (
                 <Button
                   onClick={() => {
@@ -325,61 +328,61 @@ const GerarDocumento = () => {
                       });
                     }
                   }}
-                  variant="outline"
-                  size="sm"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
-                  title="Continuar editando a análise"
+                  variant='outline'
+                  size='sm'
+                  className='inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200'
+                  title='Continuar editando a análise'
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className='h-4 w-4' />
                   Continuar Editando
                 </Button>
               )}
               <Button
                 onClick={handleDecreaseFont}
-                variant="ghost"
-                size="sm"
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200"
-                title="Diminuir tamanho da fonte"
+                variant='ghost'
+                size='sm'
+                className='inline-flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200'
+                title='Diminuir tamanho da fonte'
               >
-                <Minimize2 className="h-4 w-4" />
+                <Minimize2 className='h-4 w-4' />
               </Button>
               <Button
                 onClick={handleIncreaseFont}
-                variant="ghost"
-                size="sm"
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200"
-                title="Aumentar tamanho da fonte"
+                variant='ghost'
+                size='sm'
+                className='inline-flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200'
+                title='Aumentar tamanho da fonte'
               >
-                <Maximize2 className="h-4 w-4" />
+                <Maximize2 className='h-4 w-4' />
               </Button>
               {documentType === 'Convite para Acompanhamento' ? (
                 <Button
                   onClick={() => handleCopyRenderedContent('document-content')}
-                  size="sm"
-                  variant="outline"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                  size='sm'
+                  variant='outline'
+                  className='inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200'
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className='h-4 w-4' />
                   Copiar
                 </Button>
               ) : (
                 <CopyButton
                   content={combinedDocumentContent}
-                  size="sm"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                  size='sm'
+                  className='inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200'
                 />
               )}
               <Button
                 onClick={handlePrint}
-                variant="primary"
-                size="sm"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50"
+                variant='primary'
+                size='sm'
+                className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50'
                 disabled={isPrinting}
               >
                 {isPrinting ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className='h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
                 ) : (
-                  <Printer className="h-4 w-4" />
+                  <Printer className='h-4 w-4' />
                 )}
                 {isPrinting ? 'Preparando...' : 'Imprimir'}
               </Button>
@@ -389,10 +392,10 @@ const GerarDocumento = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-8 py-6 space-y-6">
+      <div className='max-w-[1400px] mx-auto px-8 py-6 space-y-6'>
         {/* Document Preview - Primeiro Documento */}
-        <Card className="shadow-sm">
-          <CardContent className="p-0">
+        <Card className='shadow-sm'>
+          <CardContent className='p-0'>
             <div
               className={`p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto ${
                 isWhatsAppMessage
@@ -400,7 +403,7 @@ const GerarDocumento = () => {
                   : 'bg-white'
               }`}
               style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
-              id="document-content"
+              id='document-content'
             >
               <div
                 dangerouslySetInnerHTML={{ __html: template }}
@@ -411,62 +414,68 @@ const GerarDocumento = () => {
         </Card>
 
         {/* Convite para Acompanhamento */}
-        {hasInvitationMessage && documentType !== 'Convite para Acompanhamento' && (
-          <Card className="shadow-sm">
-            <CardContent className="p-0">
-              <div
-                className="p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto"
-                style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
-                id="invitation-content-rendered"
-              >
-                <div dangerouslySetInnerHTML={{ __html: invitationHtml }} />
+        {hasInvitationMessage &&
+          documentType !== 'Convite para Acompanhamento' && (
+            <Card className='shadow-sm'>
+              <CardContent className='p-0'>
+                <div
+                  className='p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto'
+                  style={{
+                    fontSize: `${fontSize}px`,
+                    backgroundColor: 'white',
+                  }}
+                  id='invitation-content-rendered'
+                >
+                  <div dangerouslySetInnerHTML={{ __html: invitationHtml }} />
+                </div>
+              </CardContent>
+              <div className='bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex items-center justify-between'>
+                <p className='text-sm text-neutral-600'>
+                  Copie este convite para envio por e-mail.
+                </p>
+                <Button
+                  onClick={() =>
+                    handleCopyRenderedContent('invitation-content-rendered')
+                  }
+                  size='sm'
+                  variant='outline'
+                  className='inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200'
+                >
+                  <Copy className='h-4 w-4' />
+                  Copiar
+                </Button>
               </div>
-            </CardContent>
-            <div className="bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex items-center justify-between">
-              <p className="text-sm text-neutral-600">
-                Copie este convite para envio por e-mail.
-              </p>
-              <Button
-                onClick={() => handleCopyRenderedContent('invitation-content-rendered')}
-                size="sm"
-                variant="outline"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
-              >
-                <Copy className="h-4 w-4" />
-                Copiar
-              </Button>
-            </div>
-          </Card>
-        )}
+            </Card>
+          )}
 
         {/* Segundo Documento - E-mail de Convite (apenas para Vistoria Final) */}
         {hasSecondaryTemplate && (
-          <Card className="shadow-sm">
-            <div className="bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md shadow-green-500/20">
-                  <FileText className="h-5 w-5 text-white" />
+          <Card className='shadow-sm'>
+            <div className='bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between'>
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md shadow-green-500/20'>
+                  <FileText className='h-5 w-5 text-white' />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-neutral-900 tracking-tight">
+                  <h2 className='text-lg font-semibold text-neutral-900 tracking-tight'>
                     Assunto do E-mail: Convite para Acompanhamento da Vistoria
                     de Saída - Contrato N°{' '}
                     {formData?.numeroContrato || '[Número]'}
                   </h2>
-                  <p className="text-xs text-neutral-600">Documento separado</p>
+                  <p className='text-xs text-neutral-600'>Documento separado</p>
                 </div>
               </div>
               <CopyButton
                 content={secondaryTemplate}
-                size="sm"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200"
+                size='sm'
+                className='inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200'
               />
             </div>
-            <CardContent className="p-0">
+            <CardContent className='p-0'>
               <div
-                className="p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto bg-white"
+                className='p-8 rounded-lg max-h-[calc(100vh-200px)] overflow-auto bg-white'
                 style={{ fontSize: `${fontSize}px`, backgroundColor: 'white' }}
-                id="secondary-document-content"
+                id='secondary-document-content'
               >
                 <div
                   dangerouslySetInnerHTML={{ __html: secondaryTemplate }}

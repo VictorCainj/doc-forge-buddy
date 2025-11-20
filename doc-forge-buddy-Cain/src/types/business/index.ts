@@ -10,3 +10,4 @@ export * from './orcamento';
 export * from './sentimentAnalysis';
 export * from './vistoria.extended';
 export * from './vistoria';
+export * from './prestador';

@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import PageLoader from '@/components/common/PageLoader';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-import { useLocation } from 'react-router-dom';
 
 // Lazy load da feature completa de Vistoria
 // Isso remove todo o código da vistoria do bundle principal
@@ -20,8 +19,6 @@ const AnaliseVistoriaRefatorado = lazy(() =>
  * 4. Gestão de Título da Página
  */
 const AnaliseVistoria: React.FC = () => {
-  const location = useLocation();
-
   // Atualiza o título da página para melhor UX
   useEffect(() => {
     document.title = 'Análise de Vistoria | Doc Forge Buddy';

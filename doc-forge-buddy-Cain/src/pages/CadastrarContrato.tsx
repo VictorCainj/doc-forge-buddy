@@ -16,6 +16,7 @@ import { NotificationAutoCreator } from '@/features/notifications/utils/notifica
 import { useEvictionReasons } from '@/hooks/useEvictionReasons';
 import { splitNames } from '@/utils/nameHelpers';
 import type { ContractFormData } from '@/types/shared/contract';
+import type { EvictionReason } from '@/types';
 
 const CadastrarContrato = () => {
   // Buscar motivos de desocupação ativos
@@ -62,7 +63,7 @@ const CadastrarContrato = () => {
   }, [location.state]);
 
   // Converter motivos para formato de options
-  const motivoOptions = reasons.map((reason) => ({
+  const motivoOptions = reasons.map((reason: EvictionReason) => ({
     value: reason.description,
     label: reason.description,
   }));
@@ -306,7 +307,7 @@ const CadastrarContrato = () => {
   // Estado do modal
   const [isModalOpen, setIsModalOpen] = useState(true);
 
-  const handleSubmit = async (data: Record<string, string>): Promise<void> => {
+  const handleSubmit = async (data: Record<string, any>): Promise<void> => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
@@ -320,7 +321,9 @@ const CadastrarContrato = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      const previousFormData = isEditMode ? (formData as Partial<ContractFormData>) : null;
+      const previousFormData = isEditMode
+        ? (formData as Partial<ContractFormData>)
+        : null;
       const previousVersion = Number(previousFormData?.versao ?? 0);
       const nextVersion = isEditMode
         ? Number.isFinite(previousVersion) && previousVersion > 0
@@ -338,9 +341,7 @@ const CadastrarContrato = () => {
       };
 
       const updatedAtIso = new Date().toISOString();
-      const title = `Contrato ${
-        data.numeroContrato || '[NÚMERO]'
-      } - ${
+      const title = `Contrato ${data.numeroContrato || '[NÚMERO]'} - ${
         splitNames(data.nomeProprietario || '')[0]?.trim() || '[LOCADOR]'
       } - ${splitNames(data.nomeLocatario || '')[0]?.trim() || '[LOCATÁRIO]'}`;
 
@@ -372,8 +373,6 @@ const CadastrarContrato = () => {
           .single();
 
         if (error) {
-          console.error('Erro ao inserir contrato:', error);
-          console.error('Dados enviados:', enhancedData);
           throw error;
         }
 
@@ -390,11 +389,18 @@ const CadastrarContrato = () => {
       setFormData(enhancedData);
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line no-console
       console.error('Erro completo ao cadastrar contrato:', error);
-      const errorMessage = error?.message || error?.error?.message || 'Erro desconhecido ao cadastrar contrato';
+      const err = error as any;
+      const errorMessage =
+        err?.message ||
+        err?.error?.message ||
+        'Erro desconhecido ao cadastrar contrato';
       toast.error(
-        isEditMode ? `Erro ao atualizar contrato: ${errorMessage}` : `Erro ao cadastrar contrato: ${errorMessage}`
+        isEditMode
+          ? `Erro ao atualizar contrato: ${errorMessage}`
+          : `Erro ao cadastrar contrato: ${errorMessage}`
       );
     } finally {
       setIsSubmitting(false);
@@ -410,7 +416,7 @@ const CadastrarContrato = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className='min-h-screen bg-neutral-50'>
       {/* Modal Wizard Google Material Design 3 */}
       <ContractWizardModal
         open={isModalOpen}

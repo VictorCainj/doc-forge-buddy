@@ -118,6 +118,7 @@ const useContracts = () => {
     : null;
 
   if (typedError) {
+    // eslint-disable-next-line no-console
     console.error('Erro ao buscar contratos:', typedError);
   }
 
@@ -864,6 +865,7 @@ const Contratos = () => {
           },
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Erro ao gerar convite:', error);
         showError('Erro ao gerar documento. Tente novamente.');
       }
@@ -918,6 +920,7 @@ const Contratos = () => {
           },
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Erro ao gerar documento:', error);
         showError('Erro ao gerar documento. Tente novamente.');
       }
@@ -1008,6 +1011,7 @@ const Contratos = () => {
 
       handleCloseScheduleModal();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Erro ao gerar agendamento:', error);
       showError('Erro ao gerar documento. Tente novamente.');
     } finally {
@@ -1089,6 +1093,7 @@ const Contratos = () => {
         });
         exportSucceeded = true;
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Erro ao exportar contratos:', error);
         showError('load', {
           title: 'Erro na exportação',

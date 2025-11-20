@@ -69,13 +69,22 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
         );
       });
 
+      // Obter usuário atual
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       // Salvar no banco de dados
-      const { error } = await supabase.from('contracts').insert({
-        contract_id: contractData.id,
+      const { error } = await supabase.from('saved_terms').insert({
+        title: `Termo de Recusa - ${contractData.numeroContrato || 'Sem Número'}`,
         document_type: 'Termo de Recusa de Assinatura - E-mail',
         content: processedTemplate,
         form_data: enhancedData,
-        created_at: new Date().toISOString(),
+        user_id: user.id,
       });
 
       if (error) {
@@ -95,8 +104,9 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
       });
 
       toast.success('Documento gerado com sucesso!');
-    } catch {
-      // console.error('Erro ao gerar documento:', error);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Erro ao gerar documento:', error);
       toast.error('Erro ao gerar o documento');
     } finally {
       setIsGenerating(false);
@@ -104,34 +114,34 @@ const TermoRecusaAssinaturaEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800 relative overflow-hidden">
+    <div className='min-h-screen bg-gradient-to-br from-neutral-900 via-primary-900 to-neutral-800 relative overflow-hidden'>
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12"></div>
-        <div className="absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45"></div>
-        <div className="absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45"></div>
+      <div className='absolute inset-0 opacity-5'>
+        <div className='absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-lg rotate-12'></div>
+        <div className='absolute top-40 right-32 w-24 h-24 border border-white/15 rounded-lg -rotate-12'></div>
+        <div className='absolute bottom-32 left-32 w-28 h-28 border border-white/10 rounded-lg rotate-45'></div>
+        <div className='absolute bottom-20 right-20 w-20 h-20 border border-white/25 rounded-lg -rotate-45'></div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6 relative z-10">
+      <div className='p-6 relative z-10'>
         {/* Back Button */}
-        <div className="mb-6">
+        <div className='mb-6'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={() => navigate('/contratos')}
-            className="gap-2"
+            className='gap-2'
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className='h-4 w-4' />
             Voltar
           </Button>
         </div>
-        <div className="max-w-6xl mx-auto">
-          <Card className="bg-white border border-neutral-200 shadow-sm">
-            <CardContent className="p-0">
+        <div className='max-w-6xl mx-auto'>
+          <Card className='bg-white border border-neutral-200 shadow-sm'>
+            <CardContent className='p-0'>
               <DocumentForm
-                title="Termo de Recusa de Assinatura - E-mail"
-                description="Gere o termo de recusa de assinatura por e-mail com os dados da vistoria"
+                title='Termo de Recusa de Assinatura - E-mail'
+                description='Gere o termo de recusa de assinatura por e-mail com os dados da vistoria'
                 fields={fields}
                 template={TERMO_RECUSA_ASSINATURA_EMAIL_TEMPLATE}
                 onGenerate={handleGenerate}

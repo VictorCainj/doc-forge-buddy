@@ -6,29 +6,7 @@ import { toast } from 'sonner';
 import { isValidPrestadorArray, isValidPrestador } from '@/utils/typeGuards';
 import { log } from '@/utils/logger';
 
-export interface Prestador {
-  id: string;
-  user_id: string | null;
-  nome: string;
-  cnpj: string | null;
-  telefone: string | null;
-  email: string | null;
-  endereco: string | null;
-  especialidade: string | null;
-  observacoes: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-export interface CreatePrestadorData {
-  nome: string;
-  cnpj?: string;
-  telefone?: string;
-  email?: string;
-  endereco?: string;
-  especialidade?: string;
-  observacoes?: string;
-}
+import { Prestador, CreatePrestadorData } from '@/types/business';
 
 export const usePrestadores = () => {
   const { user } = useAuth();

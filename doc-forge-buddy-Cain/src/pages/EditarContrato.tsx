@@ -380,6 +380,7 @@ const EditarContrato = () => {
           data.numeroContrato || 'N/A'
         );
       } catch (notificationError) {
+        // eslint-disable-next-line no-console
         console.warn('Erro ao criar notificação (não crítico):', notificationError);
       }
 
@@ -388,6 +389,7 @@ const EditarContrato = () => {
       setIsModalOpen(false);
       setTimeout(() => navigate('/contratos'), 300);
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Erro ao atualizar contrato:', error);
       const errorMessage = error?.message || error?.error?.message || 'Erro desconhecido ao atualizar contrato';
       toast.error(`Erro ao atualizar contrato: ${errorMessage}`);

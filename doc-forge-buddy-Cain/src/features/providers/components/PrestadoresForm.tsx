@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Prestador } from '@/types/business';
+import { CreatePrestadorData } from '@/types/business';
 
 interface PrestadoresFormProps {
-  onSubmit: (prestador: Omit<Prestador, 'id'>) => void;
+  onSubmit: (data: CreatePrestadorData) => void | Promise<any>;
 }
 
 export const PrestadoresForm: React.FC<PrestadoresFormProps> = ({ onSubmit }) => {

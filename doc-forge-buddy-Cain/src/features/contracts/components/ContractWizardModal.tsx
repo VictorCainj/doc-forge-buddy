@@ -34,8 +34,8 @@ interface ContractWizardModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   steps: FormStep[];
-  initialData?: Record<string, string>;
-  onSubmit: (data: Record<string, string>) => Promise<void>;
+  initialData?: Record<string, any>;
+  onSubmit: (data: Record<string, any>) => Promise<void>;
   isSubmitting?: boolean;
   submitButtonText?: string;
   title?: string;

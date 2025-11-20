@@ -208,7 +208,8 @@ All colors MUST be HSL.
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* GPU acceleration para elementos animados */
+  /* GPU acceleration para elementos animados - REMOVIDO para evitar blur em textos */
+  /*
   button,
   [role='button'],
   .transition-all,
@@ -217,6 +218,7 @@ All colors MUST be HSL.
     backface-visibility: hidden;
     will-change: transform;
   }
+  */
 
   /* Tipografia Google */
   body {
@@ -228,7 +230,8 @@ All colors MUST be HSL.
   }
 
   /* Remove blur de animações após conclusão - força nitidez máxima */
-  /* Otimizado: removido * global para melhor performance */
+  /* Otimizado: removido regras globais agressivas que causam blur */
+  /*
   button,
   [role='button'],
   .transition-all,
@@ -237,6 +240,7 @@ All colors MUST be HSL.
     transform: translateZ(0);
     backface-visibility: hidden;
   }
+  */
 
   /* Garante que after de animações não cause blur */
   .motion-complete,
@@ -287,8 +291,8 @@ All colors MUST be HSL.
   .backdrop-blur-sm,
   .backdrop-blur,
   .glass-card {
-    will-change: filter;
-    transform: translateZ(0);
+    /* will-change: filter; - Removido para evitar blur */
+    /* transform: translateZ(0); - Removido para evitar blur */
   }
 
   /* Otimização de métricas cards - transições mais rápidas */

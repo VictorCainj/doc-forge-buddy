@@ -1,9 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PremiumButton } from '@/components/ui/premium-button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +15,9 @@ import {
 import {
   Plus,
   Loader2,
-  Wand2,
-  Search,
   ClipboardList,
-  CheckCircle2,
-  Clock,
   AlertCircle,
+  Flame,
   X,
 } from '@/utils/iconMapper';
 import { TaskBlock } from '@/components/TaskBlock';
@@ -35,6 +30,9 @@ import { UserStatsCard } from '@/components/UserStatsCard';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/components/ui/use-toast';
 import { Task, CreateTaskInput, TaskStatus } from '@/types/domain/task';
+import { TaskToolbar } from '@/components/tasks/TaskToolbar';
+import { TaskListView } from '@/components/tasks/TaskListView';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Tarefas = () => {
   const { toast } = useToast();
@@ -59,70 +57,91 @@ const Tarefas = () => {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  
+  // New State for Toolbar and Views
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | 'urgent' | null>(null);
 
-  // Filtrar tarefas por busca
+  // Filtrar e Ordenar Tarefas
   const filteredTasks = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return tasks;
-    }
+    let result = tasks;
 
-    const query = searchQuery.toLowerCase();
-    return tasks.filter(task => {
-      return (
+    // Search Filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(task =>
         task.title.toLowerCase().includes(query) ||
         task.subtitle?.toLowerCase().includes(query) ||
         task.description.toLowerCase().includes(query) ||
         task.observacao?.toLowerCase().includes(query)
       );
-    });
-  }, [tasks, searchQuery]);
+    }
 
-  // Obter a primeira tarefa em andamento para a seção destacada (mais recente)
+    // Status Filter
+    if (statusFilter !== 'all') {
+      result = result.filter(task => task.status === statusFilter);
+    }
+
+    // Sort Logic
+    return result.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else if (sortBy === 'urgent') {
+        const isAUrgent = a.observacao?.includes('[URGENTE]') ? 1 : 0;
+        const isBUrgent = b.observacao?.includes('[URGENTE]') ? 1 : 0;
+        if (isAUrgent !== isBUrgent) return isBUrgent - isAUrgent;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      return 0;
+    });
+  }, [tasks, searchQuery, statusFilter, sortBy]);
+
+  // Identificar tarefa urgente (marcada com [URGENTE] na observação)
+  const urgentTask = useMemo(() => {
+    return tasks.find(t => t.observacao?.includes('[URGENTE]')) || null;
+  }, [tasks]);
+
+  // Obter a primeira tarefa em andamento para a seção destacada (mais recente), excluindo a urgente
   const highlightedTask = useMemo(() => {
-    const inProgressTasks = filteredTasks
-      .filter(t => t.status === 'in_progress')
+    const inProgressTasks = tasks // Use tasks instead of filteredTasks for global highlight logic
+      .filter(t => t.status === 'in_progress' && t.id !== urgentTask?.id)
       .sort(
         (a, b) =>
           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
     return inProgressTasks[0] || null;
-  }, [filteredTasks]);
+  }, [tasks, urgentTask]);
 
-  // Agrupar tarefas por status (excluindo a tarefa destacada)
+  // Agrupar tarefas por status (excluindo a tarefa destacada e a urgente para o Board)
   const tasksByStatus = useMemo(() => {
+    // In board view, we might want to hide highlighted/urgent from the columns if they are shown above
+    // But for List view we show everything filtered.
+    // Let's keep the board logic consistent with previous behavior
     const highlightedTaskId = highlightedTask?.id;
-    return {
-      not_started: filteredTasks.filter(t => t.status === 'not_started'),
-      in_progress: filteredTasks.filter(
-        t => t.status === 'in_progress' && t.id !== highlightedTaskId
-      ),
-      completed: filteredTasks.filter(t => t.status === 'completed'),
-    };
-  }, [filteredTasks, highlightedTask]);
+    const urgentTaskId = urgentTask?.id;
+    const excludedIds = [highlightedTaskId, urgentTaskId].filter(Boolean);
 
-  // Contar tarefas por status
-  const taskCounts = useMemo(() => {
+    // Apply search filter to board columns too
     return {
-      all: tasks.length,
-      not_started: tasks.filter(t => t.status === 'not_started').length,
-      in_progress: tasks.filter(t => t.status === 'in_progress').length,
-      completed: tasks.filter(t => t.status === 'completed').length,
+      not_started: filteredTasks.filter(t => t.status === 'not_started' && !excludedIds.includes(t.id)),
+      in_progress: filteredTasks.filter(
+        t => t.status === 'in_progress' && !excludedIds.includes(t.id)
+      ),
+      completed: filteredTasks.filter(t => t.status === 'completed' && !excludedIds.includes(t.id)),
     };
-  }, [tasks]);
+  }, [filteredTasks, highlightedTask, urgentTask]);
 
   const handleCreateTask = async (taskData: CreateTaskInput) => {
     try {
-      // A tarefa já aparece instantaneamente devido ao optimistic update
-      // Fechar o modal imediatamente para melhor UX
       setIsTaskModalOpen(false);
-
-      // Enviar para o servidor em background
       await createTask(taskData);
-
-      // Toast de sucesso discreto (a tarefa já está visível)
       toast({
         title: 'Tarefa criada',
         description: 'A tarefa foi salva com sucesso.',
@@ -130,12 +149,10 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao criar tarefa:', error);
-      // Reabrir o modal em caso de erro para o usuário tentar novamente
       setIsTaskModalOpen(true);
       toast({
         title: 'Erro ao sincronizar tarefa',
-        description:
-          'A tarefa foi criada localmente, mas não foi salva no servidor. Tente novamente.',
+        description: 'A tarefa foi criada localmente, mas não foi salva no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -146,15 +163,9 @@ const Tarefas = () => {
     if (!editingTask) return;
 
     try {
-      // As alterações já aparecem instantaneamente devido ao optimistic update
-      // Fechar o modal imediatamente para melhor UX
       setIsTaskModalOpen(false);
       setEditingTask(null);
-
-      // Enviar para o servidor em background
       await updateTask({ id: editingTask.id, updates: taskData });
-
-      // Toast de sucesso discreto (as alterações já estão visíveis)
       toast({
         title: 'Tarefa atualizada',
         description: 'As alterações foram salvas com sucesso.',
@@ -162,12 +173,10 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
-      // Reabrir o modal em caso de erro para o usuário tentar novamente
       setIsTaskModalOpen(true);
       toast({
         title: 'Erro ao sincronizar alterações',
-        description:
-          'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
+        description: 'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -182,17 +191,12 @@ const Tarefas = () => {
   const confirmDeleteTask = async () => {
     if (!taskToDelete) return;
 
-    // Fechar o diálogo imediatamente (a tarefa já foi removida visualmente)
     setDeleteDialogOpen(false);
     const deletedTaskId = taskToDelete;
     setTaskToDelete(null);
 
     try {
-      // A tarefa já foi removida visualmente devido ao optimistic update
-      // Enviar para o servidor em background
       await deleteTask(deletedTaskId);
-
-      // Toast de sucesso discreto
       toast({
         title: 'Tarefa excluída',
         description: 'A tarefa foi removida com sucesso.',
@@ -200,11 +204,9 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
-      // A tarefa será restaurada automaticamente pelo rollback do optimistic update
       toast({
         title: 'Erro ao sincronizar exclusão',
-        description:
-          'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
+        description: 'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -213,11 +215,7 @@ const Tarefas = () => {
 
   const handleChangeStatus = async (taskId: string, status: TaskStatus) => {
     try {
-      // O status já foi alterado visualmente devido ao optimistic update
-      // Enviar para o servidor em background
       await changeStatus({ id: taskId, status });
-
-      // Toast de sucesso discreto apenas para mudanças importantes
       if (status === 'completed') {
         toast({
           title: 'Tarefa concluída',
@@ -227,11 +225,9 @@ const Tarefas = () => {
       }
     } catch (error) {
       console.error('Erro ao alterar status:', error);
-      // O status será revertido automaticamente pelo rollback do optimistic update
       toast({
         title: 'Erro ao sincronizar status',
-        description:
-          'O status foi alterado localmente, mas não foi salvo no servidor. Tente novamente.',
+        description: 'O status foi alterado localmente, mas não foi salvo no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -267,21 +263,93 @@ const Tarefas = () => {
     setDraggedTaskId(null);
 
     if (taskId && currentStatus !== targetStatus) {
-      // O status já foi alterado visualmente devido ao optimistic update
-      // Enviar para o servidor em background (sem toast para não poluir a UI durante drag & drop)
       try {
         await changeStatus({ id: taskId, status: targetStatus });
       } catch (error) {
-        // O status será revertido automaticamente pelo rollback
         console.error('Erro ao sincronizar mudança de status:', error);
         toast({
           title: 'Erro ao sincronizar',
-          description:
-            'A mudança foi aplicada localmente, mas não foi salva no servidor.',
+          description: 'A mudança foi aplicada localmente, mas não foi salva no servidor.',
           variant: 'destructive',
           duration: 3000,
         });
       }
+    }
+  };
+
+  const handleDropUrgent = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const taskId = e.dataTransfer.getData('taskId');
+    setDragOverStatus(null);
+    setDraggedTaskId(null);
+
+    if (taskId) {
+      // Se já é a tarefa urgente, não faz nada
+      if (urgentTask && urgentTask.id === taskId) return;
+
+      try {
+        // 1. Remover urgência da tarefa atual (se houver)
+        if (urgentTask) {
+          await updateTask({
+            id: urgentTask.id,
+            updates: {
+              observacao: urgentTask.observacao.replace('[URGENTE]', '').trim()
+            }
+          });
+        }
+
+        // 2. Adicionar urgência à nova tarefa
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          const newObs = task.observacao ? `${task.observacao} [URGENTE]` : '[URGENTE]';
+          await updateTask({
+            id: taskId,
+            updates: {
+              observacao: newObs
+            }
+          });
+          
+          toast({
+            title: 'Tarefa Urgente Definida',
+            description: 'A tarefa foi marcada como urgente.',
+            duration: 2000,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar urgência:', error);
+        toast({
+          title: 'Erro ao atualizar urgência',
+          description: 'Não foi possível marcar a tarefa como urgente.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleRemoveUrgency = async () => {
+    if (!urgentTask) return;
+
+    try {
+      await updateTask({
+        id: urgentTask.id,
+        updates: {
+          observacao: urgentTask.observacao.replace('[URGENTE]', '').trim()
+        }
+      });
+      toast({
+        title: 'Urgência removida',
+        description: 'A tarefa não está mais marcada como urgente.',
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Erro ao remover urgência:', error);
+      toast({
+        title: 'Erro ao remover urgência',
+        description: 'Não foi possível remover a urgência da tarefa.',
+        variant: 'destructive',
+        duration: 3000,
+      });
     }
   };
 
@@ -308,8 +376,6 @@ const Tarefas = () => {
     updates: CreateTaskInput
   ) => {
     try {
-      // As alterações já aparecem instantaneamente devido ao optimistic update
-      // Atualizar a tarefa selecionada imediatamente
       if (selectedTask?.id === task.id) {
         setSelectedTask({
           ...selectedTask,
@@ -318,10 +384,8 @@ const Tarefas = () => {
         });
       }
 
-      // Enviar para o servidor em background
       await updateTask({ id: task.id, updates });
 
-      // Atualizar com dados do servidor após sincronização
       if (selectedTask?.id === task.id) {
         const updatedTask = tasks.find(t => t.id === task.id);
         if (updatedTask) {
@@ -336,7 +400,6 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
-      // Reverter a tarefa selecionada em caso de erro
       if (selectedTask?.id === task.id) {
         const originalTask = tasks.find(t => t.id === task.id);
         if (originalTask) {
@@ -345,8 +408,7 @@ const Tarefas = () => {
       }
       toast({
         title: 'Erro ao sincronizar alterações',
-        description:
-          'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
+        description: 'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -355,17 +417,13 @@ const Tarefas = () => {
   };
 
   const handleDeleteTaskInModal = async (taskId: string) => {
-    // Fechar o modal imediatamente (a tarefa já foi removida visualmente)
     if (selectedTask?.id === taskId) {
       setIsTaskDetailModalOpen(false);
       setSelectedTask(null);
     }
 
     try {
-      // A tarefa já foi removida visualmente devido ao optimistic update
-      // Enviar para o servidor em background
       await deleteTask(taskId);
-
       toast({
         title: 'Tarefa excluída',
         description: 'A tarefa foi removida com sucesso.',
@@ -373,8 +431,6 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
-      // A tarefa será restaurada automaticamente pelo rollback do optimistic update
-      // Reabrir o modal se necessário
       const restoredTask = tasks.find(t => t.id === taskId);
       if (restoredTask) {
         setSelectedTask(restoredTask);
@@ -382,8 +438,7 @@ const Tarefas = () => {
       }
       toast({
         title: 'Erro ao sincronizar exclusão',
-        description:
-          'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
+        description: 'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -399,14 +454,11 @@ const Tarefas = () => {
   const handleConfirmCompletion = async (conclusionText: string) => {
     if (!completingTask) return;
 
-    // Fechar o modal imediatamente (o status já foi alterado visualmente)
     setIsCompletionModalOpen(false);
     const taskId = completingTask.id;
     setCompletingTask(null);
 
     try {
-      // O status já foi alterado visualmente devido ao optimistic update
-      // Enviar para o servidor em background
       await changeStatus({
         id: taskId,
         status: 'completed',
@@ -420,8 +472,6 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao concluir tarefa:', error);
-      // O status será revertido automaticamente pelo rollback do optimistic update
-      // Reabrir o modal em caso de erro
       const task = tasks.find(t => t.id === taskId);
       if (task) {
         setCompletingTask(task);
@@ -429,8 +479,7 @@ const Tarefas = () => {
       }
       toast({
         title: 'Erro ao sincronizar conclusão',
-        description:
-          'A tarefa foi marcada como concluída localmente, mas não foi salva no servidor. Tente novamente.',
+        description: 'A tarefa foi marcada como concluída localmente, mas não foi salva no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -471,7 +520,6 @@ const Tarefas = () => {
     if (!highlightedTask) return;
 
     try {
-      // Muda o status para "not_started" para remover o destaque
       await changeStatus({ id: highlightedTask.id, status: 'not_started' });
       toast({
         title: 'Destaque removido',
@@ -502,372 +550,357 @@ const Tarefas = () => {
 
   return (
     <div className='min-h-screen bg-neutral-50'>
-      <div className='max-w-[1400px] mx-auto px-2 py-2 sm:px-3 lg:px-4'>
-        {/* Header Moderno */}
-        <div className='mb-2'>
-          <div className='flex items-center gap-1.5 mb-2'>
-            <div className='w-8 h-8 bg-white border border-neutral-300 rounded-lg flex items-center justify-center shadow-sm'>
-              <ClipboardList className='h-4 w-4 text-neutral-700' />
+      <div className='max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8'>
+        {/* Header & Toolbar */}
+        <div className='mb-6'>
+          <div className='flex items-center gap-3 mb-6'>
+            <div className='w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center shadow-sm'>
+              <ClipboardList className='h-5 w-5 text-primary-600' />
             </div>
             <div>
-              <h1 className='text-lg sm:text-xl font-semibold text-neutral-900 tracking-tight'>
+              <h1 className='text-2xl font-bold text-neutral-900 tracking-tight'>
                 Minhas Tarefas
               </h1>
+              <p className='text-sm text-neutral-500'>
+                Gerencie suas atividades e acompanhe seu progresso.
+              </p>
             </div>
           </div>
 
-          {/* Barra de busca */}
-          <div className='relative mb-2'>
-            <Search className='absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-neutral-400' />
-            <Input
-              type='text'
-              placeholder='Buscar tarefas...'
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className='pl-8 h-8 text-xs rounded-lg border-neutral-300 bg-white focus:border-neutral-400 focus:ring-neutral-200 transition-all duration-200'
-            />
-          </div>
-
-          {/* Botões de Ação */}
-          <div className='flex flex-wrap gap-1.5'>
-            <PremiumButton
-              onClick={handleNewTask}
-              icon={<Plus />}
-              variant='secondary'
-              className='h-7 text-xs px-2.5'
-            >
-              Nova Tarefa
-            </PremiumButton>
-            <Button
-              onClick={handleAITask}
-              variant='outline'
-              className='inline-flex items-center gap-1.5 px-2.5 py-1 h-7 text-xs rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-400 transition-all duration-200'
-            >
-              <Wand2 className='h-3 w-3' />
-              Criar com IA
-            </Button>
-          </div>
+          <TaskToolbar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            onNewTask={handleNewTask}
+            onAITask={handleAITask}
+          />
         </div>
 
-        {/* Card de Progresso e Conquistas */}
-        <div className='mb-2'>
+        {/* Card de Progresso */}
+        <div className='mb-6'>
           <UserStatsCard />
         </div>
 
-        {/* Estatísticas */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-1.5 mb-2.5'>
-          <div className='group relative bg-white border border-neutral-300 rounded-lg p-2 hover:shadow-md hover:border-neutral-400 transition-all duration-200'>
-            <div className='flex items-center justify-between mb-1.5'>
-              <div className='p-1.5 rounded-lg bg-neutral-100 border border-neutral-200'>
-                <ClipboardList className='h-3.5 w-3.5 text-neutral-700' />
-              </div>
-              <Badge
-                variant='outline'
-                className='border-neutral-300 bg-white text-neutral-700 text-[10px] px-1 py-0'
-              >
-                Todas
-              </Badge>
-            </div>
-            <p className='text-[9px] text-neutral-500 mb-0.5 uppercase tracking-wide'>
-              Total
-            </p>
-            <p className='text-lg font-bold text-neutral-900'>
-              {taskCounts.all}
-            </p>
-          </div>
+        {/* Seções Destacadas (Apenas no Board View por enquanto) */}
+        {viewMode === 'board' && (
+          <div className='mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto'>
+            {/* Tarefa em Andamento */}
+            <div className='w-full'>
+              <Card
+                className={`border-2 h-full ${
+                  highlightedTask
+                    ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-md hover:shadow-lg'
+                    : 'border-amber-200 bg-amber-50/50'
+                } transition-all duration-300 ${
+                  dragOverStatus === 'in_progress' && draggedTaskId
+                    ? 'ring-2 ring-amber-400 ring-offset-1'
+                    : ''
+                }`}
+                onDragOver={e => {
+                  handleDragOver(e);
+                  setDragOverStatus('in_progress');
+                }}
+                onDragLeave={handleDragLeave}
+                onDrop={async e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const taskId = e.dataTransfer.getData('taskId');
+                  const currentStatus = e.dataTransfer.getData('currentStatus') as TaskStatus;
+                  setDragOverStatus(null);
+                  setDraggedTaskId(null);
 
-          <div className='group relative bg-white border border-neutral-300 rounded-lg p-2 hover:shadow-md hover:border-neutral-400 transition-all duration-200'>
-            <div className='flex items-center justify-between mb-1.5'>
-              <div className='p-1.5 rounded-lg bg-neutral-100 border border-neutral-200'>
-                <Clock className='h-3.5 w-3.5 text-neutral-700' />
-              </div>
-              <Badge
-                variant='outline'
-                className='border-neutral-300 bg-white text-neutral-700 text-[10px] px-1 py-0'
-              >
-                Pendentes
-              </Badge>
-            </div>
-            <p className='text-[9px] text-neutral-500 mb-0.5 uppercase tracking-wide'>
-              Não Iniciadas
-            </p>
-            <p className='text-lg font-bold text-neutral-900'>
-              {taskCounts.not_started}
-            </p>
-          </div>
-
-          <div className='group relative bg-white border border-neutral-300 rounded-lg p-2 hover:shadow-md hover:border-neutral-400 transition-all duration-200'>
-            <div className='flex items-center justify-between mb-1.5'>
-              <div className='p-1.5 rounded-lg bg-amber-50 border border-amber-200'>
-                <AlertCircle className='h-3.5 w-3.5 text-amber-700' />
-              </div>
-              <Badge
-                variant='outline'
-                className='border-amber-300 bg-amber-50 text-amber-700 text-[10px] px-1 py-0'
-              >
-                Ativas
-              </Badge>
-            </div>
-            <p className='text-[9px] text-neutral-500 mb-0.5 uppercase tracking-wide'>
-              Em Andamento
-            </p>
-            <p className='text-lg font-bold text-neutral-900'>
-              {taskCounts.in_progress}
-            </p>
-          </div>
-
-          <div className='group relative bg-white border border-neutral-300 rounded-lg p-2 hover:shadow-md hover:border-neutral-400 transition-all duration-200'>
-            <div className='flex items-center justify-between mb-1.5'>
-              <div className='p-1.5 rounded-lg bg-emerald-50 border border-emerald-200'>
-                <CheckCircle2 className='h-3.5 w-3.5 text-emerald-700' />
-              </div>
-              <Badge
-                variant='outline'
-                className='border-emerald-300 bg-emerald-50 text-emerald-700 text-[10px] px-1 py-0'
-              >
-                Finalizadas
-              </Badge>
-            </div>
-            <p className='text-[9px] text-neutral-500 mb-0.5 uppercase tracking-wide'>
-              Concluídas
-            </p>
-            <p className='text-lg font-bold text-neutral-900'>
-              {taskCounts.completed}
-            </p>
-          </div>
-        </div>
-
-        {/* Seção Destacada - Tarefa em Andamento */}
-        <div className='mb-3 flex justify-center'>
-          <div className='w-full max-w-2xl'>
-            <Card
-              className={`border-2 ${
-                highlightedTask
-                  ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-md hover:shadow-lg'
-                  : 'border-amber-200 bg-amber-50/50'
-              } transition-all duration-300 ${
-                dragOverStatus === 'in_progress' && draggedTaskId
-                  ? 'ring-2 ring-amber-400 ring-offset-1'
-                  : ''
-              }`}
-              onDragOver={e => {
-                handleDragOver(e);
-                setDragOverStatus('in_progress');
-              }}
-              onDragLeave={handleDragLeave}
-              onDrop={async e => {
-                e.preventDefault();
-                e.stopPropagation();
-                const taskId = e.dataTransfer.getData('taskId');
-                const currentStatus = e.dataTransfer.getData(
-                  'currentStatus'
-                ) as TaskStatus;
-                setDragOverStatus(null);
-                setDraggedTaskId(null);
-
-                if (taskId) {
-                  try {
-                    // Se a tarefa não está em andamento, muda para in_progress
-                    // Se já está em andamento, atualiza para que se torne a tarefa destacada
-                    if (currentStatus !== 'in_progress') {
-                      await changeStatus({ id: taskId, status: 'in_progress' });
-                    } else {
-                      // Atualiza a tarefa para que ela se torne a mais recente (e apareça na seção destacada)
-                      const task = tasks.find(t => t.id === taskId);
-                      if (task) {
-                        await updateTask({
-                          id: taskId,
-                          updates: {
-                            title: task.title,
-                            description: task.description,
-                            status: 'in_progress',
-                            subtitle: task.subtitle,
-                            observacao: task.observacao,
-                          },
-                        });
+                  if (taskId) {
+                    try {
+                      if (currentStatus !== 'in_progress') {
+                        await changeStatus({ id: taskId, status: 'in_progress' });
+                      } else {
+                        const task = tasks.find(t => t.id === taskId);
+                        if (task) {
+                          await updateTask({
+                            id: taskId,
+                            updates: {
+                              title: task.title,
+                              description: task.description,
+                              status: 'in_progress',
+                              subtitle: task.subtitle,
+                              observacao: task.observacao,
+                            },
+                          });
+                        }
                       }
+                    } catch (error) {
+                      console.error('Erro ao sincronizar mudança de status:', error);
+                      toast({
+                        title: 'Erro ao sincronizar',
+                        description: 'A mudança foi aplicada localmente, mas não foi salva no servidor.',
+                        variant: 'destructive',
+                        duration: 3000,
+                      });
                     }
-                  } catch (error) {
-                    console.error(
-                      'Erro ao sincronizar mudança de status:',
-                      error
-                    );
-                    toast({
-                      title: 'Erro ao sincronizar',
-                      description:
-                        'A mudança foi aplicada localmente, mas não foi salva no servidor.',
-                      variant: 'destructive',
-                      duration: 3000,
-                    });
                   }
-                }
-              }}
-            >
-              <CardHeader className='pb-1.5 pt-2 px-2.5 border-b border-amber-200 bg-white/50'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-1.5'>
-                    <div className='p-1.5 rounded-lg bg-amber-100 border-2 border-amber-300 shadow-sm'>
-                      <AlertCircle className='h-3.5 w-3.5 text-amber-700' />
+                }}
+              >
+                <CardHeader className='pb-3 pt-4 px-4 border-b border-amber-200 bg-white/50'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <div className='p-1.5 rounded-lg bg-amber-100 border-2 border-amber-300 shadow-sm'>
+                        <AlertCircle className='h-4 w-4 text-amber-700' />
+                      </div>
+                      <div>
+                        <h3 className='text-sm font-bold text-neutral-900'>
+                          Tarefa em Foco
+                        </h3>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className='text-xs font-bold text-neutral-900'>
-                        Tarefa em Andamento
-                      </h3>
-                      <p className='text-[9px] text-neutral-600 mt-0.5'>
-                        {highlightedTask
-                          ? 'Foco na tarefa atual'
-                          : 'Arraste uma tarefa aqui para destacá-la'}
+                    <div className='flex items-center gap-1.5'>
+                      {highlightedTask && (
+                        <Button
+                          onClick={handleRemoveHighlight}
+                          variant='ghost'
+                          size='sm'
+                          className='h-6 w-6 p-0 hover:bg-amber-100 text-neutral-600 hover:text-neutral-900'
+                          title='Remover destaque'
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className='p-4 h-full min-h-[140px] flex items-center justify-center'>
+                  {highlightedTask ? (
+                    <div
+                      draggable
+                      onDragStart={e => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('taskId', highlightedTask.id);
+                        e.dataTransfer.setData('currentStatus', highlightedTask.status);
+                        handleDragStart(highlightedTask.id);
+                      }}
+                      className='cursor-move w-full'
+                    >
+                      <TaskCard
+                        task={highlightedTask}
+                        onEdit={handleEditTask}
+                        onDelete={handleDeleteTask}
+                        onChangeStatus={handleChangeStatus}
+                        onRequestCompletion={handleRequestCompletion}
+                        onClick={handleTaskClick}
+                      />
+                    </div>
+                  ) : (
+                    <div className='text-center'>
+                      <p className='text-sm text-neutral-600 mb-1 font-medium'>
+                        Nenhuma tarefa em destaque
+                      </p>
+                      <p className='text-xs text-neutral-500'>
+                        Arraste uma tarefa "Em Andamento" aqui
                       </p>
                     </div>
-                  </div>
-                  <div className='flex items-center gap-1.5'>
-                    {highlightedTask && (
-                      <Button
-                        onClick={handleRemoveHighlight}
-                        variant='ghost'
-                        size='sm'
-                        className='h-5 w-5 p-0 hover:bg-amber-100 text-neutral-600 hover:text-neutral-900'
-                        title='Remover destaque'
-                      >
-                        <X className='h-3 w-3' />
-                      </Button>
-                    )}
-                    <Badge
-                      variant='outline'
-                      className='border-amber-400 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0'
-                    >
-                      {highlightedTask ? 'Em Foco' : 'Vazio'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className='p-2'>
-                {highlightedTask ? (
-                  <div
-                    draggable
-                    onDragStart={e => {
-                      e.dataTransfer.effectAllowed = 'move';
-                      e.dataTransfer.setData('taskId', highlightedTask.id);
-                      e.dataTransfer.setData(
-                        'currentStatus',
-                        highlightedTask.status
-                      );
-                      handleDragStart(highlightedTask.id);
-                    }}
-                    className='cursor-move'
-                  >
-                    <TaskCard
-                      task={highlightedTask}
-                      onEdit={handleEditTask}
-                      onDelete={handleDeleteTask}
-                      onChangeStatus={handleChangeStatus}
-                      onRequestCompletion={handleRequestCompletion}
-                      onClick={handleTaskClick}
-                    />
-                  </div>
-                ) : (
-                  <div className='flex flex-col items-center justify-center py-6 text-center'>
-                    <div className='p-2 rounded-lg bg-amber-100 border-2 border-amber-200 mb-2'>
-                      <AlertCircle className='h-5 w-5 text-amber-600' />
-                    </div>
-                    <p className='text-xs text-neutral-600 mb-1 font-medium'>
-                      Nenhuma tarefa em destaque
-                    </p>
-                    <p className='text-[9px] text-neutral-500'>
-                      Arraste uma tarefa "Em Andamento" aqui para destacá-la
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Layout de Blocos */}
-        <div
-          className='grid grid-cols-1 lg:grid-cols-3 gap-2'
-          onDragEnd={handleDragEnd}
-        >
-          <TaskBlock
-            status='not_started'
-            tasks={tasksByStatus.not_started}
-            onEdit={handleEditTask}
-            onDelete={handleDeleteTask}
-            onChangeStatus={handleChangeStatus}
-            onRequestCompletion={handleRequestCompletion}
-            onCreateTask={handleCreateTaskInBlock}
-            onTaskClick={handleTaskClick}
-            onDragStart={handleDragStart}
-            onDragOver={e => {
-              handleDragOver(e);
-              setDragOverStatus('not_started');
-            }}
-            onDragLeave={handleDragLeave}
-            onDrop={e => handleDrop(e, 'not_started')}
-            isDragging={draggedTaskId !== null}
-            dragOver={dragOverStatus === 'not_started'}
-          />
-          <TaskBlock
-            status='in_progress'
-            tasks={tasksByStatus.in_progress}
-            onEdit={handleEditTask}
-            onDelete={handleDeleteTask}
-            onChangeStatus={handleChangeStatus}
-            onRequestCompletion={handleRequestCompletion}
-            onCreateTask={handleCreateTaskInBlock}
-            onTaskClick={handleTaskClick}
-            onDragStart={handleDragStart}
-            onDragOver={e => {
-              handleDragOver(e);
-              setDragOverStatus('in_progress');
-            }}
-            onDragLeave={handleDragLeave}
-            onDrop={e => handleDrop(e, 'in_progress')}
-            isDragging={draggedTaskId !== null}
-            dragOver={dragOverStatus === 'in_progress'}
-          />
-          <TaskBlock
-            status='completed'
-            tasks={tasksByStatus.completed}
-            onEdit={handleEditTask}
-            onDelete={handleDeleteTask}
-            onChangeStatus={handleChangeStatus}
-            onRequestCompletion={handleRequestCompletion}
-            onCreateTask={handleCreateTaskInBlock}
-            onTaskClick={handleTaskClick}
-            onDragStart={handleDragStart}
-            onDragOver={e => {
-              handleDragOver(e);
-              setDragOverStatus('completed');
-            }}
-            onDragLeave={handleDragLeave}
-            onDrop={e => handleDrop(e, 'completed')}
-            isDragging={draggedTaskId !== null}
-            dragOver={dragOverStatus === 'completed'}
-          />
-        </div>
-
-        {/* Mensagem quando não há tarefas */}
-        {filteredTasks.length === 0 && (
-          <Card className='border-neutral-300 bg-white shadow-sm mt-2'>
-            <CardContent className='py-6 text-center'>
-              <div className='w-10 h-10 bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center mx-auto mb-2'>
-                <ClipboardList className='h-5 w-5 text-neutral-400' />
-              </div>
-              <p className='text-neutral-600 mb-3 font-medium text-xs'>
-                {searchQuery.trim()
-                  ? 'Nenhuma tarefa encontrada com os termos de busca.'
-                  : 'Nenhuma tarefa cadastrada ainda.'}
-              </p>
-              <Button
-                onClick={handleNewTask}
-                className='inline-flex items-center gap-1.5 px-2.5 py-1 h-7 text-xs rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white shadow-sm hover:shadow-md transition-all duration-200'
+            {/* Tarefas em Urgência */}
+            <div className='w-full'>
+              <Card
+                className={`border-2 h-full ${
+                  urgentTask
+                    ? 'border-red-400 bg-gradient-to-br from-red-50 to-rose-50 shadow-md hover:shadow-lg'
+                    : 'border-red-200 bg-red-50/50'
+                } transition-all duration-300 ${
+                  dragOverStatus === 'urgent' && draggedTaskId
+                    ? 'ring-2 ring-red-400 ring-offset-1'
+                    : ''
+                }`}
+                onDragOver={e => {
+                  handleDragOver(e);
+                  setDragOverStatus('urgent');
+                }}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDropUrgent}
               >
-                <Plus className='h-3 w-3' />
-                Criar Primeira Tarefa
-              </Button>
-            </CardContent>
-          </Card>
+                <CardHeader className='pb-3 pt-4 px-4 border-b border-red-200 bg-white/50'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <div className='p-1.5 rounded-lg bg-red-100 border-2 border-red-300 shadow-sm'>
+                        <Flame className='h-4 w-4 text-red-700' />
+                      </div>
+                      <div>
+                        <h3 className='text-sm font-bold text-neutral-900'>
+                          Prioridade Máxima
+                        </h3>
+                      </div>
+                    </div>
+                    <div className='flex items-center gap-1.5'>
+                      {urgentTask && (
+                        <Button
+                          onClick={handleRemoveUrgency}
+                          variant='ghost'
+                          size='sm'
+                          className='h-6 w-6 p-0 hover:bg-red-100 text-neutral-600 hover:text-neutral-900'
+                          title='Remover urgência'
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className='p-4 h-full min-h-[140px] flex items-center justify-center'>
+                  {urgentTask ? (
+                    <div
+                      draggable
+                      onDragStart={e => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('taskId', urgentTask.id);
+                        e.dataTransfer.setData('currentStatus', urgentTask.status);
+                        handleDragStart(urgentTask.id);
+                      }}
+                      className='cursor-move w-full'
+                    >
+                      <TaskCard
+                        task={urgentTask}
+                        onEdit={handleEditTask}
+                        onDelete={handleDeleteTask}
+                        onChangeStatus={handleChangeStatus}
+                        onRequestCompletion={handleRequestCompletion}
+                        onClick={handleTaskClick}
+                      />
+                    </div>
+                  ) : (
+                    <div className='text-center'>
+                      <p className='text-sm text-neutral-600 mb-1 font-medium'>
+                        Nenhuma tarefa urgente
+                      </p>
+                      <p className='text-xs text-neutral-500'>
+                        Arraste uma tarefa aqui para priorizar
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Conteúdo Principal */}
+        <AnimatePresence mode="wait">
+          {viewMode === 'board' ? (
+            <motion.div
+              key="board"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className='grid grid-cols-1 lg:grid-cols-3 gap-6'
+              onDragEnd={handleDragEnd}
+            >
+              <TaskBlock
+                status='not_started'
+                tasks={tasksByStatus.not_started}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+                onChangeStatus={handleChangeStatus}
+                onRequestCompletion={handleRequestCompletion}
+                onCreateTask={handleCreateTaskInBlock}
+                onTaskClick={handleTaskClick}
+                onDragStart={handleDragStart}
+                onDragOver={e => {
+                  handleDragOver(e);
+                  setDragOverStatus('not_started');
+                }}
+                onDragLeave={handleDragLeave}
+                onDrop={e => handleDrop(e, 'not_started')}
+                isDragging={draggedTaskId !== null}
+                dragOver={dragOverStatus === 'not_started'}
+              />
+              <TaskBlock
+                status='in_progress'
+                tasks={tasksByStatus.in_progress}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+                onChangeStatus={handleChangeStatus}
+                onRequestCompletion={handleRequestCompletion}
+                onCreateTask={handleCreateTaskInBlock}
+                onTaskClick={handleTaskClick}
+                onDragStart={handleDragStart}
+                onDragOver={e => {
+                  handleDragOver(e);
+                  setDragOverStatus('in_progress');
+                }}
+                onDragLeave={handleDragLeave}
+                onDrop={e => handleDrop(e, 'in_progress')}
+                isDragging={draggedTaskId !== null}
+                dragOver={dragOverStatus === 'in_progress'}
+              />
+              <TaskBlock
+                status='completed'
+                tasks={tasksByStatus.completed}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+                onChangeStatus={handleChangeStatus}
+                onRequestCompletion={handleRequestCompletion}
+                onCreateTask={handleCreateTaskInBlock}
+                onTaskClick={handleTaskClick}
+                onDragStart={handleDragStart}
+                onDragOver={e => {
+                  handleDragOver(e);
+                  setDragOverStatus('completed');
+                }}
+                onDragLeave={handleDragLeave}
+                onDrop={e => handleDrop(e, 'completed')}
+                isDragging={draggedTaskId !== null}
+                dragOver={dragOverStatus === 'completed'}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="list"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <TaskListView
+                tasks={filteredTasks}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+                onChangeStatus={handleChangeStatus}
+                onRequestCompletion={handleRequestCompletion}
+                onTaskClick={handleTaskClick}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mensagem quando não há tarefas (Global) */}
+        {tasks.length === 0 && !searchQuery && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className='mt-8 text-center'
+          >
+            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 mb-4'>
+              <Plus className='h-8 w-8 text-neutral-400' />
+            </div>
+            <h3 className='text-lg font-semibold text-neutral-900 mb-2'>
+              Comece a organizar suas tarefas
+            </h3>
+            <p className='text-neutral-500 mb-6 max-w-sm mx-auto'>
+              Crie sua primeira tarefa para começar a acompanhar seu progresso e aumentar sua produtividade.
+            </p>
+            <Button onClick={handleNewTask} size="lg" className="shadow-lg">
+              <Plus className='h-5 w-5 mr-2' />
+              Criar Primeira Tarefa
+            </Button>
+          </motion.div>
         )}
       </div>
 

@@ -48,7 +48,9 @@ interface DocumentFormProps {
   fields?: FormField[];
   fieldGroups?: FieldGroup[];
   template: string;
-  onGenerate: (data: Record<string, string>) => Record<string, string> | void;
+  onGenerate: (
+    data: Record<string, string>
+  ) => Promise<Record<string, string> | void> | Record<string, string> | void;
   initialData?: Record<string, string>;
   termId?: string;
   isEditing?: boolean;
@@ -84,8 +86,25 @@ const DocumentForm = memo<DocumentFormProps>(
     // Usar função segura para cálculo de fonte
     const checkAndAdjustFontSize = calculateOptimalFontSize;
 
-    const handleGenerate = () => {
-      const processedData = onGenerate(formData);
+    const handleGenerate = async () => {
+      let processedData: Record<string, string> | void;
+      try {
+        const result = onGenerate(formData);
+        if (result instanceof Promise) {
+          processedData = await result;
+        } else {
+          processedData = result;
+        }
+      } catch (error) {
+        console.error('Erro ao gerar documento:', error);
+        toast({
+          title: 'Erro',
+          description: 'Falha ao processar o documento.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Usa os dados processados se retornados, senão usa os originais
       const finalData = processedData || formData;
       setFormData(finalData);

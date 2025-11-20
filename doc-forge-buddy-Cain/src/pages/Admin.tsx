@@ -1,7 +1,8 @@
 import { useState, useMemo, lazy, Suspense } from 'react';
+import { LucideIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SystemStats } from '@/types/admin';
+import { SystemStats } from '@/types/business/admin';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -57,7 +58,7 @@ interface AdminOption {
   id: string;
   title: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   component: React.ReactNode;
   color: {
     icon: string;

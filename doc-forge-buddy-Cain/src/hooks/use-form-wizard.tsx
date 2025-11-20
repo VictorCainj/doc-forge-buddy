@@ -29,13 +29,13 @@ export interface FormStep {
   title: string;
   description?: string;
   fields: FormField[];
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<any>;
 }
 
 interface UseFormWizardProps {
   steps: FormStep[];
-  initialData?: Record<string, string>;
-  contractData?: Record<string, string>;
+  initialData?: Record<string, any>;
+  contractData?: Record<string, any>;
   onStepValidation?: (stepIndex: number, isValid: boolean) => void;
 }
 
@@ -52,7 +52,7 @@ export const useFormWizard = ({
   }), [initialData, contractData]);
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<Record<string, string>>(initialFormData);
+  const [formData, setFormData] = useState<Record<string, any>>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -99,8 +99,8 @@ export const useFormWizard = ({
   const validateStepInternal = useCallback(
     (
       stepIndex: number,
-      data: Record<string, string>,
-      contractData: Record<string, string> = {}
+      data: Record<string, any>,
+      contractData: Record<string, any> = {}
     ): boolean => {
       const step = steps[stepIndex];
       if (!step) return true;
@@ -158,7 +158,7 @@ export const useFormWizard = ({
 
   // Validar uma etapa específica (com side effects)
   const validateStep = useCallback(
-    (stepIndex: number, contractData: Record<string, string> = {}): boolean => {
+    (stepIndex: number, contractData: Record<string, any> = {}): boolean => {
       const step = steps[stepIndex];
       if (!step) return true;
 
