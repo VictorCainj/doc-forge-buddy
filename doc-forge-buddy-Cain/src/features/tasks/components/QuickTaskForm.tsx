@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Loader2 } from '@/utils/iconMapper';
-import { TaskStatus } from '@/types/domain/task';
+import { TaskStatus } from '../types/task';
 
 interface QuickTaskFormProps {
   onSubmit: (taskData: { title: string; description: string }) => Promise<void>;

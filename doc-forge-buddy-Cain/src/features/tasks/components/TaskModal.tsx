@@ -24,7 +24,7 @@ import {
   TaskStatus,
   TASK_STATUS_LABELS,
   CreateTaskInput,
-} from '@/types/domain/task';
+} from '../types/task';
 import { useOpenAI } from '@/hooks/useOpenAI';
 import { useToast } from '@/components/ui/use-toast';
 import { log } from '@/utils/logger';

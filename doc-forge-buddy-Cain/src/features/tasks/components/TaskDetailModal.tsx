@@ -35,7 +35,7 @@ import {
   TASK_STATUS_LABELS,
   TASK_STATUS_COLORS,
   CreateTaskInput,
-} from '@/types/domain/task';
+} from '../types/task';
 import { formatDateBrazilian } from '@/utils/core/dateFormatter';
 import { cn } from '@/lib/utils';
 

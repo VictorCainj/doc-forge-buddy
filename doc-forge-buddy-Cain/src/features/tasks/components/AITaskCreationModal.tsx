@@ -27,7 +27,7 @@ import {
   AIGeneratedTask,
   TASK_STATUS_LABELS,
   CreateTaskInput,
-} from '@/types/domain/task';
+} from '../types/task';
 
 interface AITaskCreationModalProps {
   open: boolean;

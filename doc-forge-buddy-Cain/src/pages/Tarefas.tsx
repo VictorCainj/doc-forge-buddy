@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useState } from 'react';
+import { Loader2, ClipboardList, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,32 +11,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Plus,
-  Loader2,
-  ClipboardList,
-  AlertCircle,
-  Flame,
-  X,
-} from '@/utils/iconMapper';
-import { TaskBlock } from '@/components/TaskBlock';
-import { TaskCard } from '@/components/TaskCard';
-import { TaskModal } from '@/components/TaskModal';
-import { TaskDetailModal } from '@/components/TaskDetailModal';
-import { AITaskCreationModal } from '@/components/AITaskCreationModal';
-import { TaskCompletionModal } from '@/components/TaskCompletionModal';
-import { UserStatsCard } from '@/components/UserStatsCard';
-import { useTasks } from '@/hooks/useTasks';
+import { TaskModal } from '@/features/tasks/components/TaskModal';
+import { TaskDetailModal } from '@/features/tasks/components/TaskDetailModal';
+import { AITaskCreationModal } from '@/features/tasks/components/AITaskCreationModal';
+import { TaskCompletionModal } from '@/features/tasks/components/TaskCompletionModal';
+import { UserStatsCard } from '@/features/tasks/components/UserStatsCard';
+import { TaskToolbar } from '@/features/tasks/components/TaskToolbar';
+import { TaskBoardView } from '@/features/tasks/components/TaskBoardView';
+import { TaskListView } from '@/features/tasks/components/TaskListView';
+import { useTasks } from '@/features/tasks/hooks/useTasks';
+import { useTaskFilters } from '@/features/tasks/hooks/useTaskFilters';
+import { Task, CreateTaskInput, TaskStatus } from '@/features/tasks/types/task';
 import { useToast } from '@/components/ui/use-toast';
-import { Task, CreateTaskInput, TaskStatus } from '@/types/domain/task';
-import { TaskToolbar } from '@/components/tasks/TaskToolbar';
-import { TaskListView } from '@/components/tasks/TaskListView';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import { TaskBoardSkeleton } from '@/features/tasks/components/TaskBoardSkeleton';
 
 const Tarefas = () => {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+
   const {
     tasks,
     isLoading,
@@ -50,6 +44,18 @@ const Tarefas = () => {
     isDeleting,
   } = useTasks();
 
+  const {
+    searchQuery,
+    setSearchQuery,
+    viewMode,
+    setViewMode,
+    statusFilter,
+    setStatusFilter,
+    sortBy,
+    setSortBy,
+    filteredTasks,
+  } = useTaskFilters(tasks);
+
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -57,87 +63,36 @@ const Tarefas = () => {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  
-  // New State for Toolbar and Views
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
 
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | 'urgent' | null>(null);
+  // Derived state for Board View
+  const urgentTask =
+    tasks.find((t) => t.observacao?.includes('[URGENTE]')) || null;
 
-  // Filtrar e Ordenar Tarefas
-  const filteredTasks = useMemo(() => {
-    let result = tasks;
-
-    // Search Filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(task =>
-        task.title.toLowerCase().includes(query) ||
-        task.subtitle?.toLowerCase().includes(query) ||
-        task.description.toLowerCase().includes(query) ||
-        task.observacao?.toLowerCase().includes(query)
-      );
-    }
-
-    // Status Filter
-    if (statusFilter !== 'all') {
-      result = result.filter(task => task.status === statusFilter);
-    }
-
-    // Sort Logic
-    return result.sort((a, b) => {
-      if (sortBy === 'newest') {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      } else if (sortBy === 'oldest') {
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      } else if (sortBy === 'urgent') {
-        const isAUrgent = a.observacao?.includes('[URGENTE]') ? 1 : 0;
-        const isBUrgent = b.observacao?.includes('[URGENTE]') ? 1 : 0;
-        if (isAUrgent !== isBUrgent) return isBUrgent - isAUrgent;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-      return 0;
-    });
-  }, [tasks, searchQuery, statusFilter, sortBy]);
-
-  // Identificar tarefa urgente (marcada com [URGENTE] na observação)
-  const urgentTask = useMemo(() => {
-    return tasks.find(t => t.observacao?.includes('[URGENTE]')) || null;
-  }, [tasks]);
-
-  // Obter a primeira tarefa em andamento para a seção destacada (mais recente), excluindo a urgente
-  const highlightedTask = useMemo(() => {
-    const inProgressTasks = tasks // Use tasks instead of filteredTasks for global highlight logic
-      .filter(t => t.status === 'in_progress' && t.id !== urgentTask?.id)
+  const highlightedTask =
+    tasks
+      .filter((t) => t.status === 'in_progress' && t.id !== urgentTask?.id)
       .sort(
         (a, b) =>
           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-    return inProgressTasks[0] || null;
-  }, [tasks, urgentTask]);
+      )[0] || null;
 
-  // Agrupar tarefas por status (excluindo a tarefa destacada e a urgente para o Board)
-  const tasksByStatus = useMemo(() => {
-    // In board view, we might want to hide highlighted/urgent from the columns if they are shown above
-    // But for List view we show everything filtered.
-    // Let's keep the board logic consistent with previous behavior
-    const highlightedTaskId = highlightedTask?.id;
-    const urgentTaskId = urgentTask?.id;
-    const excludedIds = [highlightedTaskId, urgentTaskId].filter(Boolean);
+  const excludedIds = [highlightedTask?.id, urgentTask?.id].filter(
+    Boolean
+  ) as string[];
 
-    // Apply search filter to board columns too
-    return {
-      not_started: filteredTasks.filter(t => t.status === 'not_started' && !excludedIds.includes(t.id)),
-      in_progress: filteredTasks.filter(
-        t => t.status === 'in_progress' && !excludedIds.includes(t.id)
-      ),
-      completed: filteredTasks.filter(t => t.status === 'completed' && !excludedIds.includes(t.id)),
-    };
-  }, [filteredTasks, highlightedTask, urgentTask]);
+  const tasksByStatus = {
+    not_started: filteredTasks.filter(
+      (t) => t.status === 'not_started' && !excludedIds.includes(t.id)
+    ),
+    in_progress: filteredTasks.filter(
+      (t) => t.status === 'in_progress' && !excludedIds.includes(t.id)
+    ),
+    completed: filteredTasks.filter(
+      (t) => t.status === 'completed' && !excludedIds.includes(t.id)
+    ),
+  };
 
+  // Handlers
   const handleCreateTask = async (taskData: CreateTaskInput) => {
     try {
       setIsTaskModalOpen(false);
@@ -152,7 +107,8 @@ const Tarefas = () => {
       setIsTaskModalOpen(true);
       toast({
         title: 'Erro ao sincronizar tarefa',
-        description: 'A tarefa foi criada localmente, mas não foi salva no servidor. Tente novamente.',
+        description:
+          'A tarefa foi criada localmente, mas não foi salva no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -176,7 +132,8 @@ const Tarefas = () => {
       setIsTaskModalOpen(true);
       toast({
         title: 'Erro ao sincronizar alterações',
-        description: 'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
+        description:
+          'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -206,7 +163,8 @@ const Tarefas = () => {
       console.error('Erro ao excluir tarefa:', error);
       toast({
         title: 'Erro ao sincronizar exclusão',
-        description: 'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
+        description:
+          'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -227,143 +185,12 @@ const Tarefas = () => {
       console.error('Erro ao alterar status:', error);
       toast({
         title: 'Erro ao sincronizar status',
-        description: 'O status foi alterado localmente, mas não foi salvo no servidor. Tente novamente.',
+        description:
+          'O status foi alterado localmente, mas não foi salvo no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
     }
-  };
-
-  const handleDragStart = (taskId: string) => {
-    setDraggedTaskId(taskId);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDragLeave = () => {
-    setDragOverStatus(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedTaskId(null);
-    setDragOverStatus(null);
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetStatus: TaskStatus) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const taskId = e.dataTransfer.getData('taskId');
-    const currentStatus = e.dataTransfer.getData('currentStatus') as TaskStatus;
-
-    setDragOverStatus(null);
-    setDraggedTaskId(null);
-
-    if (taskId && currentStatus !== targetStatus) {
-      try {
-        await changeStatus({ id: taskId, status: targetStatus });
-      } catch (error) {
-        console.error('Erro ao sincronizar mudança de status:', error);
-        toast({
-          title: 'Erro ao sincronizar',
-          description: 'A mudança foi aplicada localmente, mas não foi salva no servidor.',
-          variant: 'destructive',
-          duration: 3000,
-        });
-      }
-    }
-  };
-
-  const handleDropUrgent = async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const taskId = e.dataTransfer.getData('taskId');
-    setDragOverStatus(null);
-    setDraggedTaskId(null);
-
-    if (taskId) {
-      // Se já é a tarefa urgente, não faz nada
-      if (urgentTask && urgentTask.id === taskId) return;
-
-      try {
-        // 1. Remover urgência da tarefa atual (se houver)
-        if (urgentTask) {
-          await updateTask({
-            id: urgentTask.id,
-            updates: {
-              observacao: urgentTask.observacao.replace('[URGENTE]', '').trim()
-            }
-          });
-        }
-
-        // 2. Adicionar urgência à nova tarefa
-        const task = tasks.find(t => t.id === taskId);
-        if (task) {
-          const newObs = task.observacao ? `${task.observacao} [URGENTE]` : '[URGENTE]';
-          await updateTask({
-            id: taskId,
-            updates: {
-              observacao: newObs
-            }
-          });
-          
-          toast({
-            title: 'Tarefa Urgente Definida',
-            description: 'A tarefa foi marcada como urgente.',
-            duration: 2000,
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao atualizar urgência:', error);
-        toast({
-          title: 'Erro ao atualizar urgência',
-          description: 'Não foi possível marcar a tarefa como urgente.',
-          variant: 'destructive',
-        });
-      }
-    }
-  };
-
-  const handleRemoveUrgency = async () => {
-    if (!urgentTask) return;
-
-    try {
-      await updateTask({
-        id: urgentTask.id,
-        updates: {
-          observacao: urgentTask.observacao.replace('[URGENTE]', '').trim()
-        }
-      });
-      toast({
-        title: 'Urgência removida',
-        description: 'A tarefa não está mais marcada como urgente.',
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Erro ao remover urgência:', error);
-      toast({
-        title: 'Erro ao remover urgência',
-        description: 'Não foi possível remover a urgência da tarefa.',
-        variant: 'destructive',
-        duration: 3000,
-      });
-    }
-  };
-
-  const handleCreateTaskInBlock = async (taskData: {
-    title: string;
-    description: string;
-    status: TaskStatus;
-  }) => {
-    const createData: CreateTaskInput = {
-      title: taskData.title,
-      description: taskData.description,
-      status: taskData.status,
-    };
-    await handleCreateTask(createData);
   };
 
   const handleTaskClick = (task: Task) => {
@@ -387,7 +214,7 @@ const Tarefas = () => {
       await updateTask({ id: task.id, updates });
 
       if (selectedTask?.id === task.id) {
-        const updatedTask = tasks.find(t => t.id === task.id);
+        const updatedTask = tasks.find((t) => t.id === task.id);
         if (updatedTask) {
           setSelectedTask(updatedTask);
         }
@@ -401,14 +228,15 @@ const Tarefas = () => {
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
       if (selectedTask?.id === task.id) {
-        const originalTask = tasks.find(t => t.id === task.id);
+        const originalTask = tasks.find((t) => t.id === task.id);
         if (originalTask) {
           setSelectedTask(originalTask);
         }
       }
       toast({
         title: 'Erro ao sincronizar alterações',
-        description: 'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
+        description:
+          'As alterações foram aplicadas localmente, mas não foram salvas no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -431,14 +259,15 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
-      const restoredTask = tasks.find(t => t.id === taskId);
+      const restoredTask = tasks.find((t) => t.id === taskId);
       if (restoredTask) {
         setSelectedTask(restoredTask);
         setIsTaskDetailModalOpen(true);
       }
       toast({
         title: 'Erro ao sincronizar exclusão',
-        description: 'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
+        description:
+          'A tarefa foi removida localmente, mas não foi excluída no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -472,14 +301,15 @@ const Tarefas = () => {
       });
     } catch (error) {
       console.error('Erro ao concluir tarefa:', error);
-      const task = tasks.find(t => t.id === taskId);
+      const task = tasks.find((t) => t.id === taskId);
       if (task) {
         setCompletingTask(task);
         setIsCompletionModalOpen(true);
       }
       toast({
         title: 'Erro ao sincronizar conclusão',
-        description: 'A tarefa foi marcada como concluída localmente, mas não foi salva no servidor. Tente novamente.',
+        description:
+          'A tarefa foi marcada como concluída localmente, mas não foi salva no servidor. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -516,52 +346,51 @@ const Tarefas = () => {
     setIsTaskModalOpen(true);
   };
 
-  const handleRemoveHighlight = async () => {
-    if (!highlightedTask) return;
-
-    try {
-      await changeStatus({ id: highlightedTask.id, status: 'not_started' });
-      toast({
-        title: 'Destaque removido',
-        description: 'A tarefa foi removida do foco.',
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Erro ao remover destaque:', error);
-      toast({
-        title: 'Erro ao remover destaque',
-        description: 'Não foi possível remover o destaque da tarefa.',
-        variant: 'destructive',
-        duration: 3000,
-      });
-    }
+  const handleCreateTaskInBlock = async (taskData: {
+    title: string;
+    description: string;
+    status: TaskStatus;
+  }) => {
+    const createData: CreateTaskInput = {
+      title: taskData.title,
+      description: taskData.description,
+      status: taskData.status,
+    };
+    await handleCreateTask(createData);
   };
 
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-neutral-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <Loader2 className='h-8 w-8 animate-spin text-neutral-600 mx-auto mb-4' />
-          <p className='text-sm text-neutral-600'>Carregando tarefas...</p>
+      <div className="min-h-screen bg-neutral-50">
+        <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          {/* Header Skeleton */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center shadow-sm animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-8 w-48 bg-neutral-200 rounded animate-pulse" />
+              <div className="h-4 w-64 bg-neutral-200 rounded animate-pulse" />
+            </div>
+          </div>
+          <TaskBoardSkeleton />
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-neutral-50'>
-      <div className='max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8'>
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Header & Toolbar */}
-        <div className='mb-6'>
-          <div className='flex items-center gap-3 mb-6'>
-            <div className='w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center shadow-sm'>
-              <ClipboardList className='h-5 w-5 text-primary-600' />
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center shadow-sm">
+              <ClipboardList className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <h1 className='text-2xl font-bold text-neutral-900 tracking-tight'>
+              <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
                 Minhas Tarefas
               </h1>
-              <p className='text-sm text-neutral-500'>
+              <p className="text-sm text-neutral-500">
                 Gerencie suas atividades e acompanhe seu progresso.
               </p>
             </div>
@@ -582,213 +411,9 @@ const Tarefas = () => {
         </div>
 
         {/* Card de Progresso */}
-        <div className='mb-6'>
+        <div className="mb-6">
           <UserStatsCard />
         </div>
-
-        {/* Seções Destacadas (Apenas no Board View por enquanto) */}
-        {viewMode === 'board' && (
-          <div className='mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto'>
-            {/* Tarefa em Andamento */}
-            <div className='w-full'>
-              <Card
-                className={`border-2 h-full ${
-                  highlightedTask
-                    ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-md hover:shadow-lg'
-                    : 'border-amber-200 bg-amber-50/50'
-                } transition-all duration-300 ${
-                  dragOverStatus === 'in_progress' && draggedTaskId
-                    ? 'ring-2 ring-amber-400 ring-offset-1'
-                    : ''
-                }`}
-                onDragOver={e => {
-                  handleDragOver(e);
-                  setDragOverStatus('in_progress');
-                }}
-                onDragLeave={handleDragLeave}
-                onDrop={async e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const taskId = e.dataTransfer.getData('taskId');
-                  const currentStatus = e.dataTransfer.getData('currentStatus') as TaskStatus;
-                  setDragOverStatus(null);
-                  setDraggedTaskId(null);
-
-                  if (taskId) {
-                    try {
-                      if (currentStatus !== 'in_progress') {
-                        await changeStatus({ id: taskId, status: 'in_progress' });
-                      } else {
-                        const task = tasks.find(t => t.id === taskId);
-                        if (task) {
-                          await updateTask({
-                            id: taskId,
-                            updates: {
-                              title: task.title,
-                              description: task.description,
-                              status: 'in_progress',
-                              subtitle: task.subtitle,
-                              observacao: task.observacao,
-                            },
-                          });
-                        }
-                      }
-                    } catch (error) {
-                      console.error('Erro ao sincronizar mudança de status:', error);
-                      toast({
-                        title: 'Erro ao sincronizar',
-                        description: 'A mudança foi aplicada localmente, mas não foi salva no servidor.',
-                        variant: 'destructive',
-                        duration: 3000,
-                      });
-                    }
-                  }
-                }}
-              >
-                <CardHeader className='pb-3 pt-4 px-4 border-b border-amber-200 bg-white/50'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-2'>
-                      <div className='p-1.5 rounded-lg bg-amber-100 border-2 border-amber-300 shadow-sm'>
-                        <AlertCircle className='h-4 w-4 text-amber-700' />
-                      </div>
-                      <div>
-                        <h3 className='text-sm font-bold text-neutral-900'>
-                          Tarefa em Foco
-                        </h3>
-                      </div>
-                    </div>
-                    <div className='flex items-center gap-1.5'>
-                      {highlightedTask && (
-                        <Button
-                          onClick={handleRemoveHighlight}
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 w-6 p-0 hover:bg-amber-100 text-neutral-600 hover:text-neutral-900'
-                          title='Remover destaque'
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className='p-4 h-full min-h-[140px] flex items-center justify-center'>
-                  {highlightedTask ? (
-                    <div
-                      draggable
-                      onDragStart={e => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('taskId', highlightedTask.id);
-                        e.dataTransfer.setData('currentStatus', highlightedTask.status);
-                        handleDragStart(highlightedTask.id);
-                      }}
-                      className='cursor-move w-full'
-                    >
-                      <TaskCard
-                        task={highlightedTask}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
-                        onChangeStatus={handleChangeStatus}
-                        onRequestCompletion={handleRequestCompletion}
-                        onClick={handleTaskClick}
-                      />
-                    </div>
-                  ) : (
-                    <div className='text-center'>
-                      <p className='text-sm text-neutral-600 mb-1 font-medium'>
-                        Nenhuma tarefa em destaque
-                      </p>
-                      <p className='text-xs text-neutral-500'>
-                        Arraste uma tarefa "Em Andamento" aqui
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Tarefas em Urgência */}
-            <div className='w-full'>
-              <Card
-                className={`border-2 h-full ${
-                  urgentTask
-                    ? 'border-red-400 bg-gradient-to-br from-red-50 to-rose-50 shadow-md hover:shadow-lg'
-                    : 'border-red-200 bg-red-50/50'
-                } transition-all duration-300 ${
-                  dragOverStatus === 'urgent' && draggedTaskId
-                    ? 'ring-2 ring-red-400 ring-offset-1'
-                    : ''
-                }`}
-                onDragOver={e => {
-                  handleDragOver(e);
-                  setDragOverStatus('urgent');
-                }}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDropUrgent}
-              >
-                <CardHeader className='pb-3 pt-4 px-4 border-b border-red-200 bg-white/50'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-2'>
-                      <div className='p-1.5 rounded-lg bg-red-100 border-2 border-red-300 shadow-sm'>
-                        <Flame className='h-4 w-4 text-red-700' />
-                      </div>
-                      <div>
-                        <h3 className='text-sm font-bold text-neutral-900'>
-                          Prioridade Máxima
-                        </h3>
-                      </div>
-                    </div>
-                    <div className='flex items-center gap-1.5'>
-                      {urgentTask && (
-                        <Button
-                          onClick={handleRemoveUrgency}
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 w-6 p-0 hover:bg-red-100 text-neutral-600 hover:text-neutral-900'
-                          title='Remover urgência'
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className='p-4 h-full min-h-[140px] flex items-center justify-center'>
-                  {urgentTask ? (
-                    <div
-                      draggable
-                      onDragStart={e => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('taskId', urgentTask.id);
-                        e.dataTransfer.setData('currentStatus', urgentTask.status);
-                        handleDragStart(urgentTask.id);
-                      }}
-                      className='cursor-move w-full'
-                    >
-                      <TaskCard
-                        task={urgentTask}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
-                        onChangeStatus={handleChangeStatus}
-                        onRequestCompletion={handleRequestCompletion}
-                        onClick={handleTaskClick}
-                      />
-                    </div>
-                  ) : (
-                    <div className='text-center'>
-                      <p className='text-sm text-neutral-600 mb-1 font-medium'>
-                        Nenhuma tarefa urgente
-                      </p>
-                      <p className='text-xs text-neutral-500'>
-                        Arraste uma tarefa aqui para priorizar
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
 
         {/* Conteúdo Principal */}
         <AnimatePresence mode="wait">
@@ -799,65 +424,17 @@ const Tarefas = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className='grid grid-cols-1 lg:grid-cols-3 gap-6'
-              onDragEnd={handleDragEnd}
             >
-              <TaskBlock
-                status='not_started'
-                tasks={tasksByStatus.not_started}
+              <TaskBoardView
+                tasks={tasksByStatus}
+                highlightedTask={highlightedTask}
+                urgentTask={urgentTask}
                 onEdit={handleEditTask}
                 onDelete={handleDeleteTask}
                 onChangeStatus={handleChangeStatus}
                 onRequestCompletion={handleRequestCompletion}
                 onCreateTask={handleCreateTaskInBlock}
                 onTaskClick={handleTaskClick}
-                onDragStart={handleDragStart}
-                onDragOver={e => {
-                  handleDragOver(e);
-                  setDragOverStatus('not_started');
-                }}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, 'not_started')}
-                isDragging={draggedTaskId !== null}
-                dragOver={dragOverStatus === 'not_started'}
-              />
-              <TaskBlock
-                status='in_progress'
-                tasks={tasksByStatus.in_progress}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-                onChangeStatus={handleChangeStatus}
-                onRequestCompletion={handleRequestCompletion}
-                onCreateTask={handleCreateTaskInBlock}
-                onTaskClick={handleTaskClick}
-                onDragStart={handleDragStart}
-                onDragOver={e => {
-                  handleDragOver(e);
-                  setDragOverStatus('in_progress');
-                }}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, 'in_progress')}
-                isDragging={draggedTaskId !== null}
-                dragOver={dragOverStatus === 'in_progress'}
-              />
-              <TaskBlock
-                status='completed'
-                tasks={tasksByStatus.completed}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-                onChangeStatus={handleChangeStatus}
-                onRequestCompletion={handleRequestCompletion}
-                onCreateTask={handleCreateTaskInBlock}
-                onTaskClick={handleTaskClick}
-                onDragStart={handleDragStart}
-                onDragOver={e => {
-                  handleDragOver(e);
-                  setDragOverStatus('completed');
-                }}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, 'completed')}
-                isDragging={draggedTaskId !== null}
-                dragOver={dragOverStatus === 'completed'}
               />
             </motion.div>
           ) : (
@@ -882,22 +459,23 @@ const Tarefas = () => {
 
         {/* Mensagem quando não há tarefas (Global) */}
         {tasks.length === 0 && !searchQuery && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className='mt-8 text-center'
+            className="mt-8 text-center"
           >
-            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 mb-4'>
-              <Plus className='h-8 w-8 text-neutral-400' />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 mb-4">
+              <Plus className="h-8 w-8 text-neutral-400" />
             </div>
-            <h3 className='text-lg font-semibold text-neutral-900 mb-2'>
+            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
               Comece a organizar suas tarefas
             </h3>
-            <p className='text-neutral-500 mb-6 max-w-sm mx-auto'>
-              Crie sua primeira tarefa para começar a acompanhar seu progresso e aumentar sua produtividade.
+            <p className="text-neutral-500 mb-6 max-w-sm mx-auto">
+              Crie sua primeira tarefa para começar a acompanhar seu progresso e
+              aumentar sua produtividade.
             </p>
             <Button onClick={handleNewTask} size="lg" className="shadow-lg">
-              <Plus className='h-5 w-5 mr-2' />
+              <Plus className="h-5 w-5 mr-2" />
               Criar Primeira Tarefa
             </Button>
           </motion.div>
@@ -907,7 +485,7 @@ const Tarefas = () => {
       {/* Modals */}
       <TaskDetailModal
         open={isTaskDetailModalOpen}
-        onOpenChange={open => {
+        onOpenChange={(open) => {
           setIsTaskDetailModalOpen(open);
           if (!open) setSelectedTask(null);
         }}
@@ -917,14 +495,14 @@ const Tarefas = () => {
         onChangeStatus={handleChangeStatus}
         onRequestCompletion={handleRequestCompletion}
         isSubmitting={isCreating || isUpdating || isDeleting}
-        onTaskUpdated={updatedTask => {
+        onTaskUpdated={(updatedTask) => {
           setSelectedTask(updatedTask);
         }}
       />
 
       <TaskModal
         open={isTaskModalOpen}
-        onOpenChange={open => {
+        onOpenChange={(open) => {
           setIsTaskModalOpen(open);
           if (!open) setEditingTask(null);
         }}

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { getLevelInfo, getExpProgress, USER_LEVELS } from '@/types/domain/task';
+import { getLevelInfo, getExpProgress, USER_LEVELS } from '@/features/tasks/types/task';
 
 export const useUserLevel = () => {
   const { user } = useAuth();

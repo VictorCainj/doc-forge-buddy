@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useUserLevel } from '@/hooks/useUserLevel';
-import { useTasks } from '@/hooks/useTasks';
+import { useTasks } from '@/features/tasks/hooks/useTasks';
 import { CheckCircle2, TrendingUp } from '@/utils/iconMapper';
 
 export const UserStatsCard = () => {

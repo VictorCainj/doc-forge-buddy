@@ -10,10 +10,12 @@ import {
   CheckCircle2,
 } from '@/utils/iconMapper';
 import { GripVertical } from 'lucide-react';
-import { Task, TaskStatus, TASK_STATUS_LABELS } from '@/types/domain/task';
+import { Task, TaskStatus, TASK_STATUS_LABELS } from '../types/task';
 import { TaskCard } from './TaskCard';
 import { QuickTaskForm } from './QuickTaskForm';
 import { cn } from '@/lib/utils';
+
+import { EmptyColumnState } from './EmptyColumnState';
 
 interface TaskBlockProps {
   status: TaskStatus;
@@ -174,21 +176,11 @@ export const TaskBlock = ({
           <ScrollArea className="flex-1 pr-2">
             <div className="grid grid-cols-1 gap-3 min-h-[200px]">
               {tasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center col-span-1">
-                  <div className="p-3 rounded-lg bg-neutral-100 border border-neutral-200 mb-4">
-                    <div className={config.accentColor}>
-                      {config.icon}
-                    </div>
-                  </div>
-                  <p className="text-sm text-neutral-600 mb-1 font-medium">
-                    Nenhuma tarefa {status === 'not_started' ? 'não iniciada' : status === 'in_progress' ? 'em andamento' : 'finalizada'} ainda.
-                  </p>
-                  <p className="text-xs text-neutral-500">
-                    {status === 'completed' 
-                      ? 'Tarefas concluídas aparecerão aqui'
-                      : 'Que tal adicionar uma tarefa?'}
-                  </p>
-                </div>
+                <EmptyColumnState
+                  icon={config.icon}
+                  statusLabel={TASK_STATUS_LABELS[status]}
+                  statusKey={status}
+                />
               ) : (
                 tasks.map((task) => (
                   <div
